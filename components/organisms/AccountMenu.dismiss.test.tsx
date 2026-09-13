@@ -1,8 +1,19 @@
 // @vitest-environment happy-dom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { AccountMenu } from "./AccountMenu";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+/**
+ * tasks.md 28.11 — el doble de la acción de servidor. `signOutAction` importa
+ * `auth.ts` por importación diferida (sólo al invocarse, ver su propio
+ * comentario), así que esta suite no necesita `DATABASE_URL` para renderizar
+ * el menú — sólo la reemplaza para comprobar que SE LLAMA, sin ejecutar la
+ * de verdad.
+ */
+const { signOutAction } = vi.hoisted(() => ({ signOutAction: vi.fn(async () => undefined) }));
+vi.mock("@/modules/identity/infrastructure/sign-out-action", () => ({ signOutAction }));
+
+const { AccountMenu } = await import("./AccountMenu");
 
 /**
  * El menú de cuenta (tasks.md 28.1), la instancia confirmada por el
@@ -96,5 +107,40 @@ describe("AccountMenu — se cierra de verdad (28.1)", () => {
     });
 
     expect(container.querySelector('[role="menu"]')).not.toBeNull();
+  });
+
+  /**
+   * tasks.md 28.11 — «el menú de cuenta no tiene cómo cerrar sesión». La
+   * medición del fundador y el barrido de la 28.10: `signOut|cerrar sesión`
+   * no aparecía en ninguna parte de `app/` ni `components/`.
+   */
+  describe("«Cerrar sesión» (28.11)", () => {
+    beforeEach(() => {
+      signOutAction.mockClear();
+    });
+
+    it("el panel abierto la ofrece dentro de un <form>, nunca de un enlace", () => {
+      openMenu();
+      const boton = container.querySelector(
+        'form button[type="submit"]',
+      ) as HTMLButtonElement | null;
+
+      expect(boton).not.toBeNull();
+      expect(boton?.textContent).toContain("Cerrar sesión");
+      // El mecanismo: un POST de verdad, no un `<a>` con `onClick` — un `GET`
+      // que termina una sesión es el defecto que esta tarea cierra.
+      expect(boton?.closest("a")).toBeNull();
+    });
+
+    it("usarlo llama a la acción de servidor que cierra la sesión, y no navega", () => {
+      openMenu();
+      const form = container.querySelector("form") as HTMLFormElement;
+
+      act(() => {
+        form.requestSubmit();
+      });
+
+      expect(signOutAction).toHaveBeenCalledTimes(1);
+    });
   });
 });

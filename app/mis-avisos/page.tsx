@@ -13,6 +13,7 @@ import {
   resolveNavPublish,
 } from "../../src/modules/identity/domain/nav-account";
 import { nextAuthSessionPort } from "../../src/modules/identity/infrastructure/session-port";
+import { signOutAction } from "../../src/modules/identity/infrastructure/sign-out-action";
 import { homeSearchForm } from "../../src/modules/listing-catalogue/domain/search-destination";
 import { listPublisherListings } from "../../src/modules/listing-publication/application/list-publisher-listings";
 import type {
@@ -136,6 +137,22 @@ export default async function MisAvisosPage({
               <AppLink href="/importar">Importar cartera</AppLink>
             </p>
           ) : null}
+
+          {/*
+            tasks.md 28.11 — «el menú de cuenta no tiene cómo cerrar
+            sesión», y peor: la función no existía en ningún lado de la capa
+            de entrega. El menú de cuenta (14b) ya la ofrece, pero ese panel
+            sólo existe con JavaScript (`useDismissLayer`, 28.1) — la misma
+            razón por la que «Importar cartera» vive acá arriba y no sólo en
+            el panel. `signOutAction` es la MISMA acción de servidor que usa
+            el menú: un solo lugar decide qué hace "cerrar sesión" y a dónde
+            vuelve (`SIGN_OUT_DESTINATION`).
+          */}
+          <form action={signOutAction} className={styles.cerrarSesion}>
+            <button type="submit" className={styles.cerrarSesionBoton}>
+              Cerrar sesión
+            </button>
+          </form>
 
           {board.total === 0 ? (
             <p className={styles.vacio}>
