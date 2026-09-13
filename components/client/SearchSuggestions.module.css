@@ -4,11 +4,16 @@
 
    Se dibuja colgado de la pastilla y no dentro de ella: la pastilla es una fila
    de tres piezas dentro de un solo borde, y meter una lista adentro rompería
-   esa forma. `position: absolute` sobre el ancla, con la pastilla como
-   contenedor posicionado. */
+   esa forma. `position: absolute` sobre `.panel`, con la pastilla —no este
+   ancla— como contenedor posicionado (`SearchPill.module.css`, 28.10b). */
 
 .anchor {
-  position: relative;
+  /* **28.10(b) — este selector dejó de declarar su propia posición.** Esa
+     declaración era la causa de que el desplegable midiera la columna de
+     texto y no la pastilla entera: al volverse ella misma un contenedor
+     posicionado, `.panel` medía `inset-inline: 0` contra ÉSTA y no contra
+     `.pill`. Sin una posición propia acá, el navegador sigue subiendo por los
+     ancestros hasta encontrar uno posicionado — que ahora es la pastilla. */
   /* Ancho cero en el flujo: el ancla no ocupa lugar en la fila de la pastilla.
      El panel se estira sobre la pastilla entera desde acá. */
   inline-size: 100%;
@@ -69,14 +74,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* El conteo, en el mismo registro que el de la pastilla. */
-.count {
-  flex: none;
-  font-family: var(--meta);
-  font-size: var(--pill-meta-fs);
-  color: var(--soft);
 }
 
 /* Compartida con las otras cuatro hojas que usan la misma utilidad de

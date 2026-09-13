@@ -14,6 +14,16 @@
   border-radius: var(--rs);
   background: var(--surface);
   box-shadow: var(--shadow-raised);
+  /* **tasks.md 28.10(b) — el contenedor posicionado del panel de sugerencias
+     es la pastilla entera, no la columna de texto.** `SearchSuggestions.module.css`
+     ya lo decía en su propio comentario desde el primer commit ("con la
+     pastilla como contenedor posicionado"), pero nunca lo cumplía: el ancla
+     era `position: relative` por su cuenta, adentro de `.textCol` — más
+     angosta que la pastilla porque comparte la fila con el filtro y la lupa.
+     `.panel` mide `inset-inline: 0` contra el ancestro posicionado más
+     cercano; puesto acá, ese ancestro es la pastilla y el desplegable pasa a
+     medir lo mismo que ella. */
+  position: relative;
 }
 
 .pill:focus-within {
