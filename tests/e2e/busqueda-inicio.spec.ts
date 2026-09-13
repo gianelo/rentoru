@@ -96,9 +96,7 @@ test("lo que no se reconoce contesta «no entendí», nunca «no hay avisos»", 
  * Sólo en `chromium`: la isla es la mejora, y con el script apagado la ausencia
  * del panel es lo que se afirma arriba.
  */
-test("con el script cargado, el inicio ofrece las zonas con avisos", async ({
-  page,
-}, testInfo) => {
+test("con el script cargado, el inicio ofrece las zonas con avisos", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "crawlability", "la lista es la mejora, no el piso");
 
   await page.goto("/");
