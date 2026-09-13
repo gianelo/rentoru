@@ -2666,6 +2666,17 @@ Textual: *«entiendo que esto fue una de las peticiones que se hicieron al princ
 
 - [ ] 28.2 **El panel de filtros es un modal de verdad cuando hay JavaScript.** Hoy es «una pantalla encima de otra»: no cierra con clic afuera, sólo con la X; **«Limpiar todo» limpia y deja el modal abierto**; y mientras está abierto **el fondo se va filtrando solo**, que el fundador llama textualmente *«no tiene ningún sentido»*. Con la decisión de arriba: los filtros se eligen en el cliente, **se aplican al apretar el botón**, y el modal cierra al aplicar. Sin JavaScript cae al camino servido de hoy, que se conserva entero.
 
+  **GUÍA DE DISEÑO DEL FUNDADOR, 2026-09-13: son TRES tratamientos, no uno.** Se registra porque la primera lectura de esta tarea los generalizaba, y el fundador la corrigió en el momento: *«ojo, solo hablé del móvil; en el iPad y desktop es diferente, allí sí creo que tenemos que rediseñar»*.
+
+  - **Móvil, 390 × 844 — el acordeón SE CONSERVA.** Textual: *«el móvil en acordeón me gusta pero lo que está dentro del acordeón debemos mejorarlo»*. La forma está aprobada; **lo que se rehace es el contenido de cada sección**, y buena parte de eso ya vive en la 28.8 y la 28.9.
+  - **Tablet, 768 × 1024 — rediseño completo.** *«Muy cargado… tiene que ser algo más simple.»* Hoy esa banda **no está dibujada en ningún archivo**, que es lo que la 20.10 mide desde agosto.
+  - **Escritorio, 1440 × 900 — rediseño.** *«Tengo aquí un scroll obligado y a mí no me gusta.»* Y hoy el panel **emula** un modal dibujando una pantalla encima de otra, en vez de serlo.
+
+  **Consecuencia de orden, y conviene decirla ahora**: dos de los tres tratamientos exigen una lámina que no existe, así que **esta tarea depende de la 28.4**. Rediseñar el panel de tablet sin su lámina sería inventar una medida a ojo — exactamente el problema que la 20.10 lleva anotado.
+
+  **Y la primitiva ya está esperándola**: la 28.1 dejó `useDismissLayer` construida y adoptada por dos menús, con el panel de filtros **deliberadamente fuera** para que esta tarea la consuma en vez de escribir una tercera implementación.
+
+
 - [x] 28.3 **El conteo del filtro miente, y eso es la regla 3 rota.** Medido por el fundador en `dev`: filtrando por **dos habitaciones** en Maracaibo la pantalla dice **«siete propiedades»** y **se ven cuatro avisos**. La regla transversal 3 es «si una etiqueta dice 9, hay 9». **Esto no es diseño: es un defecto de conteo** y va primero que cualquier rediseño del panel.
 
     **La 27.8 se descartó primero, y quedó inocente.** Su cambio a `citywide`/`zoneAgg` movió el `total` a una subconsulta y le puso `.as(...)`, pero la EXPRESIÓN que lo calcula —`countWhere(...others())`— es literal, carácter por carácter, la misma de antes (`git show c759396` contra el archivo). `search()` y `countFacets()` comparten exactamente el mismo `WHERE`: ciudad, `status='active'`, `expiresAt>now()` (task 21.1, las dos condiciones en los dos lectores), y habitaciones como MÍNIMO (`gte`) en ambos — nunca "exacto" en uno y "o más" en el otro. Los tres caminos que la tarea pedía descartar quedaron descartados por lectura de código, no por sospecha.
