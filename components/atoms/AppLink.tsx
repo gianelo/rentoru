@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { AnchorHTMLAttributes } from "react";
+import type { AnchorHTMLAttributes, Ref } from "react";
 import { isInternalPath } from "@/shared/navigation/internal-path";
 
 /**
@@ -28,6 +28,13 @@ import { isInternalPath } from "@/shared/navigation/internal-path";
  */
 export interface AppLinkProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   readonly href: string;
+  /**
+   * React 19 pasa `ref` como una prop más para un componente de función; acá
+   * se declara explícito y se deja viajar dentro de `rest` hacia el `<a>` o
+   * el `<Link>` de abajo — la primitiva de capa descartable (28.1) lo
+   * necesita para devolver el foco al control que abrió un menú.
+   */
+  readonly ref?: Ref<HTMLAnchorElement>;
 }
 
 export function AppLink({ href, ...rest }: AppLinkProps) {
