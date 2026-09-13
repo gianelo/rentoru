@@ -152,14 +152,19 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
                   otro lugar, y llegar con una navegación de documento es lo
                   mismo que hace la lupa. Además el panel se desmonta al
                   navegar, así que no hay nada que preservar del cliente. */}
+              {/* **28.10(c) — el conteo se retira del dibujo.** Textual del
+                  fundador: "nadie ve eso del conteo ahí dentro de la
+                  sugerencia; vamos a quitarlo para no gastar recursos en
+                  eso". Medido antes de tocarlo: no cuesta una consulta ni una
+                  fila propia — `choice.countLabel` sale de `zone.count`, el
+                  mismo número que el dominio YA necesita para excluir zonas
+                  vacías y para ordenar por oferta (17.5/17.7), así que viaja
+                  igual con o sin esta línea. Lo único que se ahorra es dibujar
+                  el `<span>`; `SearchChoice.countLabel` se queda declarado
+                  porque otras pruebas de dominio siguen afirmándolo. */}
               <a className={styles.option} href={choice.href}>
                 <span>{choice.label}</span>
                 <span className={styles.scope}>{choice.scope}</span>
-                {/* El número, o nada. Un «0» pegado a una opción se lee como un
-                    conteo roto, y el dominio ya contestó `null` por eso. */}
-                {choice.countLabel === null ? null : (
-                  <span className={styles.count}>{choice.countLabel}</span>
-                )}
               </a>
             </li>
           ))}
