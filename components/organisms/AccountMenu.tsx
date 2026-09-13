@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AppLink } from "../atoms/AppLink";
+import { useDismissLayer } from "../hooks/useDismissLayer";
 import styles from "./AccountMenu.module.css";
 
 export interface AccountMenuItem {
@@ -60,10 +61,17 @@ export function AccountMenu({
   items,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
+  // La primitiva compartida (tasks.md 28.1): clic afuera, Escape y el foco
+  // que vuelve al control — antes cada menú lo resolvía a mano, y ninguno
+  // cerraba con ninguna de las dos cosas.
+  const { triggerRef, panelRef } = useDismissLayer<HTMLAnchorElement, HTMLDivElement>(open, () =>
+    setOpen(false),
+  );
 
   return (
     <span className={styles.wrap}>
       <AppLink
+        ref={triggerRef}
         href={href}
         className={
           triggerLabelVisible ? styles.trigger : `${styles.trigger} ${styles.triggerIconOnly}`
@@ -91,7 +99,7 @@ export function AccountMenu({
       </AppLink>
 
       {open ? (
-        <div className={styles.panel} role="menu">
+        <div ref={panelRef} className={styles.panel} role="menu">
           <div className={styles.panelHeader}>
             <span className={styles.panelName}>{panelTitle}</span>
             {panelEmail ? <span className={styles.panelEmail}>{panelEmail}</span> : null}
