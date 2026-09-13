@@ -96,7 +96,7 @@ test("lo que no se reconoce contesta «no entendí», nunca «no hay avisos»", 
  * Sólo en `chromium`: la isla es la mejora, y con el script apagado la ausencia
  * del panel es lo que se afirma arriba.
  */
-test("con el script cargado, el inicio ofrece las zonas con avisos y su conteo", async ({
+test("con el script cargado, el inicio ofrece las zonas con avisos", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name === "crawlability", "la lista es la mejora, no el piso");
@@ -107,7 +107,8 @@ test("con el script cargado, el inicio ofrece las zonas con avisos y su conteo",
   const opcion = page.getByRole("list", { name: "Sugerencias" }).getByRole("listitem").first();
   await expect(opcion).toContainText("Tierra Negra");
   // El vencido de la misma zona no cuenta: son 2 y no 3.
-  await expect(opcion).toContainText("2");
+  // El conteo salió del dibujo en la 28.10(c) — ver la nota en
+  // tests/measure/sugerencias.spec.ts. Lo que se afirma es el lugar y su ámbito.
 
   // Y la sugerencia lleva a la búsqueda de ese lugar, no a un texto libre.
   await opcion.getByRole("link").click();

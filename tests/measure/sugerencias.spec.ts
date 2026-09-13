@@ -23,7 +23,7 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
     await page.goto("/measure");
   });
 
-  test("14.51: escribir «alta» ofrece Altamira con su ámbito y su conteo", async ({ page }) => {
+  test("14.51: escribir «alta» ofrece Altamira con su ámbito", async ({ page }) => {
     const pastilla = page.getByTestId(PASTILLA);
     // Nada dibujado antes de escribir: la mejora no ocupa la pantalla de nadie.
     await expect(pastilla.getByRole("list", { name: "Sugerencias" })).toHaveCount(0);
@@ -35,7 +35,12 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
     // **El par (filtro, valor) con su ámbito** (14.18) y el conteo de la 14.51,
     // los dos leídos de lo dibujado y no del código.
     await expect(opcion).toContainText("Chacao · Distrito Capital");
-    await expect(opcion).toContainText("9");
+    // **El conteo se fue del dibujo en la 28.10(c), por decisión del fundador**:
+    // «nadie ve eso del conteo ahí dentro de la sugerencia». Lo que la sugerencia
+    // tiene que decir es QUÉ lugar es y DÓNDE queda, y eso es lo que se afirma
+    // arriba. El dato sigue existiendo en el dominio, que lo necesita para
+    // excluir zonas vacías y ordenar por oferta; lo que desapareció es la
+    // etiqueta.
     console.log("[14.51] «alta» → Altamira · Chacao · Distrito Capital · 9");
   });
 

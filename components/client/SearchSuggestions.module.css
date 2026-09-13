@@ -23,9 +23,14 @@
 .panel {
   position: absolute;
   inset-inline: 0;
-  /* Justo debajo del borde de la pastilla, con el mismo aire que separa sus
-     piezas. */
-  inset-block-start: 12px;
+  /* **Justo debajo del borde INFERIOR de la pastilla**, con el mismo aire que
+     separa sus piezas. Se dice con `calc(100% + …)` y no con un número suelto
+     porque el contenedor posicionado cambió con la 28.10(b): antes era el ancla
+     —un marcador de altura cero que quedaba al pie de la pastilla, así que 12px
+     ya caían debajo—, y ahora es la pastilla entera. Con el número suelto el
+     panel arrancaba 12px bajo el BORDE SUPERIOR y le tapaba el botón de la
+     lupa, que es lo que el e2e sin JavaScript atrapó. */
+  inset-block-start: calc(100% + 6px);
   z-index: 20;
   margin: 0;
   padding: 6px;
