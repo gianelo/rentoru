@@ -132,3 +132,31 @@
   outline: 2px solid var(--accent);
   outline-offset: -2px;
 }
+
+/* «Cerrar sesión» (tasks.md 28.11) — separado del resto por una línea,
+   igual que `.panelHeader` ya separa el nombre de las filas. */
+.signOutForm {
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+}
+
+.signOutButton {
+  display: flex;
+  align-items: center;
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: 0 16px;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--nav-menu-item-fs);
+  text-align: left;
+  cursor: pointer;
+}
+
+.signOutButton:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
