@@ -328,6 +328,31 @@ describe("ListingCard — la cuadrícula y sus reglas transversales", () => {
 });
 
 /**
+ * **La zona fluye en vez de recortarse (tasks.md 28.7).** Con la taxonomía
+ * real hay zonas como «Barrio Tierra Negra del Sector Bella Vista», que no
+ * entran en ninguna línea del cuerpo de la tarjeta como unidad indivisible
+ * — `.card { overflow: hidden }` (arriba) la recortaba en silencio en vez de
+ * mandarla a la línea de abajo. Habitaciones y metros no lo necesitan: nunca
+ * son tan largos como para desbordar una línea, así que se quedan en la
+ * regla que nunca se parte por dentro (22.47).
+ *
+ * **Por qué el marcado y no el texto renderizado.** `renderToStaticMarkup`
+ * nunca ejecuta el layout del navegador: el texto de una zona larga llega
+ * completo al HTML tanto con el defecto como sin él, porque lo que recortaba
+ * era CSS (`overflow: hidden`) y no una función de JavaScript que acortara
+ * la cadena. La prueba que de verdad puede fallar es sobre la clase que
+ * `ListingCard` elige para cada parte, no sobre el texto que produce.
+ */
+describe("ListingCard — la zona no se recorta (tasks.md 28.7)", () => {
+  it("envuelve la zona con `wrap`, y habitaciones/metros sin él", () => {
+    const source = readFileSync("components/molecules/ListingCard.tsx", "utf-8");
+    expect(source).toMatch(/<ListingMetaPart wrap>\{zone\}<\/ListingMetaPart>/);
+    expect(source).toMatch(/<ListingMetaPart>\{rooms\} hab<\/ListingMetaPart>/);
+    expect(source).toMatch(/<ListingMetaPart>\{areaM2\} m²<\/ListingMetaPart>/);
+  });
+});
+
+/**
  * La cuadrícula viaja con la tarjeta y no con la pantalla que la usa: los
  * anchos de 158 y 254 px **son geometría de la tarjeta**, y dejarlos en la
  * hoja de una página los duplica en la siguiente que dibuje avisos — el

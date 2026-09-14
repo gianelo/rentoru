@@ -46,7 +46,22 @@ export function ListingMeta({ children }: { readonly children: ReactNode }) {
  * consumidor, con un espacio normal a cada lado — y un espacio normal es
  * exactamente donde SÍ puede cortar, que es lo que hace que la unidad
  * completa caiga entera a la línea de abajo en vez de partirse.
+ *
+ * **`wrap`, la salida deliberada de esa misma regla (tasks.md 28.7).** La
+ * suposición de la 22.47 era que toda unidad, sola en su propia línea,
+ * siempre entra — cierta para «2 hab» o «78 m²», falsa para una zona real
+ * como «Barrio Tierra Negra del Sector Bella Vista». `wrap` no reemplaza la
+ * regla: la sustituye sólo para la unidad que la pide, dejando que el
+ * navegador la rompa en sus propios espacios en vez de desbordar y que
+ * `overflow: hidden` la recorte en silencio.
  */
-export function ListingMetaPart({ children }: { readonly children: ReactNode }) {
-  return <span className={styles.part}>{children}</span>;
+export function ListingMetaPart({
+  children,
+  wrap = false,
+}: {
+  readonly children: ReactNode;
+  /** La unidad puede fluir a varias líneas en vez de nunca partirse. */
+  readonly wrap?: boolean;
+}) {
+  return <span className={wrap ? styles.partWrap : styles.part}>{children}</span>;
 }

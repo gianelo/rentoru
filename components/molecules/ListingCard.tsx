@@ -112,7 +112,13 @@ export function ListingCard({
             separador `· ` sigue siendo texto normal — es donde el
             navegador SÍ puede cortar. */}
         <ListingMeta>
-          <ListingMetaPart>{zone}</ListingMetaPart>
+          {/* La zona es la única parte que la taxonomía real puede volver
+              más larga que cualquier línea del cuerpo («Barrio Tierra Negra
+              del Sector Bella Vista», tasks.md 28.7): `wrap` deja que fluya
+              en vez de desbordar y perderse contra `.card { overflow:
+              hidden }`. Habitaciones y metros nunca llegan a ese largo y
+              siguen protegidos por la regla de la 22.47. */}
+          <ListingMetaPart wrap>{zone}</ListingMetaPart>
           {" · "}
           <ListingMetaPart>{rooms} hab</ListingMetaPart>
           {" · "}
