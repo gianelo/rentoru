@@ -1,5 +1,5 @@
-import { and, asc, eq, gt, ilike, inArray, or, sql } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
+import { and, asc, eq, gt, ilike, inArray, or, type SQL, sql } from "drizzle-orm";
+import { alias, type PgColumn } from "drizzle-orm/pg-core";
 import { cities, listings, zoneAliases, zones } from "../../../shared/db/schema";
 import type { SearchVocabularyPort } from "../application/ports/search-vocabulary.port";
 import type { SuggestionVocabulary } from "../domain/suggest-filters";
@@ -29,6 +29,9 @@ import type { CatalogueDatabase } from "./drizzle-catalogue";
  * El handle se inyecta, igual que en los otros adaptadores: el despliegue pasa
  * un cliente Neon y la prueba de integración uno de `node-postgres` apuntado a
  * un contenedor real, y **los dos corren este mismo código**.
+ *
+ * **El corte de `LOOKUP_LIMIT` es por relevancia, no por abecedario
+ * (17.17).** Ver `relevanceRank` para el porqué y el costo medido.
  */
 
 /** Ancho suficiente para que el dominio tenga de dónde elegir sus ocho. */
@@ -62,6 +65,64 @@ function wordsOf(text: string): string[] {
     .slice(0, 6);
 }
 
+/**
+ * **17.17 — un puesto por fila, no un orden alfabético.**
+ *
+ * `LOOKUP_LIMIT` recorta a 60; antes de esta tarea el `ORDER BY` era
+ * `name ASC`, así que ese recorte era literalmente alfabético. Con 5.796
+ * zonas y una palabra tan común como «en» adentro de 1.052 de ellas
+ * («23 de Enero», «Alimentador San Bernardino»…), la fila que la frase
+ * realmente nombraba podía perder el corte sin ningún aviso — no por no
+ * coincidir, sino por llamarse algo que ordena después de las sesenta
+ * primeras zonas reales que también coinciden. `tests/integration/
+ * catalogue-search.test.ts` lo prueba con una zona a propósito lejos del
+ * principio del alfabeto.
+ *
+ * **Tres niveles, el mejor gana.** Por cada palabra de la búsqueda:
+ *
+ * - **0 — coincide entera.** La columna ES esa palabra (sin comodines):
+ *   la reconstrucción más específica posible con lo que se escribió.
+ * - **1 — empieza por ella, sola o después de un espacio.** «Enero» para
+ *   la palabra «en», o el propio alias de esta prueba para la palabra que
+ *   lo nombra completo — sigue siendo una coincidencia de PALABRA, no de
+ *   substring perdido en el medio de otra.
+ * - **2 — el resto.** Coincide en algún punto, como toda fila que ya
+ *   pasaba el `WHERE`, pero es la última en desempatar.
+ *
+ * Una fila puede ganar por CUALQUIERA de sus palabras — de ahí `least()`:
+ * si una palabra la encuentra por el nivel 0, no importa que las otras
+ * cinco no digan nada de ella.
+ *
+ * **El empate se resuelve por largo, no por abecedario.** Entre dos filas
+ * del mismo nivel, la más corta es la coincidencia más específica — un
+ * nombre de 8 caracteres que empieza por «en» es más «esa palabra» que uno
+ * de 40. El nombre entra al final, sólo para que el resultado sea
+ * determinista y nunca dependa del orden en que Postgres barrió la tabla.
+ *
+ * **Costo: ninguno nuevo.** El `WHERE` ya usa `ILIKE '%palabra%'` — el
+ * comodín inicial le impide a Postgres usar el índice de `zone_alias` para
+ * FILTRAR, así que ya barría la tabla entera antes de esta tarea. Lo único
+ * que cambia es la expresión que ordena esas mismas filas ya filtradas
+ * (como mucho unos miles, nunca las 5.796/3.547 completas) antes de
+ * cortar en `LOOKUP_LIMIT`: el `ORDER BY name ASC` de antes tampoco corría
+ * sobre un índice, porque ordenar un resultado ya filtrado por un barrido
+ * exige su propio paso de orden sin importar la expresión. No hay un
+ * segundo barrido ni una tabla nueva que recorrer — sólo unas
+ * comparaciones `ILIKE` de más por fila ya en memoria.
+ */
+function relevanceRank(column: PgColumn, words: readonly string[]): SQL<number> {
+  const perWord = words.map((word) => {
+    const escaped = escapeLike(word);
+    return sql`(case
+      when ${column} ilike ${escaped} then 0
+      when ${column} ilike ${`${escaped}%`} or ${column} ilike ${`% ${escaped}%`} then 1
+      else 2
+    end)`;
+  });
+
+  return sql<number>`least(${sql.join(perWord, sql`, `)})`;
+}
+
 export class DrizzleSearchVocabulary implements SearchVocabularyPort {
   constructor(private readonly db: CatalogueDatabase) {}
 
@@ -93,14 +154,24 @@ export class DrizzleSearchVocabulary implements SearchVocabularyPort {
       .from(zones)
       .leftJoin(parent, eq(zones.parentId, parent.id))
       .where(or(...like.map((pattern) => ilike(zones.name, pattern))))
-      .orderBy(asc(zones.name))
+      // 17.17: relevancia primero, largo como desempate y el nombre sólo al
+      // final para que el resultado sea determinista — ver `relevanceRank`.
+      .orderBy(
+        asc(relevanceRank(zones.name, words)),
+        asc(sql`length(${zones.name})`),
+        asc(zones.name),
+      )
       .limit(LOOKUP_LIMIT);
 
     const aliasRows = await this.db
       .select({ zoneId: zoneAliases.zoneId, alias: zoneAliases.alias })
       .from(zoneAliases)
       .where(or(...like.map((pattern) => ilike(zoneAliases.alias, pattern))))
-      .orderBy(asc(zoneAliases.alias))
+      .orderBy(
+        asc(relevanceRank(zoneAliases.alias, words)),
+        asc(sql`length(${zoneAliases.alias})`),
+        asc(zoneAliases.alias),
+      )
       .limit(LOOKUP_LIMIT);
 
     // Las zonas que un alias trajo y el nombre no. Sin ellas, encontrar por
