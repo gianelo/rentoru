@@ -43,3 +43,18 @@
 .part {
   white-space: nowrap;
 }
+
+/* **Cuando la propia unidad no entra en NINGUNA línea (tasks.md 28.7).** Con
+   la taxonomía real hay zonas como «Barrio Tierra Negra del Sector Bella
+   Vista»: `.part` no las manda a la línea de abajo enteras —no hay línea que
+   las reciba enteras—, así que desbordan y `ListingCard.module.css`'s
+   `.card { overflow: hidden }` las recorta en silencio. `.partWrap` es la
+   misma unidad tipográfica sin la regla de indivisibilidad de la 22.47: se
+   rompe en sus propios espacios, como cualquier frase, y cae en dos o tres
+   líneas en vez de perder la mitad de su nombre. Decisión del fundador
+   (2026-09-14): *«no puede haber nada fijo, para eso estamos trabajando
+   responsive»* — las unidades cortas («2 hab», «78 m²») siguen en `.part`,
+   porque nunca son tan largas como para necesitar esto. */
+.partWrap {
+  white-space: normal;
+}

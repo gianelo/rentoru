@@ -64,6 +64,21 @@ describe("la ficha en una columna", () => {
     expect(page).toContain("PhotoStrip");
     expect(page).toContain("DetailSplit");
   });
+
+  /**
+   * **Verificado y no supuesto (tasks.md 28.7).** El fundador nombró la
+   * ficha como una de las tres superficies que una zona real puede
+   * desbordar. `.location` (el párrafo que dibuja «Apartamento · <zona> ·
+   * <ciudad>») no declara ni `overflow: hidden` ni `white-space: nowrap` en
+   * toda la hoja: ya fluye a varias líneas si la zona no entra en una sola,
+   * sin necesitar el cambio que sí hizo falta en `ListingCard`. Esta prueba
+   * fija ese hecho para que quien le agregue un recorte a esta hoja más
+   * adelante vuelva a leer este comentario antes de reintroducirlo.
+   */
+  it("no tiene de dónde recortar la zona: sin overflow: hidden ni nowrap", () => {
+    expect(css).not.toMatch(/overflow:\s*hidden/);
+    expect(css).not.toMatch(/white-space:\s*nowrap/);
+  });
 });
 
 /**
