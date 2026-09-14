@@ -56,7 +56,18 @@ const ZONE = randomUUID();
 // pasaba con esa consulta borrada. Lo encontró una mutación, no una lectura.
 const ZONE_NAME = `Oficina Postal Telegrafica ${randomUUID()}`;
 // El nombre por el que la gente busca, que vive sólo en `zone_alias`.
-const ZONE_ALIAS = `Bellavistona ${randomUUID()}`;
+//
+// **17.17 — arranca con «Z» a propósito, y no es cosmético.** Era
+// «Bellavistona»: sorteaba temprano entre las filas reales que también
+// contienen «en» y sobrevivía al recorte de `LOOKUP_LIMIT` por pura suerte
+// alfabética. Con la taxonomía real sembrada, cambiar sólo esta letra
+// bastaba para tumbar la prueba sin tocar una línea de código — es
+// exactamente la evidencia que probó que el `ORDER BY name ASC` de
+// `drizzle-search-vocabulary.ts` era el defecto, no la frase. Se deja en
+// «Z» adrede como guardia de regresión: si el corte alguna vez vuelve a
+// ser alfabético, esta prueba cae de nuevo sin que nadie tenga que
+// acordarse de probarlo a mano.
+const ZONE_ALIAS = `Zetavistona ${randomUUID()}`;
 
 const USER = randomUUID();
 
@@ -220,9 +231,27 @@ describe("el buscador del inicio, contra filas reales", () => {
    * que quitarla de esta frase no prueba menos: sigue siendo texto libre con
    * los mismos filtros y la misma zona, y ahora depende sólo de lo que esta
    * prueba sembró.
+   *
+   * **Corrección, 2026-09-13/14 — ese arreglo era cosmético y no aguantó.**
+   * Reproducido de nuevo contra la taxonomía real: sacar «en» de la frase
+   * quitó el DISPARADOR de este caso puntual, pero dejó viva la DEPENDENCIA
+   * — cualquier palabra común de la frase (`ORDER BY name ASC` no distingue
+   * una de otra) puede volver a empujar el alias fuera de las 60 filas.
+   * Medido: reinsertando «en» con `ZONE_ALIAS` sorteando tarde
+   * («Zetavistona»), 20/20 corridas contra la taxonomía real caían a
+   * `choices`; con «Bellavistona» (sorteando temprano), 0/20. La causa real
+   * era `drizzle-search-vocabulary.ts` cortando por abecedario y no por
+   * relevancia — ver `relevanceRank` ahí. Con la relevancia arreglada, la
+   * frase natural con «en» pasa 20/20 con `ZONE_ALIAS` sorteando tarde (que
+   * es justo lo que este archivo deja sembrado permanentemente arriba, como
+   * guardia de regresión). **Los dos atajos que la nota de 2026-09-06 ya
+   * había descartado seguían descartados** — no se tocó `LOOKUP_LIMIT` ni se
+   * le aplicó `STOPWORDS` al SQL —, y la frase original con «en» queda
+   * restaurada, como prueba de que el arreglo es el correcto y no otro
+   * parche sobre el síntoma.
    */
   it("pega a la ruta los filtros que la misma frase trae", async () => {
-    const text = `apartamento amoblado ${ZONE_ALIAS} hasta 400`;
+    const text = `apartamento amoblado en ${ZONE_ALIAS} hasta 400`;
     const found = await vocabulary.lookup(text);
     const destination = resolveSearchDestination(text, found);
 
