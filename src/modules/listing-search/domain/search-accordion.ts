@@ -84,6 +84,20 @@ export const PANEL_OPEN_TOKEN = "todos";
 export const STALE_FILTER_GROUP_NOTICE =
   "Esa dirección pedía un grupo de filtros que ya no existe. El panel se abrió igual.";
 
+/**
+ * Lo que se dice cuando la dirección pide el filtro de metros cuadrados que
+ * la 28.18 sacó del panel.
+ *
+ * **Mismo trato que `STALE_FILTER_GROUP_NOTICE`, y por la misma razón**
+ * (decisión del fundador, 2026-09-14: *«vamos a quitar este filtro. Ojo solo
+ * quitar de acá nada más»*): `?metros=70` era válido antes de esta tarea, y
+ * `buildSearchCriteria` ya lo ignora entero. Descartarlo sin avisar dejaría a
+ * quien lo pegó de un chat mirando una lista más ancha sin saber por qué —el
+ * filtro fantasma que la tarea pide evitar.
+ */
+export const STALE_AREA_FILTER_NOTICE =
+  "Esa dirección pedía un filtro de metros cuadrados que ya no existe. El panel se abrió igual.";
+
 /** Lo elegido hasta ahora, en la forma en que se muestra. */
 export interface SearchSelection {
   /** Siempre presente: la ciudad la afirma la ruta, nunca la query. */
@@ -94,7 +108,6 @@ export interface SearchSelection {
   readonly maxPriceUsd?: number;
   readonly minRooms?: number;
   readonly minBathrooms?: number;
-  readonly minAreaM2?: number;
   readonly attributes?: readonly ListingAttribute[];
   readonly publisherType?: PublisherType;
 }
@@ -153,16 +166,33 @@ export interface FilterPanelState {
  * - **Cualquier otra cosa**: abierto igual, con aviso. Es la dirección vieja
  *   de `?filtros=zona`, y también `?filtros=constructor` — la comparación es
  *   contra una lista cerrada, así que no hay valor que se cuele como grupo.
+ *
+ * **`staleAreaFilter` es la misma cortesía para `?metros=` (28.18).** Es un
+ * segundo eje y no un cuarto estado del primero: la dirección puede pedir CUALQUIERA
+ * de los tres estados de arriba y ADEMÁS traer un `?metros=` que ya no filtra.
+ * Cuando los dos avisos aplicarían a la vez —un grupo viejo Y un `?metros=`
+ * viejo— gana el del grupo: es el caso que de otro modo dejaría el panel sin
+ * saber en qué grupo abrir, y perder esa explicación es peor que perder la del
+ * metraje.
  */
-export function resolveFilterPanel(raw: string | null | undefined): FilterPanelState {
+export function resolveFilterPanel(
+  raw: string | null | undefined,
+  staleAreaFilter = false,
+): FilterPanelState {
   const value = (raw ?? "").trim();
-  if (value === "") return { open: false, notice: null };
-  if (value === PANEL_OPEN_TOKEN) return { open: true, notice: null };
+  if (value === "") {
+    return staleAreaFilter
+      ? { open: true, notice: STALE_AREA_FILTER_NOTICE }
+      : { open: false, notice: null };
+  }
+  if (value === PANEL_OPEN_TOKEN) {
+    return { open: true, notice: staleAreaFilter ? STALE_AREA_FILTER_NOTICE : null };
+  }
 
   const step = readSearchStep(value);
   if (step === undefined) return { open: true, notice: STALE_FILTER_GROUP_NOTICE };
 
-  return { open: true, step, notice: null };
+  return { open: true, step, notice: staleAreaFilter ? STALE_AREA_FILTER_NOTICE : null };
 }
 
 /**
@@ -190,10 +220,7 @@ export function resolveSearchSteps(
     },
     habitaciones: {
       summary: sizeSummary(selection),
-      answered:
-        selection.minRooms !== undefined ||
-        selection.minBathrooms !== undefined ||
-        selection.minAreaM2 !== undefined,
+      answered: selection.minRooms !== undefined || selection.minBathrooms !== undefined,
     },
     publica: {
       summary: publisherSummary(selection.publisherType),
@@ -261,31 +288,21 @@ function bathroomsSummary(minBathrooms: number | undefined): string {
 }
 
 /**
- * **Los metros², que no son un escalón sino un número escrito** (14.45 rebanada
- * B). Por eso no hay `+` ni lista que consultar: lo que se escribió es lo que
- * se dice.
- *
- * El «Desde» no es adorno — es un MÍNIMO, y «72 m²» a secas se leería como
- * «mide 72». Es la misma palabra con la que el precio ya dice su extremo
- * abierto, para que el renglón no invente un segundo vocabulario.
- */
-function areaSummary(minAreaM2: number): string {
-  return `Desde ${minAreaM2} m²`;
-}
-
-/**
  * **El grupo que el fundador llamó «tamaño», resumido entero** (14.45).
  *
  * Habitaciones y baños comparten grupo porque la lámina 7b los dibuja en la
  * misma columna, uno debajo del otro. El renglón cerrado del acordeón es lo
  * único que se ve de ese grupo en el teléfono, así que nombrar sólo la mitad
  * escondería justo el filtro que alguien acaba de poner.
+ *
+ * **Los metros² se fueron del grupo (28.18).** Eran la tercera parte —«2 hab ·
+ * 2 baños · Desde 90 m²»—, y con el control fuera del panel no queda selección
+ * que resumir: `SearchSelection` ya no trae `minAreaM2`.
  */
 function sizeSummary(selection: SearchSelection): string {
   const parts = [
     ...(selection.minRooms === undefined ? [] : [roomsSummary(selection.minRooms)]),
     ...(selection.minBathrooms === undefined ? [] : [bathroomsSummary(selection.minBathrooms)]),
-    ...(selection.minAreaM2 === undefined ? [] : [areaSummary(selection.minAreaM2)]),
   ];
   return parts.length === 0 ? "Cualquiera" : parts.join(" · ");
 }
@@ -367,9 +384,12 @@ export function describeFilter(selection: SearchSelection, filter: RelaxableFilt
   if (filter === "price") return priceSummary(selection);
   if (filter === "rooms") return roomsSummary(selection.minRooms);
   if (filter === "bathrooms") return bathroomsSummary(selection.minBathrooms);
-  if (filter === "area") {
-    return selection.minAreaM2 === undefined ? "" : areaSummary(selection.minAreaM2);
-  }
+  // **`"area"` no la alcanza nadie en producción desde la 28.18.** El tipo
+  // `RelaxableFilter` (`search-confirm.ts`) sigue vivo a propósito —es la
+  // reversibilidad que pidió el fundador—, pero `relaxableFilters`
+  // (`search-panel.ts`) ya no ofrece «area» porque `SearchSelection` no trae
+  // `minAreaM2`. Esta rama queda por exhaustividad de tipo, no por uso real.
+  if (filter === "area") return "";
   if (filter === "publisherType") {
     return selection.publisherType === undefined ? "" : PUBLISHER_SUMMARY[selection.publisherType];
   }
@@ -388,13 +408,7 @@ export function toSearchSelection(
   zoneNames: readonly string[],
   criteria: Pick<
     SearchCriteria,
-    | "minPriceUsd"
-    | "maxPriceUsd"
-    | "minRooms"
-    | "minBathrooms"
-    | "minAreaM2"
-    | "publisherType"
-    | "attributes"
+    "minPriceUsd" | "maxPriceUsd" | "minRooms" | "minBathrooms" | "publisherType" | "attributes"
   >,
 ): SearchSelection {
   return {
@@ -404,7 +418,6 @@ export function toSearchSelection(
     ...(criteria.maxPriceUsd === undefined ? {} : { maxPriceUsd: criteria.maxPriceUsd }),
     ...(criteria.minRooms === undefined ? {} : { minRooms: criteria.minRooms }),
     ...(criteria.minBathrooms === undefined ? {} : { minBathrooms: criteria.minBathrooms }),
-    ...(criteria.minAreaM2 === undefined ? {} : { minAreaM2: criteria.minAreaM2 }),
     ...(criteria.publisherType === undefined ? {} : { publisherType: criteria.publisherType }),
     ...(criteria.attributes === undefined ? {} : { attributes: criteria.attributes }),
   };
@@ -436,7 +449,6 @@ export function countPillFilters(selection: SearchSelection): number {
   if (selection.minPriceUsd !== undefined || selection.maxPriceUsd !== undefined) count += 1;
   if (selection.minRooms !== undefined) count += 1;
   if (selection.minBathrooms !== undefined) count += 1;
-  if (selection.minAreaM2 !== undefined) count += 1;
   if (selection.publisherType !== undefined) count += 1;
   return count;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildSearchCriteria, type CuratedZone } from "./search-criteria";
+import { buildSearchCriteria, type CuratedZone, readMinAreaM2 } from "./search-criteria";
 
 const MARACAIBO = "city-maracaibo";
 const DISTRITO = "city-distrito";
@@ -203,7 +203,10 @@ describe("buildSearchCriteria — price and characteristics", () => {
       // **Un mínimo, igual que las habitaciones** (14.45): `3` en la dirección
       // es "tres baños o más", que es lo que el botón «3+» promete.
       minBathrooms: 3,
-      minAreaM2: 60,
+      // **Sin `minAreaM2` (28.18).** `raw.minAreaM2` llegó con «60» arriba —el
+      // mismo campo que antes de esta tarea sí filtraba— y el criterio lo
+      // ignora entero: la búsqueda ya no lee `?metros=`, así que un `60` de
+      // verdad tampoco entra.
     });
   });
 
@@ -215,7 +218,6 @@ describe("buildSearchCriteria — price and characteristics", () => {
         maxPrice: "-1",
         minRooms: "1.5",
         minBathrooms: "dos",
-        minAreaM2: "",
       },
       ZONES,
     );
@@ -224,21 +226,30 @@ describe("buildSearchCriteria — price and characteristics", () => {
   });
 
   /**
-   * **Los metros² son un CAMPO donde se escribe el número, no una lista de
-   * escalones** (14.45 rebanada B, decisión del fundador 2026-09-04: *«hay
-   * casas que tienen 72,5 o 84 y así no puede ser preseleccionado»*).
-   *
-   * Un campo libre trae la validación que los escalones no tenían: los otros
-   * mínimos del panel salen de listas cerradas y sólo se pueden ensuciar
-   * editando la dirección a mano, mientras que acá cualquiera escribe cualquier
-   * cosa en el propio control. Cada caso de abajo se cae **solo**, campo por
-   * campo, que es la regla que este archivo ya aplica al resto.
+   * **`minAreaM2` ya no llega al criterio, sea cual sea el valor** (28.18,
+   * decisión del fundador 2026-09-14: *«vamos a quitar este filtro. Ojo solo
+   * quitar de acá nada más»*). No importa si `raw.minAreaM2` es un entero
+   * válido, basura o vacío: el resultado es el mismo criterio sin ese campo,
+   * porque la búsqueda dejó de leerlo.
    */
-  describe("los metros² son un mínimo escrito a mano (14.45 rebanada B)", () => {
-    const area = (raw: string) => buildSearchCriteria({ city: MARACAIBO, minAreaM2: raw }, ZONES);
+  it("los metros² nunca entran al criterio, ni siquiera con un número válido", () => {
+    for (const raw of ["72", "0", "-30", "setenta", "1e21", "", " "]) {
+      expect(buildSearchCriteria({ city: MARACAIBO, minAreaM2: raw }, ZONES)).toEqual({
+        cityId: MARACAIBO,
+      });
+    }
+  });
 
+  /**
+   * **La validación que antes se veía a través del criterio sigue viva, sólo
+   * que se mira directo** (28.18). El fundador pidió no reconstruir el dato:
+   * volver a activar el control es sumar una línea en `buildSearchCriteria`,
+   * no rehacer estas tres negativas — así que quedan probadas contra
+   * `readMinAreaM2` en vez de perderse con el criterio que las escondía.
+   */
+  describe("readMinAreaM2 — la validación que queda para cuando se reactive (28.18)", () => {
     it("acepta el número entero que alguien escribe en el campo", () => {
-      expect(area("72")).toEqual({ cityId: MARACAIBO, minAreaM2: 72 });
+      expect(readMinAreaM2("72")).toBe(72);
     });
 
     /**
@@ -249,12 +260,12 @@ describe("buildSearchCriteria — price and characteristics", () => {
      * número que ya hay. Se cae, como se cae un `?min=` vacío.
      */
     it("descarta el cero, que sería un filtro que no filtra", () => {
-      expect(area("0")).toEqual({ cityId: MARACAIBO });
+      expect(readMinAreaM2("0")).toBeUndefined();
     });
 
     it("descarta lo que no es un número entero positivo", () => {
-      for (const raw of ["-30", "setenta", "72,5", "72.5", " ", "NaN", "Infinity"]) {
-        expect(area(raw)).toEqual({ cityId: MARACAIBO });
+      for (const raw of ["-30", "setenta", "72,5", "72.5", " ", "NaN", "Infinity", ""]) {
+        expect(readMinAreaM2(raw)).toBeUndefined();
       }
     });
 
@@ -267,9 +278,9 @@ describe("buildSearchCriteria — price and characteristics", () => {
      * alcanza acá. Fallar cerrado es soltar el filtro (AGENTS.md §7).
      */
     it("descarta el número que la columna no puede recibir", () => {
-      expect(area("2147483647")).toEqual({ cityId: MARACAIBO, minAreaM2: 2147483647 });
-      expect(area("2147483648")).toEqual({ cityId: MARACAIBO });
-      expect(area("1e21")).toEqual({ cityId: MARACAIBO });
+      expect(readMinAreaM2("2147483647")).toBe(2147483647);
+      expect(readMinAreaM2("2147483648")).toBeUndefined();
+      expect(readMinAreaM2("1e21")).toBeUndefined();
     });
   });
 
@@ -522,6 +533,8 @@ describe("buildSearchCriteria — todo junto", () => {
         minPrice: "200",
         maxPrice: "800",
         minRooms: "2",
+        // Sigue llegando de la página (28.18): el nombre corto `metros` sigue
+        // siendo parte del contrato de la dirección. El criterio lo ignora.
         minAreaM2: "50",
         propertyType: "casa",
         publisherType: "owner",
@@ -538,7 +551,6 @@ describe("buildSearchCriteria — todo junto", () => {
       minPriceUsd: 200,
       maxPriceUsd: 800,
       minRooms: 2,
-      minAreaM2: 50,
       propertyType: "casa",
       publisherType: "owner",
       attributes: ["hasPowerPlant", "hasRegularWater"],

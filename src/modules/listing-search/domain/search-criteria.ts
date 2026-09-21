@@ -257,8 +257,15 @@ const PG_INTEGER_MAX = 2147483647;
  * Un mínimo enorme que SÍ cabe se acepta: es una búsqueda vacía legítima, y el
  * vacío ya tiene su salida contada —«Quitar los metros² y ver 23»— que es la
  * respuesta honesta y la misma que el precio ya da.
+ *
+ * **Exportada y sin ningún llamador propio desde la 28.18.** El fundador sacó
+ * el control del panel —«vamos a quitar este filtro… luego vemos si lo
+ * volvemos a activar»— pero pidió explícitamente no reconstruir el dato:
+ * `buildSearchCriteria` dejó de invocarla para que `?metros=` nunca vuelva a
+ * filtrar, y esta validación entera queda acá, exportada, para que reactivar
+ * el control sea sumar una línea y no rehacer las tres negativas de arriba.
  */
-function readMinAreaM2(raw: string | null | undefined): number | undefined {
+export function readMinAreaM2(raw: string | null | undefined): number | undefined {
   const value = readCount(raw);
   if (value === undefined || value === 0 || value > PG_INTEGER_MAX) return undefined;
   return value;
@@ -412,7 +419,13 @@ export function buildSearchCriteria(
     ...maybe("maxPriceUsd", maxPriceUsd),
     ...maybe("minRooms", readCount(raw.minRooms)),
     ...maybe("minBathrooms", readCount(raw.minBathrooms)),
-    ...maybe("minAreaM2", readMinAreaM2(raw.minAreaM2)),
+    // **`minAreaM2` NO participa acá desde la 28.18** (decisión del fundador,
+    // 2026-09-14: «vamos a quitar este filtro. Ojo solo quitar de acá nada
+    // más»). `raw.minAreaM2` sigue llegando de las dos páginas —el nombre
+    // corto `metros` sigue siendo parte del contrato de la dirección— pero ya
+    // no se lee: una `?metros=70` guardada de antes de esta tarea deja de
+    // filtrar en vez de filtrar en silencio sin control ni ficha que lo
+    // expliquen. `search-panel.ts` es quien avisa que se ignoró.
     ...maybe("propertyType", readChoice(raw.propertyType, PROPERTY_TYPES)),
     ...maybe("publisherType", readChoice(raw.publisherType, PUBLISHER_TYPES)),
     ...maybe("attributes", readAttributes(raw)),
