@@ -70,7 +70,13 @@ const PUBLISHER = randomUUID();
  */
 const SEÑA = "Al lado de la panadería, edificio azul 🏠";
 
-const PUBLISHED_AT = new Date("2026-08-17T15:00:00.000Z");
+/**
+ * Relativa al reloj, no fija. La búsqueda sólo devuelve avisos con
+ * `expires_at > now()`, así que una fecha fija vence sola: con el 2026-08-17 que
+ * había acá, el aviso venció el 2026-09-16 y la suite pasó a rojo sin que nadie
+ * tocara el código.
+ */
+const PUBLISHED_AT = new Date(Date.now() - 86_400_000);
 
 function listing(overrides: Partial<NewListing> = {}): NewListing {
   return {
