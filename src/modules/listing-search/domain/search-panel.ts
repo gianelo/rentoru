@@ -148,16 +148,18 @@ export interface SearchPanelInput {
   /** Las zonas elegidas, en el orden en que se eligieron. */
   readonly chosenZoneIds: readonly string[];
   readonly counts: PanelCounts;
-  /** Los filtros ya validados. Se leen de acá y no de la query cruda. */
+  /**
+   * Los filtros ya validados. Se leen de acá y no de la query cruda.
+   *
+   * **Sin `minAreaM2` desde la 28.18.** El panel ya no dibuja el control de
+   * metros² ni lo cuenta en nada de lo que arma con `criteria`, así que no
+   * necesita leerlo. `SearchCriteria.minAreaM2` sigue existiendo —la base
+   * todavía sabe filtrar por él si algún día vuelve el control—; lo que se
+   * fue es esta vista estrecha que el panel usa para construirse.
+   */
   readonly criteria: Pick<
     SearchCriteria,
-    | "minPriceUsd"
-    | "maxPriceUsd"
-    | "minRooms"
-    | "minBathrooms"
-    | "minAreaM2"
-    | "publisherType"
-    | "attributes"
+    "minPriceUsd" | "maxPriceUsd" | "minRooms" | "minBathrooms" | "publisherType" | "attributes"
   >;
   /** La ficha del único resultado, cuando hay exactamente uno (F7). */
   readonly onlyListingHref?: string;
@@ -178,6 +180,12 @@ export interface SearchPanelInput {
  * El precio cuenta como UNO aunque sean dos números: soltar sólo el mínimo y
  * dejar el máximo es media salida, y ofrecer media salida es ofrecer dos
  * salidas donde la regla pide una.
+ *
+ * **Ya no ofrece «area» (28.18).** El control de metros² salió del panel, así
+ * que `criteria` (`SearchPanelInput["criteria"]`) ya no trae `minAreaM2` — no
+ * hay nada que consultar. `withoutFilter` y `reliefHref` siguen sabiendo qué
+ * hacer con `"area"` si algún llamador se lo pide directo: lo que se quita
+ * acá es sólo la fuente que lo ofrecía desde el panel.
  */
 export function relaxableFilters(
   criteria: SearchPanelInput["criteria"],
@@ -190,7 +198,6 @@ export function relaxableFilters(
   }
   if (criteria.minRooms !== undefined) filters.push("rooms");
   if (criteria.minBathrooms !== undefined) filters.push("bathrooms");
-  if (criteria.minAreaM2 !== undefined) filters.push("area");
   if (criteria.publisherType !== undefined) filters.push("publisherType");
   for (const attribute of criteria.attributes ?? []) filters.push(attribute);
   return filters;
@@ -324,28 +331,6 @@ export interface PriceForm {
 }
 
 /**
- * **Los metros², que se ESCRIBEN en vez de elegirse** (14.45 rebanada B,
- * decisión del fundador 2026-09-04: *«hay casas que tienen 72,5 o 84 y así no
- * puede ser preseleccionado»*).
- *
- * Es un formulario y no una tira de enlaces porque la superficie es un continuo:
- * no hay opciones que enlazar ni, por lo tanto, conteo por opción que mostrar.
- * **La regla transversal 3 se cumple igual, del otro lado**: el número real
- * pasa a ser el total de resultados, que el botón de confirmar ya dice.
- *
- * Un campo suelto no envía nada sin JavaScript, así que va envuelto en su propio
- * `<form method="get">` con el resto de la búsqueda escondida — el mismo molde
- * del precio, por la misma razón (D13).
- */
-export interface AreaForm {
-  readonly action: string;
-  readonly hidden: readonly HiddenField[];
-  readonly name: string;
-  /** Lo que ya está puesto, o vacío. Sale del criterio ya validado, nunca del crudo. */
-  readonly value: string;
-}
-
-/**
  * **Un filtro puesto, con la dirección que lo saca** (lámina 7c).
  *
  * Con la barra lateral afuera, la pantalla de resultados se quedaba sin decir
@@ -387,8 +372,6 @@ export interface SearchPanelModel {
    * fundador llamó «tamaño».
    */
   readonly bathrooms: readonly BathroomChoice[];
-  /** Los metros², el tercer control del mismo grupo «tamaño» (14.45 rebanada B). */
-  readonly area: AreaForm;
   readonly publisher: PublisherChoice;
   readonly attributes: readonly AttributeChoice[];
   readonly clearAllHref: string;
@@ -427,7 +410,13 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
   // opciones son las del conteo y punto.
   const zoneOptions = resolveZoneOptions(input.zones, counts.byZone, input.chosenZoneIds);
 
-  const panel = resolveFilterPanel(query[SEARCH_QUERY_NAMES.step]);
+  // **`?metros=` guardado de antes de la 28.18 no puede filtrar en silencio**
+  // (decisión del fundador, 2026-09-14: *«vamos a quitar este filtro. Ojo
+  // solo quitar de acá nada más»*). Basta con que el parámetro haya LLEGADO,
+  // no que haya validado como número: `buildSearchCriteria` ya lo ignora
+  // entero, así que lo único que falta decidir acá es si hay que avisar.
+  const staleAreaFilter = (query[SEARCH_QUERY_NAMES.minAreaM2] ?? "").trim() !== "";
+  const panel = resolveFilterPanel(query[SEARCH_QUERY_NAMES.step], staleAreaFilter);
   // Una sola vez, y las dos salidas del panel la usan: el «×» de arriba y el
   // botón de abajo cierran lo mismo, y dos expresiones iguales escritas por
   // separado son dos que se separan en el próximo cambio.
@@ -495,21 +484,6 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
         }),
       }),
     ),
-    area: {
-      action: basePath,
-      // Su propio nombre no puede ir además escondido —viajaría dos veces y
-      // ganaría el viejo—, y la página se cae igual que en el precio: escribir
-      // otra superficie es otra búsqueda, y su página 3 no significa nada.
-      hidden: hiddenFields(
-        query,
-        [SEARCH_QUERY_NAMES.minAreaM2, SEARCH_QUERY_NAMES.page],
-        "habitaciones",
-      ),
-      name: SEARCH_QUERY_NAMES.minAreaM2,
-      // Del criterio y no de la query cruda: `?metros=abc` se cayó allá, y
-      // devolverlo escrito acá mostraría un filtro puesto que no está puesto.
-      value: criteria.minAreaM2 === undefined ? "" : String(criteria.minAreaM2),
-    },
     publisher: toPublisherChoice(input),
     attributes: resolveAttributeOptions(
       counts.byAttribute,

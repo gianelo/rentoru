@@ -218,26 +218,16 @@ describe("lo que cada grupo muestra", () => {
   });
 
   /**
-   * **Los metros², el tercer control del grupo «tamaño» y el único que se
-   * escribe** (14.45 rebanada B). Es un `<form method="get">` porque un campo
-   * suelto no envía nada sin JavaScript, y lleva su propio botón por lo mismo:
-   * el `Enter` implícito de un formulario de un solo campo existe, pero no se
-   * ve, y el panel entero se toca con el dedo.
+   * **Los metros² salieron del panel entero (28.18).** Decisión del fundador,
+   * 2026-09-14: *«vamos a quitar este filtro. Ojo solo quitar de acá nada
+   * más»*. Lo que queda por probar es la negativa: ni el campo ni su
+   * formulario aparecen en el marcado, con o sin `?metros=` en la dirección.
    */
-  it("los metros² son un campo escrito con su propio formulario", () => {
-    const markup = render();
-
-    expect(markup).toContain('id="metros-desde"');
-    expect(markup).toContain('name="metros"');
-    expect(markup).toContain('type="number"');
-    expect(markup).toContain("Usar esta superficie");
-    // Sin conteo al lado, y es la decisión: un campo libre no tiene opciones
-    // que contar, así que el número real es el total que el botón ya dice.
-    expect(markup).toContain("Superficie mínima");
-  });
-
-  it("vuelve escrito con lo que ya está puesto, para poder corregirlo", () => {
-    expect(render({ criteria: { minAreaM2: 90 } })).toContain('value="90"');
+  it("los metros² ya no tienen control en el panel", () => {
+    expect(render()).not.toContain('id="metros-desde"');
+    expect(render()).not.toContain('name="metros"');
+    expect(render()).not.toContain("Superficie mínima");
+    expect(render({ query: { ...ABIERTO, metros: "70" } })).not.toContain('id="metros-desde"');
   });
 
   it("«Limpiar todo» está siempre a la vista (F8)", () => {
@@ -291,6 +281,20 @@ describe("el panel como modal en todos los anchos (14.33)", () => {
     const markup = render({ query: { filtros: "zona" } });
 
     expect(markup).toContain('role="dialog"');
+    expect(markup).toContain("ya no existe");
+  });
+
+  /**
+   * **`?metros=` guardado de antes de la 28.18 es la misma cortesía** que un
+   * grupo viejo (arriba): sin `filtros`, el panel estaría cerrado por defecto,
+   * y un filtro que ya no existe pero sigue siendo ignorado en silencio es
+   * exactamente el filtro fantasma que la tarea pide evitar.
+   */
+  it("una dirección con `?metros=` abre el panel igual y lo explica", () => {
+    const markup = render({ query: { metros: "70" } });
+
+    expect(markup).toContain('role="dialog"');
+    expect(markup).toContain("metros cuadrados");
     expect(markup).toContain("ya no existe");
   });
 
