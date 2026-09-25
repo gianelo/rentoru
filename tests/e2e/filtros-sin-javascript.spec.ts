@@ -41,7 +41,11 @@ import { expect, test } from "@playwright/test";
  */
 const conCatalogo = Boolean(process.env.PLAYWRIGHT_BASE_URL || process.env.TEST_DATABASE_URL);
 
-test.beforeEach(() => {
+test.beforeEach(({ page: _page }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "crawlability",
+    "this contract measures the no-JavaScript crawlability project only",
+  );
   test.skip(
     !conCatalogo,
     "needs a real catalogue: no preview deployment and no local e2e harness (tasks.md 11.22)",

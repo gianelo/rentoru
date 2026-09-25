@@ -734,6 +734,12 @@ test.describe("el pie del panel no tapa la última fila (regresión de la 22.11)
       wrap.style.transform = "none";
     });
 
+    // Desde la 28.2 el acordeón B1 también rige en escritorio: el grupo de
+    // atributos ya no está abierto por estar en 1280px, así que la regresión
+    // del pie se mide abriendo ese grupo explícitamente antes de llevar su
+    // última fila al borde inferior del scrollport.
+    await page.locator("#filtros-atributos").getByRole("link").first().click();
+
     const ultimaFila = page
       .locator("#filtros-atributos")
       .locator("ul")
