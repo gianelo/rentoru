@@ -223,6 +223,12 @@ describe("27.7: la ruta de zona busca en todas las zonas que comparten el nombre
 });
 
 describe("la página de zona sin JavaScript", () => {
+  it("sirve limpiar todo junto al título sólo con filtros activos", async () => {
+    const filtered = await servedBody("maracaibo", "tierra-negra", { max: "500" });
+    expect(filtered).toMatch(
+      /<h1[^>]*>[^<]*<\/h1>\s*<a[^>]*data-testid="mobile-clear-all"[^>]*href="\/alquiler\/maracaibo"[^>]*>Limpiar todo<\/a>/,
+    );
+  });
   it("sirve cuatro enlaces de orden dentro de la zona, con filtros y sin página anterior", async () => {
     const html = await servedBody("maracaibo", "tierra-negra", {
       max: "500",
