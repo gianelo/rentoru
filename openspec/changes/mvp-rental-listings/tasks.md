@@ -2817,9 +2817,13 @@ Textual: *«entiendo que esto fue una de las peticiones que se hicieron al princ
 
 - [ ] 28.12 **Ayuda y legales, diseñadas.** Las diez páginas *«están feas y simples»*. Hoy no tienen lámina propia: heredan lo que haya. Depende de la 28.4.
 
-- [ ] 28.13 **La fila de pastillas queda pegada a la cuadrícula.** El fundador lo vio en **tablet y en escritorio**: *«sale la pastilla del filtro agregada, está muy pegada al anuncio»* y *«no veo que haya un margen entre la pastilla del aviso y queda pegada a la parte de arriba también»*. Falta separación vertical entre la fila de filtros aplicados y los resultados. Chico, pero se nota en las dos medidas grandes.
+- [x] 28.13 **La fila de pastillas queda pegada a la cuadrícula.** El fundador lo vio en **tablet y en escritorio**: *«sale la pastilla del filtro agregada, está muy pegada al anuncio»* y *«no veo que haya un margen entre la pastilla del aviso y queda pegada a la parte de arriba también»*. Falta separación vertical entre la fila de filtros aplicados y los resultados. Chico, pero se nota en las dos medidas grandes.
 
-- [ ] 28.14 **La imagen del aviso es demasiado ancha en escritorio.** A 1440 × 900: *«la veo muy grande, muy ancha; eso tenemos que rediseñar, tiene que ser un poquito más pequeña»*. Es la tarjeta de la cuadrícula, no la ficha. Depende de la 28.4, porque la medida sale de la lámina.
+    **HECHA 2026-09-24:** `FilterChips.module.css` agrega `margin-block-end: var(--card-gap)` sólo desde el breakpoint de 768 px, el mismo ancho donde las fichas se dibujan y la cuadrícula pasa al tratamiento de tablet/escritorio. RED medido en `tests/measure/canonical-viewports.spec.ts`: antes el gap entre `filter-chips` y `lista-grid` era 0 px; GREEN: 12 px en 768×1024 y 12 px en 1440×900.
+
+- [x] 28.14 **La imagen del aviso es demasiado ancha en escritorio.** A 1440 × 900: *«la veo muy grande, muy ancha; eso tenemos que rediseñar, tiene que ser un poquito más pequeña»*. Es la tarjeta de la cuadrícula, no la ficha. Depende de la 28.4, porque la medida sale de la lámina.
+
+    **HECHA 2026-09-24:** el fundador eligió 240 px como ajuste chico desde los 254 px vigentes. El ancho vive en el token `--card-w-desktop`, no en una hoja local, y el sistema queda sincronizado en `design/reference/sistema/SISTEMA.md` y `design/especificaciones/Rentoru - Flujos y funcionalidades.md`. RED medido: tarjeta 254 px; GREEN en 1440×900: tarjeta 240 px e imagen 238 px por el borde de la tarjeta, con la proporción 4:3 intacta.
 
 - [ ] 28.15 **En resultados móvil falta una salida hacia atrás.** *«Lo que sí me gustaría es un botón atrás o algo así»*. Hoy la única forma de volver es el gesto del navegador. Decidir con la lámina de 390 × 844 si es un botón propio o la miga de pan la que cumple ese papel — hoy la miga existe pero el fundador no la reconoció como salida, y eso ya es un dato.
 

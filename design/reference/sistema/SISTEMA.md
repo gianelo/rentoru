@@ -123,7 +123,7 @@ Escala: `4 · 8 · 12 · 16 · 24 · 32 · 48`. Nada fuera de esa escala.
 
 | Token | Móvil (lámina 6c) | Escritorio (lámina 7c) |
 |---|---|---|
-| `--card-w` / `--card-w-desktop` (ancho de tarjeta) | 158 px | 254 px |
+| `--card-w` / `--card-w-desktop` (ancho de tarjeta) | 158 px | 240 px |
 | columnas de la cuadrícula | 2 | 4 |
 | `--card-gap` | 12 px | 12 px |
 | `--card-photo-ratio` (portada) | 4 / 3 | 4 / 3 |
@@ -174,7 +174,7 @@ El badge **no** usa el color de acento: el contraste es relleno vs borde. Aparec
 
 **Layout móvil (360, lámina 6c):** barra de marca 60px con la **pastilla de búsqueda** dentro → miga de pan → título de la pantalla → conteo de resultados → fichas de filtro puesto, quitables de a una → **cuadrícula de dos columnas de 158px** → paginación.
 
-**Layout escritorio (1280, lámina 7c):** barra de 68px con marca, pastilla al centro y las acciones contra el borde → contenedor 1100, **sin barra lateral** → miga de pan, título, conteo → fichas de filtro puesto → **cuadrícula de cuatro columnas de 254px** → paginación. Los filtros viven sólo en el modal, que se abre desde la propia pastilla y **por dirección**, no por un manejador de clic. **El modal va sobre la lista, no en lugar de ella** (14.46): velo `--scrim` de borde a borde y la hoja como tarjeta de 800 con borde y `--r`. La lámina 7b lo dibuja distinto —panel sobre una banda de `--bg`, sin velo— y ahí la lámina queda corregida por la 14.46, igual que la 16.24 corrigió su `min-height:40px`. En el teléfono no hay tarjeta: la lámina 6b dibuja una pantalla completa y así se entrega.
+**Layout escritorio (1280, lámina 7c + ajuste 28.14):** barra de 68px con marca, pastilla al centro y las acciones contra el borde → contenedor 1100, **sin barra lateral** → miga de pan, título, conteo → fichas de filtro puesto → **cuadrícula de cuatro columnas de 240px** → paginación. Los filtros viven sólo en el modal, que se abre desde la propia pastilla y **por dirección**, no por un manejador de clic. **El modal va sobre la lista, no en lugar de ella** (14.46): velo `--scrim` de borde a borde y la hoja como tarjeta de 800 con borde y `--r`. La lámina 7b lo dibuja distinto —panel sobre una banda de `--bg`, sin velo— y ahí la lámina queda corregida por la 14.46, igual que la 16.24 corrigió su `min-height:40px`. En el teléfono no hay tarjeta: la lámina 6b dibuja una pantalla completa y así se entrega.
 
 **Tarjeta de resultado:** portada 4:3 arriba, y debajo, en este orden de documento: placa de publicador, precio, título recortado a dos líneas, metadatos (`zona · N hab · N m²`). El precio va antes del título en el orden de lectura y con más peso visual. Un solo enlace por tarjeta —su nombre accesible es el título— y el área tocable se extiende a la tarjeta entera con un `::after`, porque dos líneas de texto no llegan a 44px de forma confiable y errarle en una cuadrícula de dos columnas abre el aviso de al lado.
 

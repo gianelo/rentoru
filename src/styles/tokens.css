@@ -222,12 +222,13 @@
   --ficha-thumb-w: 120px;
   --ficha-thumb-h: 90px;
   /* La tarjeta de la cuadrícula (14.25), que reemplaza a la fila de
-     resultado. Dos columnas de 158 px en móvil y tres de 254 px en
-     escritorio: los dos anchos son del fundador, no de un cálculo, y son
-     geometría de la TARJETA — por eso viven acá y no en la hoja de la
-     pantalla que la use, que ya son dos (la zona y el inicio de la 14.21). */
+     resultado. Dos columnas de 158 px en móvil y cuatro de 240 px en
+     escritorio desde la 28.14: el fundador pidió achicar un poco la imagen a
+     1440×900, y eligió 240 px como corrección medida. Son geometría de la
+     TARJETA — por eso viven acá y no en la hoja de la pantalla que la use,
+     que ya son dos (la zona y el inicio de la 14.21). */
   --card-w: 158px;
-  --card-w-desktop: 254px;
+  --card-w-desktop: 240px;
   --card-gap: 12px;
   /* La portada, dada como proporción y no como alto. Las derivadas `thumb`
      (160×120) y `card` (256×192) son las dos 4:3, así que la proporción es
@@ -251,8 +252,9 @@
      usó para el nav y la 16.23 para el precio de la ficha:
      `Rentoru - Lista y Filtros - Mobile.dc.html` artboard 6c dibuja
      `font-size:16px` sobre una cuadrícula de `158px 158px`, y
-     `- Desktop.dc.html` artboard 7c dibuja `font-size:17px` sobre
-     `repeat(4,254px)`.
+     `- Desktop.dc.html` artboard 7c dibuja `font-size:17px` sobre la
+     cuadrícula de escritorio; la 28.14 sólo achica la caja de la tarjeta, no
+     su escala tipográfica.
 
      El tamaño llega al átomo por `--price-fs`, que es un **enganche y no un
      valor**: la superficie elige cuál token lo alimenta y no puede inventar un
