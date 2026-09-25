@@ -88,12 +88,18 @@ export function SearchResultsHeader({
         </ol>
       </nav>
 
-      <h1 className={styles.title}>{title}</h1>
-      {chips.length > 0 ? (
-        <AppLink className={styles.mobileClear} data-testid="mobile-clear-all" href={clearAllHref}>
-          Limpiar todo
-        </AppLink>
-      ) : null}
+      <div className={styles.titleRow}>
+        <h1 className={styles.title}>{title}</h1>
+        {chips.length > 0 ? (
+          <AppLink
+            className={styles.mobileClear}
+            data-testid="mobile-clear-all"
+            href={clearAllHref}
+          >
+            Limpiar todo
+          </AppLink>
+        ) : null}
+      </div>
 
       {notice === null ? null : (
         <p className={styles.alsoIn} role={notice.live ? "status" : undefined}>
