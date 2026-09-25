@@ -42,6 +42,7 @@
 .pillCol {
   order: 3;
   flex: 1 1 100%;
+  min-inline-size: 0;
   display: flex;
   justify-content: center;
 }
