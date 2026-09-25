@@ -354,15 +354,15 @@ describe("ListingCard — la zona no se recorta (tasks.md 28.7)", () => {
 
 /**
  * La cuadrícula viaja con la tarjeta y no con la pantalla que la usa: los
- * anchos de 158 y 254 px **son geometría de la tarjeta**, y dejarlos en la
+ * anchos de 158 y 240 px **son geometría de la tarjeta**, y dejarlos en la
  * hoja de una página los duplica en la siguiente que dibuje avisos — el
  * inicio de la 14.21 ya es esa siguiente.
  */
 describe("ListingGrid", () => {
   it("son dos columnas en móvil y cuatro en escritorio", () => {
     // Cuatro y no tres desde la 14.33: la barra lateral de 240 px se fue y ese
-    // ancho es el que gana la lista — «cuatro columnas de 254: 8 avisos sobre
-    // el pliegue, contra 6 antes» (lámina 7c).
+    // ancho es el que gana la lista. La 28.14 cambia el token de escritorio a
+    // 240 px, pero no cambia esta regla estructural: cuatro columnas.
     //
     // Declarado no es dibujado, y esta afirmación es de las que pueden ser
     // ciertas y ciegas: lo que de verdad se mide son las cajas renderizadas, en

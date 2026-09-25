@@ -74,6 +74,10 @@
      lámina de los dos, y las fichas son de ella. */
   .chips {
     display: flex;
+    /* 28.13: las fichas son parte del encabezado, pero visualmente necesitan
+       aire antes de que empiece la cuadrícula. El hueco usa el mismo paso que
+       separa tarjetas entre sí, para no inventar una geometría local. */
+    margin-block-end: var(--card-gap);
   }
 
   .remove,

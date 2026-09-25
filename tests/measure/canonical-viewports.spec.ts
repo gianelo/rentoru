@@ -90,4 +90,53 @@ test.describe("28.4: canonical delivery viewports", () => {
     );
     expect(gridBox.width).toBeLessThanOrEqual(1100);
   });
+
+  test("tablet and desktop: active filter chips leave measured air before the grid", async ({
+    page,
+  }) => {
+    for (const viewport of [CANONICAL_VIEWPORTS[1], CANONICAL_VIEWPORTS[2]]) {
+      await openResultsAt(page, viewport);
+
+      const chipsBox = await page.getByTestId("filter-chips").boundingBox();
+      const gridBox = await page.getByTestId("lista-grid").locator("ol").boundingBox();
+      if (!chipsBox || !gridBox) throw new Error(`${viewport.label} chips/grid did not render`);
+
+      const gap = Math.round(gridBox.y - (chipsBox.y + chipsBox.height));
+      console.log(
+        `[28.13] ${viewport.label} ${viewport.width}×${viewport.height}: ` +
+          `filterChipsBottom=${Math.round(chipsBox.y + chipsBox.height)} gridTop=${Math.round(
+            gridBox.y,
+          )} gap=${gap}px`,
+      );
+
+      expect(gap).toBeGreaterThanOrEqual(12);
+    }
+  });
+
+  test("desktop 1440×900: listing card image follows the founder-approved 240px width", async ({
+    page,
+  }) => {
+    const desktop = CANONICAL_VIEWPORTS[2];
+    await openResultsAt(page, desktop);
+
+    const cardBox = await page
+      .getByTestId("lista-grid")
+      .locator('[data-testid="listing-card"]')
+      .first()
+      .boundingBox();
+    const imageBox = await page
+      .getByTestId("lista-grid")
+      .locator('[data-testid="listing-card"] img')
+      .first()
+      .boundingBox();
+    if (!cardBox || !imageBox) throw new Error("desktop listing card image did not render");
+
+    console.log(
+      `[28.14] desktop ${desktop.width}×${desktop.height}: ` +
+        `cardWidth=${Math.round(cardBox.width)} imageWidth=${Math.round(imageBox.width)}`,
+    );
+
+    expect(Math.round(cardBox.width)).toBe(240);
+    expect(Math.round(imageBox.width)).toBeLessThanOrEqual(240);
+  });
 });

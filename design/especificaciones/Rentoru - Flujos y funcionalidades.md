@@ -217,7 +217,7 @@ Se manda por WhatsApp y el otro ve lo mismo; el botón de volver deshace el últ
 | Tiras del inicio | scroll horizontal, 5 + placa "Ver todos" | filas fijas de 5, total y flecha en el encabezado |
 | Filtros | acordeón de 4 pasos secuenciales | panel de 3 columnas, todo a la vez |
 | Filtros en resultados | barra resumen (pastilla) + engranaje | barra lateral pegada de 240 px, siempre visible |
-| Cuadrícula | 2 columnas de 158 px | 3 columnas de 254 px |
+| Cuadrícula | 2 columnas de 158 px | 4 columnas de 240 px |
 | Entrar / WhatsApp | hoja que sube desde abajo | diálogo centrado de 460 px |
 | Ancho de formulario | todo el ancho menos márgenes | columna de 420 px |
 | Galería de la ficha | tira horizontal de 6 con ajuste al centro | foto 640×360 + 3 miniaturas de 120×90 |
@@ -245,7 +245,7 @@ Vale para **todas** las pantallas del proyecto. Está repetido al pie de cada ar
 
 **El contenedor de 1100 no se estira nunca.** En una pantalla de 1920 el contenido mide 1100 y queda centrado con 410 px de aire a cada lado. El aire sobrante es aire.
 
-**Lo que escala con el ancho es el número de columnas, no el tamaño de las piezas.** La tarjeta de resultados mide 254 px en cualquier pantalla. Si algún día se decide aprovechar 1440, se hace pasando de 3 a 4 columnas, no ensanchando la tarjeta.
+**Lo que escala con el ancho es el número de columnas, no el tamaño de las piezas.** La tarjeta de resultados mide 240 px en escritorio desde el ajuste de la 28.14. Si algún día se decide aprovechar 1440, se cambia el número de columnas o el token del sistema, no se ensancha una hoja local.
 
 ### Por qué
 
@@ -258,7 +258,7 @@ Vale para **todas** las pantallas del proyecto. Está repetido al pie de cada ar
 | Pieza | Ancho |
 |---|---|
 | Contenedor | 1100 |
-| Tarjeta de resultados | 254 (escritorio) · 158 (móvil) |
+| Tarjeta de resultados | 240 (escritorio) · 158 (móvil) |
 | Columna de formulario | 420 |
 | Columna de mensaje centrado | 520 |
 | Diálogo modal | 460 |
