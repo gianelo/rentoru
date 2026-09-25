@@ -55,10 +55,3 @@
   font-size: var(--control-fs);
   font-weight: 600;
 }
-
-.count {
-  margin-inline-start: 0;
-  font-family: var(--meta);
-  font-size: var(--meta-fs-sm);
-  color: var(--soft);
-}

@@ -94,13 +94,13 @@ test("una dirección vieja con un grupo que ya no existe abre el panel y lo expl
 /**
  * **El filtro de baños, sin una línea de JavaScript** (14.45).
  *
- * Lo que se mide acá es lo que el conteo hace posible: cada escalón es un
- * enlace `GET` con su número al lado, así que el servidor vuelve a contar con
- * la dirección que llega y el número no puede quedar desfasado — no hay estado
- * en el cliente que pueda desfasarse. Con el script apagado, un control que se
- * dibujara sólo al hidratar dejaría el grupo del tamaño a la mitad.
+ * Lo que se mide acá es que cada escalón sigue siendo un enlace `GET`: el
+ * servidor vuelve a contar con la dirección que llega y no hay estado en el
+ * cliente que pueda desfasarse. Desde la 28.8 el número ya no se imprime al
+ * lado. Con el script apagado, un control que se dibujara sólo al hidratar
+ * dejaría el grupo del tamaño a la mitad.
  */
-test("los baños se eligen desde la dirección, con su conteo al lado", async ({ page }) => {
+test("los baños se eligen desde la dirección, sin conteo impreso", async ({ page }) => {
   await page.goto("/alquiler/distrito-capital?filtros=habitaciones");
 
   const grupo = page.locator("#filtros-habitaciones");
@@ -143,8 +143,7 @@ test("el puesto es la sexta opción, con su conteo derivado del número", async 
 
   const puesto = opciones.getByRole("listitem").filter({ hasText: "Puesto de estacionamiento" });
   await expect(puesto).toHaveCount(1);
-  // El «n de m» con n < m: el aviso sin puesto queda afuera del conteo.
-  await expect(puesto).toContainText("1 de 2");
+  await expect(puesto).not.toContainText(/\d+ de \d+/);
 
   await puesto.getByRole("link").click();
 

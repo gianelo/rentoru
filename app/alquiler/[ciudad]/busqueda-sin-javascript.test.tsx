@@ -245,9 +245,10 @@ describe("la búsqueda sin JavaScript", () => {
     // la dirección de la página 2 deja de poder pegarse en un chat.
     expect(html).not.toMatch(/<button[^>]*>\s*Siguiente/);
     // El panel de filtros es un formulario nativo por la misma razón.
-    expect(await servedBody({ filtros: "precio" })).toMatch(
-      /<form[^>]*action="\/alquiler\/distrito-capital"[^>]*method="get"/,
-    );
+    const filtros = await servedBody({ filtros: "precio" });
+    expect(filtros).toMatch(/<form[^>]*action="\/alquiler\/distrito-capital"[^>]*method="get"/);
+    expect(filtros).toContain("Aplicar filtros");
+    expect(filtros).not.toContain("Usar este precio");
   });
 
   /**

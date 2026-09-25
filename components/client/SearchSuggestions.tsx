@@ -69,8 +69,8 @@ const PANEL_LABEL = "Sugerencias";
  * script caído dejaría de tener el `defaultValue` que el servidor escribe, y
  * perder lo escrito al volver del servidor es lo que hace que alguien abandone
  * (`homeSearchForm` deja esa razón escrita). Un oyente sobre el campo que el
- * servidor ya dibujó no le quita nada a nadie — es el mismo camino que
- * `LiveResultCount` tomó con un solo oyente delegado en vez de diez manejadores.
+ * servidor ya dibujó no le quita nada a nadie, y evita diez manejadores por
+ * opción.
  */
 export function SearchSuggestions({ vocabulary }: { readonly vocabulary: SuggestionVocabulary }) {
   const anchor = useRef<HTMLDivElement>(null);

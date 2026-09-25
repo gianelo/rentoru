@@ -119,23 +119,16 @@ describe("el acordeón funciona con JavaScript apagado (F14)", () => {
   });
 });
 
-describe("el conteo en vivo (F7)", () => {
-  it("el botón lleva el número adentro y nunca dice «Aplicar»", () => {
+describe("el CTA fijo de aplicar filtros (28.8)", () => {
+  it("el botón principal dice «Aplicar filtros» y no imprime conteos", () => {
     const markup = render();
-    // Sólo el botón de confirmar: el buscador de zonas tiene su propio
-    // «Buscar», que es otro control y otra pregunta.
-    // El texto ahora vive dentro del `<span aria-live>` que anuncia el cambio
-    // (14.34). Es el mismo sujeto —lo que el botón dice— leído un nivel más
-    // adentro; la aserción no se aflojó.
-    const confirm = /data-testid="search-confirm"[\s\S]*?<span[^>]*>([^<]*)</.exec(markup)?.[1];
+    const confirm = /data-testid="search-confirm"[\s\S]*?>([^<>]*)<\//.exec(markup)?.[1];
 
-    expect(confirm).toBe("Ver 16 avisos");
-    for (const forbidden of ["Aplicar", "Buscar", "Filtrar"]) {
-      expect(confirm).not.toBe(forbidden);
-    }
+    expect(confirm).toBe("Aplicar filtros");
+    expect(markup).not.toContain("Ver 16 avisos");
   });
 
-  it("con cero resultados no se apaga: explica y ofrece una salida", () => {
+  it("con cero resultados mantiene el CTA fijo y explica la salida arriba", () => {
     const markup = render({
       counts: { ...COUNTS, total: 0 },
       criteria: { minPriceUsd: 900 },
@@ -146,12 +139,11 @@ describe("el conteo en vivo (F7)", () => {
       },
     });
 
-    expect(markup).toContain("Ningún aviso coincide");
     expect(markup).toContain("Quitar el precio y ver 14");
-    // Y la salida es un enlace de verdad, no un botón apagado. `aria-disabled`
-    // sí aparece en el marcado — es de una opción con cero, que es otra cosa.
+    expect(markup).toContain("Aplicar filtros");
     expect(markup).not.toContain("<button disabled");
-    expect(markup).toMatch(/<a[^>]*>Quitar el precio y ver 14</);
+    expect(markup).toMatch(/<p[^>]*>[\s\S]*Quitar el precio y ver 14[\s\S]*<\/p>/);
+    expect(markup).toMatch(/data-testid="search-confirm"[^>]*>[\s\S]*Aplicar filtros/);
   });
 
   it("con un solo resultado el botón lleva a la ficha", () => {
@@ -161,7 +153,7 @@ describe("el conteo en vivo (F7)", () => {
     });
 
     expect(markup).toContain("/alquiler/distrito-capital/chacao/apto-84512");
-    expect(markup).toContain("Ver el único aviso");
+    expect(markup).toContain("Aplicar filtros");
   });
 });
 
@@ -191,11 +183,23 @@ describe("lo que cada grupo muestra", () => {
     expect(render()).toContain('aria-disabled="true"');
   });
 
-  it("el precio como dos campos opcionales de un formulario GET", () => {
+  it("el precio conserva un submit visible sin volver a decir «Usar este precio»", () => {
     const markup = render();
 
+    expect(markup).toContain('method="get"');
     expect(markup).toContain('name="min"');
     expect(markup).toContain('name="max"');
+    expect(markup).toMatch(/<button[^>]*type="submit"[^>]*>Aplicar filtros<\/button>/);
+    expect(markup).not.toContain("Usar este precio");
+    expect(markup).not.toContain("Usar esta superficie");
+  });
+
+  it("no imprime notas ni conteos de faceta, aunque conserva opciones apagadas", () => {
+    const markup = render();
+
+    expect(markup).not.toContain("9 de 16");
+    expect(markup).not.toContain("0 de 16");
+    expect(markup).toContain('aria-disabled="true"');
   });
 
   it("las habitaciones con el «4+» del último escalón", () => {
@@ -213,8 +217,7 @@ describe("lo que cada grupo muestra", () => {
 
     expect(markup).toContain("Baños");
     expect(markup).toContain("3+");
-    // Y su conteo real al lado, que es la tarea (regla transversal 3).
-    expect(markup).toContain(">7<");
+    expect(markup).not.toContain(">7<");
   });
 
   /**
@@ -308,46 +311,28 @@ describe("el panel como modal en todos los anchos (14.33)", () => {
   });
 });
 
-describe("el conteo en vivo se monta ENCIMA del piso, nunca en su lugar (14.34)", () => {
-  it("el botón sale del servidor con su número escrito, sin ejecutar una línea de script", () => {
-    // `renderToStaticMarkup` son los bytes servidos con nada ejecutado del
-    // lado del cliente. Si el número dependiera del script, acá no estaría —
-    // y quien se quedó sin bundle vería un botón mudo.
+describe("la limpieza de previews y conteos retirados (28.8)", () => {
+  it("el botón fijo sale del servidor sin ejecutar una línea de script", () => {
     const markup = render();
-    expect(markup).toContain("Ver 16 avisos");
+    expect(markup).toContain("Aplicar filtros");
   });
 
-  it("cada opción que se puede tocar lleva escrito el número que va a producir", () => {
-    // El dato viaja en el marcado que el servidor ya escribe: el componente de
-    // cliente lo lee de ahí y no vuelve a preguntar nada.
+  it("las opciones tocables ya no llevan adelantos de conteo", () => {
     const markup = render();
-    expect(markup).toContain('data-preview="Ver 9 avisos"');
-    expect(markup).toContain('data-preview="Ver 4 avisos"');
-    expect(markup).toContain('data-preview="Ver 11 avisos"');
-    expect(markup).toContain('data-preview="Ver 70 avisos"');
+    expect(markup).not.toContain("data-preview=");
   });
 
-  it("los adelantos son exactamente los doce enlaces que se pueden tocar", () => {
-    // Contarlos, y no buscar la ausencia de uno: un `not.toContain` sigue en
-    // verde si el atributo desapareció de TODAS las opciones, que es la misma
-    // clase de defecto que la 20.x ya pagó dos veces. Doce: tres escalones de
-    // habitaciones (el cuarto cuenta 0 y llega apagado), **dos de baños** (el
-    // «3+» cuenta 0, 14.45), quién publica, **cinco atributos** —los cuatro de
-    // antes más el puesto de estacionamiento de la rebanada C, y vigilancia
-    // cuenta 0— y «Limpiar todo».
+  it("las opciones ya no imprimen adelantos de conteo", () => {
     const markup = render();
-    expect(markup.split('data-preview="').length - 1).toBe(12);
+    expect(markup).not.toContain("data-preview=");
 
     // Y las tres apagadas se dibujan como `<span aria-disabled>`, sin dirección
-    // que tocar y por lo tanto sin número que adelantar.
+    // que tocar y por lo tanto sin número impreso.
     expect(markup.split('aria-disabled="true"').length - 1).toBe(3);
   });
 
-  it("el número del botón se anuncia cuando cambia", () => {
-    // Sin `aria-live` el conteo cambia sólo para quien lo ve. La lista de
-    // opciones que reemplaza ya se leía en voz alta; esto no puede ser una
-    // regresión contra ella (AGENTS.md §2).
-    expect(render()).toContain('aria-live="polite"');
+  it("el botón fijo no monta una región viva de conteo", () => {
+    expect(render()).not.toContain('aria-live="polite"');
   });
 
   it("con el panel cerrado no hay ni un número adelantado dando vueltas", () => {
