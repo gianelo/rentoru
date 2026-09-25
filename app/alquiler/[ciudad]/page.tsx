@@ -269,6 +269,7 @@ export default async function CiudadPage({ params, searchParams }: CiudadProps) 
     // abierto desde el servidor. Sin el ancla, el panel queda debajo de la
     // cuadrícula y fuera de vista.
     filtersHref: `${buildSearchHref(cityPath, query, { step: PANEL_OPEN_TOKEN })}#filtros`,
+    filtersOpen: panel.open,
     // `boundedVocabulary`, no `boundedVocabularyOf`
     // (`R3-suggestion-count-scope-unproved`): `activeZones` sólo aporta el
     // NOMBRE de las zonas, `counts.byZone` decide CUÁLES entran.

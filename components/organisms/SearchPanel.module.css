@@ -2,9 +2,8 @@
 
    **Una sola estructura para las dos anchuras, no dos** — la regla que
    `SearchFilters` dejó escrita y que el `Nav` de la 14.40 volvió a aplicar.
-   Bajo 768 px los cuatro grupos son un acordeón porque no cabe nada más; de
-   768 para arriba se ven **los cuatro a la vez**, en tres columnas, y lo único
-   que cambia entre los dos anchos es esta hoja.
+   B1 dejó el acordeón en las tres medidas canónicas: un solo grupo abierto a
+   la vez en móvil, tablet y escritorio.
 
    **Lo que se fue, y por qué.** El panel era una barra lateral de 240 px y los
    grupos eran `<details>` con `::details-content` para abrirlos en escritorio.
@@ -427,12 +426,12 @@
   align-items: center;
 }
 
-.confirm,
-.priceApply {
+.confirm {
   min-block-size: var(--action-h);
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-inline-start: auto;
   padding-inline: 16px;
   border: 0;
   border-radius: var(--r);
@@ -442,14 +441,6 @@
   font-size: var(--control-fs);
   font-weight: 600;
   text-decoration: none;
-}
-
-.confirm {
-  margin-inline-start: auto;
-}
-
-.priceApply {
-  inline-size: 100%;
   cursor: pointer;
 }
 
@@ -494,37 +485,13 @@
     min-block-size: var(--target-min-desktop);
   }
 
-  /* **Los cuatro grupos a la vez, en tres columnas** (lámina 7b: *"los cuatro
-     pasos del móvil, simultáneos en tres columnas — no hay secuencia que
-     recordar"*). La secuencia del teléfono existe porque no cabe nada más, no
-     porque sea mejor. */
-  .groups {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    align-items: start;
-  }
-
-  /* El precio ocupa las tres columnas: es el grupo con dos campos y un
-     histograma, y partido en un tercio deja de compararse consigo mismo. */
-  .group:first-child {
-    grid-column: 1 / -1;
-  }
-
   .group {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: var(--gap);
+  }
+
+  .group:last-of-type {
     border-bottom: 0;
     padding-bottom: 0;
-  }
-
-  /* **La misma especificidad que la regla del teléfono**, para ganarle por
-     orden en la cascada y no por un `!important`: acá no hay grupo cerrado. */
-  .group:not([data-open]) .body {
-    display: flex;
-  }
-
-  /* El renglón deja de ser un control y pasa a ser el encabezado del grupo: no
-     hay nada que abrir, así que tampoco hay nada que resumir a la derecha. */
-  .stepValue {
-    display: none;
   }
 }

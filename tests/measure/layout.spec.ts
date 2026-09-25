@@ -581,20 +581,17 @@ test.describe("la barra del producto (14a, 14.41)", () => {
 });
 
 /**
- * **El panel de filtros, medido y no leído** (14.32, 14.33).
+ * **El panel de filtros, medido y no leído** (28.2).
  *
- * Este bloque existe por el mismo defecto que el del nav, un nivel más arriba.
- * `SearchPanel.module.css` afirmaba abrir los cuatro grupos en escritorio con
- * `::details-content` — una declaración cierta en la hoja y **silenciosa sobre
- * lo que se dibuja**: en un navegador que no lo entiende, 1280 seguía dibujando
- * el acordeón del teléfono y ninguna prueba se ponía roja. Lo que hay que
- * verificar es cuántos cuerpos de grupo se dibujan a cada ancho.
+ * B1 corrigió la decisión vieja de escritorio: el panel ya no abre los cuatro
+ * grupos a la vez. El contrato ahora es el mismo en móvil, tablet y escritorio:
+ * un solo cuerpo visible, el que el servidor marcó en `data-open`.
  *
  * «Visible» se mide como caja real (`getBoundingClientRect`) y no como clase o
  * como `display` declarado: eso es exactamente lo que la prueba de
  * `grid-template-columns` demostró que no alcanza.
  */
-test.describe("el panel de filtros a los dos anchos (14.32)", () => {
+test.describe("el panel de filtros como acordeón B1 en todas las medidas (28.2)", () => {
   /** Cuántos cuerpos de grupo dibujan una caja de verdad. */
   async function openBodies(page: import("@playwright/test").Page) {
     return page.evaluate(() => {
@@ -611,36 +608,24 @@ test.describe("el panel de filtros a los dos anchos (14.32)", () => {
     });
   }
 
-  test("14.32: a 1280 los cuatro grupos se ven a la vez — no hay secuencia", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 1200 });
-    await page.goto("/measure");
+  for (const [width, height] of [
+    [390, 844],
+    [768, 1024],
+    [1440, 900],
+  ] as const) {
+    test(`28.2: a ${width}px B1 mantiene un solo grupo abierto`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/measure");
 
-    const bodies = await openBodies(page);
-    console.log(`[14.32] 1280px: ${JSON.stringify(bodies)}`);
+      const bodies = await openBodies(page);
+      console.log(`[28.2] ${width}px: ${JSON.stringify(bodies)}`);
 
-    // Los cuatro que la lámina 7b dibuja en tres columnas: precio,
-    // habitaciones, quién publica y atributos.
-    expect(bodies).toHaveLength(4);
-    expect(bodies.filter((body) => body.visible)).toHaveLength(4);
-  });
-
-  test("14.32: a 360 sigue siendo un acordeón — sólo el grupo abierto se dibuja", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 360, height: 900 });
-    await page.goto("/measure");
-
-    const bodies = await openBodies(page);
-    console.log(`[14.32] 360px: ${JSON.stringify(bodies)}`);
-
-    expect(bodies).toHaveLength(4);
-    // Uno solo, y es el que el servidor marcó: con los cuatro abiertos en
-    // 360 px el botón del conteo queda cuatro pantallas más abajo, y ése es
-    // justamente el botón que hay que ver mientras se filtra.
-    expect(bodies.filter((body) => body.visible).map((body) => body.id)).toEqual([
-      "filtros-precio",
-    ]);
-  });
+      expect(bodies).toHaveLength(4);
+      expect(bodies.filter((body) => body.visible).map((body) => body.id)).toEqual([
+        "filtros-precio",
+      ]);
+    });
+  }
 
   test("14.33: la cuadrícula gana el ancho de la barra lateral — cuatro columnas a 1280", async ({
     page,
@@ -687,7 +672,7 @@ test.describe("el panel de filtros a los dos anchos (14.32)", () => {
       page
         .locator("#filtros-habitaciones ul")
         .first()
-        .getByRole("link", { name: "2", exact: true }),
+        .getByRole("link", { name: "2", exact: true, includeHidden: true }),
     ).toHaveAttribute("href", /hab=2/);
     await expect(page.getByRole("link", { name: "2 9" })).toHaveCount(0);
     await expect(page.locator("[data-preview]")).toHaveCount(0);
@@ -711,7 +696,7 @@ test.describe("el panel de filtros a los dos anchos (14.32)", () => {
       sinScript
         .locator("#filtros-habitaciones ul")
         .first()
-        .getByRole("link", { name: "2", exact: true }),
+        .getByRole("link", { name: "2", exact: true, includeHidden: true }),
     ).toHaveAttribute("href", /hab=2/);
     console.log("[28.8] piso intacto: CTA fijo y enlaces sin JavaScript");
     await context.close();
@@ -748,6 +733,12 @@ test.describe("el pie del panel no tapa la última fila (regresión de la 22.11)
       const wrap = document.querySelector('[data-testid="search-panel-harness"]') as HTMLElement;
       wrap.style.transform = "none";
     });
+
+    // Desde la 28.2 el acordeón B1 también rige en escritorio: el grupo de
+    // atributos ya no está abierto por estar en 1280px, así que la regresión
+    // del pie se mide abriendo ese grupo explícitamente antes de llevar su
+    // última fila al borde inferior del scrollport.
+    await page.locator("#filtros-atributos").getByRole("link").first().click();
 
     const ultimaFila = page
       .locator("#filtros-atributos")

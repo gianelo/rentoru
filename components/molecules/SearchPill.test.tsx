@@ -89,6 +89,20 @@ describe("SearchPill — con zona elegida", () => {
     expect(html).not.toContain("0 filtros");
     expect(html).toContain('href="/alquiler/chacao?panel=filtros"');
   });
+
+  it("el disparador queda activo mientras el modal está abierto", () => {
+    const html = renderToStaticMarkup(
+      <SearchPill
+        {...BASE}
+        state={state}
+        filtersHref="/alquiler/chacao?panel=filtros"
+        filtersOpen={true}
+      />,
+    );
+
+    expect(html).toContain('aria-expanded="true"');
+    expect(html).toContain('data-filter-open=""');
+  });
 });
 
 describe("SearchPill — con filtros aplicados", () => {
