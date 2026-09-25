@@ -1449,15 +1449,16 @@ describe("el panel armado contra la base: las zonas ofrecidas salen del conteo",
     expect(panel.zones.find((zone) => zone.id === MCBO_NORTE)?.count).toBe(2);
   });
 
-  it("el botón dice el total de la búsqueda, y es el mismo que devuelve la lista", async () => {
+  it("el botón aplica filtros con copia fija y lleva a la lista equivalente", async () => {
     const criteria: SearchCriteria = { cityId: MARACAIBO, zoneIds: [MCBO_CENTRO, MCBO_NORTE] };
     const [{ panel }, rows] = await Promise.all([
       buildFilterPanel(facets, panelRequest({ criteria, chosenZoneIds: criteria.zoneIds ?? [] })),
       search.search(criteria),
     ]);
 
+    expect(rows).toHaveLength(5);
     expect(panel.confirm.kind).toBe("results");
-    expect(panel.confirm).toMatchObject({ label: `Ver ${rows.length} avisos` });
+    expect(panel.confirm).toMatchObject({ label: "Aplicar filtros" });
   });
 
   it("sin resultados ofrece UNA salida con su número real, traído de la base", async () => {
