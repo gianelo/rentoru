@@ -18,14 +18,14 @@ import type { ListingAttribute, PublisherType, SearchCriteria } from "./search-c
  *   como encabezados propios en tres columnas de 800 px, y el fundador los
  *   nombra por separado: *"precio, tamaño, quién publica y atributos"*.
  *
- * **La secuencia es del teléfono y de nadie más.** El acordeón existe porque en
- * 360 px no cabe nada más (documento maestro, §7), no porque sea mejor: en
- * 1280 los cuatro grupos se ven a la vez. Por eso los grupos son una regla del
- * dominio y no una lista de secciones en un componente — la pantalla ancha y la
- * angosta dibujan el MISMO conjunto y tienen que coincidir en qué se eligió,
- * qué falta y cómo se resume. **Un solo componente con punto de quiebre, nunca
- * dos implementaciones**: es lo que `SearchFilters` dejó escrito y lo que el
- * `Nav` de la 14.40 volvió a aplicar.
+ * **B1 es acordeón en las tres medidas.** La decisión vieja abría los cuatro
+ * grupos en escritorio; la forma elegida para 28.2 conserva un solo grupo
+ * abierto en móvil, tablet y escritorio porque los controles nuevos harían un
+ * muro con todo desplegado. Por eso los grupos son una regla del dominio y no
+ * una lista de secciones en un componente — cada ancho dibuja el MISMO conjunto
+ * y tiene que coincidir en qué se eligió, qué falta y cómo se resume. **Un solo
+ * componente con punto de quiebre, nunca dos implementaciones**: es lo que
+ * `SearchFilters` dejó escrito y lo que el `Nav` de la 14.40 volvió a aplicar.
  *
  * Lo que este archivo NO decide: cuántos resultados hay. Eso lo dice
  * `FacetedSearchPort`, con los números reales de la base (regla transversal 3).

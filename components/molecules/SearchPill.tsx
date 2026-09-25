@@ -34,6 +34,8 @@ export interface SearchPillProps {
    * es `"selected"` — sin zona no hay filtro que enlazar.
    */
   readonly filtersHref?: string;
+  /** El panel de filtros está abierto en la dirección servida. */
+  readonly filtersOpen?: boolean;
   /**
    * **El vocabulario acotado de esta pantalla, si la pantalla lo tiene**
    * (14.51): las zonas con avisos activos y su conteo, que en las dos rutas de
@@ -76,6 +78,7 @@ export function SearchPill({
   submitLabel,
   state,
   filtersHref,
+  filtersOpen = false,
   suggestions,
 }: SearchPillProps) {
   return (
@@ -113,9 +116,12 @@ export function SearchPill({
           // Un enlace real a la misma URL con el panel abierto desde el
           // servidor — no un botón que sólo funciona con el bundle cargado.
           <AppLink
-            className={state.filterAccent ? styles.filterAccent : styles.filter}
+            className={state.filterAccent || filtersOpen ? styles.filterAccent : styles.filter}
             href={filtersHref ?? action}
             aria-label={state.filterLabel}
+            aria-expanded={filtersOpen}
+            data-search-filter-trigger=""
+            data-filter-open={filtersOpen ? "" : undefined}
           >
             <FilterIcon />
             <span className={styles.filterWord} aria-hidden="true">
