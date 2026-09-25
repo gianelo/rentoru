@@ -67,6 +67,8 @@
 }
 
 .title {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
   margin: 0;
   font-family: var(--disp);
   font-size: var(--title-fs);

@@ -186,7 +186,8 @@ test.describe("14.29: los avisos completos sobre el pliegue", () => {
       const title = page.getByRole("heading", { level: 1 });
       // Sólo geometría: el arnés cambia texto DOM, no prueba rutas ni HTML servido.
       await title.evaluate((node) => {
-        node.textContent = "Alquiler de apartamentos en Los Palos Grandes";
+        node.textContent =
+          "Alquiler de apartamentos en LosPalosGrandesLosPalosGrandesLosPalosGrandes";
       });
       const clear = page.getByTestId("mobile-clear-all");
       await expect(clear).toBeVisible();
