@@ -172,28 +172,26 @@ describe("los atributos declarados (F6)", () => {
 
     expect(options[3]?.attribute).toBe("hasParking");
     expect(options[3]?.label).toBe("Puesto de estacionamiento");
-    expect(options[3]?.note).toBe("7 de 16");
+    expect("note" in (options[3] ?? {})).toBe(false);
     expect(options[3]?.disabled).toBe(false);
   });
 
-  it("cada uno dice cuántos lo cumplen sobre el total", () => {
+  it("no lleva notas visibles de conteo por faceta", () => {
     const planta = resolveAttributeOptions(BY_ATTRIBUTE, 16, []).find(
       (option) => option.attribute === "hasPowerPlant",
     );
 
     expect(planta?.count).toBe(9);
-    expect(planta?.note).toBe("9 de 16");
+    expect("note" in (planta ?? {})).toBe(false);
   });
 
-  it("el que ningún resultado cumple queda deshabilitado, con su cero a la vista", () => {
-    // F6, textual: «con cero queda deshabilitado». Y el cero SÍ se muestra:
-    // es la respuesta a "¿por qué no puedo tocar esto?".
+  it("el que ningún resultado cumple queda deshabilitado, sin imprimir el cero", () => {
     const vigilancia = resolveAttributeOptions(BY_ATTRIBUTE, 16, []).find(
       (option) => option.attribute === "hasSecurity",
     );
 
     expect(vigilancia?.disabled).toBe(true);
-    expect(vigilancia?.note).toBe("0 de 16");
+    expect("note" in (vigilancia ?? {})).toBe(false);
   });
 
   it("uno ya marcado nunca se deshabilita: habría que poder desmarcarlo", () => {

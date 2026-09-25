@@ -9,7 +9,6 @@ import type {
 import { AppLink } from "../atoms/AppLink";
 import { SegmentedControl } from "../atoms/SegmentedControl";
 import { Switch } from "../atoms/Switch";
-import { LiveResultCount } from "./LiveResultCount";
 import styles from "./SearchPanel.module.css";
 
 /**
@@ -43,8 +42,7 @@ import styles from "./SearchPanel.module.css";
  * habría costado dos implementaciones, que es exactamente lo que la regla
  * prohíbe. Lo que se pierde: en el teléfono cambiar de grupo cuesta una vuelta
  * al servidor en vez de ser instantáneo. Lo que se gana: un solo marcado, y el
- * mismo mecanismo con el script apagado. El conteo en vivo de la 14.34 es donde
- * el JavaScript vuelve como mejora, no como piso.
+ * mismo mecanismo con el script apagado.
  *
  * **Este componente no decide nada.** Recibe un `SearchPanelModel` ya armado
  * por `listing-search/domain/search-panel.ts`: cada opción llega con su
@@ -81,10 +79,6 @@ export function SearchPanel({ model }: { readonly model: SearchPanelModel }) {
       role="dialog"
       aria-label="Filtros de búsqueda"
       data-testid="search-panel"
-      // El alcance del oyente del conteo en vivo (14.34). Un atributo propio y
-      // no el `data-testid`: ése es de las pruebas, y colgar comportamiento de
-      // producción de él lo vuelve imposible de renombrar.
-      data-search-panel=""
     >
       <div className={styles.sheet}>
         <header className={styles.head}>
@@ -145,35 +139,22 @@ export function SearchPanel({ model }: { readonly model: SearchPanelModel }) {
           {/* «Limpiar todo» vuelve al valor por defecto TODO menos la ciudad
               (F8). La dirección ya la calculó el dominio; acá es un enlace
               porque es una dirección, y tiene que poder abrirse y pegarse. */}
-          <AppLink
-            className={styles.clear}
-            href={model.clearAllHref}
-            data-preview={model.clearAllPreviewLabel ?? undefined}
-          >
+          <AppLink className={styles.clear} href={model.clearAllHref}>
             Limpiar todo
           </AppLink>
 
-          {model.confirm.kind === "empty" ? (
-            <div className={styles.empty}>
-              {/* No se deshabilita nada: un botón apagado no explica por qué. */}
-              <p className={styles.emptyLabel}>
-                <LiveResultCount label={model.confirm.label} />
-              </p>
-              {model.confirm.relief === null ? null : (
-                <AppLink className={styles.confirm} href={model.confirm.relief.href}>
-                  {model.confirm.relief.label}
-                </AppLink>
-              )}
-            </div>
-          ) : (
+          <div className={styles.confirmStack}>
+            {model.confirm.kind !== "empty" || model.confirm.relief === null ? null : (
+              <p className={styles.reliefText}>{model.confirm.relief.label}</p>
+            )}
             <AppLink
               className={styles.confirm}
               href={model.confirm.href}
               data-testid="search-confirm"
             >
-              <LiveResultCount label={model.confirm.label} />
+              {model.confirm.label}
             </AppLink>
-          )}
+          </div>
         </div>
       </div>
     </section>
@@ -216,8 +197,8 @@ function PriceStep({ model }: { readonly model: SearchPanelModel }) {
         </label>
       </div>
       <PriceHistogram histogram={model.price.histogram} />
-      <button className={styles.searchAction} type="submit">
-        Usar este precio
+      <button className={styles.priceApply} type="submit">
+        Aplicar filtros
       </button>
     </form>
   );
@@ -289,11 +270,9 @@ function toSegmentedOption(option: RoomChoice | BathroomChoice) {
   return {
     key: String(option.step),
     label: option.label,
-    count: option.count,
     chosen: option.chosen,
     disabled: option.disabled,
     href: option.href,
-    previewLabel: option.previewLabel,
   };
 }
 
@@ -311,14 +290,12 @@ function PublisherStep({ model }: { readonly model: SearchPanelModel }) {
           href={model.publisher.href}
           aria-current={model.publisher.chosen ? "true" : undefined}
           data-chosen={model.publisher.chosen ? "" : undefined}
-          data-preview={model.publisher.previewLabel ?? undefined}
         >
           <span className={styles.optionName}>
             {model.publisher.chosen ? "✓ " : ""}
             {model.publisher.label}
             <span className={styles.note}>{model.publisher.note}</span>
           </span>
-          <span className={styles.count}>{model.publisher.count}</span>
         </AppLink>
       </li>
     </ul>
@@ -357,9 +334,6 @@ function AttributeOptionItem({ attribute }: { readonly attribute: AttributeChoic
         <span className={styles.optionName}>{attribute.label}</span>
         <Switch on={attribute.chosen} />
       </span>
-      {/* «9 de 16», y el cero SÍ se escribe: es la respuesta a «¿por qué no
-          puedo tocar esto?» (F6). */}
-      <span className={styles.count}>{attribute.note}</span>
     </>
   );
 
@@ -377,7 +351,6 @@ function AttributeOptionItem({ attribute }: { readonly attribute: AttributeChoic
           href={attribute.href}
           aria-current={attribute.chosen ? "true" : undefined}
           data-chosen={attribute.chosen ? "" : undefined}
-          data-preview={attribute.previewLabel ?? undefined}
         >
           {body}
         </AppLink>

@@ -22,8 +22,8 @@ Clasificados de alquiler residencial de larga estadía para Distrito Capital y M
               tocar barra  │       │  tocar aviso / "Ver los N"
                         ┌──▼──┐    │
                         │BUSCAR│───┘
-                        └──┬──┘  4 pasos, conteo en vivo
-                           │ "Ver 9 avisos"
+                        └──┬──┘  4 pasos, CTA fijo
+                           │ "Aplicar filtros"
                      ┌─────▼──────┐
                      │ RESULTADOS │  cuadrícula 2 col · barra resumen
                      └─────┬──────┘
@@ -57,10 +57,10 @@ INICIO ──"Publicar"──► ENTRAR ──► PUBLICAR 1 datos ──► 2 f
 | 1 | Entra al sitio | Muestra cuatro tiras: recientes (70), Maracaibo (23), Distrito Capital (47), hasta $400 (18). Cada una con su total real |
 | 2 | Toca la barra de búsqueda | Abre el acordeón en el paso 1, ciudad |
 | 3 | Elige ciudad | Filtra zonas a esa ciudad. Si cambió de ciudad, **descarta las zonas ya elegidas** y avisa |
-| 4 | Elige zonas | Combina con OR. El conteo del botón baja: 47 → 21 |
-| 5 | Fija precio | Muestra el histograma de la oferta en esas zonas antes de que elija. Conteo: 21 → 16 |
-| 6 | Elige habitaciones y atributos | Cada opción muestra cuántos resultados la cumplen. Conteo: 16 → 9 |
-| 7 | Confirma "Ver 9 avisos" | Navega a resultados. Todo el estado queda en la URL |
+| 4 | Elige zonas | Combina con OR. Las opciones que dejarían la búsqueda vacía se apagan sin imprimir el cero |
+| 5 | Fija precio | Muestra el histograma de la oferta en esas zonas antes de que elija |
+| 6 | Elige habitaciones y atributos | Las opciones se activan/desactivan; las que llevarían a cero quedan en gris, sin conteo visible |
+| 7 | Confirma "Aplicar filtros" | Navega a resultados. Todo el estado queda en la URL |
 | 8 | Recorre la cuadrícula | 4 avisos completos sobre el pliegue en móvil, 6 en escritorio |
 | 9 | Llega al final | Si están todos: "Son los 9 avisos que coinciden" + propuesta de ampliar. Si hay más: "Ver 20 más" |
 | 10 | Toca un aviso | Abre la ficha. El teléfono aparece parcialmente oculto, con el motivo explicado |

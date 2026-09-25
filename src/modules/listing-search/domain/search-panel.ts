@@ -30,7 +30,6 @@ import {
   resolveZoneOptions,
   type ZoneOption,
 } from "./search-options";
-import { type PreviewChange, previewConfirmLabel } from "./search-preview";
 import {
   buildSearchHref,
   clearAllHref,
@@ -70,8 +69,9 @@ export interface PanelCounts {
    * Cuántos quedarían soltando ese filtro y ningún otro (F10 y F11).
    *
    * **Ya viajaban**: `FacetCounts` los trae desde la 14.11 y `buildFilterPanel`
-   * pasa ese mismo objeto entero. Declararlos acá no agrega una consulta — le
-   * da nombre a la mitad del conteo en vivo que faltaba (14.34), la de quitar.
+   * pasa ese mismo objeto entero. Declararlos acá no agrega una consulta: le da
+   * nombre a la salida de alivio que puede mostrarse como texto cuando la
+   * búsqueda queda vacía.
    */
   readonly withoutFilter: Readonly<Record<RelaxableFilter, number>>;
   /**
@@ -288,23 +288,11 @@ export function reliefHref(
 
 export type ZoneChoice = ZoneOption & { readonly href: string };
 
-/**
- * **Qué va a decir el botón en cuanto se toque esta opción** (14.34), o `null`
- * cuando el número no viajó con la página o la opción no se puede tocar.
- *
- * Va en el modelo y no se deriva en el componente por la regla permanente del
- * fundador: qué conteo corresponde a qué opción es producto, y escrito en un
- * `"use client"` quedaría fuera del suelo de cobertura del 90 %.
- */
-interface Previewable {
-  readonly previewLabel: string | null;
-}
+export type RoomChoice = RoomOption & { readonly href: string };
+export type BathroomChoice = BathroomOption & { readonly href: string };
+export type AttributeChoice = AttributeOption & { readonly href: string };
 
-export type RoomChoice = RoomOption & Previewable & { readonly href: string };
-export type BathroomChoice = BathroomOption & Previewable & { readonly href: string };
-export type AttributeChoice = AttributeOption & Previewable & { readonly href: string };
-
-export interface PublisherChoice extends Previewable {
+export interface PublisherChoice {
   readonly label: string;
   readonly note: string;
   readonly count: number;
@@ -375,8 +363,6 @@ export interface SearchPanelModel {
   readonly publisher: PublisherChoice;
   readonly attributes: readonly AttributeChoice[];
   readonly clearAllHref: string;
-  /** Lo que dirá el botón al limpiar: la ciudad entera, que no es un filtro. */
-  readonly clearAllPreviewLabel: string | null;
   readonly confirm: SearchConfirm;
   /** «Chacao, Altamira», o la ciudad si no hay zonas. */
   readonly headline: string;
@@ -460,10 +446,6 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
     },
     rooms: resolveRoomOptions(counts.byMinRooms, criteria.minRooms).map((option) => ({
       ...option,
-      previewLabel: preview(counts, option.disabled, {
-        kind: "rooms",
-        step: option.nextValue === null ? null : option.step,
-      }),
       href: buildSearchHref(basePath, query, {
         minRooms: option.nextValue,
         step: "habitaciones",
@@ -472,10 +454,6 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
     bathrooms: resolveBathroomOptions(counts.byMinBathrooms, criteria.minBathrooms).map(
       (option) => ({
         ...option,
-        previewLabel: preview(counts, option.disabled, {
-          kind: "bathrooms",
-          step: option.nextValue === null ? null : option.step,
-        }),
         // Vuelve a SU grupo, que es el mismo de las habitaciones: saltar a otro
         // después de tocar un escalón es perder de vista lo que se eligió.
         href: buildSearchHref(basePath, query, {
@@ -491,11 +469,6 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
       criteria.attributes ?? [],
     ).map((option) => ({
       ...option,
-      previewLabel: preview(counts, option.disabled, {
-        kind: "attribute",
-        attribute: option.attribute,
-        add: option.nextValue !== null,
-      }),
       href: buildSearchHref(basePath, query, {
         [option.attribute]: option.nextValue,
         // Cada opción devuelve a SU grupo: saltar a otro después de tocar una
@@ -504,10 +477,8 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
       }),
     })),
     clearAllHref: clearAllHref(cityPath, query),
-    clearAllPreviewLabel: preview(counts, false, { kind: "clearAll" }),
-    // Confirmar **cierra el acordeón y nada más**: los filtros ya están en la
-    // dirección desde que se tocaron, así que este botón no aplica nada — dice
-    // cuántos hay y lleva a verlos.
+    // Confirmar cierra el acordeón y nada más: los filtros ya están en la
+    // dirección desde que se tocaron. La copia queda fija desde la 28.8.
     confirm: resolveSearchConfirm({
       total: counts.total,
       resultsHref: closeHref,
@@ -613,24 +584,11 @@ function toPublisherChoice(input: SearchPanelInput): PublisherChoice {
     count,
     chosen,
     disabled: count === 0 && !chosen,
-    previewLabel: preview(input.counts, count === 0 && !chosen, {
-      kind: "publisher",
-      value: chosen ? null : "owner",
-    }),
     href: buildSearchHref(input.basePath, input.query, {
       publisherType: chosen ? null : "owner",
       step: "publica",
     }),
   };
-}
-
-/**
- * **Una opción apagada no adelanta nada.** Se dibuja como un `<span>` sin
- * dirección, así que un número al lado prometería una interacción que no
- * existe — y llevaría a la pantalla vacía que la regla transversal 4 prohíbe.
- */
-function preview(counts: PanelCounts, disabled: boolean, change: PreviewChange): string | null {
-  return disabled ? null : previewConfirmLabel(counts, change);
 }
 
 /**

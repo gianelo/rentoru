@@ -21,7 +21,7 @@ import { LISTING_ATTRIBUTES, type SearchCriteria } from "../domain/search-criter
 import { attributeCondition } from "./listing-attribute-sql";
 
 /**
- * Cada número que un filtro muestra, en UNA consulta (task 14.11).
+ * Cada número que decide el estado de un filtro, en UNA consulta (task 14.11).
  *
  * **El costo son los viajes de red, no Postgres, y ésa es toda la razón de
  * este archivo.** Neon es Postgres serverless sobre HTTP: el total más las
@@ -29,9 +29,9 @@ import { attributeCondition } from "./listing-attribute-sql";
  * tecla que alguien toca en un filtro. `COUNT(*) FILTER (WHERE …)` los resuelve
  * en una sola pasada sobre las mismas filas — que es exactamente para lo que el
  * esquema eligió cinco columnas booleanas en vez de una tabla de atributos (ver
- * el comentario de `has_power_plant` en schema.ts). Un cache no sirve acá: F7
- * pide el número **exacto**, y "Ver 47 avisos" sobre una lista de 44 rompe lo
- * único para lo que ese botón existe.
+ * el comentario de `has_power_plant` en schema.ts). Un cache no sirve acá:
+ * aunque la 28.8 ya no imprime esos números en el panel, el mismo conteo exacto
+ * decide qué opciones se apagan para no mandar a una pantalla vacía.
  *
  * **Se agrupa por zona en vez de emitir una columna por zona**, y la razón es
  * el tamaño del árbol: `zone` guarda la jerarquía entera — miles de filas por

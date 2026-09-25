@@ -258,8 +258,7 @@
 .confirm:focus-visible,
 .clear:focus-visible,
 .close:focus-visible,
-.control:focus-visible,
-.searchAction:focus-visible {
+.control:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -269,19 +268,9 @@
   flex-direction: column;
 }
 
-/* El conteo, monoespaciado y a la derecha: es un número, y los números se
-   comparan en columna. */
-.count {
-  margin-inline-start: auto;
-  font-family: var(--meta);
-  font-size: var(--meta-fs);
-  color: var(--soft);
-}
-
 /* **El interruptor de la 7b, para cada atributo** (tasks.md 22.11): fila con
-   la etiqueta y el interruptor, el conteo debajo — a diferencia de `.option`,
-   que Quién publica sigue usando en una sola fila. Fundir los dos habría
-   cambiado esa presentación sin que esta tarea la pidiera. */
+   la etiqueta y el interruptor. El conteo que antes iba debajo se retira por
+   la 28.8: la opción que dejaría cero queda apagada, pero no escribe el cero. */
 .attribute {
   display: flex;
   flex-direction: column;
@@ -316,12 +305,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--gap);
-}
-
-/* Bajo el interruptor y no a la derecha: `.count` por defecto se empuja al
-   extremo de una fila, y acá el conteo va en su propia línea. */
-.attribute .count {
-  margin-inline-start: 0;
 }
 
 .price {
@@ -415,20 +398,6 @@
   color: var(--soft);
 }
 
-.searchAction {
-  min-block-size: var(--target-min);
-  padding-inline: 14px;
-  border: 1px solid var(--accent);
-  border-radius: var(--r);
-  background: var(--surface);
-  color: var(--accent);
-  font-family: var(--sans);
-  font-size: var(--meta-fs);
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
 /* Habitaciones y baños se mudaron al control segmentado, un átomo propio
    (`components/atoms/SegmentedControl.tsx`, tasks.md 22.11): el segmentado y
    el interruptor entran a `SISTEMA.md` como anatomía nueva, y esta hoja deja
@@ -458,13 +427,14 @@
   align-items: center;
 }
 
-.confirm {
-  margin-inline-start: auto;
+.confirm,
+.priceApply {
   min-block-size: var(--action-h);
   display: flex;
   align-items: center;
   justify-content: center;
   padding-inline: 16px;
+  border: 0;
   border-radius: var(--r);
   background: var(--accent);
   color: var(--accent-ink);
@@ -474,9 +444,17 @@
   text-decoration: none;
 }
 
-/* Cero resultados: el botón NO se apaga. Dice qué pasó y ofrece una salida
-   con su número (F7). */
-.empty {
+.confirm {
+  margin-inline-start: auto;
+}
+
+.priceApply {
+  inline-size: 100%;
+  cursor: pointer;
+}
+
+/* Cero resultados: la sugerencia sube como texto y el CTA queda fijo (28.8). */
+.confirmStack {
   margin-inline-start: auto;
   display: flex;
   flex-direction: column;
@@ -484,7 +462,7 @@
   gap: 4px;
 }
 
-.emptyLabel {
+.reliefText {
   margin: 0;
   font-family: var(--sans);
   font-size: var(--meta-fs);
@@ -511,7 +489,6 @@
   .option,
   .attribute,
   .control,
-  .searchAction,
   .close,
   .summaryLink {
     min-block-size: var(--target-min-desktop);

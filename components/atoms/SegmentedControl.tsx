@@ -4,11 +4,9 @@ import styles from "./SegmentedControl.module.css";
 export interface SegmentedControlOption {
   readonly key: string;
   readonly label: string;
-  readonly count: number;
   readonly chosen: boolean;
   readonly disabled: boolean;
   readonly href: string;
-  readonly previewLabel: string | null;
 }
 
 export interface SegmentedControlProps {
@@ -39,7 +37,6 @@ export function SegmentedControl({ options }: SegmentedControlProps) {
           {option.disabled ? (
             <span className={styles.segment} aria-disabled="true">
               <span className={styles.label}>{option.label}</span>
-              <span className={styles.count}>{option.count}</span>
             </span>
           ) : (
             // Rol `link`: `aria-pressed` pertenece al rol `button` y ningún
@@ -50,10 +47,8 @@ export function SegmentedControl({ options }: SegmentedControlProps) {
               href={option.href}
               aria-current={option.chosen ? "true" : undefined}
               data-chosen={option.chosen ? "" : undefined}
-              data-preview={option.previewLabel ?? undefined}
             >
               <span className={styles.label}>{option.label}</span>
-              <span className={styles.count}>{option.count}</span>
             </AppLink>
           )}
         </li>

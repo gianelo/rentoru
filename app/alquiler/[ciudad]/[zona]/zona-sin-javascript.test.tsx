@@ -352,9 +352,12 @@ describe("«Limpiar todo» vuelve a la ciudad, no a la zona (14.22b)", () => {
       max: "500",
       hab: "2",
       pag: "2",
+      filtros: "precio",
     });
 
-    expect(html).toContain('href="/alquiler/maracaibo">Limpiar todo');
+    expect(html).toContain('href="/alquiler/maracaibo?filtros=precio">Limpiar todo');
+    expect(html).toContain("Aplicar filtros");
+    expect(html).not.toContain("Usar este precio");
     // Y el otro lado, porque un enlace a la ciudad pelada podría ser cualquier
     // otro de la miga de pan: la zona no viaja adentro de ESE enlace.
     expect(html).not.toContain('href="/alquiler/maracaibo/tierra-negra">Limpiar todo');
