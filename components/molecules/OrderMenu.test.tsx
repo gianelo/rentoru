@@ -23,7 +23,8 @@ describe("el menú de orden (14.47)", () => {
   it("las tres opciones son anclas con `href`, no controles de formulario", () => {
     const html = render({});
 
-    expect(html.match(/<a /g)).toHaveLength(3);
+    expect(html.match(/<a /g)).toHaveLength(4);
+    expect(html).toContain("Ordenar por");
     expect(html).not.toContain("<select");
     expect(html).not.toContain("<button");
   });
@@ -40,7 +41,7 @@ describe("el menú de orden (14.47)", () => {
   });
 
   it("cerrado muestra el orden puesto, que es lo que la lámina dibuja", () => {
-    expect(render({})).toContain("Recientes");
+    expect(render({})).toContain("Publicación: más recientes");
     expect(render({ orden: "precio-desc" })).toContain("Precio: mayor a menor");
   });
 

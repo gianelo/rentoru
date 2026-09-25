@@ -223,6 +223,21 @@ describe("27.7: la ruta de zona busca en todas las zonas que comparten el nombre
 });
 
 describe("la página de zona sin JavaScript", () => {
+  it("sirve cuatro enlaces de orden dentro de la zona, con filtros y sin página anterior", async () => {
+    const html = await servedBody("maracaibo", "tierra-negra", {
+      max: "500",
+      pag: "2",
+      orden: "fecha-asc",
+    });
+    const menu = html.match(/<details[^>]*data-testid="order-menu"[\s\S]*?<\/details>/)?.[0];
+
+    expect(menu).toContain("Ordenar por");
+    expect(menu).toContain('href="/alquiler/maracaibo/tierra-negra?max=500"');
+    for (const token of ["fecha-asc", "precio-asc", "precio-desc"]) {
+      expect(menu).toContain(`href="/alquiler/maracaibo/tierra-negra?max=500&amp;orden=${token}"`);
+    }
+    expect(menu).not.toContain("pag=2");
+  });
   /** 11.5 */
   it("trae los avisos activos de la zona en el cuerpo de la respuesta", async () => {
     const html = await servedBody("maracaibo", "tierra-negra");

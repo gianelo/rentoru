@@ -10,6 +10,7 @@ describe("qué orden pide una dirección (14.47)", () => {
   });
 
   it("lee los dos órdenes de precio", () => {
+    expect(readSearchOrder("fecha-asc")).toBe("oldest");
     expect(readSearchOrder(SEARCH_ORDER_TOKENS.priceAsc)).toBe("priceAsc");
     expect(readSearchOrder(SEARCH_ORDER_TOKENS.priceDesc)).toBe("priceDesc");
   });
@@ -29,11 +30,12 @@ describe("qué orden pide una dirección (14.47)", () => {
 });
 
 describe("el menú de orden (14.47)", () => {
-  it("ofrece tres opciones y ni una más", () => {
+  it("ofrece las cuatro direcciones de publicación y precio", () => {
     // Superficie NO está, y la razón es del dato: `area_m2` puede faltar, y
     // ordenar por un campo ausente ordena mal y en silencio.
     expect(buildOrderMenu(BASE, {}).options.map((option) => option.label)).toEqual([
-      "Recientes",
+      "Publicación: más recientes",
+      "Publicación: más antiguos",
       "Precio: menor a mayor",
       "Precio: mayor a menor",
     ]);
@@ -55,7 +57,8 @@ describe("el menú de orden (14.47)", () => {
     // mirando lo mismo: quedarse ahí es una rebanada que nadie pidió.
     const menu = buildOrderMenu(BASE, { pag: "3" });
 
-    expect(menu.options[1]?.href).toBe(`${BASE}?orden=precio-asc`);
+    expect(menu.options[1]?.href).toBe(`${BASE}?orden=fecha-asc`);
+    expect(menu.options[2]?.href).toBe(`${BASE}?orden=precio-asc`);
     expect(menu.options[0]?.href).toBe(BASE);
   });
 
@@ -64,15 +67,15 @@ describe("el menú de orden (14.47)", () => {
 
     expect(menu.order).toBe("priceDesc");
     expect(menu.label).toBe("Precio: mayor a menor");
-    expect(menu.options.map((option) => option.current)).toEqual([false, false, true]);
+    expect(menu.options.map((option) => option.current)).toEqual([false, false, false, true]);
   });
 
   it("con la dirección pelada el elegido es «Recientes»", () => {
     const menu = buildOrderMenu(BASE, {});
 
     expect(menu.order).toBe("recent");
-    expect(menu.label).toBe("Recientes");
-    expect(menu.options.map((option) => option.current)).toEqual([true, false, false]);
+    expect(menu.label).toBe("Publicación: más recientes");
+    expect(menu.options.map((option) => option.current)).toEqual([true, false, false, false]);
   });
 
   it("los demás parámetros sobreviven al cambio de orden", () => {
@@ -80,6 +83,6 @@ describe("el menú de orden (14.47)", () => {
     // acababa de estrechar.
     const menu = buildOrderMenu(BASE, { min: "300", planta: "1", utm_source: "wa" });
 
-    expect(menu.options[2]?.href).toBe(`${BASE}?min=300&planta=1&utm_source=wa&orden=precio-desc`);
+    expect(menu.options[3]?.href).toBe(`${BASE}?min=300&planta=1&utm_source=wa&orden=precio-desc`);
   });
 });

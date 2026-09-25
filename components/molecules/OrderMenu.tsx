@@ -53,7 +53,7 @@ export function OrderMenu({ model }: { readonly model: SearchOrderMenu }) {
           sistema, y va `aria-hidden`: el estado abierto ya lo anuncia el
           propio `<details>`. */}
       <summary className={styles.current}>
-        {model.label}
+        Ordenar por · {model.label}
         <span aria-hidden="true"> ▾</span>
       </summary>
 

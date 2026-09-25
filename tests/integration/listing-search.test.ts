@@ -76,6 +76,10 @@ const F_VENCIDO = randomUUID();
 const PAGINADA = randomUUID();
 const P_ZONA = randomUUID();
 const PAGINADOS = RESULTS_PER_PAGE + 2;
+/** Una ciudad aislada con fechas idénticas incluso a ambos lados del OFFSET. */
+const EMPATES = randomUUID();
+const E_ZONA = randomUUID();
+const E_IDS = Array.from({ length: PAGINADOS }, () => randomUUID());
 
 /**
  * **El precio NO sigue a la fecha en esta ciudad, y es a propósito** (14.47).
@@ -179,6 +183,7 @@ beforeAll(async () => {
     [DISTRITO, "Distrito Capital"],
     [FILTROS, "Filtros"],
     [PAGINADA, "Paginada"],
+    [EMPATES, "Empates"],
     [RELOJ, "Reloj"],
   ] as const) {
     await pool.query(`INSERT INTO "city" (id, name) VALUES ($1,$2)`, [city, `${name} ${city}`]);
@@ -191,6 +196,7 @@ beforeAll(async () => {
     [F_DOS, FILTROS, "Dos"],
     [F_TRES, FILTROS, "Tres"],
     [P_ZONA, PAGINADA, "Única"],
+    [E_ZONA, EMPATES, "Única"],
     [R_ZONA, RELOJ, "Única"],
   ] as const) {
     await pool.query(
@@ -332,6 +338,24 @@ beforeAll(async () => {
     });
   }
 
+  for (const id of E_IDS) {
+    await insertListing({
+      id,
+      zoneId: E_ZONA,
+      cityId: EMPATES,
+      priceUsd: 300,
+      rooms: 2,
+      areaM2: 50,
+      status: "active",
+    });
+  }
+  // Una única sentencia fija exactamente la misma fecha para todas las filas;
+  // `now()` de cada INSERT no garantiza igualdad bajo llamadas separadas.
+  await pool.query(
+    `UPDATE "listing" SET published_at = now() - interval '1 day' WHERE city_id = $1`,
+    [EMPATES],
+  );
+
   // task 21.1. Los dos son `active` y sólo se diferencian en la fecha.
   for (const [id, expiresInMinutes] of [
     [R_VIGENTE, 24 * 60],
@@ -355,7 +379,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await pool.query(`DELETE FROM "user" WHERE id = $1`, [ANA]);
   await pool.query(`DELETE FROM "city" WHERE id = ANY($1)`, [
-    [MARACAIBO, DISTRITO, FILTROS, PAGINADA, RELOJ],
+    [MARACAIBO, DISTRITO, FILTROS, PAGINADA, EMPATES, RELOJ],
   ]);
   await pool.end();
 });
@@ -754,6 +778,31 @@ describe("el orden de la lista (14.47)", () => {
     // nada en rojo: con el precio siguiendo a la fecha las dos listas salían
     // iguales. Los tres encabezados son avisos distintos.
     expect(results[0]?.title).not.toBe(masBarato);
+  });
+
+  it("publicación ascendente invierte la fecha sin perder el desempate entre páginas", async () => {
+    const primera = await search.search({ cityId: PAGINADA, order: "oldest" });
+    const segunda = await search.search({ cityId: PAGINADA, order: "oldest", page: 2 });
+
+    expect(primera[0]?.title).toBe(avisoDe(PAGINADOS - 1));
+    expect(segunda.at(-1)?.title).toBe("Aviso 00");
+    expect(new Set([...primera, ...segunda].map((row) => row.id)).size).toBe(PAGINADOS);
+  });
+
+  it("desempata fechas idénticas por id ascendente incluso al cruzar el límite de página", async () => {
+    const [primera, segunda] = await Promise.all([
+      search.search({ cityId: EMPATES, order: "oldest" }),
+      search.search({ cityId: EMPATES, order: "oldest", page: 2 }),
+    ]);
+    const expected = [...E_IDS].sort();
+    const ids = [...primera, ...segunda].map((row) => row.id);
+
+    expect(primera).toHaveLength(RESULTS_PER_PAGE);
+    expect(segunda).toHaveLength(PAGINADOS - RESULTS_PER_PAGE);
+    expect(ids).toEqual(expected);
+    expect(primera.at(-1)?.id).toBe(expected[RESULTS_PER_PAGE - 1]);
+    expect(segunda[0]?.id).toBe(expected[RESULTS_PER_PAGE]);
+    expect(new Set(ids).size).toBe(PAGINADOS);
   });
 
   it("«Precio: menor a mayor» encabeza con el más barato, no con el más nuevo", async () => {
