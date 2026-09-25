@@ -203,9 +203,28 @@ test.describe("14.29: los avisos completos sobre el pliegue", () => {
         clearBox.x + clearBox.width,
         `${width}: enlace dentro del viewport`,
       ).toBeLessThanOrEqual(width);
+      const overflow = await page.evaluate(() => {
+        const viewport = document.documentElement.clientWidth;
+        const offenders = [...document.querySelectorAll<HTMLElement>("body *")]
+          .map((node) => {
+            const box = node.getBoundingClientRect();
+            return {
+              tag: node.tagName,
+              className: typeof node.className === "string" ? node.className : "",
+              testId: node.dataset.testid,
+              left: Math.round(box.left),
+              right: Math.round(box.right),
+              scrollWidth: node.scrollWidth,
+              overflowX: getComputedStyle(node).overflowX,
+            };
+          })
+          .filter(({ right }) => right > viewport + 1)
+          .slice(0, 12);
+        return { scrollWidth: document.documentElement.scrollWidth, offenders };
+      });
       expect(
-        await page.evaluate(() => document.documentElement.scrollWidth),
-        `${width}: sin desborde horizontal`,
+        overflow.scrollWidth,
+        `${width}: sin desborde horizontal; nodos: ${JSON.stringify(overflow.offenders)}`,
       ).toBeLessThanOrEqual(width);
     }
   });
