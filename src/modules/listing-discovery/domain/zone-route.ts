@@ -220,6 +220,19 @@ export function cityRoutePath(city: RoutableCity): string {
   return `/alquiler/${slugify(city.name)}`;
 }
 
+/** Un nivel hacia arriba: ciudad → Inicio, zona → ciudad canónica, sin query. */
+export function resultsBackLink(route: {
+  readonly kind: "city" | "zone";
+  readonly city: RoutableCity;
+}): {
+  readonly href: string;
+  readonly label: string;
+} {
+  return route.kind === "city"
+    ? { href: "/", label: "Inicio" }
+    : { href: cityRoutePath(route.city), label: route.city.name };
+}
+
 /**
  * **Cualquiera del conjunto arma la misma dirección.** Cuando el nombre se
  * comparte entre parroquias (27.7), las filas de `zones` YA comparten el

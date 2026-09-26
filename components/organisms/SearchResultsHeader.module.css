@@ -8,6 +8,26 @@
   padding-block: 4px;
 }
 
+.mobileBack {
+  display: none;
+  align-items: center;
+  min-block-size: var(--target-min);
+  color: var(--accent);
+  font-family: var(--sans);
+  font-size: var(--ficha-body-fs);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mobileBack:hover {
+  text-decoration: underline;
+}
+
+.mobileBack:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .crumbs {
   margin: 0;
   padding: 0;
@@ -130,6 +150,14 @@
 }
 
 @media (max-width: 767px) {
+  .mobileBack {
+    display: inline-flex;
+  }
+
+  .crumbs {
+    display: none;
+  }
+
   .titleRow:has(.mobileClear) .title {
     font-size: var(--ficha-title-fs);
   }

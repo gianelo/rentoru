@@ -104,6 +104,68 @@ async function avisosCompletosSobreElPliegue(page: import("@playwright/test").Pa
     });
 }
 
+test.describe("28.15: salida móvil sin JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  for (const viewport of [
+    { width: 390, height: 840 },
+    { width: 360, height: 640 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`${viewport.width}×${viewport.height}: una sola fila de vuelta y pastilla intacta`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/measure/lista");
+      const back = page.getByTestId("results-mobile-back");
+      const breadcrumb = page.getByRole("navigation", { name: "Miga de pan" });
+      const crumbs = breadcrumb.locator("ol");
+      if (viewport.width < 768) {
+        await expect(back).toBeVisible();
+        await expect(back).toHaveAttribute("href", "/alquiler/distrito-capital");
+        await expect(back).toHaveText("← Distrito Capital");
+        await expect(crumbs).toBeHidden();
+        const typography = await back.evaluate((node) => {
+          const styles = getComputedStyle(node);
+          return {
+            size: styles.fontSize,
+            expectedSize: getComputedStyle(document.documentElement)
+              .getPropertyValue("--ficha-body-fs")
+              .trim(),
+            weight: styles.fontWeight,
+          };
+        });
+        expect(typography.size).toBe(typography.expectedSize);
+        expect(typography.weight).toBe("600");
+        const box = await back.boundingBox();
+        const row = await breadcrumb.boundingBox();
+        const header = await page.locator("header").first().boundingBox();
+        const pill = await page.locator("header search").boundingBox();
+        if (!box || !row || !header || !pill)
+          throw new Error("Falta geometría de salida o búsqueda");
+        expect(box.height).toBeGreaterThanOrEqual(44);
+        expect(row.height).toBeLessThanOrEqual(52);
+        expect(row.y).toBeGreaterThanOrEqual(header.y + header.height);
+        expect(pill.width).toBe(viewport.width - 32);
+        const grid = await page.getByTestId("lista-grid").locator("ol").boundingBox();
+        if (!grid) throw new Error("Falta cuadrícula");
+        console.log(
+          `[28.15] ${viewport.width}: back y=${box.y} h=${box.height}; row h=${row.height}; pill w=${pill.width}; grid y=${grid.y}`,
+        );
+        expect(grid.y).toBeLessThanOrEqual(225);
+      } else {
+        await expect(back).toBeHidden();
+        await expect(crumbs).toBeVisible();
+        await expect(crumbs.locator("li")).toHaveCount(3);
+      }
+      if (process.env.RENTORU_28_15_CAPTURE === "1" && [390, 768].includes(viewport.width)) {
+        await page.screenshot({ path: `/tmp/rentoru-results-back-${viewport.width}.png` });
+      }
+    });
+  }
+});
+
 test.describe("14.29: los avisos completos sobre el pliegue", () => {
   test("a 360×640 entran 2 avisos completos, que es el criterio del fundador", async ({ page }) => {
     await page.setViewportSize(MOVIL);
