@@ -32,6 +32,14 @@ describe("AyudaLayout", () => {
     expect(markup).not.toContain('name="zona"');
   });
 
+  it("serves the three dock destinations alongside the GET search without JavaScript", () => {
+    const markup = renderToStaticMarkup(<AyudaLayout>{null}</AyudaLayout>);
+    const dock = markup.match(/<nav[^>]*aria-label="Navegación principal"[^>]*>(.*?)<\/nav>/)?.[1];
+    expect(dock).toMatch(/href="\/"[^>]*>.*?Inicio<\/a>/);
+    expect(dock).toMatch(/href="\/publicar"[^>]*>.*?Publicar/);
+    expect(dock).toMatch(/href="[^"]*"[^>]*>.*?Entrar<\/a>/);
+  });
+
   it("draws no account menu, which only a signed-in Nav would render", () => {
     const markup = renderToStaticMarkup(<AyudaLayout>{null}</AyudaLayout>);
 
