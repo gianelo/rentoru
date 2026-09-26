@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 export default function ComoContactarPage() {
   return (
     <article>
+      <p className={styles.category}>Ayuda / Cómo contactar al dueño</p>
       <h1 className={styles.title}>Cómo contactar al dueño</h1>
 
       <p className={styles.text}>
