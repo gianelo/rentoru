@@ -84,10 +84,6 @@ function findForm(node: ReactNode): ReactElement<Record<string, unknown>> | null
     (element as ReactElement<{ action?: unknown }>).props.action === reportarAviso
   )
     return element as ReactElement<Record<string, unknown>>;
-  if (typeof element.type === "function") {
-    const rendered = (element.type as (props: unknown) => ReactNode)(element.props);
-    return findForm(rendered);
-  }
   return findForm(element.props.children ?? null);
 }
 

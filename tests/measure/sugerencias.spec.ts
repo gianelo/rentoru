@@ -23,6 +23,33 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
     await page.goto("/measure");
   });
 
+  test("14.51: recupera texto ingresado antes de hidratar la pastilla", async ({ page }) => {
+    await page.addInitScript(() => {
+      const observer = new MutationObserver(() => {
+        const field = document.querySelector<HTMLInputElement>(
+          '[data-testid="nav-harness-busqueda"] input[type="search"]',
+        );
+        if (!field || field.dataset.earlyInput) return;
+        field.dataset.earlyInput = "true";
+        field.focus();
+        field.value = "alta";
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+        observer.disconnect();
+      });
+      observer.observe(document, { childList: true, subtree: true });
+    });
+    await page.reload();
+
+    const pastilla = page.getByTestId(PASTILLA);
+    const campo = pastilla.getByRole("searchbox");
+    await expect(campo).toHaveAttribute("data-early-input", "true");
+    await expect(campo).toHaveValue("alta");
+    await expect(pastilla.getByRole("link", { name: /Altamira/ })).toHaveAttribute(
+      "href",
+      "/alquiler/distrito-capital/altamira",
+    );
+  });
+
   test("14.51: escribir «alta» ofrece Altamira con su ámbito", async ({ page }) => {
     const pastilla = page.getByTestId(PASTILLA);
     // Nada dibujado antes de escribir: la mejora no ocupa la pantalla de nadie.

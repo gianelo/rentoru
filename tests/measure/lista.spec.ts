@@ -88,7 +88,12 @@ async function avisosCompletosSobreElPliegue(page: import("@playwright/test").Pa
     .getByTestId("lista-grid")
     .locator("ol > li")
     .evaluateAll((nodes) => {
-      const alto = window.innerHeight;
+      // El dock fijo tapa la segunda fila aunque sus bordes estén dentro del viewport.
+      const dock = document.querySelector<HTMLElement>('nav[aria-label="Navegación principal"]');
+      const alto =
+        dock && getComputedStyle(dock).display !== "none"
+          ? Math.min(window.innerHeight, dock.getBoundingClientRect().top)
+          : window.innerHeight;
       const fondos = nodes.map((node) => Math.round(node.getBoundingClientRect().bottom));
 
       return {
@@ -135,25 +140,23 @@ test.describe("14.29: los avisos completos sobre el pliegue", () => {
   /**
    * **El encabezado, que es lo que el fundador eligió conservar.**
    *
-   * Los 2 de arriba no son culpa de la tarjeta: la cuadrícula empieza a **219
-   * px** en un teléfono, contra los ~74 que dibuja la lámina 6c —60 de barra
-   * más el relleno—, porque la pantalla servida agrega miga de pan, `<h1>` y
-   * conteo, y ninguno de los tres aparece en 6c. **Eran 373 hasta la 14.53**, y
-   * los 154 que faltan son las fichas quitables al irse del teléfono.
+   * La cuadrícula empieza ahora a **175 px** en el teléfono (medido en este
+   * arnés), contra los ~74 de la lámina 6c. El antiguo 219 px quedó obsoleto
+   * al compactarse el encabezado; se conserva la cota <= 225 para protegerlo.
+   * El 2 visible también depende del dock fijo: tapa la segunda fila aunque
+   * su borde inferior quede dentro de los 640 px del viewport.
    *
-   * Esos tres bloques son exactamente el aviso y medio que separa el 2 del 4, y
+   * Esos bloques explican la diferencia con la lámina, además del dock, y
    * el 2026-09-02 el fundador decidió que se quedan: la miga de pan es la
    * salida que la 14.41 dejó puesta al borrarse la `SearchSummaryBar`, y
    * **volver, en un teléfono, vale más que un aviso y medio**. Así que esta
    * medida dejó de ser un pendiente y pasó a ser una guardia: si el encabezado
-   * creciera, esto lo dice.
+   * creciera más allá de la cota, esto lo dice.
    *
    * Se afirma como cota superior y no como igualdad exacta: una igualdad al
    * píxel sobre texto renderizado se rompe por una versión de fuente sin que
-   * nada del producto haya cambiado. **La holgura de 6 px que se deja está
-   * medida y no elegida a ojo**: 219 px en macOS y 219 en el Linux de CI sobre
-   * el mismo commit — este encabezado es corto y sobrado en las dos, que es
-   * justo lo contrario de lo que le pasa al metadato de la tarjeta.
+   * nada del producto haya cambiado. La cota histórica de 225 px permanece;
+   * la medición actual de 175 px deja margen para variaciones de fuente.
    */
   test("28.9: limpiar queda visible y pulsable junto al título sin agregar otra fila", async ({
     page,
@@ -245,7 +248,7 @@ test.describe("14.29: los avisos completos sobre el pliegue", () => {
     }
   });
 
-  test("el encabezado se come 219 px del teléfono antes de la primera foto", async ({ page }) => {
+  test("el encabezado deja la cuadrícula dentro de la cota de 225 px", async ({ page }) => {
     await page.setViewportSize(MOVIL);
     await page.goto("/measure/lista");
 

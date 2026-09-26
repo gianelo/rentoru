@@ -124,6 +124,9 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
     };
 
     field.addEventListener("input", onType);
+    // El campo SSR puede recibir texto antes de que se instale este oyente.
+    // No abrir la lista por el valor inicial de una zona seleccionada en reposo.
+    if (document.activeElement === field && field.value !== field.defaultValue) onType();
     field.addEventListener("keydown", onKeyDown);
     form.addEventListener("focusout", onFocusOut);
     document.addEventListener("pointerdown", onPointerDown);
