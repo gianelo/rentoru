@@ -54,6 +54,18 @@ describe("EscribinosPage — la pantalla del formulario", () => {
     expect(html).not.toContain("Revisá los datos");
   });
 
+  it("orders the editorial category, heading, introduction and native form", async () => {
+    const html = await servida();
+    const category = html.indexOf("Ayuda / Escribinos");
+    const title = html.indexOf(">Escribinos</h1>");
+    const intro = html.indexOf("No publicamos ninguna dirección");
+    const form = html.indexOf("<form");
+    expect(category).toBeGreaterThanOrEqual(0);
+    expect(category).toBeLessThan(title);
+    expect(title).toBeLessThan(intro);
+    expect(intro).toBeLessThan(form);
+  });
+
   it("is indexable — the page carries no noindex directive", () => {
     expect(metadata.robots).toBeUndefined();
   });
@@ -65,6 +77,9 @@ describe("EscribinosPage — el acuse, después de mandar", () => {
 
     expect(html).not.toContain("<form");
     expect(html).toContain("Recibimos tu mensaje");
+    expect(html.indexOf("Ayuda / Escribinos")).toBeLessThan(html.indexOf(">Escribinos</h1>"));
+    expect(html.indexOf(">Escribinos</h1>")).toBeLessThan(html.indexOf("Recibimos tu mensaje"));
+    expect(html).not.toContain("Revisá los datos");
   });
 });
 
@@ -74,5 +89,9 @@ describe("EscribinosPage — el rechazo del servidor", () => {
 
     expect(html).toContain("<form");
     expect(html).toContain("Revisá los datos");
+    expect(html.indexOf("Ayuda / Escribinos")).toBeLessThan(html.indexOf(">Escribinos</h1>"));
+    expect(html.indexOf(">Escribinos</h1>")).toBeLessThan(html.indexOf("Revisá los datos"));
+    expect(html.indexOf("Revisá los datos")).toBeLessThan(html.indexOf("<form"));
+    expect(html).not.toContain("Recibimos tu mensaje");
   });
 });
