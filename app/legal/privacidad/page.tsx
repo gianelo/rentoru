@@ -21,6 +21,7 @@ export const metadata: Metadata = {
 export default function PrivacidadPage() {
   return (
     <article>
+      <p className={styles.category}>Legal / Política de privacidad</p>
       <h1 className={styles.title}>Política de privacidad</h1>
       <DraftNotice />
 
