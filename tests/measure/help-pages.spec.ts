@@ -22,6 +22,24 @@ for (const viewport of viewports) {
         const page = await context.newPage();
         await page.goto(`/ayuda/${route}`);
         const article = page.locator("main article");
+        if (route === "preguntas-frecuentes") {
+          const link = article.getByRole("link", { name: "Cómo contactar al dueño" });
+          await expect(link).toBeVisible();
+          const colors = await link.evaluate((element) => ({
+            actual: getComputedStyle(element).color,
+            accent: (() => {
+              const sample = document.createElement("span");
+              sample.style.color = "var(--accent)";
+              element.append(sample);
+              const color = getComputedStyle(sample).color;
+              sample.remove();
+              return color;
+            })(),
+          }));
+          expect(colors.actual).toBe(colors.accent);
+          await expect(link).toHaveCSS("text-decoration-line", "underline");
+          await expect(link).toHaveCSS("text-underline-offset", "3px");
+        }
         const final = article.locator(":scope > :last-child");
         await expect(final).toContainText(finalText);
         const geometry = await article.evaluate((el) => {
