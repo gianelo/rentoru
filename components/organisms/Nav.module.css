@@ -140,6 +140,10 @@
     flex: 1 1 auto;
   }
 
+  .barWithPill .pillCol > search {
+    inline-size: 100%;
+  }
+
   .dock {
     position: fixed;
     z-index: 2;

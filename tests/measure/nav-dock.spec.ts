@@ -62,6 +62,26 @@ test("reduced motion keeps dock visible and preference changes reveal it", async
   await expect(dock).not.toHaveAttribute("inert", "");
 });
 
+test("no-JS FAQ mobile search pill fills the header inset", async ({ browser }) => {
+  for (const width of [390, 360]) {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width, height: 840 },
+    });
+    try {
+      const page = await context.newPage();
+      await page.goto(route);
+      const pill = page.locator("header search").first();
+      await expect(pill).toBeVisible();
+      const box = await pill.boundingBox();
+      expect(box?.x, `${width}px pill left`).toBe(16);
+      expect(box?.width, `${width}px pill width`).toBe(width - 32);
+    } finally {
+      await context.close();
+    }
+  }
+});
+
 test("no-JS mobile dock stays available", async ({ browser }) => {
   const context = await browser.newContext({
     javaScriptEnabled: false,
