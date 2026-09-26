@@ -1,9 +1,7 @@
 /* Site footer (design/pantallas/Rentoru - Footer.dc.html, artboards 9a/9b;
-   tasks.md 23.1, 23.10, 23.11). Mobile-first, same 768px breakpoint
-   Container.module.css and Nav.module.css already use — "ni SISTEMA.md ni
-   design.md nombran un punto de quiebre exacto" is still true here, so this
-   reuses the one already chosen instead of inventing a second number for
-   the same open question.
+   tasks.md 23.1, 23.10, 23.11, 28.17). Mobile-first: tablet keeps the
+   stacked touch layout, and three columns start at the 1100px system
+   container width. Nav may switch at 768px independently.
 
    Horizontal inset comes from `Container`, not from a value copied off the
    artboard: the artboard's own mobile padding is 20px and Container's is
@@ -117,7 +115,9 @@
   color: var(--soft);
 }
 
-@media (min-width: 768px) {
+/* Three columns need the full system container; tablets retain the stacked
+   link groups and 44px touch targets from the mobile layout. */
+@media (min-width: 1100px) {
   .top {
     flex-direction: row;
     align-items: flex-start;

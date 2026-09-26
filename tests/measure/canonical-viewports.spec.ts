@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const CANONICAL_VIEWPORTS = [
-  { label: "mobile", width: 390, height: 844 },
+  { label: "mobile", width: 390, height: 840 },
   { label: "tablet", width: 768, height: 1024 },
   { label: "desktop", width: 1440, height: 900 },
 ] as const;
