@@ -24,15 +24,17 @@ for (const viewport of viewports) {
         await expect(page.locator("main article").getByRole("heading", { level: 1 })).toHaveText(
           entry.title,
         );
-        const screenshot = `/tmp/rentoru-served-28-12-${entry.slug}-${viewport.width}.png`;
-        await page.screenshot({ path: screenshot });
         const dimensions = await page.evaluate(() => ({
           width: innerWidth,
           height: innerHeight,
           overflow: document.documentElement.scrollWidth > innerWidth,
         }));
         expect(dimensions).toEqual({ ...viewport, overflow: false });
-        console.log(`${entry.path} ${viewport.width}×${viewport.height}: ${screenshot}`);
+        if (process.env.RENTORU_28_12_CAPTURE === "1") {
+          const screenshot = `/tmp/rentoru-served-28-12-${entry.slug}-${viewport.width}.png`;
+          await page.screenshot({ path: screenshot });
+          console.log(`${entry.path} ${viewport.width}×${viewport.height}: ${screenshot}`);
+        }
       } finally {
         await context.close();
       }
