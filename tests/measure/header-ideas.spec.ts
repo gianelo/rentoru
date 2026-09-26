@@ -4,32 +4,37 @@ import { expect, test } from "@playwright/test";
 
 const url = pathToFileURL(resolve("design/alternativas/28-6-header-movil.html")).href;
 
-test("three distinct, usable 390×840 results previews", async ({ page }) => {
+async function wheelInside(page: import("@playwright/test").Page, delta: number) {
+  const box = await page.locator("#phone-a .scroll").boundingBox();
+  if (!box) throw new Error("Missing scroll area");
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel(0, delta);
+}
+
+test("two distinct usable previews and real wheel scroll", async ({ page }) => {
   await page.setViewportSize({ width: 1400, height: 1100 });
   await page.goto(url);
-  for (const id of ["a", "b", "c"]) {
+  await expect(page.locator(".phone")).toHaveCount(2);
+  await expect(page.locator("#phone-c, .menu")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Bajar" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Subir" })).toBeEnabled();
+  for (const id of ["a", "b"]) {
     const phone = page.locator(`#phone-${id}`);
     const box = await phone.boundingBox();
     expect(box?.width).toBe(390);
     expect(box?.height).toBe(840);
     expect(await phone.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
-    const pill = phone.locator(".top search form.pill");
-    await expect(pill.locator(".textCol input.input[value='Chacao']")).toHaveCount(1);
+    const pill = phone.locator(".top form.pill");
+    await expect(pill.locator("input.input[value='Chacao']")).toHaveCount(1);
     await expect(pill.locator(".count")).toContainText("6 avisos");
     expect(await pill.locator(".count").evaluate((el) => getComputedStyle(el).fontSize)).toBe(
       "10.5px",
     );
-    await expect(pill.locator("a.filter svg[aria-hidden='true']")).toHaveCount(1);
-    await expect(pill.locator("button.submit svg[aria-hidden='true']")).toHaveCount(1);
     expect(await pill.evaluate((el) => getComputedStyle(el).minHeight)).toBe("48px");
-    expect(await pill.locator("button.submit").evaluate((el) => getComputedStyle(el).width)).toBe(
-      "44px",
-    );
-    const listings = await phone.locator(".listing").count();
-    expect(listings).toBe(6);
-    await expect(phone.locator(".scroll .count")).toContainText(`${listings} avisos`);
+    await expect(phone.locator(".listing")).toHaveCount(6);
+    await expect(phone.locator("form[method='get']")).toBeVisible();
     for (const target of await phone
-      .locator("a:visible, button:visible, summary:visible, input.input:visible")
+      .locator("a:visible, button:visible, input.input:visible")
       .all()) {
       const bounds = await target.boundingBox();
       expect(bounds?.height).toBeGreaterThanOrEqual(44);
@@ -37,105 +42,84 @@ test("three distinct, usable 390×840 results previews", async ({ page }) => {
     }
     await phone.screenshot({ path: `/tmp/rentoru-header-${id.toUpperCase()}-initial.png` });
   }
-  await expect(page.locator("#phone-a .top .srOnly")).toHaveCount(1);
-  expect(await page.locator("#phone-a .tabs").count()).toBe(1);
-  expect(await page.locator("#phone-b .tabs").count()).toBe(1);
-  expect(await page.locator("#phone-c details.menu").count()).toBe(1);
-  await expect(page.locator("#phone-c summary")).toHaveAccessibleName("Menú");
-  await expect(page.locator("#phone-c summary svg[aria-hidden='true']")).toHaveCount(1);
-  const scroller = page.locator("#phone-a .scroll");
-  await scroller.evaluate((el) => {
-    el.scrollTop = 500;
-    el.dispatchEvent(new Event("scroll"));
-  });
-  await expect(page.locator("#phone-a .tabs")).toHaveClass(/hidden/);
-  await expect(page.locator("#phone-a .tabs")).toHaveAttribute("inert", "");
+  const a = page.locator("#phone-a .tabs");
+  const b = page.locator("#phone-b .tabs");
+  expect(await a.evaluate((el) => getComputedStyle(el).left)).not.toBe("0px");
+  expect(await b.evaluate((el) => getComputedStyle(el).left)).toBe("0px");
+  expect(await a.evaluate((el) => getComputedStyle(el).borderRadius)).not.toBe(
+    await b.evaluate((el) => getComputedStyle(el).borderRadius),
+  );
+  for (const nav of [a, b]) {
+    await expect(nav.locator("a")).toHaveCount(4);
+    await expect(nav.locator("a.active, a[aria-current]")).toHaveCount(0);
+    const action = nav.locator("a.publish .action");
+    await expect(action).toHaveCount(1);
+    expect(await action.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(
+      "rgb(39, 35, 67)",
+    );
+    expect(await action.evaluate((el) => getComputedStyle(el).color)).toBe("rgb(255, 255, 255)");
+    const actionBox = await action.boundingBox();
+    expect(actionBox?.height).toBeGreaterThanOrEqual(44);
+    expect(actionBox?.width).toBeGreaterThanOrEqual(88);
+    expect(actionBox?.width).toBeLessThanOrEqual(104);
+    expect(
+      await nav.locator("a[href='#inicio']").evaluate((el) => getComputedStyle(el).backgroundColor),
+    ).toBe("rgba(0, 0, 0, 0)");
+    const slots = await nav
+      .locator("a.anonymous, a.publish, a[href='#inicio']")
+      .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().width));
+    expect(Math.max(...slots) - Math.min(...slots)).toBeLessThan(2);
+  }
+  await wheelInside(page, 620);
   await expect
-    .poll(async () => {
-      const nav = await page.locator("#phone-a .tabs").boundingBox();
-      const phone = await page.locator("#phone-a").boundingBox();
-      return Boolean(nav && phone && nav.y >= phone.y + phone.height - 1);
-    })
-    .toBe(true);
+    .poll(() => page.locator("#phone-a .scroll").evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(64);
+  await expect(a).toHaveClass(/hidden/);
+  await expect(a).toHaveAttribute("inert", "");
   await page.locator("#phone-a").screenshot({ path: "/tmp/rentoru-header-A-scrolled.png" });
+  await wheelInside(page, -350);
+  await expect(a).not.toHaveClass(/hidden/);
+  await expect(a).not.toHaveAttribute("inert", "");
+  await page.getByRole("button", { name: "Bajar" }).click();
+  await expect(a).toHaveClass(/hidden/);
+  await page.getByRole("button", { name: "Subir" }).click();
+  await expect(a).not.toHaveClass(/hidden/);
   await page.locator("#phone-b .scroll").evaluate((el) => {
     el.scrollTop = 500;
   });
   await page.locator("#phone-b").screenshot({ path: "/tmp/rentoru-header-B-scrolled.png" });
-  await scroller.evaluate((el) => {
-    el.scrollTop = 100;
-    el.dispatchEvent(new Event("scroll"));
-  });
-  await expect(page.locator("#phone-a .tabs")).not.toHaveClass(/hidden/);
-  await expect(page.locator("#phone-a .tabs")).not.toHaveAttribute("inert", "");
-  await page.locator("#phone-c summary").click();
-  await expect(page.locator("#phone-c details.menu")).toHaveAttribute("open", "");
-  await expect(page.locator("#phone-c details.menu a:visible")).toHaveCount(3);
-  await page.locator("#phone-c").screenshot({ path: "/tmp/rentoru-header-C-open.png" });
 });
 
-test("CSS-only session switch changes every bottom destination without JavaScript", async ({
-  browser,
-}) => {
+test("CSS session switch and no-JS fallback", async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false });
   try {
     const page = await context.newPage();
     await page.goto(url);
-    await page.locator("#phone-c summary").click();
-    for (const id of ["a", "b", "c"]) {
-      const nav = page.locator(`#phone-${id} ${id === "c" ? ".menu" : ".tabs"}`);
-      await expect(nav.locator(".anonymous")).toBeVisible();
-      await expect(nav.locator(".authenticated")).toBeHidden();
-      await expect(nav.locator(".anonymous svg[aria-hidden='true']")).toHaveCount(1);
-      await expect(nav.locator("a[href='#publicar'] svg[aria-hidden='true']")).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "Bajar" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Subir" })).toBeDisabled();
+    for (const id of ["a", "b"]) {
+      const phone = page.locator(`#phone-${id}`);
+      await expect(phone.locator(".listing")).toHaveCount(6);
+      await expect(phone.locator(".tabs .anonymous")).toBeVisible();
+      await expect(phone.locator(".tabs .authenticated")).toBeHidden();
+      await expect(phone.locator(".tabs")).toBeVisible();
     }
     await page.getByLabel("Con sesión").check();
-    for (const id of ["a", "b", "c"]) {
-      const nav = page.locator(`#phone-${id} ${id === "c" ? ".menu" : ".tabs"}`);
-      await expect(nav.locator(".anonymous")).toBeHidden();
-      await expect(nav.locator(".authenticated")).toBeVisible();
-      await expect(nav.locator(".authenticated")).toContainText("Mi cuenta");
-      await expect(nav.locator(".authenticated svg[aria-hidden='true']")).toHaveCount(1);
-      await page
-        .locator(`#phone-${id}`)
-        .screenshot({ path: `/tmp/rentoru-header-${id.toUpperCase()}-auth.png` });
+    for (const id of ["a", "b"]) {
+      const phone = page.locator(`#phone-${id}`);
+      await expect(phone.locator(".tabs .anonymous")).toBeHidden();
+      await expect(phone.locator(".tabs .authenticated")).toBeVisible();
+      await expect(phone.locator(".tabs .authenticated")).toContainText("Mi cuenta");
+      await phone.screenshot({ path: `/tmp/rentoru-header-${id.toUpperCase()}-auth.png` });
     }
   } finally {
     await context.close();
   }
 });
 
-test("reduced motion keeps A navigation visible while scrolling", async ({ page }) => {
+test("reduced motion leaves A visible", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(url);
-  await page.locator("#phone-a .scroll").evaluate((el) => {
-    el.scrollTop = 500;
-    el.dispatchEvent(new Event("scroll"));
-  });
+  await wheelInside(page, 620);
   await expect(page.locator("#phone-a .tabs")).not.toHaveClass(/hidden/);
-  await expect(page.locator("#phone-a .tabs")).not.toHaveAttribute("inert", "");
-});
-
-test("without JavaScript all results and native navigation remain visible", async ({ browser }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
-  try {
-    const page = await context.newPage();
-    await page.goto(url);
-    for (const id of ["a", "b", "c"]) {
-      await expect(page.locator(`#phone-${id} .listing`)).toHaveCount(6);
-      await expect(page.locator(`#phone-${id} form[method="get"]`)).toBeVisible();
-      await expect(page.locator(`#phone-${id} .top .brand`)).toHaveCount(0);
-      expect(
-        await page.locator(`#phone-${id} .top`).evaluate((el) => el.getBoundingClientRect().height),
-      ).toBe(60);
-    }
-    await expect(page.locator("#phone-a .tabs")).toBeVisible();
-    await expect(page.locator("#phone-a .tabs")).not.toHaveAttribute("inert", "");
-    await expect(page.locator("#phone-b .tabs")).toBeVisible();
-    await page.locator("#phone-c summary").click();
-    await expect(page.locator("#phone-c details.menu a:visible")).toHaveCount(3);
-    await expect(page.locator("#phone-c details.menu a").first()).toBeVisible();
-  } finally {
-    await context.close();
-  }
 });
