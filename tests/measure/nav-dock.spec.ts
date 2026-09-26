@@ -7,6 +7,19 @@ async function scroll(page: import("@playwright/test").Page, delta: number) {
   await page.mouse.wheel(0, delta);
 }
 
+async function expectSearchPillInViewport(page: import("@playwright/test").Page) {
+  const form = page.locator("header search form").first();
+  await expect(form).toBeVisible();
+  expect(
+    await form.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return (
+        rect.top >= 0 && rect.bottom <= innerHeight && rect.left >= 0 && rect.right <= innerWidth
+      );
+    }),
+  ).toBe(true);
+}
+
 test("mobile dock hides on real downward window scroll and returns on upward scroll", async ({
   page,
 }) => {
@@ -21,6 +34,15 @@ test("mobile dock hides on real downward window scroll and returns on upward scr
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(64);
   await expect(dock).toHaveAttribute("inert", "");
   await expect(dock).toHaveClass(/dockHidden/);
+  const header = page.locator("header").first();
+  await expect(header).toBeVisible();
+  expect(
+    await header.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.top >= 0 && rect.bottom <= innerHeight;
+    }),
+  ).toBe(true);
+  await expectSearchPillInViewport(page);
   await scroll(page, -200);
   await expect(dock).not.toHaveAttribute("inert", "");
   await expect(dock).not.toHaveClass(/dockHidden/);
@@ -54,6 +76,14 @@ test("no-JS mobile dock stays available", async ({ browser }) => {
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(64);
     await expect(dock).not.toHaveAttribute("inert", "");
     await expect(dock).not.toHaveClass(/dockHidden/);
+    const header = page.locator("header").first();
+    expect(
+      await header.evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return rect.top >= 0 && rect.bottom <= innerHeight;
+      }),
+    ).toBe(true);
+    await expectSearchPillInViewport(page);
   } finally {
     await context.close();
   }

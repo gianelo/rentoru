@@ -118,6 +118,9 @@
 
 @media (max-width: 767px) {
   .barWithPill {
+    position: sticky;
+    z-index: 2;
+    top: 0;
     min-block-size: var(--nav-h);
   }
 
