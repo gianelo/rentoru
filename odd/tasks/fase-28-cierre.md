@@ -41,7 +41,7 @@ Finish the remaining 28.x tasks from `openspec/changes/mvp-rental-listings/tasks
     | 9 | `e7170ba` → `d877b2b` | 126/7 = 133 | Served visual parity, full-width search and accent links |
     | 10 | `d877b2b` → `d7a34ef` | 224/5 = 229 | Mobile results back and long-zone URL preservation |
 
-    Next doc-only T6 commit belongs in final slice (<400). No PR branch or remote ref changed; choose stacked PRs to `dev` (recommended: slices can integrate in order) vs draft feature-branch tracker before creating/repointing branches; PR, push and merge still require explicit human authorization. `origin/dev` freshness must be rechecked at delivery. No issue-first or `type:*` label requirement in this repository (AGENTS.md overrides generic skill). Work-unit commit `584598c`.
+    The founder chose **stacked sequential PRs against `dev`**, not a tracker: each of the ten review slices will be opened against `dev` only after its predecessor integrates, so the project rule 'PRs against dev' holds at every step. `git ls-remote origin refs/heads/dev` returned `c627b7f` — the exact local `origin/dev` base — before local slice preparation. Preparing local branch refs is authorized; **push, PR opening and merge are not**. A separate user decision is required before each delivery action. The two doc-only T6 commits belong in final slice (<400). No issue-first or `type:*` label requirement in this repository (AGENTS.md overrides generic skill). Work-unit commit `584598c`.
 
 ## Evidence log
 - PR #313 was merged into `dev` at `c627b7f` before this feature started.
