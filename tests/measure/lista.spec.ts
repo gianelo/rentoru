@@ -203,6 +203,22 @@ test.describe("14.29: los avisos completos sobre el pliegue", () => {
         clearBox.x + clearBox.width,
         `${width}: enlace dentro del viewport`,
       ).toBeLessThanOrEqual(width);
+      const search = page.locator("header search");
+      const form = search.locator("form");
+      await expect(search).toHaveCount(1);
+      await expect(form).toHaveCount(1);
+      for (const [name, locator] of [
+        ["search", search],
+        ["form", form],
+      ] as const) {
+        const box = await locator.boundingBox();
+        if (!box) throw new Error(`${width}: ${name} debe tener una caja visible`);
+        expect(box.x, `${width}: ${name} empieza dentro del viewport`).toBeGreaterThanOrEqual(0);
+        expect(
+          box.x + box.width,
+          `${width}: ${name} termina dentro del viewport`,
+        ).toBeLessThanOrEqual(width);
+      }
       const overflow = await page.evaluate(() => {
         const viewport = document.documentElement.clientWidth;
         const offenders = [...document.querySelectorAll<HTMLElement>("body *")]
