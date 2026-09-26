@@ -76,10 +76,11 @@ export default async function MeasureHarnessPage({
   // **Se abre por la dirección, igual que en la ficha**, y no montada siempre:
   // encima de todo, su velo se come los clics de las otras mediciones — que fue
   // exactamente lo que pasó al intentarlo.
+  const params = await searchParams;
   const puerta = contactDoorFor(
     { state: "locked", method: "whatsapp" },
     { type: "owner", name: "María F." },
-    (await searchParams)[DOOR_QUERY_NAME],
+    params[DOOR_QUERY_NAME],
     // tasks.md 22.39 — este arnés mide geometría estática, no corre contra
     // Postgres: el mismo `false` de siempre mantiene la lámina medida como
     // estaba, sin arrastrar una consulta que no puede resolver.
@@ -256,10 +257,15 @@ export default async function MeasureHarnessPage({
 
           `transform` crea el bloque contenedor del `position: fixed` del panel:
           sin esto el modal taparía el resto del arnés y las demás medidas
-          medirían una pantalla cubierta. */}
+          medirían una pantalla cubierta. Solo `?panel=abierto` retira ese
+          aislamiento para medir la superposición real con el dock. */}
       <div
         data-testid="search-panel-harness"
-        style={{ transform: "translateZ(0)", position: "relative", blockSize: 640 }}
+        style={{
+          transform: params.panel === "abierto" ? undefined : "translateZ(0)",
+          position: "relative",
+          blockSize: 640,
+        }}
       >
         <SearchPanel model={harnessPanel()} />
       </div>
