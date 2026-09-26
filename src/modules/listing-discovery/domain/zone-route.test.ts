@@ -112,6 +112,32 @@ describe("resolveZoneRoute", () => {
   });
 });
 
+it("keeps the curated Barrio Tierra Negra del Sector Bella Vista path distinct in Maracaibo", () => {
+  const extended = [
+    { id: "bella", name: "Barrio Tierra Negra del Sector Bella Vista", cityId: "mcbo" },
+    { id: "otro", name: "Barrio Tierra Negra del Sector Otro Lugar", cityId: "mcbo" },
+  ];
+  const path = "/alquiler/maracaibo/barrio-tierra-negra-del-sector-bella-vista";
+  const place = resolveZoneRoute(
+    cities,
+    extended,
+    "maracaibo",
+    "barrio-tierra-negra-del-sector-bella-vista",
+  );
+
+  expect(path).toHaveLength(62);
+  expect(place?.zones.map((zone) => zone.id)).toEqual(["bella"]);
+  expect(place && zoneRoutePath(place)).toBe(path);
+  const other = resolveZoneRoute(
+    cities,
+    extended,
+    "maracaibo",
+    "barrio-tierra-negra-del-sector-otro-lugar",
+  );
+  expect(other?.zones.map((zone) => zone.id)).toEqual(["otro"]);
+  expect(other && zoneRoutePath(other)).not.toBe(path);
+});
+
 describe("isFilteredZoneRoute", () => {
   /**
    * **La regla de indexación de la 14.24, y su valor es que es mecánica.**

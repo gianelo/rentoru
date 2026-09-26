@@ -88,7 +88,7 @@ vi.mock("@/modules/listing-discovery/infrastructure/drizzle-listing-photos", () 
   },
 }));
 
-import ZonaPage from "./page";
+import ZonaPage, { generateMetadata } from "./page";
 
 beforeEach(() => {
   process.env.R2_BUCKET_PUBLIC_URL = "https://fotos.rentoru.test";
@@ -219,6 +219,38 @@ describe("27.7: la ruta de zona busca en todas las zonas que comparten el nombre
     // La URL de la ficha sigue siendo `.../barrio-nuevo/...`: la parroquia no
     // se cuela en la dirección canónica.
     expect(html).toContain('href="/alquiler/maracaibo/barrio-nuevo/');
+  });
+});
+
+describe("the curated long Maracaibo zone URL", () => {
+  const name = "Barrio Tierra Negra del Sector Bella Vista";
+  const slug = "barrio-tierra-negra-del-sector-bella-vista";
+  const path = `/alquiler/maracaibo/${slug}`;
+
+  beforeEach(() => {
+    findZoneBySlug.mockImplementation(async (citySlug: string, zoneSlug: string) => {
+      if (citySlug !== "maracaibo" || zoneSlug !== slug) return null;
+      return { city: MARACAIBO, zones: [{ id: "long-zone", name, cityId: MARACAIBO.id }] };
+    });
+  });
+
+  it("serves the full H1 and a native link to the exact long path", async () => {
+    const html = await servedBody("maracaibo", slug);
+    expect(html).toMatch(new RegExp(`<h1[^>]*>Alquiler en ${name}<\\/h1>`));
+    expect(html).toMatch(new RegExp(`<a[^>]+href="${path}(?:\\?[^"]*)?"`));
+  });
+
+  it("canonizes the unfiltered path but not the filtered page", async () => {
+    const params = Promise.resolve({ ciudad: "maracaibo", zona: slug });
+    const plain = await generateMetadata({ params, searchParams: Promise.resolve({}) });
+    const filtered = await generateMetadata({
+      params,
+      searchParams: Promise.resolve({ max: "500" }),
+    });
+    expect(plain.title).toContain(name);
+    expect(plain.alternates?.canonical).toBe(path);
+    expect(filtered.alternates?.canonical).toBeUndefined();
+    expect(filtered.robots).toEqual({ index: false, follow: true });
   });
 });
 
