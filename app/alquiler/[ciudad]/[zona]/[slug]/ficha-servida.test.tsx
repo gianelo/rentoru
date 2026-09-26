@@ -275,6 +275,17 @@ function jsonLd(html: string): string {
  * que cambió es **dónde** se dibuja: una afirmación sobre el fuente no
  * distingue un enlace dentro del `<header>` de uno dentro del `<main>`.
  */
+describe("la búsqueda servida en la ficha", () => {
+  it("offers a cityless GET search while retaining the listing sign-in callback", async () => {
+    const html = await servedBody();
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"[^>]*>/);
+    expect(html).toMatch(/<input[^>]*name="q"[^>]*>/);
+    expect(html).toMatch(/<button[^>]*type="submit"[^>]*>.*?<\/button>/);
+    expect(html).not.toContain('name="zona"');
+    expect(html).toContain("callbackUrl=");
+  });
+});
+
 describe("la vuelta vive dentro del contenido, no en la barra (14.54)", () => {
   /** El encabezado servido: todo lo que va antes de que cierre el `<header>`. */
   function encabezado(html: string): string {

@@ -7,7 +7,7 @@ import { AppLink } from "../atoms/AppLink";
 import { FilterIcon, MagnifierIcon } from "../atoms/icons";
 // **Importado derecho, y `next/dynamic` está medido y descartado.** Esta isla
 // entra en el primer paquete de toda ruta que dibuja el `Nav` —la ficha
-// incluida, que ni siquiera lleva pastilla—: +2,5 KB gzip en ocho rutas.
+// incluida (hoy con pastilla sólo en móvil por decisión posterior)—: +2,5 KB gzip en ocho rutas.
 // Partirla con `next/dynamic` para que sólo la pidan las pantallas que traen
 // vocabulario **sube el número en vez de bajarlo**: medido ruta por ruta, +0,5
 // KB MÁS en las trece, porque el cargador perezoso pesa más que lo que evita y
@@ -59,7 +59,8 @@ export interface SearchPillProps {
  * barra.
  *
  * **Sin JavaScript es un `<form method="get">`.** El texto es un
- * `input name="zona"`, la lupa su `button type="submit"`, y el filtro un
+ * `input` con el nombre que decide el caller (`q` en el inicio), la lupa su
+ * `button type="submit"`, y el filtro un
  * enlace real — no un botón que sólo abre un panel con un script. Con
  * JavaScript, encima: **las sugerencias mientras se escribe** (14.51), que
  * cuelgan del campo en `SearchSuggestions` y sólo aparecen cuando la pantalla

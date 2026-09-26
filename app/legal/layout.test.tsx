@@ -19,6 +19,14 @@ describe("LegalLayout", () => {
     expect(markup).toContain("<h1>Título de prueba</h1>");
   });
 
+  it("serves a cityless GET search pill without reading a session", () => {
+    const markup = renderToStaticMarkup(<LegalLayout>{null}</LegalLayout>);
+    expect(markup).toMatch(/<form[^>]*action="\/"[^>]*method="get"[^>]*>/);
+    expect(markup).toMatch(/<input[^>]*name="q"[^>]*>/);
+    expect(markup).toMatch(/<button[^>]*type="submit"[^>]*>.*?<\/button>/);
+    expect(markup).not.toContain('name="zona"');
+  });
+
   it("draws no account menu, which only a signed-in Nav would render", () => {
     const markup = renderToStaticMarkup(<LegalLayout>{null}</LegalLayout>);
 

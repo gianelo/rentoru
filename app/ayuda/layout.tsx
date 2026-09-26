@@ -3,6 +3,7 @@ import { Container } from "@/../components/layout/Container";
 import { FormShell } from "@/../components/layout/FormShell";
 import { Nav } from "@/../components/organisms/Nav";
 import { resolveNavAccount, resolveNavPublish } from "@/modules/identity/domain/nav-account";
+import { homeSearchForm } from "@/modules/listing-catalogue/domain/search-destination";
 import styles from "./ayuda.module.css";
 
 /**
@@ -24,13 +25,27 @@ import styles from "./ayuda.module.css";
 export default function AyudaLayout({ children }: { children: ReactNode }) {
   const account = resolveNavAccount(null);
   const publish = resolveNavPublish(account);
+  const form = homeSearchForm();
 
   return (
     <>
       {/* Bare `/signin`, the same choice app/page.tsx documents for its own
           anonymous Nav: it returns to `/`, and a help page is not worth
           threading a callback through for it. */}
-      <Nav account={account} publish={publish} signInHref="/signin" />
+      <Nav
+        account={account}
+        publish={publish}
+        signInHref="/signin"
+        pillDisplay="mobile-only"
+        pill={{
+          action: form.action,
+          name: form.name,
+          value: form.value,
+          placeholder: form.label,
+          submitLabel: form.submitLabel,
+          state: { kind: "empty" },
+        }}
+      />
       <main className={styles.page}>
         <Container>
           <FormShell>{children}</FormShell>
