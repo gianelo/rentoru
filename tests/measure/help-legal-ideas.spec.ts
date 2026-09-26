@@ -9,6 +9,70 @@ const sizes = [
   { width: 1440, height: 900 },
 ];
 const roles = ["faq", "contacto", "legal"] as const;
+const roleTitles = {
+  faq: "Preguntas frecuentes",
+  contacto: "Escribinos",
+  legal: "Términos y condiciones",
+} as const;
+
+test("chooser previews every role at each real viewport without scripts", async ({ browser }) => {
+  test.setTimeout(90000);
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    javaScriptEnabled: false,
+  });
+  try {
+    const page = await context.newPage();
+    await page.goto(
+      pathToFileURL(resolve("design/alternativas/28-12-ayuda-legales-vistas.html")).href,
+    );
+    const preview = page.frameLocator('iframe[name="preview"]');
+    await expect(page.getByRole("radio", { name: "390×840" })).toBeChecked();
+    for (const role of roles) {
+      await expect(page.getByRole("link", { name: roleTitles[role], exact: true })).toBeVisible();
+    }
+    await expect(preview.locator('[data-role="faq"]')).toBeVisible();
+    await page.screenshot({ path: "/tmp/rentoru-28-12-selector.png", fullPage: true });
+    for (const size of sizes) {
+      await page
+        .locator(
+          `label[for="${size.width === 390 ? "mobile" : size.width === 768 ? "tablet" : "desktop"}"]`,
+        )
+        .click();
+      await expect(page.getByRole("radio", { name: `${size.width}×${size.height}` })).toBeChecked();
+      for (const role of roles) {
+        await page.getByRole("link", { name: roleTitles[role], exact: true }).click();
+        await expect(preview.locator(`[data-role="${role}"]`)).toBeVisible();
+        await expect(preview.locator(".article:not(:visible)")).toHaveCount(2);
+        await expect(preview.locator(".controls")).toBeHidden();
+        const box = await page.locator('iframe[name="preview"]').boundingBox();
+        expect(box?.width).toBe(size.width);
+        expect(box?.height).toBe(size.height);
+        await expect(preview.locator(".pillCol.mobileOnly")).toBeVisible({
+          visible: size.width < 768,
+        });
+        await expect(preview.locator(".dock")).toBeVisible({ visible: size.width < 768 });
+        if (size.width >= 768) {
+          const alignment = await preview.locator(".actions").evaluate((el) => ({
+            right: el.getBoundingClientRect().right,
+            parentRight: el.parentElement?.getBoundingClientRect().right ?? 0,
+            paddingRight: el.parentElement
+              ? Number.parseFloat(getComputedStyle(el.parentElement).paddingRight)
+              : 0,
+          }));
+          expect(
+            Math.abs(alignment.parentRight - alignment.paddingRight - alignment.right),
+          ).toBeLessThanOrEqual(1);
+        }
+        await page.locator('iframe[name="preview"]').screenshot({
+          path: `/tmp/rentoru-28-12-preview-${role}-${size.width}.png`,
+        });
+      }
+    }
+  } finally {
+    await context.close();
+  }
+});
 
 for (const size of sizes) {
   test(`three readable roles at ${size.width}×${size.height} without scripts`, async ({
