@@ -570,6 +570,16 @@ describe("el orden de la lista (14.47)", () => {
     });
   });
 
+  it("la publicación ascendente llega al criterio sin perder los filtros", () => {
+    expect(
+      buildSearchCriteria({ city: MARACAIBO, order: "fecha-asc", minPrice: "300" }, ZONES),
+    ).toEqual({
+      cityId: MARACAIBO,
+      order: "oldest",
+      minPriceUsd: 300,
+    });
+  });
+
   it("los dos órdenes de precio sí llegan al criterio", () => {
     expect(buildSearchCriteria({ city: MARACAIBO, order: "precio-asc" }, ZONES)).toEqual({
       cityId: MARACAIBO,

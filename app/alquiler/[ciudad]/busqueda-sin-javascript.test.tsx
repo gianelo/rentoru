@@ -152,6 +152,24 @@ describe("el histograma de precio se sirve desde el servidor", () => {
 });
 
 describe("la búsqueda sin JavaScript", () => {
+  it("sirve limpiar todo junto al título sólo con filtros activos", async () => {
+    const filtered = await servedBody({ min: "300" });
+    expect(filtered).toMatch(
+      /<h1[^>]*>[^<]*<\/h1>\s*<a[^>]*data-testid="mobile-clear-all"[^>]*href="\/alquiler\/distrito-capital"[^>]*>Limpiar todo<\/a>/,
+    );
+    expect(await servedBody()).not.toContain('data-testid="mobile-clear-all"');
+  });
+  it("sirve cuatro enlaces de orden con filtros, ciudad y página reiniciada", async () => {
+    const html = await servedBody({ min: "300", pag: "2", orden: "fecha-asc" });
+    const menu = html.match(/<details[^>]*data-testid="order-menu"[\s\S]*?<\/details>/)?.[0];
+
+    expect(menu).toContain("Ordenar por");
+    expect(menu).toContain('href="/alquiler/distrito-capital?min=300"');
+    expect(menu).toContain('href="/alquiler/distrito-capital?min=300&amp;orden=fecha-asc"');
+    expect(menu).toContain('href="/alquiler/distrito-capital?min=300&amp;orden=precio-asc"');
+    expect(menu).toContain('href="/alquiler/distrito-capital?min=300&amp;orden=precio-desc"');
+    expect(menu).not.toContain("pag=2");
+  });
   /** 11.3 */
   it("trae los resultados en el cuerpo de la respuesta", async () => {
     const html = await servedBody();

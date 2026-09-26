@@ -57,14 +57,42 @@
   outline-offset: 2px;
 }
 
+.titleRow {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-block-start: 4px;
+}
+
 .title {
-  margin: 4px 0 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  margin: 0;
   font-family: var(--disp);
   font-size: var(--title-fs);
   font-weight: var(--title-fw);
   line-height: var(--title-lh);
   letter-spacing: var(--brand-ls);
   color: var(--ink);
+}
+
+.mobileClear {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--target-min);
+  flex-shrink: 0;
+  padding-inline: 4px;
+  font-family: var(--sans);
+  font-size: var(--meta-fs);
+  color: var(--soft);
+  text-decoration: underline;
+}
+
+.mobileClear:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* El gris es --soft y nunca `opacity`: atenuar con opacidad se lleva puesto
@@ -101,7 +129,28 @@
   color: var(--soft);
 }
 
+@media (max-width: 767px) {
+  .titleRow:has(.mobileClear) .title {
+    font-size: var(--ficha-title-fs);
+  }
+
+  .mobileClear {
+    position: absolute;
+    inset-inline-end: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .titleRow:has(.mobileClear) {
+    padding-inline-end: calc(2 * var(--target-min) + var(--gap));
+  }
+}
+
 @media (min-width: 768px) {
+  .mobileClear {
+    display: none;
+  }
+
   .crumbLink {
     min-block-size: var(--target-min-desktop);
   }

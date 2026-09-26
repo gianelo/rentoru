@@ -490,6 +490,31 @@ test.describe("search filters (5.7)", () => {
  * geometría renderizada, y para eso existe este arnés (1b.10).
  */
 test.describe("la barra del producto (14a, 14.41)", () => {
+  test("la pastilla de búsqueda y su botón caben a 320 y 360", async ({ page }) => {
+    for (const width of [320, 360]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/measure");
+      const nav = page.getByTestId("nav-harness-busqueda");
+      const search = nav.locator("search");
+      const form = search.locator("form");
+      const button = form.locator('button[type="submit"]');
+      for (const [name, locator] of [
+        ["search", search],
+        ["form", form],
+      ] as const) {
+        const box = await locator.boundingBox();
+        if (!box) throw new Error(`${width}: ${name} no dibujó una caja`);
+        console.log(`[Nav] ${width}px ${name}: left=${box.x} right=${box.x + box.width}`);
+        expect(box.x, `${width}: ${name} borde izquierdo`).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width, `${width}: ${name} borde derecho`).toBeLessThanOrEqual(width);
+      }
+      const box = await button.boundingBox();
+      if (!box) throw new Error(`${width}: botón no dibujó una caja`);
+      expect(box.width, `${width}: botón ancho`).toBe(44);
+      expect(box.height, `${width}: botón alto`).toBe(44);
+      expect(box.x + box.width, `${width}: botón dentro del viewport`).toBeLessThanOrEqual(width);
+    }
+  });
   /**
    * El centro de un elemento y el de la barra que lo contiene, para
    * compararlos. `text` desambigua cuando el selector casa más de uno — no se

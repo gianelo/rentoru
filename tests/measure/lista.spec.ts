@@ -155,6 +155,96 @@ test.describe("14.29: los avisos completos sobre el pliegue", () => {
    * el mismo commit — este encabezado es corto y sobrado en las dos, que es
    * justo lo contrario de lo que le pasa al metadato de la tarjeta.
    */
+  test("28.9: limpiar queda visible y pulsable junto al título sin agregar otra fila", async ({
+    page,
+  }) => {
+    await page.setViewportSize(MOVIL);
+    await page.goto("/measure/lista");
+
+    const clear = page.getByTestId("mobile-clear-all");
+    const title = page.getByRole("heading", { level: 1 });
+    await expect(clear).toBeVisible();
+    await expect(clear).toHaveAttribute("href", "/alquiler/distrito-capital");
+    const clearBox = await clear.boundingBox();
+    const titleBox = await title.boundingBox();
+    if (!clearBox || !titleBox) throw new Error("El título y el enlace deben tener cajas visibles");
+    expect(clearBox.height).toBeGreaterThanOrEqual(44);
+    expect(clearBox.width).toBeGreaterThanOrEqual(44);
+    expect(clearBox.x).toBeGreaterThanOrEqual(titleBox.x + titleBox.width);
+    expect(clearBox.y).toBeLessThan(titleBox.y + titleBox.height);
+    expect(clearBox.x + clearBox.width).toBeLessThanOrEqual(MOVIL.width);
+
+    await page.setViewportSize(ESCRITORIO);
+    await expect(clear).toBeHidden();
+    await expect(page.getByRole("link", { name: "Limpiar todo" })).toHaveCount(1);
+  });
+
+  test("28.9: un título de zona largo no tapa limpiar en teléfonos angostos", async ({ page }) => {
+    for (const width of [360, 320]) {
+      await page.setViewportSize({ width, height: 640 });
+      await page.goto("/measure/lista");
+      const title = page.getByRole("heading", { level: 1 });
+      // Sólo geometría: el arnés cambia texto DOM, no prueba rutas ni HTML servido.
+      await title.evaluate((node) => {
+        node.textContent =
+          "Alquiler de apartamentos en LosPalosGrandesLosPalosGrandesLosPalosGrandes";
+      });
+      const clear = page.getByTestId("mobile-clear-all");
+      await expect(clear).toBeVisible();
+      await expect(clear).toHaveAttribute("href", "/alquiler/distrito-capital");
+      const titleBox = await title.boundingBox();
+      const clearBox = await clear.boundingBox();
+      if (!titleBox || !clearBox) throw new Error("El título y el enlace deben ser visibles");
+      expect(titleBox.height, `${width}: título multilínea`).toBeGreaterThan(30);
+      expect(clearBox.width, `${width}: ancho táctil`).toBeGreaterThanOrEqual(44);
+      expect(clearBox.height, `${width}: alto táctil`).toBeGreaterThanOrEqual(44);
+      expect(titleBox.x + titleBox.width, `${width}: sin solape`).toBeLessThanOrEqual(clearBox.x);
+      expect(
+        clearBox.x + clearBox.width,
+        `${width}: enlace dentro del viewport`,
+      ).toBeLessThanOrEqual(width);
+      const search = page.locator("header search");
+      const form = search.locator("form");
+      await expect(search).toHaveCount(1);
+      await expect(form).toHaveCount(1);
+      for (const [name, locator] of [
+        ["search", search],
+        ["form", form],
+      ] as const) {
+        const box = await locator.boundingBox();
+        if (!box) throw new Error(`${width}: ${name} debe tener una caja visible`);
+        expect(box.x, `${width}: ${name} empieza dentro del viewport`).toBeGreaterThanOrEqual(0);
+        expect(
+          box.x + box.width,
+          `${width}: ${name} termina dentro del viewport`,
+        ).toBeLessThanOrEqual(width);
+      }
+      const overflow = await page.evaluate(() => {
+        const viewport = document.documentElement.clientWidth;
+        const offenders = [...document.querySelectorAll<HTMLElement>("body *")]
+          .map((node) => {
+            const box = node.getBoundingClientRect();
+            return {
+              tag: node.tagName,
+              className: typeof node.className === "string" ? node.className : "",
+              testId: node.dataset.testid,
+              left: Math.round(box.left),
+              right: Math.round(box.right),
+              scrollWidth: node.scrollWidth,
+              overflowX: getComputedStyle(node).overflowX,
+            };
+          })
+          .filter(({ right }) => right > viewport + 1)
+          .slice(0, 12);
+        return { scrollWidth: document.documentElement.scrollWidth, offenders };
+      });
+      expect(
+        overflow.scrollWidth,
+        `${width}: sin desborde horizontal; nodos: ${JSON.stringify(overflow.offenders)}`,
+      ).toBeLessThanOrEqual(width);
+    }
+  });
+
   test("el encabezado se come 219 px del teléfono antes de la primera foto", async ({ page }) => {
     await page.setViewportSize(MOVIL);
     await page.goto("/measure/lista");
