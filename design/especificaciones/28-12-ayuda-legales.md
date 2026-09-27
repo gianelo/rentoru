@@ -1,6 +1,6 @@
 # 28.12 · Ayuda y legales — propuesta para aprobación
 
-[Ver los tres arquetipos](../alternativas/28-12-ayuda-legales.html). Es un tablero independiente, no una modificación de las rutas. El selector CSS funciona sin JavaScript; el formulario del tablero ilustra la estructura, **no envía mensajes reales**.
+[Ver las vistas por tamaño y rol](../alternativas/28-12-ayuda-legales-vistas.html). El índice independiente permite elegir Móvil 390 × 840, iPad 768 × 1024 o Escritorio 1440 × 900 y FAQ, Escribinos o Legal sin JavaScript: los enlaces de rol cargan fragmentos del tablero en un iframe con ancho real para activar las media queries importadas de Nav y SearchPill. En el índice, la tira de controles del tablero se oculta y el fragmento elige el artículo aun con el radio FAQ marcado. [Abrir el tablero directamente](../alternativas/28-12-ayuda-legales.html) conserva sus radios CSS y su comportamiento responsive sin fragmento. Ninguna de las dos vistas modifica las rutas; el formulario ilustra la estructura, **no envía mensajes reales**.
 
 ## Derivación
 

@@ -20,6 +20,13 @@
     .controls:has(#faq:checked) label[for=faq], .controls:has(#contacto:checked) label[for=contacto], .controls:has(#legal:checked) label[for=legal] { background: var(--tint); border-color: var(--accent); }
     #faq:focus-visible~.choices label[for=faq], #contacto:focus-visible~.choices label[for=contacto], #legal:focus-visible~.choices label[for=legal] { outline: 3px solid var(--accent); }
     body:has(#faq:checked) .article:not([data-role=faq]), body:has(#contacto:checked) .article:not([data-role=contacto]), body:has(#legal:checked) .article:not([data-role=legal]) { display: none; }
+    body:has(.frame-target:target) .controls { display: none; }
+    body:has(#frame-faq:target) .article:not([data-role=faq]),
+    body:has(#frame-contacto:target) .article:not([data-role=contacto]),
+    body:has(#frame-legal:target) .article:not([data-role=legal]) { display: none; }
+    body:has(#frame-contacto:target) .article[data-role=contacto],
+    body:has(#frame-legal:target) .article[data-role=legal] { display: block; }
+    .frame-target { position: absolute; top: 0; }
     .site { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: var(--surface); }
     .top { height: var(--nav-h); border-bottom: 1px solid var(--line); background: var(--surface); }
     .top .inner { height: 100%; }
@@ -59,6 +66,9 @@
   </style>
 </head>
 <body>
+  <span class="frame-target" id="frame-faq" hidden></span>
+  <span class="frame-target" id="frame-contacto" hidden></span>
+  <span class="frame-target" id="frame-legal" hidden></span>
   <div class="controls">
     <p>28.12 · Propuesta visual. Elegí una anatomía; el tablero no modifica las rutas.</p>
     <input type="radio" name="role" id="faq" aria-label="faq" checked>

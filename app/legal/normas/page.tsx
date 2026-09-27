@@ -18,6 +18,7 @@ export const metadata: Metadata = {
 export default function NormasPage() {
   return (
     <article>
+      <p className={styles.category}>Legal / Normas de publicación</p>
       <h1 className={styles.title}>Normas de publicación</h1>
       <DraftNotice />
 

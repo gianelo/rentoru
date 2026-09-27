@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 export default function DatosPage() {
   return (
     <article>
+      <p className={styles.category}>Legal / Tratamiento de datos</p>
       <h1 className={styles.title}>Tratamiento de datos</h1>
       <DraftNotice />
 

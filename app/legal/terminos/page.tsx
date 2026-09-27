@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 export default function TerminosPage() {
   return (
     <article>
+      <p className={styles.category}>Legal / Términos y condiciones</p>
       <h1 className={styles.title}>Términos y condiciones</h1>
       <DraftNotice />
 
