@@ -262,6 +262,7 @@
 
   .actions {
     order: 3;
+    grid-column: 3;
     justify-self: end;
     min-width: 0;
     gap: 8px;
