@@ -112,13 +112,100 @@
    sesión el botón ya hizo su trabajo"; costaba una segunda fila de cromo en
    la pantalla donde la foto es lo que vende). Sin sesión NUNCA se esconde —
    es cuando hay que provocar, y sigue afuera en las dos anchuras. */
+.dock {
+  display: none;
+}
+
 @media (max-width: 767px) {
+  .barWithPill {
+    min-block-size: var(--nav-h);
+  }
+
+  .barWithPill .inner {
+    flex-wrap: nowrap;
+    min-block-size: var(--nav-h);
+    padding-inline: 16px;
+  }
+
+  .barWithPill .brand,
+  .barWithPill .actions {
+    display: none;
+  }
+
+  .barWithPill .pillCol {
+    order: 1;
+    flex: 1 1 auto;
+  }
+
+  .dock {
+    position: fixed;
+    z-index: 2;
+    inset-inline: var(--nav-dock-inset);
+    bottom: calc(var(--nav-dock-bottom) + env(safe-area-inset-bottom, 0px));
+    block-size: var(--nav-dock-h);
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--strong);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-raised);
+    background: var(--surface);
+  }
+
+  .dockFallback {
+    display: none;
+  }
+
+  .dockLink {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    min-block-size: var(--target-min);
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 2px;
+    color: var(--ink);
+    font-size: var(--nav-dock-label-fs);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .dockLink svg {
+    inline-size: 18px;
+    block-size: 18px;
+  }
+
+  .dockAction {
+    inline-size: var(--nav-dock-action-w);
+    min-block-size: var(--target-min);
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 2px;
+    border-radius: var(--r);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .dockAction svg {
+    inline-size: 22px;
+    block-size: 22px;
+  }
+
+  .dockLink:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
   .publishAuth {
     display: none;
   }
 }
 
 @media (min-width: 768px) {
+  .dock {
+    display: none;
+  }
+
   .inner {
     display: grid;
     grid-template-columns: minmax(120px, 250px) minmax(0, 1fr) minmax(0, 250px);

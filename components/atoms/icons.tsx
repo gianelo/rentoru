@@ -20,6 +20,70 @@
  * lado — el botón que lo usa ya dice «Continuar con Google»), nunca el SVG.
  */
 
+/** Destinos del dock móvil (SISTEMA.md, 28.6). Cada enlace lleva rótulo visible. */
+export function HomeIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="m3 11 9-8 9 8v10h-7v-7h-4v7H3z" />
+    </svg>
+  );
+}
+
+export function PlusIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M12 4v16M4 12h16" />
+    </svg>
+  );
+}
+
+export function EnterIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10" />
+    </svg>
+  );
+}
+
+export function AccountIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-5 3-7 8-7s8 2 8 7" />
+    </svg>
+  );
+}
+
 /** La lupa. Vive dentro de un control con `aria-label="Buscar"`. */
 export function MagnifierIcon() {
   return (
