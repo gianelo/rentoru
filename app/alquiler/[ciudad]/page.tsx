@@ -17,6 +17,7 @@ import {
   cityRoutePath,
   isFilteredZoneRoute,
   resolveCityRoute,
+  resultsBackLink,
 } from "@/modules/listing-discovery/domain/zone-route";
 import { DrizzleListingPhotos } from "@/modules/listing-discovery/infrastructure/drizzle-listing-photos";
 import { readPhotoPublicBaseUrl } from "@/modules/listing-discovery/infrastructure/photo-public-base-url";
@@ -347,6 +348,7 @@ export default async function CiudadPage({ params, searchParams }: CiudadProps) 
             dejaron de ser dos cosas que mantener sincronizadas. */}
         <SearchResultsHeader
           crumbs={crumbs}
+          backLink={resultsBackLink({ kind: "city", city })}
           title={`Alquiler en ${city.name}`}
           notice={notice}
           priceNotices={priceNotices}
