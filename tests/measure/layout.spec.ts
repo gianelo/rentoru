@@ -634,7 +634,7 @@ test.describe("el panel de filtros como acordeón B1 en todas las medidas (28.2)
   }
 
   for (const [width, height] of [
-    [390, 844],
+    [390, 840],
     [768, 1024],
     [1440, 900],
   ] as const) {
