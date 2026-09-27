@@ -50,6 +50,12 @@
   line-height: var(--ficha-body-lh);
 }
 
+.page article a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 @media (min-width: 768px) {
   .page {
     padding-block: 48px 80px;
