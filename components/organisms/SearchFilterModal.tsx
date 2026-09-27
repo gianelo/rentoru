@@ -131,7 +131,9 @@ export function SearchFilterModal({ children }: SearchFilterModalProps) {
 
     host.addEventListener("click", onClick);
     host.addEventListener("submit", onSubmit);
+    host.setAttribute("data-search-filter-enhanced", "");
     return () => {
+      host.removeAttribute("data-search-filter-enhanced");
       host.removeEventListener("click", onClick);
       host.removeEventListener("submit", onSubmit);
     };

@@ -763,7 +763,17 @@ test.describe("el pie del panel no tapa la última fila (regresión de la 22.11)
     // atributos ya no está abierto por estar en 1280px, así que la regresión
     // del pie se mide abriendo ese grupo explícitamente antes de llevar su
     // última fila al borde inferior del scrollport.
-    await page.locator("#filtros-atributos").getByRole("link").first().click();
+    const panel = page.getByTestId("search-panel");
+    await expect(panel.locator("xpath=..")).toHaveAttribute("data-search-filter-enhanced", "");
+    const attributes = page.locator("#filtros-atributos");
+    const nativeLink = attributes.getByRole("link").first();
+    await expect(nativeLink).toHaveAttribute(
+      "href",
+      /\/alquiler\/distrito-capital\?filtros=atributos/,
+    );
+    await nativeLink.click();
+    await expect(page).toHaveURL(/\/measure(?:\?|$)/);
+    await expect(attributes).toHaveAttribute("data-open", "");
 
     const ultimaFila = page
       .locator("#filtros-atributos")
