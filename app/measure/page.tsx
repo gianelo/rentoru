@@ -121,6 +121,23 @@ export default async function MeasureHarnessPage({
         />
       </div>
 
+      <div data-testid="nav-harness-mobile-only">
+        <Nav
+          account={{ kind: "anonymous" }}
+          publish={{ bar: { label: "Publicar gratis", emphasis: "accent" }, menu: null }}
+          signInHref="/signin"
+          pillDisplay="mobile-only"
+          pill={{
+            action: "/",
+            name: "q",
+            value: "",
+            placeholder: "¿En qué zona buscás?",
+            submitLabel: "Buscar",
+            state: { kind: "empty" },
+          }}
+        />
+      </div>
+
       {/* **La barra con sesión, para medir el menú de cuenta** (14.48). El
           arnés de arriba es anónimo, así que las iniciales del avatar no se
           dibujaban en ninguna parte medible — y ahí vivía un token que el
@@ -149,9 +166,8 @@ export default async function MeasureHarnessPage({
         />
       </div>
 
-      {/* **La barra sin pastilla, que es la de la ficha** (14.54). Ya no lleva
-          vuelta ni placa: con las dos afuera, la única diferencia con la de
-          búsqueda es que ésta no arma pastilla, y eso es lo que se mide. */}
+      {/* La barra sin pastilla (14.54), conservada para medir la disposición
+          de marca: la ficha real ahora lleva pastilla sólo en móvil. */}
       <div data-testid="nav-harness-ficha">
         <Nav
           account={{ kind: "anonymous" }}

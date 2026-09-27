@@ -153,6 +153,11 @@
     justify-content: center;
   }
 
+  /* Founder override: formerly pill-less routes search on mobile only. */
+  .mobileOnly {
+    display: none;
+  }
+
   .actions {
     order: 3;
     justify-self: end;

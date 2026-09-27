@@ -6,6 +6,7 @@ import { Container } from "@/../components/layout/Container";
 import { FormShell } from "@/../components/layout/FormShell";
 import { Nav } from "@/../components/organisms/Nav";
 import { resolveNavAccount, resolveNavPublish } from "@/modules/identity/domain/nav-account";
+import { homeSearchForm } from "@/modules/listing-catalogue/domain/search-destination";
 import { listingIdFromSlug } from "@/modules/listing-discovery/domain/listing-url";
 import {
   REPORT_SENT_PARAM,
@@ -78,12 +79,22 @@ export default async function ReportarPage({ params, searchParams }: ReportarPro
   // pantalla.
   const account = resolveNavAccount(session, await readNavAccountFlags(session));
   const publish = resolveNavPublish(account);
+  const searchForm = homeSearchForm();
 
   return (
     <>
       <Nav
         account={account}
         publish={publish}
+        pillDisplay="mobile-only"
+        pill={{
+          action: searchForm.action,
+          name: searchForm.name,
+          value: searchForm.value,
+          placeholder: searchForm.label,
+          submitLabel: searchForm.submitLabel,
+          state: { kind: "empty" },
+        }}
         // Volver acá y no a la ficha: quien entra para reportar sigue queriendo
         // reportar. Es el mismo destino que la acción arma cuando el POST llega
         // sin sesión.

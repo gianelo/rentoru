@@ -490,6 +490,32 @@ test.describe("search filters (5.7)", () => {
  * geometría renderizada, y para eso existe este arnés (1b.10).
  */
 test.describe("la barra del producto (14a, 14.41)", () => {
+  test("mobile-only pill is usable at 390 and absent at 768 and 1440", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    for (const [width, height, visible] of [
+      [390, 840, true],
+      [768, 1024, false],
+      [1440, 900, false],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      await page.goto("/measure");
+      const form = page
+        .getByTestId("nav-harness-mobile-only")
+        .locator('form[action="/"][method="get"]');
+      expect(await form.count()).toBe(1);
+      await expect(form.locator('input[name="q"]')).toHaveCount(1);
+      await expect(form.locator('button[type="submit"]')).toHaveCount(1);
+      const box = await form.boundingBox();
+      console.log(`[mobile-only] ${width}x${height}: ${JSON.stringify(box)}`);
+      expect(Boolean(box && box.width > 0 && box.height > 0)).toBe(visible);
+      if (visible) {
+        await form.locator('input[name="q"]').fill("Chacao");
+        await expect(form).toHaveJSProperty("action", new URL("/", page.url()).href);
+      }
+    }
+    await context.close();
+  });
   test("la pastilla de búsqueda y su botón caben a 320 y 360", async ({ page }) => {
     for (const width of [320, 360]) {
       await page.setViewportSize({ width, height: 800 });
