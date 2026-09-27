@@ -11,8 +11,10 @@ test("mobile dock hides on real downward window scroll and returns on upward scr
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 840 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto(route);
   const dock = page.getByRole("navigation", { name: "Navegación principal" });
+  await expect(dock).toHaveAttribute("data-scroll-ready", "");
   await expect(dock).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollHeight - innerHeight),
@@ -28,8 +30,10 @@ test("mobile dock hides on real downward window scroll and returns on upward scr
 
 test("reduced motion keeps dock visible and preference changes reveal it", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 840 });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto(route);
   const dock = page.getByRole("navigation", { name: "Navegación principal" });
+  await expect(dock).toHaveAttribute("data-scroll-ready", "");
   await scroll(page, 450);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(64);
   await expect(dock).toHaveAttribute("inert", "");

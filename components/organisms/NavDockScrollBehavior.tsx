@@ -44,7 +44,9 @@ export function NavDockScrollBehavior({ children, fallback }: NavDockScrollBehav
     window.addEventListener("scroll", onScroll, { passive: true });
     mobile.addEventListener("change", onPreferenceChange);
     reducedMotion.addEventListener("change", onPreferenceChange);
+    dockRef.current?.setAttribute("data-scroll-ready", "");
     return () => {
+      dockRef.current?.removeAttribute("data-scroll-ready");
       window.removeEventListener("scroll", onScroll);
       mobile.removeEventListener("change", onPreferenceChange);
       reducedMotion.removeEventListener("change", onPreferenceChange);
