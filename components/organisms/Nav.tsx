@@ -35,8 +35,9 @@ const WORDMARK = "Rentoru";
  *   del nombre y del teléfono, que es donde el inquilino la lee justo antes de
  *   escribir. La 14.43 la había subido acá y esta tarea la revierte entera.
  *
- * `pill` queda opcional y sigue distinguiendo algo real: una ficha no es una
- * búsqueda, y ninguna de sus dos láminas dibuja la pastilla.
+ * `pill` queda opcional. La decisión posterior del fundador agrega búsqueda
+ * en todas las barras móviles; `pillDisplay` conserva la ficha sin pastilla
+ * en escritorio, como muestran sus láminas.
  */
 export interface NavProps {
   /** Ya resuelto por quien la usa (`resolveNavAccount`) — acá no se decide nada. */
@@ -45,8 +46,10 @@ export interface NavProps {
   readonly publish: NavPublish;
   /** A dónde manda "Entrar" — incluye el `callbackUrl`, si aplica. */
   readonly signInHref: string;
-  /** El inicio, las dos pantallas de resultados y `/mis-avisos`; la ficha no. */
+  /** Formulario ya resuelto por el caller; la ficha lo sirve sólo en móvil. */
   readonly pill?: SearchPillProps;
+  /** Presentation only: callers choose whether their pill occupies desktop. */
+  readonly pillDisplay?: "all" | "mobile-only";
 }
 
 /**
@@ -64,7 +67,7 @@ export interface NavProps {
  * embudo de nueve pasos es una salida justo donde menos conviene. Tampoco
  * `/renovar/[token]`, deliberadamente sin estilo.
  */
-export function Nav({ account, publish, pill, signInHref }: NavProps) {
+export function Nav({ account, publish, pill, pillDisplay = "all", signInHref }: NavProps) {
   const publishClass =
     publish.bar.emphasis === "accent" ? styles.publishAccent : styles.publishOutline;
 
@@ -84,7 +87,9 @@ export function Nav({ account, publish, pill, signInHref }: NavProps) {
         </AppLink>
 
         {pill ? (
-          <div className={styles.pillCol}>
+          <div
+            className={`${styles.pillCol} ${pillDisplay === "mobile-only" ? styles.mobileOnly : ""}`}
+          >
             <SearchPill {...pill} />
           </div>
         ) : null}

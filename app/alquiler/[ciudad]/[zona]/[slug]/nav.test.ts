@@ -45,20 +45,12 @@ describe("la barra de la ficha es la del resto del sitio (14.54)", () => {
     expect(FICHA).not.toContain(">←<");
   });
 
-  /**
-   * **RESUELTO por el fundador: «seguí el diseño, que fue lo que se decidió
-   * acá».** Ninguna de las dos láminas de la ficha dibuja la pastilla — la 11
-   * (escritorio) gasta el slot central en la marca y la 10 (móvil) dibuja sólo
-   * dos hijos. Eso acota la 14i, que decía «la pastilla aparece en todas las
-   * páginas», a «en todas menos la ficha»: una ficha no es una búsqueda.
-   *
-   * Se comprueba que la página no la ARME, no sólo que no la pase: dejar el
-   * `homeSearchForm` colgando sería trabajo muerto que el próximo arreglo
-   * apurado vuelve a enchufar.
+  /** La decisión posterior del fundador reemplaza la excepción de las láminas.
+   * El destino real y el HTML servido se comprueban en ficha-servida.test.tsx.
    */
-  it("no arma ninguna pastilla: la ficha no la lleva (láminas 10 y 11)", () => {
-    expect(FICHA).not.toContain("homeSearchForm");
-    expect(FICHA).not.toContain("SearchPillProps");
+  it("alimenta la pastilla con el formulario del dominio", () => {
+    expect(FICHA).toContain("homeSearchForm()");
+    expect(FICHA).toContain("pill={{");
   });
 
   it("resuelve el estado de la barra en el dominio y no en la página", () => {
