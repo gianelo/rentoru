@@ -8,6 +8,7 @@ import { AccountIcon, EnterIcon, HomeIcon, PlusIcon } from "../atoms/icons";
 import { SearchPill, type SearchPillProps } from "../molecules/SearchPill";
 import { AccountMenu } from "./AccountMenu";
 import styles from "./Nav.module.css";
+import { NavDockScrollBehavior } from "./NavDockScrollBehavior";
 
 /**
  * Una sola copia. SISTEMA.md fija que no hay logotipo y que la marca ES la
@@ -135,10 +136,7 @@ export function Nav({ account, publish, pill, pillDisplay = "all", signInHref }:
           </div>
         </div>
       </header>
-      <nav
-        className={`${styles.dock} ${pill ? "" : styles.dockFallback}`}
-        aria-label="Navegación principal"
-      >
+      <NavDockScrollBehavior fallback={!pill}>
         <AppLink className={styles.dockLink} href="/">
           <HomeIcon />
           Inicio
@@ -160,7 +158,7 @@ export function Nav({ account, publish, pill, pillDisplay = "all", signInHref }:
             Mi cuenta
           </AppLink>
         )}
-      </nav>
+      </NavDockScrollBehavior>
     </>
   );
 }

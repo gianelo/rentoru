@@ -12,8 +12,11 @@ import styles from "./legal.module.css";
  * Mirrors `app/ayuda/layout.tsx` rather than sharing it: extracting a
  * common shell would edit a file 23.4 already shipped, for two categories
  * free to diverge later (product copy vs. founder-ratified legal text).
- * Same static-content discipline: no session read, no query, no client
- * component (design.md D13/D14) — `Nav` always draws anonymous.
+ * Same static-content discipline: no session read or database query.
+ * `Nav` always draws anonymous; its client-side dock scroll behavior is
+ * optional, so reading remains usable without JavaScript (design.md D13/D14).
+ * A signed-in visitor still sees "Entrar" here rather than their account
+ * menu: the known tradeoff for avoiding a session read.
  */
 export default function LegalLayout({ children }: { children: ReactNode }) {
   const account = resolveNavAccount(null);
