@@ -24,6 +24,22 @@ describe("AyudaLayout", () => {
     expect(markup).toContain("<h1>Título de prueba</h1>");
   });
 
+  it("serves a cityless GET search pill without reading a session", () => {
+    const markup = renderToStaticMarkup(<AyudaLayout>{null}</AyudaLayout>);
+    expect(markup).toMatch(/<form[^>]*action="\/"[^>]*method="get"[^>]*>/);
+    expect(markup).toMatch(/<input[^>]*name="q"[^>]*>/);
+    expect(markup).toMatch(/<button[^>]*type="submit"[^>]*>.*?<\/button>/);
+    expect(markup).not.toContain('name="zona"');
+  });
+
+  it("serves the three dock destinations alongside the GET search without JavaScript", () => {
+    const markup = renderToStaticMarkup(<AyudaLayout>{null}</AyudaLayout>);
+    const dock = markup.match(/<nav[^>]*aria-label="Navegación principal"[^>]*>(.*?)<\/nav>/)?.[1];
+    expect(dock).toMatch(/href="\/"[^>]*>.*?Inicio<\/a>/);
+    expect(dock).toMatch(/href="\/publicar"[^>]*>.*?Publicar/);
+    expect(dock).toMatch(/href="[^"]*"[^>]*>.*?Entrar<\/a>/);
+  });
+
   it("draws no account menu, which only a signed-in Nav would render", () => {
     const markup = renderToStaticMarkup(<AyudaLayout>{null}</AyudaLayout>);
 

@@ -88,3 +88,43 @@ describe("ListingMetaPart", () => {
     expect(parte.trim()).toBe("white-space: nowrap;");
   });
 });
+
+/**
+ * **`wrap`, la salida deliberada de la 22.47 (tasks.md 28.7).** Con la
+ * taxonomía real hay zonas como «Barrio Tierra Negra del Sector Bella
+ * Vista» que no entran en NINGUNA línea del cuerpo de la tarjeta como una
+ * sola unidad indivisible: `white-space: nowrap` no las manda a la línea de
+ * abajo — no hay línea que las reciba enteras —, las desborda, y
+ * `ListingCard.module.css`'s `.card { overflow: hidden }` las recorta en
+ * silencio. El fundador lo dijo explícito: *«sé que decidimos que sea un
+ * espacio fijo, pero cuando hay texto grande debería hacer el salto de
+ * línea dinámicamente; no puede haber nada fijo»*.
+ *
+ * **Por qué es un prop y no un segundo componente.** `ListingMetaPart` ya
+ * es la unidad exacta que cada consumidor envuelve; una unidad que necesita
+ * fluir sigue siendo la misma unidad, sólo con otra regla de recorte. Las
+ * unidades cortas —«2 hab», «78 m²»— nunca necesitan esto: no son lo
+ * bastante largas para no entrar solas en una línea, así que perder la
+ * protección de la 22.47 ahí no compraría nada y se quedan en `.part`.
+ */
+describe("ListingMetaPart — wrap (tasks.md 28.7)", () => {
+  const metaSource = readFileSync("components/atoms/ListingMeta.tsx", "utf-8");
+
+  it("`.partWrap` declara flujo normal y nada de la regla que sustituye", () => {
+    expect(block(metaCss, "partWrap").trim()).toBe("white-space: normal;");
+  });
+
+  it("el prop `wrap` decide entre las dos clases, no abre una tercera copia del átomo", () => {
+    expect(metaSource).toMatch(/wrap[?:]/);
+    expect(metaSource).toContain("styles.partWrap");
+    expect(metaSource).toContain("styles.part");
+  });
+
+  it("con contenido que no entra en ninguna línea, sigue siendo el mismo envoltorio", () => {
+    const markup = renderToStaticMarkup(
+      <ListingMetaPart wrap>Barrio Tierra Negra del Sector Bella Vista</ListingMetaPart>,
+    );
+    expect(markup.startsWith("<span")).toBe(true);
+    expect(markup).toContain("Barrio Tierra Negra del Sector Bella Vista");
+  });
+});

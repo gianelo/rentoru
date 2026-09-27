@@ -42,8 +42,13 @@
 .pillCol {
   order: 3;
   flex: 1 1 100%;
+  min-inline-size: 0;
   display: flex;
   justify-content: center;
+}
+
+.pillCol > search {
+  min-inline-size: 0;
 }
 
 .actions {
@@ -107,22 +112,128 @@
    sesión el botón ya hizo su trabajo"; costaba una segunda fila de cromo en
    la pantalla donde la foto es lo que vende). Sin sesión NUNCA se esconde —
    es cuando hay que provocar, y sigue afuera en las dos anchuras. */
+.dock {
+  display: none;
+}
+
 @media (max-width: 767px) {
+  .barWithPill {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    min-block-size: var(--nav-h);
+  }
+
+  .barWithPill .inner {
+    flex-wrap: nowrap;
+    min-block-size: var(--nav-h);
+    padding-inline: 16px;
+  }
+
+  .barWithPill .brand,
+  .barWithPill .actions {
+    display: none;
+  }
+
+  .barWithPill .pillCol {
+    order: 1;
+    flex: 1 1 auto;
+  }
+
+  .barWithPill .pillCol > search {
+    inline-size: 100%;
+  }
+
+  .dock {
+    position: fixed;
+    z-index: 2;
+    inset-inline: var(--nav-dock-inset);
+    bottom: calc(var(--nav-dock-bottom) + env(safe-area-inset-bottom, 0px));
+    block-size: var(--nav-dock-h);
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--strong);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-raised);
+    background: var(--surface);
+  }
+
+  .dockFallback {
+    display: none;
+  }
+
+  .dockHidden {
+    transform: translateY(
+      calc(100% + var(--nav-dock-bottom) + env(safe-area-inset-bottom, 0px) + 8px)
+    );
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dock {
+      transition: transform 200ms ease;
+    }
+  }
+
+  .dockLink {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    min-block-size: var(--target-min);
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 2px;
+    color: var(--ink);
+    font-size: var(--nav-dock-label-fs);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .dockLink svg {
+    inline-size: 18px;
+    block-size: 18px;
+  }
+
+  .dockAction {
+    inline-size: var(--nav-dock-action-w);
+    min-block-size: var(--target-min);
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 2px;
+    border-radius: var(--r);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .dockAction svg {
+    inline-size: 22px;
+    block-size: 22px;
+  }
+
+  .dockLink:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
   .publishAuth {
     display: none;
   }
 }
 
 @media (min-width: 768px) {
+  .dock {
+    display: none;
+  }
+
   .inner {
     display: grid;
-    grid-template-columns: 250px 1fr 250px;
+    grid-template-columns: minmax(120px, 250px) minmax(0, 1fr) minmax(0, 250px);
     align-items: center;
     gap: 20px;
     min-block-size: var(--nav-h-desktop);
     max-inline-size: 1100px;
     margin-inline: auto;
-    padding-inline: 0;
+    padding-inline: 16px;
   }
 
   .brand {
@@ -148,14 +259,32 @@
     justify-content: center;
   }
 
+  /* Founder override: formerly pill-less routes search on mobile only. */
+  .mobileOnly {
+    display: none;
+  }
+
   .actions {
     order: 3;
+    grid-column: 3;
     justify-self: end;
+    min-width: 0;
+    gap: 8px;
   }
 
   .publishAccent,
   .publishOutline,
   .enter {
     min-block-size: 40px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .inner {
+    padding-inline: 0;
+  }
+
+  .actions {
+    gap: 12px;
   }
 }

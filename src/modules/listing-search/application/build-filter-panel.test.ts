@@ -287,7 +287,7 @@ describe("buildFilterPanel", () => {
     });
 
     expect(panel.confirm.kind).toBe("results");
-    expect(panel.confirm).toMatchObject({ label: "Ver 1 aviso" });
+    expect(panel.confirm).toMatchObject({ label: "Aplicar filtros" });
   });
 });
 

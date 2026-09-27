@@ -20,6 +20,7 @@ export const metadata: Metadata = {
 export default function CookiesPage() {
   return (
     <article>
+      <p className={styles.category}>Legal / Uso de cookies</p>
       <h1 className={styles.title}>Uso de cookies</h1>
       <DraftNotice />
 

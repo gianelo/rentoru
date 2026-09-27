@@ -7,6 +7,7 @@ import {
   resolveSearchSteps,
   SEARCH_STEPS,
   type SearchSelection,
+  STALE_AREA_FILTER_NOTICE,
   STALE_FILTER_GROUP_NOTICE,
   searchHeadline,
 } from "./search-accordion";
@@ -92,6 +93,65 @@ describe("si el panel está abierto lo dice la dirección (14.33)", () => {
   });
 });
 
+/**
+ * **`?metros=` guardado de antes de la 28.18 es la misma cortesía que un
+ * grupo viejo, y no un cuarto estado del primer eje.**
+ *
+ * Decisión del fundador, 2026-09-14: *«vamos a quitar este filtro. Ojo solo
+ * quitar de acá nada más. Luego vemos si lo volvemos a activar»*. Sin el
+ * control ni la ficha, un `?metros=70` que sigue filtrando en silencio es un
+ * filtro fantasma; `buildSearchCriteria` ya lo ignora, y esto prueba que el
+ * panel lo dice — mirando sólo si el parámetro llegó, no si validó, porque lo
+ * que hay que avisar es que se PIDIÓ, no que haya sido un número entero.
+ */
+describe("`?metros=` guardado abre el panel igual y lo dice (28.18)", () => {
+  it("presente sin ningún grupo pedido: abre igual y lo dice", () => {
+    expect(resolveFilterPanel(undefined, true)).toEqual({
+      open: true,
+      notice: STALE_AREA_FILTER_NOTICE,
+    });
+  });
+
+  it("con el token de la pastilla: abre igual, con el aviso encima", () => {
+    expect(resolveFilterPanel(PANEL_OPEN_TOKEN, true)).toEqual({
+      open: true,
+      notice: STALE_AREA_FILTER_NOTICE,
+    });
+  });
+
+  it("con un grupo válido pedido: abre en ese grupo, con el aviso encima", () => {
+    expect(resolveFilterPanel("precio", true)).toEqual({
+      open: true,
+      step: "precio",
+      notice: STALE_AREA_FILTER_NOTICE,
+    });
+  });
+
+  it("basta con que el parámetro esté presente: no hace falta que valide", () => {
+    // El texto avisa que se PIDIÓ un filtro de metros que ya no existe, no que
+    // haya sido un número válido — eso lo decide `readMinAreaM2`, no esto.
+    expect(resolveFilterPanel(undefined, true).notice).toBe(STALE_AREA_FILTER_NOTICE);
+  });
+
+  it("sin el segundo argumento sigue siendo el comportamiento de siempre", () => {
+    expect(resolveFilterPanel(undefined)).toEqual({ open: false, notice: null });
+  });
+
+  /**
+   * **Con un grupo viejo Y `?metros=` viejo a la vez, gana el aviso del
+   * grupo.** Es una decisión explícita y no un accidente de orden: perder la
+   * explicación de en qué grupo abrir el panel es peor que perder la del
+   * metraje, así que `resolveFilterPanel` no intenta decir las dos cosas a la
+   * vez en un solo campo de texto.
+   */
+  it("con las dos direcciones viejas a la vez, gana el aviso del grupo", () => {
+    expect(resolveFilterPanel("zona", true)).toEqual({
+      open: true,
+      notice: STALE_FILTER_GROUP_NOTICE,
+    });
+  });
+});
+
 describe("un solo grupo abierto a la vez en el teléfono (acordeón secuencial)", () => {
   it("abre el que pide la dirección", () => {
     const open = resolveSearchSteps(CARACAS, "atributos").filter((view) => view.open);
@@ -169,20 +229,6 @@ describe("cada grupo cerrado muestra lo elegido", () => {
     expect(step(CARACAS, "habitaciones").answered).toBe(false);
   });
 
-  /**
-   * **Los metros² son la tercera parte del mismo grupo «tamaño»** (14.45
-   * rebanada B). No son un escalón sino un número escrito, así que el resumen
-   * dice el número tal cual con su «desde»: es un mínimo, y «72 m²» a secas se
-   * leería como "mide 72".
-   */
-  it("el grupo del tamaño nombra también los metros², y son un mínimo", () => {
-    expect(step({ ...CARACAS, minAreaM2: 72 }, "habitaciones").summary).toBe("Desde 72 m²");
-    expect(step({ ...CARACAS, minAreaM2: 72 }, "habitaciones").answered).toBe(true);
-    expect(
-      step({ ...CARACAS, minRooms: 2, minBathrooms: 2, minAreaM2: 90 }, "habitaciones").summary,
-    ).toBe("2 hab · 2 baños · Desde 90 m²");
-  });
-
   it("quién publica dice a quién, con las mismas palabras que el resumen", () => {
     expect(step(CARACAS, "publica").summary).toBe("Cualquiera");
     expect(step(CARACAS, "publica").answered).toBe(false);
@@ -258,10 +304,6 @@ describe("countPillFilters — lo que el filtro de la pastilla abre de verdad (1
   it("los baños cuentan como un filtro más: la pastilla abre el grupo del tamaño entero", () => {
     expect(countPillFilters({ ...CARACAS, minBathrooms: 2 })).toBe(1);
     expect(countPillFilters({ ...CARACAS, minRooms: 2, minBathrooms: 2 })).toBe(2);
-    // Y los metros² son el tercero del mismo grupo (14.45 rebanada B): la
-    // pastilla cuenta filtros puestos, no grupos abiertos.
-    expect(countPillFilters({ ...CARACAS, minAreaM2: 72 })).toBe(1);
-    expect(countPillFilters({ ...CARACAS, minRooms: 2, minBathrooms: 2, minAreaM2: 72 })).toBe(3);
   });
 
   it("el caso de la lámina 7c: precio, habitaciones y quién publica son 3", () => {

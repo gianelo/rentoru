@@ -267,8 +267,7 @@ export function searchChoices(
       `/alquiler/${slugify(city.name)}/${slugify(zone.name)}`,
       // **El conteo es de la ZONA y nunca de la ciudad**: la ciudad no tiene un
       // conteo por zona que contar, y escribirle uno sería inventar un número
-      // que nadie mandó — la misma negativa que `search-preview.ts` ya toma con
-      // el precio.
+      // que nadie mandó.
       zone.count,
     );
   }

@@ -3,6 +3,7 @@ import { Container } from "@/../components/layout/Container";
 import { FormShell } from "@/../components/layout/FormShell";
 import { Nav } from "@/../components/organisms/Nav";
 import { resolveNavAccount, resolveNavPublish } from "@/modules/identity/domain/nav-account";
+import { homeSearchForm } from "@/modules/listing-catalogue/domain/search-destination";
 import styles from "./legal.module.css";
 
 /**
@@ -11,18 +12,35 @@ import styles from "./legal.module.css";
  * Mirrors `app/ayuda/layout.tsx` rather than sharing it: extracting a
  * common shell would edit a file 23.4 already shipped, for two categories
  * free to diverge later (product copy vs. founder-ratified legal text).
- * Same static-content discipline: no session read, no query, no client
- * component (design.md D13/D14) — `Nav` always draws anonymous.
+ * Same static-content discipline: no session read or database query.
+ * `Nav` always draws anonymous; its client-side dock scroll behavior is
+ * optional, so reading remains usable without JavaScript (design.md D13/D14).
+ * A signed-in visitor still sees "Entrar" here rather than their account
+ * menu: the known tradeoff for avoiding a session read.
  */
 export default function LegalLayout({ children }: { children: ReactNode }) {
   const account = resolveNavAccount(null);
   const publish = resolveNavPublish(account);
+  const form = homeSearchForm();
 
   return (
     <>
       {/* Bare `/signin`, the same choice Ayuda's layout and app/page.tsx
           make for their own anonymous Nav. */}
-      <Nav account={account} publish={publish} signInHref="/signin" />
+      <Nav
+        account={account}
+        publish={publish}
+        signInHref="/signin"
+        pillDisplay="mobile-only"
+        pill={{
+          action: form.action,
+          name: form.name,
+          value: form.value,
+          placeholder: form.label,
+          submitLabel: form.submitLabel,
+          state: { kind: "empty" },
+        }}
+      />
       <main className={styles.page}>
         <Container>
           <FormShell>{children}</FormShell>

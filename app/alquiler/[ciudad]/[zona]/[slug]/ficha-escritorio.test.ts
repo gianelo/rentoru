@@ -30,8 +30,8 @@ const CONTACT = readFileSync(
 );
 
 /** El bloque de una hoja a partir de su punto de quiebre. */
-function desktopBlock(css: string): string {
-  const at = css.indexOf("@media (min-width: 768px)");
+function desktopBlock(css: string, breakpoint = 768): string {
+  const at = css.indexOf(`@media (min-width: ${breakpoint}px)`);
   expect(at).toBeGreaterThan(-1);
   return css.slice(at);
 }
@@ -85,16 +85,18 @@ describe("la ficha de escritorio contra su lámina", () => {
    * sobraban 8 px del contenedor — una desalineación que no rompe nada y que se
    * arrastra a cada pantalla que reuse esta rejilla.
    */
-  it("la separación entre columnas es la del dibujo", () => {
+  it("la separación entre columnas es la del dibujo sólo desde 1100px", () => {
     const drawn = pixels(laminaStyle("grid-template-columns:640px"), "gap");
+    const tablet = SPLIT.slice(0, SPLIT.indexOf("@media (min-width: 1100px)"));
 
-    expect(declaration(desktopBlock(SPLIT), "split", "gap")).toBe(`${drawn}px`);
+    expect(tablet).not.toMatch(/grid-template-columns:|position:\s*sticky/);
+    expect(declaration(desktopBlock(SPLIT, 1100), "split", "gap")).toBe(`${drawn}px`);
   });
 
   it("foto, separación y columna de datos suman el contenedor entero", () => {
-    const columns = declaration(desktopBlock(SPLIT), "split", "grid-template-columns");
+    const columns = declaration(desktopBlock(SPLIT, 1100), "split", "grid-template-columns");
     const [media, data] = columns.split(/\s+/).map((track) => Number.parseInt(track, 10));
-    const gap = Number.parseInt(declaration(desktopBlock(SPLIT), "split", "gap"), 10);
+    const gap = Number.parseInt(declaration(desktopBlock(SPLIT, 1100), "split", "gap"), 10);
 
     // 1100 es el contenedor fijo, y la lámina lo dice en su propia nota: en
     // 1440, 1920 o 4K sigue midiendo 1100 y lo que crece es el aire lateral.

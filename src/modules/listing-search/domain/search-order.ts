@@ -3,8 +3,8 @@ import { buildSearchHref, SEARCH_QUERY_NAMES, type SearchQuery } from "./search-
 /**
  * **En qué orden sale la lista** (14.47, decisión del fundador del 2026-09-03).
  *
- * Tres opciones y ni una más: «Recientes» —la de por defecto—, «Precio: menor a
- * mayor» y «Precio: mayor a menor».
+ * Cuatro direcciones: publicación reciente (por defecto), publicación antigua
+ * y ambos sentidos de precio.
  *
  * **«Recientes» sigue de por defecto, y ahora como decisión y no como inercia.**
  * La razón es del catálogo: un aviso viejo en un mercado de alquileres suele
@@ -22,7 +22,7 @@ import { buildSearchHref, SEARCH_QUERY_NAMES, type SearchQuery } from "./search-
  * plantilla— y por la razón mecánica de siempre: el suelo de cobertura del 90 %
  * llega acá y no llega a `app/`.
  */
-export type SearchOrder = "recent" | "priceAsc" | "priceDesc";
+export type SearchOrder = "recent" | "oldest" | "priceAsc" | "priceDesc";
 
 /**
  * Cómo viaja cada orden en `?orden=`, y **«Recientes» viaja como ausencia**.
@@ -41,6 +41,7 @@ export type SearchOrder = "recent" | "priceAsc" | "priceDesc";
  */
 export const SEARCH_ORDER_TOKENS: Readonly<Record<SearchOrder, string | null>> = {
   recent: null,
+  oldest: "fecha-asc",
   priceAsc: "precio-asc",
   priceDesc: "precio-desc",
 };
@@ -51,7 +52,8 @@ export const SEARCH_ORDER_TOKENS: Readonly<Record<SearchOrder, string | null>> =
  * abierto ni las otras dos.
  */
 const SEARCH_ORDER_LABELS: Readonly<Record<SearchOrder, string>> = {
-  recent: "Recientes",
+  recent: "Publicación: más recientes",
+  oldest: "Publicación: más antiguos",
   priceAsc: "Precio: menor a mayor",
   priceDesc: "Precio: mayor a menor",
 };
@@ -60,6 +62,7 @@ const SEARCH_ORDERS = Object.keys(SEARCH_ORDER_LABELS) as readonly SearchOrder[]
 
 /** Del token de la dirección al orden, con `recent` como caída. */
 const BY_TOKEN: Readonly<Record<string, SearchOrder>> = {
+  "fecha-asc": "oldest",
   "precio-asc": "priceAsc",
   "precio-desc": "priceDesc",
 };
@@ -99,7 +102,7 @@ export interface SearchOrderMenu {
 }
 
 /**
- * Las tres opciones con su dirección ya armada.
+ * Las cuatro opciones con su dirección ya armada.
  *
  * **Elegir un orden vuelve a la primera página**, y por eso el `page: null` va
  * explícito: `buildSearchHref` sólo reinicia la paginación cuando cambia un

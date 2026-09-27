@@ -6,16 +6,16 @@ import type { RelaxableFilter } from "../../domain/search-confirm";
 import type { ListingAttribute, PublisherType, SearchCriteria } from "../../domain/search-criteria";
 
 /**
- * The numbers every filter option shows before anybody picks it (tasks.md
+ * The real counts behind each filter option before anybody picks it (tasks.md
  * 14.11 — "the heaviest requirement in the entire document").
  *
  * The founder's cross-cutting rule 3 is the whole contract: **"todo conteo es
- * real. Si una etiqueta dice 9, hay 9."** F3, F4, F6 and F7 all rest on it —
- * every option carries its count, and the confirm button states the exact
- * result count at each step ("Ver 47 avisos" → "Ver 21" → "Ver 16" → "Ver 9").
- * A count that comes from anywhere other than the rows themselves is a number
- * that can lie without anyone noticing, which is why this port has no cache
- * and no estimate in its shape.
+ * real. Si una etiqueta dice 9, hay 9."** Since 28.8 the panel no longer prints
+ * those counts beside each option or inside the confirm button, but it still
+ * needs the same real numbers to decide which options would lead to zero
+ * results and must be disabled. A count that comes from anywhere other than
+ * the rows themselves is a number that can lie without anyone noticing, which
+ * is why this port has no cache and no estimate in its shape.
  *
  * **`criteria` is the same `SearchCriteria` the row query takes, deliberately.**
  * It is not a parallel type that happens to look similar: sharing it is what

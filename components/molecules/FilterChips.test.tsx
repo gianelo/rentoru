@@ -112,3 +112,36 @@ function bloque(css: string, selector: string): string {
   if (!match) throw new Error(`falta el bloque .${selector}`);
   return match[1] ?? "";
 }
+
+/**
+ * **Verificado y no supuesto (tasks.md 28.7).** El fundador nombró estas
+ * fichas como una de las tres superficies que una zona real puede desbordar
+ * —«Barrio Tierra Negra del Sector Bella Vista»—, pero esta hoja no declara
+ * ni `overflow: hidden` ni `white-space: nowrap` en ningún bloque, y
+ * `chip.label` (el `<span>` que dibuja el texto) no tiene ni siquiera una
+ * clase propia: hereda el `white-space: normal` del navegador. Sin un ancho
+ * fijo que lo obligue a recortarse, el texto ya fluye. Esta prueba fija ese
+ * hecho para que quien le agregue una clase a `.label` más adelante —o un
+ * `max-width` a `.chip`— vuelva a leer este comentario antes de reintroducir
+ * el mismo recorte que la tarjeta tuvo que revertir.
+ */
+describe("las fichas no tienen de dónde recortar texto (tasks.md 28.7)", () => {
+  const css = readFileSync("components/molecules/FilterChips.module.css", "utf-8");
+
+  it("ningún bloque declara overflow: hidden ni white-space: nowrap", () => {
+    expect(css).not.toMatch(/overflow:\s*hidden/);
+    expect(css).not.toMatch(/white-space:\s*nowrap/);
+  });
+
+  it("una etiqueta de zona real, larga, se lee completa y no acortada", () => {
+    const chips: readonly FilterChip[] = [
+      {
+        label: "Barrio Tierra Negra del Sector Bella Vista",
+        removeHref: "/alquiler/distrito-capital",
+        removeLabel: "Quitar Barrio Tierra Negra del Sector Bella Vista",
+      },
+    ];
+
+    expect(render(chips)).toContain("Barrio Tierra Negra del Sector Bella Vista");
+  });
+});

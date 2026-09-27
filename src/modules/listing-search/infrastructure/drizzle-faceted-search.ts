@@ -1,8 +1,9 @@
-import { and, eq, gt, gte, inArray, lte, type SQL, sql } from "drizzle-orm";
+import { and, eq, exists, gt, gte, inArray, lte, type SQL, sql } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type * as schema from "../../../shared/db/schema";
 import type { PropertyType } from "../../../shared/db/schema";
-import { listings } from "../../../shared/db/schema";
+import { listingPhotoDerivatives, listingPhotos, listings } from "../../../shared/db/schema";
+import { REQUIRED_SIZES } from "../../listing-discovery/domain/listing-grid";
 import { assertRowBudget } from "../../operability/domain/row-budget";
 import type {
   BathroomStep,
@@ -20,7 +21,7 @@ import { LISTING_ATTRIBUTES, type SearchCriteria } from "../domain/search-criter
 import { attributeCondition } from "./listing-attribute-sql";
 
 /**
- * Cada número que un filtro muestra, en UNA consulta (task 14.11).
+ * Cada número que decide el estado de un filtro, en UNA consulta (task 14.11).
  *
  * **El costo son los viajes de red, no Postgres, y ésa es toda la razón de
  * este archivo.** Neon es Postgres serverless sobre HTTP: el total más las
@@ -28,9 +29,9 @@ import { attributeCondition } from "./listing-attribute-sql";
  * tecla que alguien toca en un filtro. `COUNT(*) FILTER (WHERE …)` los resuelve
  * en una sola pasada sobre las mismas filas — que es exactamente para lo que el
  * esquema eligió cinco columnas booleanas en vez de una tabla de atributos (ver
- * el comentario de `has_power_plant` en schema.ts). Un cache no sirve acá: F7
- * pide el número **exacto**, y "Ver 47 avisos" sobre una lista de 44 rompe lo
- * único para lo que ese botón existe.
+ * el comentario de `has_power_plant` en schema.ts). Un cache no sirve acá:
+ * aunque la 28.8 ya no imprime esos números en el panel, el mismo conteo exacto
+ * decide qué opciones se apagan para no mandar a una pantalla vacía.
  *
  * **Se agrupa por zona en vez de emitir una columna por zona**, y la razón es
  * el tamaño del árbol: `zone` guarda la jerarquía entera — miles de filas por
@@ -124,10 +125,44 @@ export class DrizzleFacetedSearch implements FacetedSearchPort {
     // hay 9»). `tests/integration/faceted-search.test.ts` compara cada total
     // contra las filas de la búsqueda equivalente, así que arreglar una sola
     // de las dos consultas no puede pasar en verde.
+    //
+    // **La cuarta condición incondicional, y es la que la 28.3 agrega.**
+    // `buildListingGrid` (F9, `listing-grid.ts`) descarta en JavaScript todo
+    // aviso sin las dos derivadas requeridas de su portada — «un aviso sin
+    // portada no se muestra» — y hasta acá ese descarte ocurría DESPUÉS de que
+    // este archivo ya lo hubiera contado: el mismo defecto de forma que la
+    // 27.1 y la 27.8 ya corrigieron para la taxonomía y las zonas, ahora en la
+    // fotografía. La importación de cartera de la Fase 9 no exige foto al
+    // importar (`broker-bulk-import`) y `activateListing` sí la exige antes de
+    // marcar `active` — así que en el camino real un aviso activo siempre
+    // tiene AL MENOS una foto —, pero el rellenado de derivadas de la 19a
+    // puede dejar una portada a medio derivar, incompleta en `thumb` o `card`
+    // y por lo tanto invisible en la cuadrícula aunque `status` diga `active`.
+    // `hasDrawableCover` repite la MISMA pregunta que F9 ya resuelve en
+    // JavaScript, con la MISMA lista de tamaños (`REQUIRED_SIZES`,
+    // importada y no copiada), para que el número que este archivo promete
+    // sea el número que `buildListingGrid` puede dibujar de verdad.
+    const hasDrawableCover = exists(
+      this.db
+        .select({ photoId: listingPhotos.id })
+        .from(listingPhotos)
+        .innerJoin(listingPhotoDerivatives, eq(listingPhotoDerivatives.photoId, listingPhotos.id))
+        .where(
+          and(
+            eq(listingPhotos.listingId, listings.id),
+            eq(listingPhotos.position, 0),
+            inArray(listingPhotoDerivatives.name, [...REQUIRED_SIZES]),
+          ),
+        )
+        .groupBy(listingPhotos.id)
+        .having(sql`count(*) = ${REQUIRED_SIZES.length}`),
+    );
+
     const shared = [
       eq(listings.cityId, criteria.cityId),
       eq(listings.status, "active"),
       gt(listings.expiresAt, sql`now()`),
+      hasDrawableCover,
     ];
 
     // El precio se salió del `WHERE` compartido: es soltable, y un filtro que

@@ -76,10 +76,11 @@ export default async function MeasureHarnessPage({
   // **Se abre por la dirección, igual que en la ficha**, y no montada siempre:
   // encima de todo, su velo se come los clics de las otras mediciones — que fue
   // exactamente lo que pasó al intentarlo.
+  const params = await searchParams;
   const puerta = contactDoorFor(
     { state: "locked", method: "whatsapp" },
     { type: "owner", name: "María F." },
-    (await searchParams)[DOOR_QUERY_NAME],
+    params[DOOR_QUERY_NAME],
     // tasks.md 22.39 — este arnés mide geometría estática, no corre contra
     // Postgres: el mismo `false` de siempre mantiene la lámina medida como
     // estaba, sin arrastrar una consulta que no puede resolver.
@@ -121,6 +122,23 @@ export default async function MeasureHarnessPage({
         />
       </div>
 
+      <div data-testid="nav-harness-mobile-only">
+        <Nav
+          account={{ kind: "anonymous" }}
+          publish={{ bar: { label: "Publicar gratis", emphasis: "accent" }, menu: null }}
+          signInHref="/signin"
+          pillDisplay="mobile-only"
+          pill={{
+            action: "/",
+            name: "q",
+            value: "",
+            placeholder: "¿En qué zona buscás?",
+            submitLabel: "Buscar",
+            state: { kind: "empty" },
+          }}
+        />
+      </div>
+
       {/* **La barra con sesión, para medir el menú de cuenta** (14.48). El
           arnés de arriba es anónimo, así que las iniciales del avatar no se
           dibujaban en ninguna parte medible — y ahí vivía un token que el
@@ -149,9 +167,8 @@ export default async function MeasureHarnessPage({
         />
       </div>
 
-      {/* **La barra sin pastilla, que es la de la ficha** (14.54). Ya no lleva
-          vuelta ni placa: con las dos afuera, la única diferencia con la de
-          búsqueda es que ésta no arma pastilla, y eso es lo que se mide. */}
+      {/* La barra sin pastilla (14.54), conservada para medir la disposición
+          de marca: la ficha real ahora lleva pastilla sólo en móvil. */}
       <div data-testid="nav-harness-ficha">
         <Nav
           account={{ kind: "anonymous" }}
@@ -240,10 +257,15 @@ export default async function MeasureHarnessPage({
 
           `transform` crea el bloque contenedor del `position: fixed` del panel:
           sin esto el modal taparía el resto del arnés y las demás medidas
-          medirían una pantalla cubierta. */}
+          medirían una pantalla cubierta. Solo `?panel=abierto` retira ese
+          aislamiento para medir la superposición real con el dock. */}
       <div
         data-testid="search-panel-harness"
-        style={{ transform: "translateZ(0)", position: "relative", blockSize: 640 }}
+        style={{
+          transform: params.panel === "abierto" ? undefined : "translateZ(0)",
+          position: "relative",
+          blockSize: 640,
+        }}
       >
         <SearchPanel model={harnessPanel()} />
       </div>

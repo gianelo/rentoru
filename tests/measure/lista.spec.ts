@@ -37,9 +37,11 @@ import { expect, test } from "@playwright/test";
  * **Y son las dos únicas cotas de esta pantalla que las dos plataformas
  * firman.** Medido: sobre el mismo commit, macOS mide la tarjeta del teléfono
  * en 222 px y el Linux de CI en 239 —una caja de línea de metadato de
- * diferencia—, y aun así las dos cuentan 2 y 4. Una cota en píxeles sobre esta
- * pantalla mide la máquina; el conteo, no. El porqué está medido abajo, en «el
- * metadato del teléfono va a un pelo de plegarse».
+ * diferencia—. El conteo considera sólo tarjetas no tapadas por el dock fijo
+ * del teléfono; en escritorio el pliegue sigue siendo el borde del viewport.
+ * Una cota en píxeles sobre esta pantalla mide la máquina; el conteo, no.
+ * El porqué está medido abajo, en «el metadato del teléfono va a un pelo de
+ * plegarse».
  *
  * **De dónde salían los dos objetivos de las láminas.** El enunciado de la
  * 14.29 dice «6 a 1280» y ese 6 es anterior a la 14.33: la lámina 7c lo escribe
@@ -88,16 +90,90 @@ async function avisosCompletosSobreElPliegue(page: import("@playwright/test").Pa
     .getByTestId("lista-grid")
     .locator("ol > li")
     .evaluateAll((nodes) => {
-      const alto = window.innerHeight;
+      // El dock fijo tapa tarjetas aunque sus bordes estén dentro del viewport.
+      const dock = document.querySelector<HTMLElement>("nav[aria-label='Navegación principal']");
+      const estilo = dock && getComputedStyle(dock);
+      const dockVisible =
+        dock &&
+        estilo?.position === "fixed" &&
+        estilo.display !== "none" &&
+        estilo.visibility !== "hidden" &&
+        dock.getBoundingClientRect().width > 0 &&
+        dock.getBoundingClientRect().height > 0;
+      const pliegue = dockVisible
+        ? Math.min(window.innerHeight, dock.getBoundingClientRect().top)
+        : window.innerHeight;
       const fondos = nodes.map((node) => Math.round(node.getBoundingClientRect().bottom));
 
       return {
-        completos: fondos.filter((fondo) => fondo <= alto).length,
+        completos: fondos.filter((fondo) => fondo <= pliegue).length,
         dibujadas: nodes.length,
         fondos,
       };
     });
 }
+
+test.describe("28.15: salida móvil sin JavaScript", () => {
+  test.use({ javaScriptEnabled: false });
+
+  for (const viewport of [
+    { width: 390, height: 840 },
+    { width: 360, height: 640 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`${viewport.width}×${viewport.height}: una sola fila de vuelta y pastilla intacta`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/measure/lista");
+      const back = page.getByTestId("results-mobile-back");
+      const breadcrumb = page.getByRole("navigation", { name: "Miga de pan" });
+      const crumbs = breadcrumb.locator("ol");
+      if (viewport.width < 768) {
+        await expect(back).toBeVisible();
+        await expect(back).toHaveAttribute("href", "/alquiler/distrito-capital");
+        await expect(back).toHaveText("← Distrito Capital");
+        await expect(crumbs).toBeHidden();
+        const typography = await back.evaluate((node) => {
+          const styles = getComputedStyle(node);
+          return {
+            size: styles.fontSize,
+            expectedSize: getComputedStyle(document.documentElement)
+              .getPropertyValue("--ficha-body-fs")
+              .trim(),
+            weight: styles.fontWeight,
+          };
+        });
+        expect(typography.size).toBe(typography.expectedSize);
+        expect(typography.weight).toBe("600");
+        const box = await back.boundingBox();
+        const row = await breadcrumb.boundingBox();
+        const header = await page.locator("header").first().boundingBox();
+        const pill = await page.locator("header search").boundingBox();
+        if (!box || !row || !header || !pill)
+          throw new Error("Falta geometría de salida o búsqueda");
+        expect(box.height).toBeGreaterThanOrEqual(44);
+        expect(row.height).toBeLessThanOrEqual(52);
+        expect(row.y).toBeGreaterThanOrEqual(header.y + header.height);
+        expect(pill.width).toBe(viewport.width - 32);
+        const grid = await page.getByTestId("lista-grid").locator("ol").boundingBox();
+        if (!grid) throw new Error("Falta cuadrícula");
+        console.log(
+          `[28.15] ${viewport.width}: back y=${box.y} h=${box.height}; row h=${row.height}; pill w=${pill.width}; grid y=${grid.y}`,
+        );
+        expect(grid.y).toBeLessThanOrEqual(225);
+      } else {
+        await expect(back).toBeHidden();
+        await expect(crumbs).toBeVisible();
+        await expect(crumbs.locator("li")).toHaveCount(3);
+      }
+      if (process.env.RENTORU_28_15_CAPTURE === "1" && [390, 768].includes(viewport.width)) {
+        await page.screenshot({ path: `/tmp/rentoru-results-back-${viewport.width}.png` });
+      }
+    });
+  }
+});
 
 test.describe("14.29: los avisos completos sobre el pliegue", () => {
   test("a 360×640 entran 2 avisos completos, que es el criterio del fundador", async ({ page }) => {
@@ -135,27 +211,115 @@ test.describe("14.29: los avisos completos sobre el pliegue", () => {
   /**
    * **El encabezado, que es lo que el fundador eligió conservar.**
    *
-   * Los 2 de arriba no son culpa de la tarjeta: la cuadrícula empieza a **219
-   * px** en un teléfono, contra los ~74 que dibuja la lámina 6c —60 de barra
-   * más el relleno—, porque la pantalla servida agrega miga de pan, `<h1>` y
-   * conteo, y ninguno de los tres aparece en 6c. **Eran 373 hasta la 14.53**, y
-   * los 154 que faltan son las fichas quitables al irse del teléfono.
+   * La cuadrícula empieza ahora a **175 px** en el teléfono (medido en este
+   * arnés), contra los ~74 de la lámina 6c. El antiguo 219 px quedó obsoleto
+   * al compactarse el encabezado; se conserva la cota <= 225 para protegerlo.
+   * El 2 visible también depende del dock fijo: tapa la segunda fila aunque
+   * su borde inferior quede dentro de los 640 px del viewport.
    *
-   * Esos tres bloques son exactamente el aviso y medio que separa el 2 del 4, y
+   * Esos bloques explican la diferencia con la lámina, además del dock, y
    * el 2026-09-02 el fundador decidió que se quedan: la miga de pan es la
    * salida que la 14.41 dejó puesta al borrarse la `SearchSummaryBar`, y
    * **volver, en un teléfono, vale más que un aviso y medio**. Así que esta
    * medida dejó de ser un pendiente y pasó a ser una guardia: si el encabezado
-   * creciera, esto lo dice.
+   * creciera más allá de la cota, esto lo dice.
    *
    * Se afirma como cota superior y no como igualdad exacta: una igualdad al
    * píxel sobre texto renderizado se rompe por una versión de fuente sin que
-   * nada del producto haya cambiado. **La holgura de 6 px que se deja está
-   * medida y no elegida a ojo**: 219 px en macOS y 219 en el Linux de CI sobre
-   * el mismo commit — este encabezado es corto y sobrado en las dos, que es
-   * justo lo contrario de lo que le pasa al metadato de la tarjeta.
+   * nada del producto haya cambiado. La cota histórica de 225 px permanece;
+   * la medición actual de 175 px deja margen para variaciones de fuente.
    */
-  test("el encabezado se come 219 px del teléfono antes de la primera foto", async ({ page }) => {
+  test("28.9: limpiar queda visible y pulsable junto al título sin agregar otra fila", async ({
+    page,
+  }) => {
+    await page.setViewportSize(MOVIL);
+    await page.goto("/measure/lista");
+
+    const clear = page.getByTestId("mobile-clear-all");
+    const title = page.getByRole("heading", { level: 1 });
+    await expect(clear).toBeVisible();
+    await expect(clear).toHaveAttribute("href", "/alquiler/distrito-capital");
+    const clearBox = await clear.boundingBox();
+    const titleBox = await title.boundingBox();
+    if (!clearBox || !titleBox) throw new Error("El título y el enlace deben tener cajas visibles");
+    expect(clearBox.height).toBeGreaterThanOrEqual(44);
+    expect(clearBox.width).toBeGreaterThanOrEqual(44);
+    expect(clearBox.x).toBeGreaterThanOrEqual(titleBox.x + titleBox.width);
+    expect(clearBox.y).toBeLessThan(titleBox.y + titleBox.height);
+    expect(clearBox.x + clearBox.width).toBeLessThanOrEqual(MOVIL.width);
+
+    await page.setViewportSize(ESCRITORIO);
+    await expect(clear).toBeHidden();
+    await expect(page.getByRole("link", { name: "Limpiar todo" })).toHaveCount(1);
+  });
+
+  test("28.9: un título de zona largo no tapa limpiar en teléfonos angostos", async ({ page }) => {
+    for (const width of [360, 320]) {
+      await page.setViewportSize({ width, height: 640 });
+      await page.goto("/measure/lista");
+      const title = page.getByRole("heading", { level: 1 });
+      // Sólo geometría: el arnés cambia texto DOM, no prueba rutas ni HTML servido.
+      await title.evaluate((node) => {
+        node.textContent =
+          "Alquiler de apartamentos en LosPalosGrandesLosPalosGrandesLosPalosGrandes";
+      });
+      const clear = page.getByTestId("mobile-clear-all");
+      await expect(clear).toBeVisible();
+      await expect(clear).toHaveAttribute("href", "/alquiler/distrito-capital");
+      const titleBox = await title.boundingBox();
+      const clearBox = await clear.boundingBox();
+      if (!titleBox || !clearBox) throw new Error("El título y el enlace deben ser visibles");
+      expect(titleBox.height, `${width}: título multilínea`).toBeGreaterThan(30);
+      expect(clearBox.width, `${width}: ancho táctil`).toBeGreaterThanOrEqual(44);
+      expect(clearBox.height, `${width}: alto táctil`).toBeGreaterThanOrEqual(44);
+      expect(titleBox.x + titleBox.width, `${width}: sin solape`).toBeLessThanOrEqual(clearBox.x);
+      expect(
+        clearBox.x + clearBox.width,
+        `${width}: enlace dentro del viewport`,
+      ).toBeLessThanOrEqual(width);
+      const search = page.locator("header search");
+      const form = search.locator("form");
+      await expect(search).toHaveCount(1);
+      await expect(form).toHaveCount(1);
+      for (const [name, locator] of [
+        ["search", search],
+        ["form", form],
+      ] as const) {
+        const box = await locator.boundingBox();
+        if (!box) throw new Error(`${width}: ${name} debe tener una caja visible`);
+        expect(box.x, `${width}: ${name} empieza dentro del viewport`).toBeGreaterThanOrEqual(0);
+        expect(
+          box.x + box.width,
+          `${width}: ${name} termina dentro del viewport`,
+        ).toBeLessThanOrEqual(width);
+      }
+      const overflow = await page.evaluate(() => {
+        const viewport = document.documentElement.clientWidth;
+        const offenders = [...document.querySelectorAll<HTMLElement>("body *")]
+          .map((node) => {
+            const box = node.getBoundingClientRect();
+            return {
+              tag: node.tagName,
+              className: typeof node.className === "string" ? node.className : "",
+              testId: node.dataset.testid,
+              left: Math.round(box.left),
+              right: Math.round(box.right),
+              scrollWidth: node.scrollWidth,
+              overflowX: getComputedStyle(node).overflowX,
+            };
+          })
+          .filter(({ right }) => right > viewport + 1)
+          .slice(0, 12);
+        return { scrollWidth: document.documentElement.scrollWidth, offenders };
+      });
+      expect(
+        overflow.scrollWidth,
+        `${width}: sin desborde horizontal; nodos: ${JSON.stringify(overflow.offenders)}`,
+      ).toBeLessThanOrEqual(width);
+    }
+  });
+
+  test("el encabezado deja la cuadrícula dentro de la cota de 225 px", async ({ page }) => {
     await page.setViewportSize(MOVIL);
     await page.goto("/measure/lista");
 

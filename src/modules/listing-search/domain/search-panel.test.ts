@@ -25,8 +25,7 @@ const COUNTS = {
   byPropertyType: { apartamento: 10, casa: 3, quinta: 1, anexo: 1, habitacion: 1 },
   byPublisherType: { owner: 11, broker: 5 },
   // Las nueve relajaciones y el total pelado de la ciudad viajan en la MISMA
-  // consulta que las facetas (14.11), y son la otra mitad del conteo en vivo:
-  // cuántos quedarían al soltar cada filtro (14.34).
+  // consulta que las facetas (14.11): cuántos quedarían al soltar cada filtro.
   withoutFilter: {
     zone: 40,
     price: 22,
@@ -102,8 +101,8 @@ describe("el panel entero", () => {
     ]);
   });
 
-  it("el botón lleva el total real adentro", () => {
-    expect(panel().confirm.label).toBe("Ver 16 avisos");
+  it("el botón de confirmar no repite el total de la página", () => {
+    expect(panel().confirm.label).toBe("Aplicar filtros");
   });
 
   it("confirmar cierra el acordeón, y nada más", () => {
@@ -368,10 +367,11 @@ describe("paso 4 · habitaciones y atributos (F6)", () => {
     expect(elegido?.href).not.toContain("banos=");
   });
 
-  it("los cinco atributos con su conteo sobre el total", () => {
+  it("los atributos no llevan notas de conteo al panel", () => {
     const planta = panel().attributes.find((a) => a.attribute === "hasPowerPlant");
 
-    expect(planta?.note).toBe("9 de 16");
+    expect(planta?.count).toBe(9);
+    expect("note" in (planta ?? {})).toBe(false);
   });
 
   it("el atributo que ningún resultado cumple queda deshabilitado", () => {
@@ -405,17 +405,6 @@ describe("la salida del vacío (F7 · F11)", () => {
   it("el precio cuenta como uno solo, aunque sean dos números", () => {
     expect(relaxableFilters({ minPriceUsd: 250, maxPriceUsd: 700 }, [])).toEqual(["price"]);
     expect(relaxableFilters({ minRooms: 2, minBathrooms: 2 }, [])).toEqual(["rooms", "bathrooms"]);
-  });
-
-  /**
-   * **Los metros² se pueden soltar como cualquier otro filtro** (14.45 rebanada
-   * B). Es lo que le da ficha quitable y salida del vacío: sin esto, un
-   * «desde 200 m²» tecleado de más deja la lista en cero sin que nada nombre al
-   * culpable ni ofrezca la salida — que es la regla transversal 5.
-   */
-  it("los metros² entran en lo que se puede soltar, y van con el tamaño", () => {
-    expect(relaxableFilters({ minAreaM2: 90 }, [])).toEqual(["area"]);
-    expect(relaxableFilters({ minRooms: 2, minAreaM2: 90 }, [])).toEqual(["rooms", "area"]);
   });
 
   it("cada salida es una dirección con ese filtro quitado y ningún otro", () => {
@@ -657,16 +646,12 @@ describe("las fichas quitables de los filtros puestos (14.33, lámina 7c)", () =
   });
 
   /**
-   * **La ficha de los metros² dice el número que alguien escribió**, con el
-   * mismo vocabulario del renglón cerrado: un filtro que se llama distinto
-   * según dónde se lo mire obliga a adivinar de cuál habla cada pantalla.
+   * **Los metros² ya no tienen ficha (28.18).** El control salió del panel y
+   * `criteria` ya no trae `minAreaM2`, así que `relaxableFilters` no ofrece
+   * «area» y no hay nada que fichar — aunque la dirección traiga `?metros=`.
    */
-  it("los metros² tienen su ficha, con su número adentro", () => {
-    const chips = panel({ criteria: { minAreaM2: 90 }, query: { metros: "90" } }).chips;
-
-    expect(chips.map((chip) => chip.label)).toEqual(["Desde 90 m²"]);
-    expect(chips[0]?.removeHref).toBe("/alquiler/distrito-capital");
-    expect(chips[0]?.removeLabel).toBe("Quitar Desde 90 m²");
+  it("los metros² ya no tienen ficha, ni con la dirección puesta", () => {
+    expect(panel({ query: { metros: "90" } }).chips).toEqual([]);
   });
 
   it("cada atributo es su propia ficha: se combinan con Y", () => {
@@ -679,102 +664,51 @@ describe("las fichas quitables de los filtros puestos (14.33, lámina 7c)", () =
 });
 
 /**
- * **El control de los metros² es un CAMPO, no una tira de escalones** (14.45
- * rebanada B, decisión del fundador 2026-09-04). Por eso es un `<form
- * method="get">` con sus campos escondidos, igual que el precio, y no una lista
- * de enlaces: un continuo no tiene opciones que enlazar, y sin JavaScript un
- * campo sin formulario alrededor no puede enviar nada.
+ * **El control de los metros² salió del panel entero (28.18).** Decisión del
+ * fundador, 2026-09-14: *«vamos a quitar este filtro. Ojo solo quitar de acá
+ * nada más»*. `SearchPanelModel` ya no lleva `area`, así que no queda un
+ * formulario que probar acá — lo que queda es que una dirección vieja con
+ * `?metros=` no filtre en silencio, y eso lo prueba el bloque de abajo.
  */
-describe("los metros², el campo del grupo del tamaño (14.45 rebanada B)", () => {
-  it("envía a la misma ruta con el nombre corto del dominio", () => {
-    expect(panel().area.action).toBe("/alquiler/distrito-capital");
-    expect(panel().area.name).toBe("metros");
+describe("una dirección con `?metros=` ya no filtra, y el panel lo dice (28.18)", () => {
+  it("abre el panel igual, aunque nadie haya pedido un grupo", () => {
+    const model = panel({ query: { metros: "70" } });
+
+    expect(model.open).toBe(true);
+    expect(model.openNotice).toContain("metros cuadrados");
   });
 
-  it("vuelve escrito con lo que ya está puesto, y vacío cuando no hay nada", () => {
-    expect(panel().area.value).toBe("");
-    expect(panel({ criteria: { minAreaM2: 90 } }).area.value).toBe("90");
+  it("no aparece ningún control ni ficha de metros² en el modelo", () => {
+    const model = panel({ query: { metros: "70" } });
+
+    expect("area" in model).toBe(false);
   });
 
-  /**
-   * Un `<form method="get">` reemplaza la query entera por sus propios campos:
-   * sin esto, escribir los metros² borraría las zonas y el precio ya puestos. Y
-   * el suyo NO puede ir escondido además, o viajaría dos veces y ganaría el
-   * viejo.
-   */
-  it("se lleva el resto de la búsqueda escondido, menos el suyo y la página", () => {
-    const area = panel({ query: { min: "250", metros: "60", pag: "3", filtros: "precio" } }).area;
-    const names = area.hidden.map((field) => field.name);
+  it("un grupo válido pedido a la vez sigue abriendo ESE grupo, con el aviso encima", () => {
+    const model = panel({ query: { filtros: "precio", metros: "70" } });
 
-    expect(names).toContain("min");
-    expect(names).not.toContain("metros");
-    expect(names).not.toContain("pag");
-    // El acordeón queda en SU grupo después de enviar: sin JavaScript el
-    // navegador no puede recordar cuál estaba abierto.
-    expect(area.hidden).toContainEqual({ name: "filtros", value: "habitaciones" });
+    expect(model.steps.find((step) => step.open)?.id).toBe("precio");
+    expect(model.openNotice).toContain("metros cuadrados");
+  });
+
+  it("vacío o ausente no dice nada: no hay nada que avisar", () => {
+    expect(panel({ query: { metros: "" } }).openNotice).toBeNull();
+    expect(panel().openNotice).toBeNull();
   });
 });
 
-describe("cada opción lleva el número que va a producir (14.34)", () => {
-  it("el escalón de habitaciones adelanta su propia faceta", () => {
-    // «Ver 16 avisos» → «Ver 9 avisos» sin esperar la respuesta: el 9 es el
-    // conteo real de la faceta de 2 habitaciones, no una estimación.
+describe("el panel no lleva adelantos de conteo por opción (28.8)", () => {
+  it("los escalones conservan el estado deshabilitado, sin etiqueta de vista previa", () => {
     const rooms = panel().rooms;
-    expect(rooms.map((room) => room.previewLabel)).toEqual([
-      "Ver 16 avisos",
-      "Ver 9 avisos",
-      "Ver 4 avisos",
-      null,
-    ]);
+
+    expect(rooms.find((room) => room.step === 4)?.disabled).toBe(true);
+    expect(rooms.some((room) => "previewLabel" in room)).toBe(false);
   });
 
-  it("el escalón elegido adelanta lo que queda al soltarlo, no lo que ya hay", () => {
-    // Volver a tocarlo lo suelta, así que su número es el de la relajación (31)
-    // y NO el 9 de su propia faceta. Adelantar el 9 acá sería el botón diciendo
-    // que quitar un filtro no cambia nada.
-    const [uno, dos] = panel({ criteria: { minRooms: 2 } }).rooms;
-    expect(dos?.previewLabel).toBe("Ver 31 avisos");
-    expect(uno?.previewLabel).toBe("Ver 16 avisos");
-  });
-
-  it("los atributos, en los dos sentidos", () => {
-    const sinMarcar = panel().attributes.find((option) => option.attribute === "isFurnished");
-    expect(sinMarcar?.previewLabel).toBe("Ver 4 avisos");
-
-    const marcado = panel({ criteria: { attributes: ["isFurnished"] } }).attributes.find(
-      (option) => option.attribute === "isFurnished",
-    );
-    expect(marcado?.previewLabel).toBe("Ver 20 avisos");
-  });
-
-  it("quién publica, en los dos sentidos", () => {
-    expect(panel().publisher.previewLabel).toBe("Ver 11 avisos");
-    expect(panel({ criteria: { publisherType: "owner" } }).publisher.previewLabel).toBe(
-      "Ver 25 avisos",
-    );
-  });
-
-  it("«Limpiar todo» adelanta el total de la ciudad", () => {
-    expect(panel().clearAllPreviewLabel).toBe("Ver 70 avisos");
-  });
-
-  it("una opción apagada no adelanta nada: no se puede tocar", () => {
-    // `hasSecurity` cuenta 0 y llega deshabilitada, así que se dibuja como un
-    // `<span>` sin dirección. Un número adelantado para algo que nadie puede
-    // tocar es marcado que promete una interacción que no existe.
+  it("los atributos conservan el estado deshabilitado, sin etiqueta de vista previa", () => {
     const apagada = panel().attributes.find((option) => option.attribute === "hasSecurity");
-    expect(apagada?.disabled).toBe(true);
-    expect(apagada?.previewLabel).toBeNull();
-  });
 
-  it("sin los conteos de relajación no inventa un número", () => {
-    // Falla cerrado: sin `withoutFilter` el botón se queda con lo que el
-    // servidor escribió hasta que llegue la respuesta.
-    const { withoutFilter: _sin, ...resto } = COUNTS;
-    const sinRelajaciones = panel({
-      counts: resto as unknown as SearchPanelInput["counts"],
-      criteria: { minRooms: 2 },
-    });
-    expect(sinRelajaciones.rooms[1]?.previewLabel).toBeNull();
+    expect(apagada?.disabled).toBe(true);
+    expect("previewLabel" in (apagada ?? {})).toBe(false);
   });
 });

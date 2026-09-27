@@ -30,7 +30,6 @@ import {
   resolveZoneOptions,
   type ZoneOption,
 } from "./search-options";
-import { type PreviewChange, previewConfirmLabel } from "./search-preview";
 import {
   buildSearchHref,
   clearAllHref,
@@ -70,8 +69,9 @@ export interface PanelCounts {
    * Cuántos quedarían soltando ese filtro y ningún otro (F10 y F11).
    *
    * **Ya viajaban**: `FacetCounts` los trae desde la 14.11 y `buildFilterPanel`
-   * pasa ese mismo objeto entero. Declararlos acá no agrega una consulta — le
-   * da nombre a la mitad del conteo en vivo que faltaba (14.34), la de quitar.
+   * pasa ese mismo objeto entero. Declararlos acá no agrega una consulta: le da
+   * nombre a la salida de alivio que puede mostrarse como texto cuando la
+   * búsqueda queda vacía.
    */
   readonly withoutFilter: Readonly<Record<RelaxableFilter, number>>;
   /**
@@ -148,16 +148,18 @@ export interface SearchPanelInput {
   /** Las zonas elegidas, en el orden en que se eligieron. */
   readonly chosenZoneIds: readonly string[];
   readonly counts: PanelCounts;
-  /** Los filtros ya validados. Se leen de acá y no de la query cruda. */
+  /**
+   * Los filtros ya validados. Se leen de acá y no de la query cruda.
+   *
+   * **Sin `minAreaM2` desde la 28.18.** El panel ya no dibuja el control de
+   * metros² ni lo cuenta en nada de lo que arma con `criteria`, así que no
+   * necesita leerlo. `SearchCriteria.minAreaM2` sigue existiendo —la base
+   * todavía sabe filtrar por él si algún día vuelve el control—; lo que se
+   * fue es esta vista estrecha que el panel usa para construirse.
+   */
   readonly criteria: Pick<
     SearchCriteria,
-    | "minPriceUsd"
-    | "maxPriceUsd"
-    | "minRooms"
-    | "minBathrooms"
-    | "minAreaM2"
-    | "publisherType"
-    | "attributes"
+    "minPriceUsd" | "maxPriceUsd" | "minRooms" | "minBathrooms" | "publisherType" | "attributes"
   >;
   /** La ficha del único resultado, cuando hay exactamente uno (F7). */
   readonly onlyListingHref?: string;
@@ -178,6 +180,12 @@ export interface SearchPanelInput {
  * El precio cuenta como UNO aunque sean dos números: soltar sólo el mínimo y
  * dejar el máximo es media salida, y ofrecer media salida es ofrecer dos
  * salidas donde la regla pide una.
+ *
+ * **Ya no ofrece «area» (28.18).** El control de metros² salió del panel, así
+ * que `criteria` (`SearchPanelInput["criteria"]`) ya no trae `minAreaM2` — no
+ * hay nada que consultar. `withoutFilter` y `reliefHref` siguen sabiendo qué
+ * hacer con `"area"` si algún llamador se lo pide directo: lo que se quita
+ * acá es sólo la fuente que lo ofrecía desde el panel.
  */
 export function relaxableFilters(
   criteria: SearchPanelInput["criteria"],
@@ -190,7 +198,6 @@ export function relaxableFilters(
   }
   if (criteria.minRooms !== undefined) filters.push("rooms");
   if (criteria.minBathrooms !== undefined) filters.push("bathrooms");
-  if (criteria.minAreaM2 !== undefined) filters.push("area");
   if (criteria.publisherType !== undefined) filters.push("publisherType");
   for (const attribute of criteria.attributes ?? []) filters.push(attribute);
   return filters;
@@ -281,23 +288,11 @@ export function reliefHref(
 
 export type ZoneChoice = ZoneOption & { readonly href: string };
 
-/**
- * **Qué va a decir el botón en cuanto se toque esta opción** (14.34), o `null`
- * cuando el número no viajó con la página o la opción no se puede tocar.
- *
- * Va en el modelo y no se deriva en el componente por la regla permanente del
- * fundador: qué conteo corresponde a qué opción es producto, y escrito en un
- * `"use client"` quedaría fuera del suelo de cobertura del 90 %.
- */
-interface Previewable {
-  readonly previewLabel: string | null;
-}
+export type RoomChoice = RoomOption & { readonly href: string };
+export type BathroomChoice = BathroomOption & { readonly href: string };
+export type AttributeChoice = AttributeOption & { readonly href: string };
 
-export type RoomChoice = RoomOption & Previewable & { readonly href: string };
-export type BathroomChoice = BathroomOption & Previewable & { readonly href: string };
-export type AttributeChoice = AttributeOption & Previewable & { readonly href: string };
-
-export interface PublisherChoice extends Previewable {
+export interface PublisherChoice {
   readonly label: string;
   readonly note: string;
   readonly count: number;
@@ -321,28 +316,6 @@ export interface PriceForm {
   readonly max: string;
   /** El dibujo, o la negativa a dibujarlo, ya resuelto (F5). */
   readonly histogram: PriceHistogramView;
-}
-
-/**
- * **Los metros², que se ESCRIBEN en vez de elegirse** (14.45 rebanada B,
- * decisión del fundador 2026-09-04: *«hay casas que tienen 72,5 o 84 y así no
- * puede ser preseleccionado»*).
- *
- * Es un formulario y no una tira de enlaces porque la superficie es un continuo:
- * no hay opciones que enlazar ni, por lo tanto, conteo por opción que mostrar.
- * **La regla transversal 3 se cumple igual, del otro lado**: el número real
- * pasa a ser el total de resultados, que el botón de confirmar ya dice.
- *
- * Un campo suelto no envía nada sin JavaScript, así que va envuelto en su propio
- * `<form method="get">` con el resto de la búsqueda escondida — el mismo molde
- * del precio, por la misma razón (D13).
- */
-export interface AreaForm {
-  readonly action: string;
-  readonly hidden: readonly HiddenField[];
-  readonly name: string;
-  /** Lo que ya está puesto, o vacío. Sale del criterio ya validado, nunca del crudo. */
-  readonly value: string;
 }
 
 /**
@@ -387,13 +360,9 @@ export interface SearchPanelModel {
    * fundador llamó «tamaño».
    */
   readonly bathrooms: readonly BathroomChoice[];
-  /** Los metros², el tercer control del mismo grupo «tamaño» (14.45 rebanada B). */
-  readonly area: AreaForm;
   readonly publisher: PublisherChoice;
   readonly attributes: readonly AttributeChoice[];
   readonly clearAllHref: string;
-  /** Lo que dirá el botón al limpiar: la ciudad entera, que no es un filtro. */
-  readonly clearAllPreviewLabel: string | null;
   readonly confirm: SearchConfirm;
   /** «Chacao, Altamira», o la ciudad si no hay zonas. */
   readonly headline: string;
@@ -427,7 +396,13 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
   // opciones son las del conteo y punto.
   const zoneOptions = resolveZoneOptions(input.zones, counts.byZone, input.chosenZoneIds);
 
-  const panel = resolveFilterPanel(query[SEARCH_QUERY_NAMES.step]);
+  // **`?metros=` guardado de antes de la 28.18 no puede filtrar en silencio**
+  // (decisión del fundador, 2026-09-14: *«vamos a quitar este filtro. Ojo
+  // solo quitar de acá nada más»*). Basta con que el parámetro haya LLEGADO,
+  // no que haya validado como número: `buildSearchCriteria` ya lo ignora
+  // entero, así que lo único que falta decidir acá es si hay que avisar.
+  const staleAreaFilter = (query[SEARCH_QUERY_NAMES.minAreaM2] ?? "").trim() !== "";
+  const panel = resolveFilterPanel(query[SEARCH_QUERY_NAMES.step], staleAreaFilter);
   // Una sola vez, y las dos salidas del panel la usan: el «×» de arriba y el
   // botón de abajo cierran lo mismo, y dos expresiones iguales escritas por
   // separado son dos que se separan en el próximo cambio.
@@ -471,10 +446,6 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
     },
     rooms: resolveRoomOptions(counts.byMinRooms, criteria.minRooms).map((option) => ({
       ...option,
-      previewLabel: preview(counts, option.disabled, {
-        kind: "rooms",
-        step: option.nextValue === null ? null : option.step,
-      }),
       href: buildSearchHref(basePath, query, {
         minRooms: option.nextValue,
         step: "habitaciones",
@@ -483,10 +454,6 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
     bathrooms: resolveBathroomOptions(counts.byMinBathrooms, criteria.minBathrooms).map(
       (option) => ({
         ...option,
-        previewLabel: preview(counts, option.disabled, {
-          kind: "bathrooms",
-          step: option.nextValue === null ? null : option.step,
-        }),
         // Vuelve a SU grupo, que es el mismo de las habitaciones: saltar a otro
         // después de tocar un escalón es perder de vista lo que se eligió.
         href: buildSearchHref(basePath, query, {
@@ -495,21 +462,6 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
         }),
       }),
     ),
-    area: {
-      action: basePath,
-      // Su propio nombre no puede ir además escondido —viajaría dos veces y
-      // ganaría el viejo—, y la página se cae igual que en el precio: escribir
-      // otra superficie es otra búsqueda, y su página 3 no significa nada.
-      hidden: hiddenFields(
-        query,
-        [SEARCH_QUERY_NAMES.minAreaM2, SEARCH_QUERY_NAMES.page],
-        "habitaciones",
-      ),
-      name: SEARCH_QUERY_NAMES.minAreaM2,
-      // Del criterio y no de la query cruda: `?metros=abc` se cayó allá, y
-      // devolverlo escrito acá mostraría un filtro puesto que no está puesto.
-      value: criteria.minAreaM2 === undefined ? "" : String(criteria.minAreaM2),
-    },
     publisher: toPublisherChoice(input),
     attributes: resolveAttributeOptions(
       counts.byAttribute,
@@ -517,11 +469,6 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
       criteria.attributes ?? [],
     ).map((option) => ({
       ...option,
-      previewLabel: preview(counts, option.disabled, {
-        kind: "attribute",
-        attribute: option.attribute,
-        add: option.nextValue !== null,
-      }),
       href: buildSearchHref(basePath, query, {
         [option.attribute]: option.nextValue,
         // Cada opción devuelve a SU grupo: saltar a otro después de tocar una
@@ -530,10 +477,8 @@ export function buildSearchPanel(input: SearchPanelInput): SearchPanelModel {
       }),
     })),
     clearAllHref: clearAllHref(cityPath, query),
-    clearAllPreviewLabel: preview(counts, false, { kind: "clearAll" }),
-    // Confirmar **cierra el acordeón y nada más**: los filtros ya están en la
-    // dirección desde que se tocaron, así que este botón no aplica nada — dice
-    // cuántos hay y lleva a verlos.
+    // Confirmar cierra el acordeón y nada más: los filtros ya están en la
+    // dirección desde que se tocaron. La copia queda fija desde la 28.8.
     confirm: resolveSearchConfirm({
       total: counts.total,
       resultsHref: closeHref,
@@ -639,24 +584,11 @@ function toPublisherChoice(input: SearchPanelInput): PublisherChoice {
     count,
     chosen,
     disabled: count === 0 && !chosen,
-    previewLabel: preview(input.counts, count === 0 && !chosen, {
-      kind: "publisher",
-      value: chosen ? null : "owner",
-    }),
     href: buildSearchHref(input.basePath, input.query, {
       publisherType: chosen ? null : "owner",
       step: "publica",
     }),
   };
-}
-
-/**
- * **Una opción apagada no adelanta nada.** Se dibuja como un `<span>` sin
- * dirección, así que un número al lado prometería una interacción que no
- * existe — y llevaría a la pantalla vacía que la regla transversal 4 prohíbe.
- */
-function preview(counts: PanelCounts, disabled: boolean, change: PreviewChange): string | null {
-  return disabled ? null : previewConfirmLabel(counts, change);
 }
 
 /**

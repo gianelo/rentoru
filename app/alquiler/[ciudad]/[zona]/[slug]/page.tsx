@@ -31,6 +31,7 @@ import {
   DrizzleContactVerificationEvidence,
   DrizzleListingContactVerification,
 } from "@/modules/identity/infrastructure/drizzle-verified-contact";
+import { homeSearchForm } from "@/modules/listing-catalogue/domain/search-destination";
 import { DrizzleCatalogue } from "@/modules/listing-catalogue/infrastructure/drizzle-catalogue";
 import { suggestActiveListings } from "@/modules/listing-discovery/application/suggest-active-listings";
 import { resolveListingAvailability } from "@/modules/listing-discovery/domain/listing-availability";
@@ -237,6 +238,7 @@ export default async function FichaPage({ params, searchParams }: FichaProps) {
   // pantalla.
   const account = resolveNavAccount(session, await readNavAccountFlags(session));
   const publish = resolveNavPublish(account);
+  const searchForm = homeSearchForm();
 
   // Se lee al servir y no al importar el módulo: `next build` evalúa el módulo
   // sin las variables del despliegue, y una lectura arriba del archivo
@@ -328,8 +330,8 @@ export default async function FichaPage({ params, searchParams }: FichaProps) {
           vuelta mudada al contenido, esta barra dibuja lo mismo que la del
           inicio y la de resultados, y `NavProps` dejó de ser una unión.
 
-          **Sin pastilla**, que es lo que dicen las dos láminas de la ficha: una
-          ficha no es una búsqueda. `pill` es opcional y esta página no lo pasa.
+          La decisión posterior del fundador reemplaza la excepción sin pastilla
+          de las láminas: la ficha ofrece búsqueda desde cualquier móvil.
 
           `signInHref` vuelve a ESTA ficha, con el origen puesto (F19): pedirle
           una cuenta a alguien y devolverlo al inicio pierde el aviso que estaba
@@ -340,6 +342,15 @@ export default async function FichaPage({ params, searchParams }: FichaProps) {
       <Nav
         account={account}
         publish={publish}
+        pillDisplay="mobile-only"
+        pill={{
+          action: searchForm.action,
+          name: searchForm.name,
+          value: searchForm.value,
+          placeholder: searchForm.label,
+          submitLabel: searchForm.submitLabel,
+          state: { kind: "empty" },
+        }}
         signInHref={`/signin?callbackUrl=${encodeURIComponent(listingHref)}`}
       />
 

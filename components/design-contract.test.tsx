@@ -468,3 +468,50 @@ describe("el velo de los modales (14.46)", () => {
     expect(linterSource).toContain('["--door-veil", "--scrim"]');
   });
 });
+
+/**
+ * **El ancho máximo se asevera una vez y cubre toda sección futura (28.5).**
+ *
+ * `SiteFooter` dibujaba `.top`/`.strip` directo contra el viewport, sin
+ * `Container` de por medio: a 1440 el encabezado quedaba centrado a 1100px
+ * y el pie se desparramaba de borde a borde, y en 390 no tenía padding
+ * horizontal. Una prueba que sólo mirara `SiteFooter.module.css` habría
+ * arreglado ESTA sección y dejado exactamente el mismo hueco abierto para
+ * la próxima — que es justo cómo se coló esta.
+ *
+ * **Por qué se lee `app/layout.tsx` y no una lista de nombres.** Todo
+ * componente que ese archivo monta directamente en `<body>` — fuera de
+ * `{children}`, que es el hueco de cada página — es cromo de sitio entero,
+ * exactamente el papel que tiene `SiteFooter` hoy. Leer sus propios
+ * imports en vez de escribir `["SiteFooter"]` a mano es lo que hace que la
+ * prueba se ponga roja SOLA el día que alguien monte una segunda sección
+ * ahí sin pasar por `Container` — no hace falta acordarse de escribirle
+ * una aserción nueva, como si hubiese hecho falta acordarse acá.
+ */
+describe("el cromo de app/layout.tsx compone Container, no una copia del ancho (28.5)", () => {
+  const layoutSource = readFileSync("app/layout.tsx", "utf-8");
+  const bodyMarkup = layoutSource.match(/<body>([\s\S]*?)<\/body>/)?.[1];
+  if (bodyMarkup === undefined) throw new Error("app/layout.tsx: no se encontró <body>");
+
+  const chromeNames = [
+    ...new Set([...bodyMarkup.matchAll(/<([A-Z]\w+)[\s/>]/g)].map((match) => match[1])),
+  ];
+
+  it("la guarda: layout.tsx monta al menos un componente de cromo para revisar", () => {
+    expect(chromeNames.length).toBeGreaterThan(0);
+  });
+
+  it.each(chromeNames)("%s compone Container en vez de una copia propia del ancho", (name) => {
+    const importMatch = layoutSource.match(
+      new RegExp(`import\\s+(?:\\{[^}]*\\b${name}\\b[^}]*\\}|${name})\\s*from\\s*"(\\.[^"]+)"`),
+    );
+    if (!importMatch?.[1]) {
+      throw new Error(`app/layout.tsx: <${name}> no tiene un import relativo que resolver`);
+    }
+
+    const source = readFileSync(join("app", `${importMatch[1]}.tsx`), "utf-8");
+
+    expect(source).toMatch(/import\s*\{[^}]*\bContainer\b[^}]*\}\s*from\s*"[^"]*\/Container"/);
+    expect(source).toMatch(/<Container[\s>]/);
+  });
+});

@@ -16,6 +16,7 @@ import { buildListingGrid } from "@/modules/listing-discovery/domain/listing-gri
 import {
   isFilteredZoneRoute,
   resolveZoneRoute,
+  resultsBackLink,
   zoneRoutePath,
 } from "@/modules/listing-discovery/domain/zone-route";
 import { DrizzleListingPhotos } from "@/modules/listing-discovery/infrastructure/drizzle-listing-photos";
@@ -349,6 +350,7 @@ export default async function ZonaPage({ params, searchParams }: ZonaProps) {
     // abierto desde el servidor. Sin el ancla, el panel queda debajo de la
     // cuadrícula y fuera de vista.
     filtersHref: `${buildSearchHref(basePath, query, { step: PANEL_OPEN_TOKEN })}#filtros`,
+    filtersOpen: panel.open,
     // **El vocabulario acotado de las sugerencias** (14.51), con
     // `boundedVocabulary` (corrección 27.1-C,
     // `R3-suggestion-count-scope-unproved`): `activeZones` sólo aporta el
@@ -435,6 +437,7 @@ export default async function ZonaPage({ params, searchParams }: ZonaProps) {
             dejaron de ser dos cosas que mantener sincronizadas. */}
         <SearchResultsHeader
           crumbs={crumbs}
+          backLink={resultsBackLink({ kind: "zone", city: place.city })}
           title={`Alquiler en ${place.zones[0].name}`}
           notice={notice}
           priceNotices={priceNotices}

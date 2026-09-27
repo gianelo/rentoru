@@ -22,8 +22,8 @@ Clasificados de alquiler residencial de larga estadía para Distrito Capital y M
               tocar barra  │       │  tocar aviso / "Ver los N"
                         ┌──▼──┐    │
                         │BUSCAR│───┘
-                        └──┬──┘  4 pasos, conteo en vivo
-                           │ "Ver 9 avisos"
+                        └──┬──┘  4 pasos, CTA fijo
+                           │ "Aplicar filtros"
                      ┌─────▼──────┐
                      │ RESULTADOS │  cuadrícula 2 col · barra resumen
                      └─────┬──────┘
@@ -57,10 +57,10 @@ INICIO ──"Publicar"──► ENTRAR ──► PUBLICAR 1 datos ──► 2 f
 | 1 | Entra al sitio | Muestra cuatro tiras: recientes (70), Maracaibo (23), Distrito Capital (47), hasta $400 (18). Cada una con su total real |
 | 2 | Toca la barra de búsqueda | Abre el acordeón en el paso 1, ciudad |
 | 3 | Elige ciudad | Filtra zonas a esa ciudad. Si cambió de ciudad, **descarta las zonas ya elegidas** y avisa |
-| 4 | Elige zonas | Combina con OR. El conteo del botón baja: 47 → 21 |
-| 5 | Fija precio | Muestra el histograma de la oferta en esas zonas antes de que elija. Conteo: 21 → 16 |
-| 6 | Elige habitaciones y atributos | Cada opción muestra cuántos resultados la cumplen. Conteo: 16 → 9 |
-| 7 | Confirma "Ver 9 avisos" | Navega a resultados. Todo el estado queda en la URL |
+| 4 | Elige zonas | Combina con OR. Las opciones que dejarían la búsqueda vacía se apagan sin imprimir el cero |
+| 5 | Fija precio | Muestra el histograma de la oferta en esas zonas antes de que elija |
+| 6 | Elige habitaciones y atributos | Las opciones se activan/desactivan; las que llevarían a cero quedan en gris, sin conteo visible |
+| 7 | Confirma "Aplicar filtros" | Navega a resultados. Todo el estado queda en la URL |
 | 8 | Recorre la cuadrícula | 4 avisos completos sobre el pliegue en móvil, 6 en escritorio |
 | 9 | Llega al final | Si están todos: "Son los 9 avisos que coinciden" + propuesta de ampliar. Si hay más: "Ver 20 más" |
 | 10 | Toca un aviso | Abre la ficha. El teléfono aparece parcialmente oculto, con el motivo explicado |
@@ -217,7 +217,7 @@ Se manda por WhatsApp y el otro ve lo mismo; el botón de volver deshace el últ
 | Tiras del inicio | scroll horizontal, 5 + placa "Ver todos" | filas fijas de 5, total y flecha en el encabezado |
 | Filtros | acordeón de 4 pasos secuenciales | panel de 3 columnas, todo a la vez |
 | Filtros en resultados | barra resumen (pastilla) + engranaje | barra lateral pegada de 240 px, siempre visible |
-| Cuadrícula | 2 columnas de 158 px | 3 columnas de 254 px |
+| Cuadrícula | 2 columnas de 158 px | 4 columnas de 240 px |
 | Entrar / WhatsApp | hoja que sube desde abajo | diálogo centrado de 460 px |
 | Ancho de formulario | todo el ancho menos márgenes | columna de 420 px |
 | Galería de la ficha | tira horizontal de 6 con ajuste al centro | foto 640×360 + 3 miniaturas de 120×90 |
@@ -245,7 +245,7 @@ Vale para **todas** las pantallas del proyecto. Está repetido al pie de cada ar
 
 **El contenedor de 1100 no se estira nunca.** En una pantalla de 1920 el contenido mide 1100 y queda centrado con 410 px de aire a cada lado. El aire sobrante es aire.
 
-**Lo que escala con el ancho es el número de columnas, no el tamaño de las piezas.** La tarjeta de resultados mide 254 px en cualquier pantalla. Si algún día se decide aprovechar 1440, se hace pasando de 3 a 4 columnas, no ensanchando la tarjeta.
+**Lo que escala con el ancho es el número de columnas, no el tamaño de las piezas.** La tarjeta de resultados mide 240 px en escritorio desde el ajuste de la 28.14. Si algún día se decide aprovechar 1440, se cambia el número de columnas o el token del sistema, no se ensancha una hoja local.
 
 ### Por qué
 
@@ -258,7 +258,7 @@ Vale para **todas** las pantallas del proyecto. Está repetido al pie de cada ar
 | Pieza | Ancho |
 |---|---|
 | Contenedor | 1100 |
-| Tarjeta de resultados | 254 (escritorio) · 158 (móvil) |
+| Tarjeta de resultados | 240 (escritorio) · 158 (móvil) |
 | Columna de formulario | 420 |
 | Columna de mensaje centrado | 520 |
 | Diálogo modal | 460 |

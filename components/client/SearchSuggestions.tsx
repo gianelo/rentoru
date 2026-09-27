@@ -69,8 +69,8 @@ const PANEL_LABEL = "Sugerencias";
  * script caído dejaría de tener el `defaultValue` que el servidor escribe, y
  * perder lo escrito al volver del servidor es lo que hace que alguien abandone
  * (`homeSearchForm` deja esa razón escrita). Un oyente sobre el campo que el
- * servidor ya dibujó no le quita nada a nadie — es el mismo camino que
- * `LiveResultCount` tomó con un solo oyente delegado en vez de diez manejadores.
+ * servidor ya dibujó no le quita nada a nadie, y evita diez manejadores por
+ * opción.
  */
 export function SearchSuggestions({ vocabulary }: { readonly vocabulary: SuggestionVocabulary }) {
   const anchor = useRef<HTMLDivElement>(null);
@@ -128,6 +128,10 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
     form.addEventListener("focusout", onFocusOut);
     document.addEventListener("pointerdown", onPointerDown);
 
+    // Recuperar texto escrito antes de instalar los oyentes, pero no abrir
+    // sugerencias por el valor inicial de una zona seleccionada en reposo.
+    if (document.activeElement === field && field.value !== field.defaultValue) onType();
+
     return () => {
       field.removeEventListener("input", onType);
       field.removeEventListener("keydown", onKeyDown);
@@ -152,14 +156,19 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
                   otro lugar, y llegar con una navegación de documento es lo
                   mismo que hace la lupa. Además el panel se desmonta al
                   navegar, así que no hay nada que preservar del cliente. */}
+              {/* **28.10(c) — el conteo se retira del dibujo.** Textual del
+                  fundador: "nadie ve eso del conteo ahí dentro de la
+                  sugerencia; vamos a quitarlo para no gastar recursos en
+                  eso". Medido antes de tocarlo: no cuesta una consulta ni una
+                  fila propia — `choice.countLabel` sale de `zone.count`, el
+                  mismo número que el dominio YA necesita para excluir zonas
+                  vacías y para ordenar por oferta (17.5/17.7), así que viaja
+                  igual con o sin esta línea. Lo único que se ahorra es dibujar
+                  el `<span>`; `SearchChoice.countLabel` se queda declarado
+                  porque otras pruebas de dominio siguen afirmándolo. */}
               <a className={styles.option} href={choice.href}>
                 <span>{choice.label}</span>
                 <span className={styles.scope}>{choice.scope}</span>
-                {/* El número, o nada. Un «0» pegado a una opción se lee como un
-                    conteo roto, y el dominio ya contestó `null` por eso. */}
-                {choice.countLabel === null ? null : (
-                  <span className={styles.count}>{choice.countLabel}</span>
-                )}
               </a>
             </li>
           ))}

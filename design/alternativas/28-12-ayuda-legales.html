@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es" data-theme="menta" data-layout="compacto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>28.12 · Ayuda y legales — propuesta visual</title>
+  <style>
+    @import url("../../src/styles/tokens.css");
+    @import url("../../components/molecules/SearchPill.module.css");
+    @import url("../../components/organisms/Nav.module.css");
+    @import url("../../src/styles/a11y.module.css");
+
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--bg); font-family: var(--sans); }
+    .controls { padding: 16px; }
+    .controls p { margin: 0 0 8px; color: var(--soft); }
+    .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+    .choices input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; }
+    .tab { display: grid; place-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--strong); border-radius: var(--r); cursor: pointer; background: var(--surface); }
+    .controls:has(#faq:checked) label[for=faq], .controls:has(#contacto:checked) label[for=contacto], .controls:has(#legal:checked) label[for=legal] { background: var(--tint); border-color: var(--accent); }
+    #faq:focus-visible~.choices label[for=faq], #contacto:focus-visible~.choices label[for=contacto], #legal:focus-visible~.choices label[for=legal] { outline: 3px solid var(--accent); }
+    body:has(#faq:checked) .article:not([data-role=faq]), body:has(#contacto:checked) .article:not([data-role=contacto]), body:has(#legal:checked) .article:not([data-role=legal]) { display: none; }
+    body:has(.frame-target:target) .controls { display: none; }
+    body:has(#frame-faq:target) .article:not([data-role=faq]),
+    body:has(#frame-contacto:target) .article:not([data-role=contacto]),
+    body:has(#frame-legal:target) .article:not([data-role=legal]) { display: none; }
+    body:has(#frame-contacto:target) .article[data-role=contacto],
+    body:has(#frame-legal:target) .article[data-role=legal] { display: block; }
+    .frame-target { position: absolute; top: 0; }
+    .site { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: var(--surface); }
+    .top { height: var(--nav-h); border-bottom: 1px solid var(--line); background: var(--surface); }
+    .top .inner { height: 100%; }
+    .top .pillCol { min-width: 0; }
+    .top .pillCol > search { display: block; width: 100%; }
+    .top .pill { max-width: none; width: 100%; }
+    .top .submit { width: 44px; height: 44px; }
+    .top .textCol { position: relative; height: 44px; }
+    .top .input { position: absolute; inset: 0; width: 100%; min-height: 44px; padding: 0; }
+    .top .srOnly { position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+    .scroll { height: calc(100% - var(--nav-h)); overflow-y: auto; }
+    .content { max-width: 600px; margin: 0 auto; padding: 32px 16px 120px; }
+    .eyebrow { margin: 0 0 12px; color: var(--soft); font-size: var(--ficha-body-fs); font-weight: 600; }
+    .article h1 { font-size: var(--title-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0 0 24px; text-wrap: balance; }
+    .article section { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 24px; }
+    .article h2 { font-size: var(--ficha-body-fs); line-height: 1.4; margin: 0 0 10px; }
+    .article p { font-size: var(--ficha-body-fs); line-height: var(--ficha-body-lh); }
+    .article section p { margin: 0 0 12px; }
+    .article a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+    .notice { border: 1px solid var(--strong); padding: 16px; border-radius: var(--r); margin: 0 0 24px; background: var(--surface); }
+    .form { display: grid; gap: 16px; }
+    .form label { display: block; font-weight: 600; margin-bottom: 8px; }
+    .form input, .form textarea { display: block; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--strong); border-radius: var(--r); font: inherit; color: var(--ink); background: var(--surface); }
+    .form textarea { min-height: 132px; }
+    .form button { min-height: 44px; padding: 0 20px; border: 0; border-radius: var(--r); background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 700; }
+    .state { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 16px; }
+    .state p { margin: 8px 0; }
+    .site .dock { position: absolute; }
+    a:focus-visible, input:focus-visible, textarea:focus-visible, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    @media (min-width: 768px) {
+      .top { height: var(--nav-h-desktop); }
+      .top .pillCol.mobileOnly { display: none; }
+      .scroll { height: calc(100% - var(--nav-h-desktop)); }
+      .content { padding: 48px 0 80px; }
+      .article p { font-size: var(--ficha-body-fs-desktop); line-height: var(--ficha-body-lh-desktop); }
+    }
+  </style>
+</head>
+<body>
+  <span class="frame-target" id="frame-faq" hidden></span>
+  <span class="frame-target" id="frame-contacto" hidden></span>
+  <span class="frame-target" id="frame-legal" hidden></span>
+  <div class="controls">
+    <p>28.12 · Propuesta visual. Elegí una anatomía; el tablero no modifica las rutas.</p>
+    <input type="radio" name="role" id="faq" aria-label="faq" checked>
+    <input type="radio" name="role" id="contacto" aria-label="contacto">
+    <input type="radio" name="role" id="legal" aria-label="legal">
+    <div class="choices" role="group" aria-label="Arquetipo de contenido">
+      <label class="tab" for="faq">Ayuda · preguntas</label>
+      <label class="tab" for="contacto">Ayuda · Escribinos</label>
+      <label class="tab" for="legal">Legal · términos</label>
+    </div>
+  </div>
+  <div class="site">
+    <header class="top bar barWithPill">
+      <div class="inner">
+        <a class="brand" href="/">Rentoru</a>
+        <div class="pillCol mobileOnly">
+          <search>
+            <form class="pill" method="get" action="/">
+              <span class="textCol">
+                <label class="srOnly" for="search-zone">Buscar zona</label>
+                <input class="input" id="search-zone" type="search" name="q" placeholder="¿En qué zona buscás?" autocomplete="off">
+              </span>
+              <button class="submit" type="submit" aria-label="Buscar">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.3"/><path d="M10.1 10.1 14 14"/></svg>
+              </button>
+            </form>
+          </search>
+        </div>
+        <div class="actions">
+          <a class="publishAccent" href="/publicar">Publicar gratis</a>
+          <a class="enter" href="/signin">Entrar</a>
+        </div>
+      </div>
+    </header>
+    <div class="scroll"><main class="content">
+      <article class="article" data-role="faq">
+        <p class="eyebrow">Ayuda / Preguntas frecuentes</p>
+        <h1>Preguntas frecuentes</h1>
+        <section><h2>¿Cuánto cuesta publicar o contactar a un dueño?</h2><p>Nada. Publicar un aviso y contactar al dueño no cuestan nada: rentoru.com no cobra comisión ni a quien publica ni a quien alquila.</p></section>
+        <section><h2>¿Cuánto dura un aviso publicado?</h2><p>30 días. Antes de que venza, le avisamos por correo a quien lo publicó con un enlace para renovarlo. Si no se renueva, el aviso deja de mostrarse.</p></section>
+        <section><h2>¿Cómo contacto al dueño de un aviso?</h2><p>Cada ficha muestra un botón para ver el contacto del dueño. Hace falta entrar y escribir un mensaje antes de verlo — el detalle está en <a href="/ayuda/como-contactar-al-dueno">Cómo contactar al dueño</a>.</p></section>
+      </article>
+      <article class="article" data-role="contacto">
+        <p class="eyebrow">Ayuda / Escribinos</p>
+        <h1>Escribinos</h1>
+        <p>No publicamos ninguna dirección de correo acá: contanos qué necesitás y te escribimos nosotros a la tuya.</p>
+        <div class="form" role="group" aria-label="Vista previa del formulario">
+          <div><label for="name">Tu nombre</label><input id="name" name="name" required></div>
+          <div><label for="email">Tu correo</label><input id="email" name="email" type="email" required></div>
+          <div><label for="message">Tu mensaje</label><textarea id="message" name="message" rows="6" required></textarea></div>
+          <button type="button">Enviar mensaje</button>
+        </div>
+        <div class="state"><strong>Estados existentes · vista de referencia</strong><p role="status">Recibimos tu mensaje. Te contestamos por correo, al mismo que dejaste acá.</p><p>Un error del servidor se muestra junto al formulario; no se inventa su texto acá.</p></div>
+      </article>
+      <article class="article" data-role="legal">
+        <p class="eyebrow">Legal / Términos y condiciones</p>
+        <h1>Términos y condiciones</h1>
+        <p class="notice"><strong>Borrador en revisión.</strong> Este texto describe el comportamiento real de rentoru.com tal como funciona hoy, pero todavía no ha sido ratificado por el fundador del sitio. No lo tomes como la versión final.</p>
+        <p>rentoru.com es un sitio gratuito de avisos de alquiler en Venezuela: no cobra comisión ni a quien publica ni a quien alquila.</p>
+        <section><h2>Qué es rentoru.com y qué no es</h2><p>rentoru.com conecta a quien publica un aviso con quien lo busca, pero no participa en la negociación entre las partes, no es parte del contrato de alquiler y no verifica la identidad de quien publica más allá de lo que se describe en <a href="/ayuda/como-contactar-al-dueno">Cómo contactar al dueño</a>. Visitá la propiedad y verificá quién es el dueño antes de entregar dinero.</p></section>
+        <section><h2>Quién puede publicar</h2><p>Un dueño o una inmobiliaria. Quién publica se declara al crear el aviso, y esa declaración no se verifica más allá de lo que la persona indica.</p></section>
+      </article>
+    </main></div>
+    <nav class="dock" aria-label="Navegación principal">
+      <a class="dockLink" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 9-8 9 8v10h-7v-7h-4v7H3z"/></svg>Inicio</a>
+      <a class="dockLink" href="/publicar"><span class="dockAction"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg>Publicar</span></a>
+      <a class="dockLink" href="/signin"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4H4v16h6M14 8l4 4-4 4M8 12h10"/></svg>Entrar</a>
+    </nav>
+  </div>
+</body>
+</html>

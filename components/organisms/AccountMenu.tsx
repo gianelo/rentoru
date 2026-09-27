@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { signOutAction } from "@/modules/identity/infrastructure/sign-out-action";
 import { AppLink } from "../atoms/AppLink";
+import { useDismissLayer } from "../hooks/useDismissLayer";
 import styles from "./AccountMenu.module.css";
 
 export interface AccountMenuItem {
@@ -60,10 +62,17 @@ export function AccountMenu({
   items,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
+  // La primitiva compartida (tasks.md 28.1): clic afuera, Escape y el foco
+  // que vuelve al control — antes cada menú lo resolvía a mano, y ninguno
+  // cerraba con ninguna de las dos cosas.
+  const { triggerRef, panelRef } = useDismissLayer<HTMLAnchorElement, HTMLDivElement>(open, () =>
+    setOpen(false),
+  );
 
   return (
     <span className={styles.wrap}>
       <AppLink
+        ref={triggerRef}
         href={href}
         className={
           triggerLabelVisible ? styles.trigger : `${styles.trigger} ${styles.triggerIconOnly}`
@@ -91,7 +100,7 @@ export function AccountMenu({
       </AppLink>
 
       {open ? (
-        <div className={styles.panel} role="menu">
+        <div ref={panelRef} className={styles.panel} role="menu">
           <div className={styles.panelHeader}>
             <span className={styles.panelName}>{panelTitle}</span>
             {panelEmail ? <span className={styles.panelEmail}>{panelEmail}</span> : null}
@@ -106,6 +115,26 @@ export function AccountMenu({
               {item.label}
             </AppLink>
           ))}
+
+          {/*
+            tasks.md 28.11 — «el menú de cuenta no tiene cómo cerrar
+            sesión». Un `<form>` de Server Action y no un enlace: cerrar
+            sesión cambia estado (invalida la fila de `session` en la
+            base), y un `GET` que hace eso es el defecto que esta tarea
+            cierra — un prefetch, un rastreador o un "atrás" mal dado
+            podría dispararlo. `signOutAction` decide a dónde vuelve
+            (`SIGN_OUT_DESTINATION`); acá no se decide nada.
+
+            **Este panel sólo existe con JavaScript** (`useDismissLayer`,
+            28.1) — la misma razón por la que «Importar cartera» también
+            vive en `/mis-avisos` (14d): la 28.11 repite ese mismo botón
+            ahí, servido, para quien no tiene script.
+          */}
+          <form action={signOutAction} className={styles.signOutForm}>
+            <button type="submit" className={styles.signOutButton} role="menuitem">
+              Cerrar sesión
+            </button>
+          </form>
         </div>
       ) : null}
     </span>

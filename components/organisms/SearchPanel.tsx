@@ -9,7 +9,7 @@ import type {
 import { AppLink } from "../atoms/AppLink";
 import { SegmentedControl } from "../atoms/SegmentedControl";
 import { Switch } from "../atoms/Switch";
-import { LiveResultCount } from "./LiveResultCount";
+import { SearchFilterModal } from "./SearchFilterModal";
 import styles from "./SearchPanel.module.css";
 
 /**
@@ -27,24 +27,19 @@ import styles from "./SearchPanel.module.css";
  *   lectura de la dirección** y no un manejador de clic: un panel que sólo
  *   existe cuando llega un script deja sin filtros a quien se quedó sin bundle,
  *   y en este mercado eso pasa todos los días (D13).
- * - **En escritorio no hay secuencia** (14.32). *"La secuencia del móvil existe
- *   porque no cabe nada más, no porque sea mejor"*: en 1280 los cuatro grupos
- *   van a la vez en tres columnas de 800 px. **Un solo marcado con punto de
- *   quiebre, nunca dos implementaciones** — es la regla que `SearchFilters` ya
- *   dejó escrita y que el `Nav` de la 14.40 volvió a aplicar.
+ * - **B1 dejó una sola secuencia en las tres medidas** (28.2). Abrir los cuatro
+ *   grupos en escritorio quedó descartado: con los controles nuevos se vuelve
+ *   un muro, y el fundador eligió un acordeón puro también para tablet y
+ *   desktop. **Un solo marcado con punto de quiebre, nunca dos implementaciones**
+ *   — es la regla que `SearchFilters` ya dejó escrita y que el `Nav` de la
+ *   14.40 volvió a aplicar.
  *
  * **Por qué los grupos dejaron de ser `<details>`, que es un desvío anotado.**
  * El acordeón exclusivo del navegador (`<details name>`) resolvía el teléfono
- * sin una línea de JavaScript, y era lo correcto mientras el escritorio dibujara
- * lo mismo. Deja de servir en cuanto el escritorio tiene que mostrar los cuatro
- * abiertos: **ninguna hoja de estilos puede volver a abrir de forma confiable
- * un `<details>` cerrado** en los navegadores que este producto tiene que
- * atender —el interior de WhatsApp incluido—, así que sostener el acordeón
- * habría costado dos implementaciones, que es exactamente lo que la regla
- * prohíbe. Lo que se pierde: en el teléfono cambiar de grupo cuesta una vuelta
- * al servidor en vez de ser instantáneo. Lo que se gana: un solo marcado, y el
- * mismo mecanismo con el script apagado. El conteo en vivo de la 14.34 es donde
- * el JavaScript vuelve como mejora, no como piso.
+ * sin una línea de JavaScript, pero no alcanza para la mejora con JavaScript:
+ * mientras el modal está abierto, tocar opciones debe modificar un borrador y no
+ * navegar. El marcado servido conserva enlaces y formulario reales; la isla
+ * cliente sólo intercepta esos gestos cuando el bundle llegó.
  *
  * **Este componente no decide nada.** Recibe un `SearchPanelModel` ya armado
  * por `listing-search/domain/search-panel.ts`: cada opción llega con su
@@ -67,116 +62,117 @@ export function SearchPanel({ model }: { readonly model: SearchPanelModel }) {
   // avisó que estaba ahí.
   if (!model.open) return null;
 
+  const openStep = model.steps.find((step) => step.open)?.id;
+
   return (
-    // El `id` es el destino del filtro de la pastilla (`SearchPill`), que
-    // apunta a `…#filtros`.
-    //
-    // `role="dialog"` y **no `aria-modal`**: sin JavaScript no hay forma de
-    // atrapar el foco, y declarar `aria-modal="true"` sin atraparlo le promete
-    // a un lector de pantalla algo que no se cumple. El panel va primero en el
-    // documento, así que igual es lo primero que se alcanza.
-    <section
-      className={styles.panel}
-      id="filtros"
-      role="dialog"
-      aria-label="Filtros de búsqueda"
-      data-testid="search-panel"
-      // El alcance del oyente del conteo en vivo (14.34). Un atributo propio y
-      // no el `data-testid`: ése es de las pruebas, y colgar comportamiento de
-      // producción de él lo vuelve imposible de renombrar.
-      data-search-panel=""
-    >
-      <div className={styles.sheet}>
-        <header className={styles.head}>
-          <p className={styles.headTitle}>Buscar alquiler</p>
-          {/* El «×» de la lámina, y es una dirección: cerrar el panel es la
+    <SearchFilterModal>
+      {/* El `id` es el destino del filtro de la pastilla (`SearchPill`), que
+      apunta a `…#filtros`.
+
+      `role="dialog"` y **no `aria-modal`**: sin JavaScript no hay forma de
+      atrapar el foco, y declarar `aria-modal="true"` sin atraparlo le promete
+      a un lector de pantalla algo que no se cumple. El panel va primero en el
+      documento, así que igual es lo primero que se alcanza. */}
+      <section
+        className={styles.panel}
+        id="filtros"
+        role="dialog"
+        aria-label="Filtros de búsqueda"
+        data-testid="search-panel"
+      >
+        <div className={styles.sheet}>
+          <header className={styles.head}>
+            <p className={styles.headTitle}>Buscar alquiler</p>
+            {/* El «×» de la lámina, y es una dirección: cerrar el panel es la
               misma búsqueda sin el parámetro, así que tiene que poder abrirse
               en otra pestaña y funcionar con el script apagado. */}
-          <AppLink
-            className={styles.close}
-            href={model.closeHref}
-            aria-label="Cerrar los filtros"
-            data-testid="search-panel-close"
-          >
-            ×
-          </AppLink>
-        </header>
-
-        {/* Una dirección vieja que nombra un grupo que ya no existe abre el
-            panel igual y lo dice (14.23b). El texto lo escribe el dominio. */}
-        {model.openNotice === null ? null : (
-          <p className={styles.notice} role="status">
-            {model.openNotice}
-          </p>
-        )}
-
-        <div className={styles.groups}>
-          {model.steps.map((step) => (
-            <section
-              key={step.id}
-              className={styles.group}
-              id={`filtros-${step.id}`}
-              // El estado abierto viaja en el marcado y la hoja de estilos lo
-              // lee: bajo 768 px sólo el marcado se dibuja, y de 768 para
-              // arriba se dibujan los cuatro. Un solo marcado, dos anchos.
-              data-open={step.open ? "" : undefined}
+            <AppLink
+              className={styles.close}
+              href={model.closeHref}
+              aria-label="Cerrar los filtros"
+              data-testid="search-panel-close"
+              data-search-filter-close=""
             >
-              <h2 className={styles.summary}>
-                <AppLink className={styles.summaryLink} href={step.href}>
-                  <span className={styles.position}>{step.position}</span>
-                  <span className={styles.stepTitle}>{step.title}</span>
-                  <span className={styles.stepValue}>{step.summary}</span>
-                </AppLink>
-              </h2>
+              ×
+            </AppLink>
+          </header>
 
-              <div className={styles.body}>
-                <p className={styles.question}>{step.question}</p>
+          {/* Una dirección vieja que nombra un grupo que ya no existe abre el
+            panel igual y lo dice (14.23b). El texto lo escribe el dominio. */}
+          {model.openNotice === null ? null : (
+            <p className={styles.notice} role="status">
+              {model.openNotice}
+            </p>
+          )}
 
-                {step.id === "precio" ? <PriceStep model={model} /> : null}
-                {step.id === "habitaciones" ? <RoomsStep model={model} /> : null}
-                {step.id === "publica" ? <PublisherStep model={model} /> : null}
-                {step.id === "atributos" ? <AttributesStep model={model} /> : null}
-              </div>
-            </section>
-          ))}
-        </div>
+          <div className={styles.groups}>
+            {model.steps.map((step) => (
+              <section
+                key={step.id}
+                className={styles.group}
+                id={`filtros-${step.id}`}
+                // El estado abierto viaja en el marcado y la hoja de estilos lo
+                // lee: B1 mantiene un solo cuerpo visible en móvil, tablet y
+                // escritorio. Un solo marcado, tres medidas.
+                data-open={step.open ? "" : undefined}
+              >
+                <h2 className={styles.summary}>
+                  <AppLink className={styles.summaryLink} href={step.href}>
+                    <span className={styles.position}>{step.position}</span>
+                    <span className={styles.stepTitle}>{step.title}</span>
+                    <span className={styles.stepValue}>{step.summary}</span>
+                  </AppLink>
+                </h2>
 
-        <div className={styles.foot}>
-          {/* «Limpiar todo» vuelve al valor por defecto TODO menos la ciudad
+                <div className={styles.body}>
+                  <p className={styles.question}>{step.question}</p>
+
+                  {step.id === "precio" ? <PriceStep model={model} /> : null}
+                  {step.id === "habitaciones" ? <RoomsStep model={model} /> : null}
+                  {step.id === "publica" ? <PublisherStep model={model} /> : null}
+                  {step.id === "atributos" ? <AttributesStep model={model} /> : null}
+                </div>
+              </section>
+            ))}
+          </div>
+
+          <div className={styles.foot}>
+            {/* «Limpiar todo» vuelve al valor por defecto TODO menos la ciudad
               (F8). La dirección ya la calculó el dominio; acá es un enlace
               porque es una dirección, y tiene que poder abrirse y pegarse. */}
-          <AppLink
-            className={styles.clear}
-            href={model.clearAllHref}
-            data-preview={model.clearAllPreviewLabel ?? undefined}
-          >
-            Limpiar todo
-          </AppLink>
+            <AppLink className={styles.clear} href={model.clearAllHref} data-search-filter-clear="">
+              Limpiar todo
+            </AppLink>
 
-          {model.confirm.kind === "empty" ? (
-            <div className={styles.empty}>
-              {/* No se deshabilita nada: un botón apagado no explica por qué. */}
-              <p className={styles.emptyLabel}>
-                <LiveResultCount label={model.confirm.label} />
-              </p>
-              {model.confirm.relief === null ? null : (
-                <AppLink className={styles.confirm} href={model.confirm.relief.href}>
-                  {model.confirm.relief.label}
+            <div className={styles.confirmStack}>
+              {model.confirm.kind !== "empty" || model.confirm.relief === null ? null : (
+                <p className={styles.reliefText}>{model.confirm.relief.label}</p>
+              )}
+              {openStep === "precio" && model.confirm.kind === "results" ? (
+                <button
+                  className={styles.confirm}
+                  type="submit"
+                  form="search-price-form"
+                  data-testid="search-confirm"
+                  data-search-filter-confirm=""
+                >
+                  {model.confirm.label}
+                </button>
+              ) : (
+                <AppLink
+                  className={styles.confirm}
+                  href={model.confirm.href}
+                  data-testid="search-confirm"
+                  data-search-filter-confirm=""
+                >
+                  {model.confirm.label}
                 </AppLink>
               )}
             </div>
-          ) : (
-            <AppLink
-              className={styles.confirm}
-              href={model.confirm.href}
-              data-testid="search-confirm"
-            >
-              <LiveResultCount label={model.confirm.label} />
-            </AppLink>
-          )}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </SearchFilterModal>
   );
 }
 
@@ -185,7 +181,7 @@ function PriceStep({ model }: { readonly model: SearchPanelModel }) {
     // Los dos extremos son opcionales, y al revés se intercambian en vez de dar
     // error (F5). El intercambio lo hace `buildSearchCriteria`, así que estos
     // campos ya vuelven en orden después de enviar.
-    <form className={styles.price} method="get" action={model.price.action}>
+    <form id="search-price-form" className={styles.price} method="get" action={model.price.action}>
       <Hidden fields={model.price.hidden} />
       <div className={styles.priceRow}>
         <label className={styles.field} htmlFor="precio-desde">
@@ -216,9 +212,6 @@ function PriceStep({ model }: { readonly model: SearchPanelModel }) {
         </label>
       </div>
       <PriceHistogram histogram={model.price.histogram} />
-      <button className={styles.searchAction} type="submit">
-        Usar este precio
-      </button>
     </form>
   );
 }
@@ -276,7 +269,6 @@ function RoomsStep({ model }: { readonly model: SearchPanelModel }) {
       <SegmentedControl options={model.rooms.map(toSegmentedOption)} />
       <h3 className={styles.question}>Baños</h3>
       <SegmentedControl options={model.bathrooms.map(toSegmentedOption)} />
-      <AreaField model={model} />
     </>
   );
 }
@@ -290,56 +282,10 @@ function toSegmentedOption(option: RoomChoice | BathroomChoice) {
   return {
     key: String(option.step),
     label: option.label,
-    count: option.count,
     chosen: option.chosen,
     disabled: option.disabled,
     href: option.href,
-    previewLabel: option.previewLabel,
   };
-}
-
-/**
- * **Los metros², que se escriben en vez de elegirse** (14.45 rebanada B,
- * decisión del fundador 2026-09-04: *«hay casas que tienen 72,5 o 84 y así no
- * puede ser preseleccionado»*).
- *
- * Es la tercera parte del grupo «tamaño» y **el único control del panel sin
- * conteo al lado**: un campo libre no tiene opciones que contar, así que el
- * número real es el total que el botón de confirmar ya dice (regla transversal
- * 3, cumplida del otro lado).
- *
- * **Su propio `<form method="get">` con su botón**, igual que el precio: un
- * campo suelto no envía nada con el script apagado, y el envío implícito de un
- * formulario de un solo campo existe pero no se ve — este panel se toca con el
- * dedo (D13, F14).
- *
- * `min={1}` y `step={1}` acompañan al dominio, no lo reemplazan: el navegador
- * ayuda antes de enviar y `buildSearchCriteria` decide igual, porque la misma
- * dirección se pega a mano desde un chat.
- */
-function AreaField({ model }: { readonly model: SearchPanelModel }) {
-  return (
-    <form className={styles.areaForm} method="get" action={model.area.action}>
-      <Hidden fields={model.area.hidden} />
-      <label className={styles.field} htmlFor="metros-desde">
-        <span className={styles.searchLabel}>Superficie mínima</span>
-        <input
-          className={styles.control}
-          id="metros-desde"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          step={1}
-          name={model.area.name}
-          defaultValue={model.area.value}
-          placeholder="70 m²"
-        />
-      </label>
-      <button className={styles.searchAction} type="submit">
-        Usar esta superficie
-      </button>
-    </form>
-  );
 }
 
 /**
@@ -356,14 +302,12 @@ function PublisherStep({ model }: { readonly model: SearchPanelModel }) {
           href={model.publisher.href}
           aria-current={model.publisher.chosen ? "true" : undefined}
           data-chosen={model.publisher.chosen ? "" : undefined}
-          data-preview={model.publisher.previewLabel ?? undefined}
         >
           <span className={styles.optionName}>
             {model.publisher.chosen ? "✓ " : ""}
             {model.publisher.label}
             <span className={styles.note}>{model.publisher.note}</span>
           </span>
-          <span className={styles.count}>{model.publisher.count}</span>
         </AppLink>
       </li>
     </ul>
@@ -402,9 +346,6 @@ function AttributeOptionItem({ attribute }: { readonly attribute: AttributeChoic
         <span className={styles.optionName}>{attribute.label}</span>
         <Switch on={attribute.chosen} />
       </span>
-      {/* «9 de 16», y el cero SÍ se escribe: es la respuesta a «¿por qué no
-          puedo tocar esto?» (F6). */}
-      <span className={styles.count}>{attribute.note}</span>
     </>
   );
 
@@ -422,7 +363,6 @@ function AttributeOptionItem({ attribute }: { readonly attribute: AttributeChoic
           href={attribute.href}
           aria-current={attribute.chosen ? "true" : undefined}
           data-chosen={attribute.chosen ? "" : undefined}
-          data-preview={attribute.previewLabel ?? undefined}
         >
           {body}
         </AppLink>

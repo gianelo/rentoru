@@ -490,6 +490,121 @@ test.describe("search filters (5.7)", () => {
  * geometría renderizada, y para eso existe este arnés (1b.10).
  */
 test.describe("la barra del producto (14a, 14.41)", () => {
+  test("desktop Nav actions align on Help with a mobile-only pill", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    try {
+      const page = await context.newPage();
+      for (const [width, height] of [
+        [768, 1024],
+        [1440, 900],
+      ] as const) {
+        await page.setViewportSize({ width, height });
+        await page.goto("/ayuda/preguntas-frecuentes");
+        const geometry = await page
+          .locator("header > div")
+          .first()
+          .evaluate((inner) => {
+            const brand = inner.querySelector('a[href="/"]');
+            const actions = inner.querySelector('a[href="/publicar"]')?.parentElement;
+            const pill = inner.querySelector("search")?.parentElement;
+            if (!brand || !actions || !pill) throw new Error("Nav slots missing");
+            const frame = inner.getBoundingClientRect();
+            const b = brand.getBoundingClientRect();
+            const a = actions.getBoundingClientRect();
+            const p = pill.getBoundingClientRect();
+            return {
+              left: frame.left,
+              right: frame.right,
+              brandLeft: b.left,
+              actionsRight: a.right,
+              pillWidth: p.width,
+              pillHeight: p.height,
+            };
+          });
+        console.log(`[Help Nav] ${width}x${height}: ${JSON.stringify(geometry)}`);
+        expect(Math.abs((geometry.left + geometry.right) / 2 - width / 2)).toBeLessThanOrEqual(1);
+        expect(geometry.brandLeft).toBeGreaterThanOrEqual(geometry.left);
+        expect(geometry.brandLeft - geometry.left).toBeLessThanOrEqual(16);
+        expect(geometry.right - geometry.actionsRight).toBeGreaterThanOrEqual(0);
+        expect(geometry.right - geometry.actionsRight).toBeLessThanOrEqual(16);
+        expect(geometry.pillWidth * geometry.pillHeight).toBe(0);
+      }
+      await page.setViewportSize({ width: 390, height: 840 });
+      await page.goto("/ayuda/preguntas-frecuentes");
+      const mobile = await page
+        .locator("header > div")
+        .first()
+        .evaluate((inner) => {
+          const boxes = [
+            inner.querySelector("search"),
+            inner.querySelector('a[href="/"]'),
+            inner.querySelector('a[href="/publicar"]')?.parentElement,
+          ];
+          return boxes.map((box) => {
+            if (!box) throw new Error("Nav slots missing on mobile");
+            const rect = box.getBoundingClientRect();
+            return rect.width * rect.height;
+          });
+        });
+      console.log(`[Help Nav] 390x840: search/brand/actions areas ${JSON.stringify(mobile)}`);
+      expect(mobile[0]).toBeGreaterThan(0);
+      expect(mobile[1]).toBe(0);
+      expect(mobile[2]).toBe(0);
+    } finally {
+      await context.close();
+    }
+  });
+  test("mobile-only pill is usable at 390 and absent at 768 and 1440", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    for (const [width, height, visible] of [
+      [390, 840, true],
+      [768, 1024, false],
+      [1440, 900, false],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      await page.goto("/measure");
+      const form = page
+        .getByTestId("nav-harness-mobile-only")
+        .locator('form[action="/"][method="get"]');
+      expect(await form.count()).toBe(1);
+      await expect(form.locator('input[name="q"]')).toHaveCount(1);
+      await expect(form.locator('button[type="submit"]')).toHaveCount(1);
+      const box = await form.boundingBox();
+      console.log(`[mobile-only] ${width}x${height}: ${JSON.stringify(box)}`);
+      expect(Boolean(box && box.width > 0 && box.height > 0)).toBe(visible);
+      if (visible) {
+        await form.locator('input[name="q"]').fill("Chacao");
+        await expect(form).toHaveJSProperty("action", new URL("/", page.url()).href);
+      }
+    }
+    await context.close();
+  });
+  test("la pastilla de búsqueda y su botón caben a 320 y 360", async ({ page }) => {
+    for (const width of [320, 360]) {
+      await page.setViewportSize({ width, height: 800 });
+      await page.goto("/measure");
+      const nav = page.getByTestId("nav-harness-busqueda");
+      const search = nav.locator("search");
+      const form = search.locator("form");
+      const button = form.locator('button[type="submit"]');
+      for (const [name, locator] of [
+        ["search", search],
+        ["form", form],
+      ] as const) {
+        const box = await locator.boundingBox();
+        if (!box) throw new Error(`${width}: ${name} no dibujó una caja`);
+        console.log(`[Nav] ${width}px ${name}: left=${box.x} right=${box.x + box.width}`);
+        expect(box.x, `${width}: ${name} borde izquierdo`).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width, `${width}: ${name} borde derecho`).toBeLessThanOrEqual(width);
+      }
+      const box = await button.boundingBox();
+      if (!box) throw new Error(`${width}: botón no dibujó una caja`);
+      expect(box.width, `${width}: botón ancho`).toBe(44);
+      expect(box.height, `${width}: botón alto`).toBe(44);
+      expect(box.x + box.width, `${width}: botón dentro del viewport`).toBeLessThanOrEqual(width);
+    }
+  });
   /**
    * El centro de un elemento y el de la barra que lo contiene, para
    * compararlos. `text` desambigua cuando el selector casa más de uno — no se
@@ -581,20 +696,17 @@ test.describe("la barra del producto (14a, 14.41)", () => {
 });
 
 /**
- * **El panel de filtros, medido y no leído** (14.32, 14.33).
+ * **El panel de filtros, medido y no leído** (28.2).
  *
- * Este bloque existe por el mismo defecto que el del nav, un nivel más arriba.
- * `SearchPanel.module.css` afirmaba abrir los cuatro grupos en escritorio con
- * `::details-content` — una declaración cierta en la hoja y **silenciosa sobre
- * lo que se dibuja**: en un navegador que no lo entiende, 1280 seguía dibujando
- * el acordeón del teléfono y ninguna prueba se ponía roja. Lo que hay que
- * verificar es cuántos cuerpos de grupo se dibujan a cada ancho.
+ * B1 corrigió la decisión vieja de escritorio: el panel ya no abre los cuatro
+ * grupos a la vez. El contrato ahora es el mismo en móvil, tablet y escritorio:
+ * un solo cuerpo visible, el que el servidor marcó en `data-open`.
  *
  * «Visible» se mide como caja real (`getBoundingClientRect`) y no como clase o
  * como `display` declarado: eso es exactamente lo que la prueba de
  * `grid-template-columns` demostró que no alcanza.
  */
-test.describe("el panel de filtros a los dos anchos (14.32)", () => {
+test.describe("el panel de filtros como acordeón B1 en todas las medidas (28.2)", () => {
   /** Cuántos cuerpos de grupo dibujan una caja de verdad. */
   async function openBodies(page: import("@playwright/test").Page) {
     return page.evaluate(() => {
@@ -611,36 +723,24 @@ test.describe("el panel de filtros a los dos anchos (14.32)", () => {
     });
   }
 
-  test("14.32: a 1280 los cuatro grupos se ven a la vez — no hay secuencia", async ({ page }) => {
-    await page.setViewportSize({ width: 1280, height: 1200 });
-    await page.goto("/measure");
+  for (const [width, height] of [
+    [390, 840],
+    [768, 1024],
+    [1440, 900],
+  ] as const) {
+    test(`28.2: a ${width}px B1 mantiene un solo grupo abierto`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/measure");
 
-    const bodies = await openBodies(page);
-    console.log(`[14.32] 1280px: ${JSON.stringify(bodies)}`);
+      const bodies = await openBodies(page);
+      console.log(`[28.2] ${width}px: ${JSON.stringify(bodies)}`);
 
-    // Los cuatro que la lámina 7b dibuja en tres columnas: precio,
-    // habitaciones, quién publica y atributos.
-    expect(bodies).toHaveLength(4);
-    expect(bodies.filter((body) => body.visible)).toHaveLength(4);
-  });
-
-  test("14.32: a 360 sigue siendo un acordeón — sólo el grupo abierto se dibuja", async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 360, height: 900 });
-    await page.goto("/measure");
-
-    const bodies = await openBodies(page);
-    console.log(`[14.32] 360px: ${JSON.stringify(bodies)}`);
-
-    expect(bodies).toHaveLength(4);
-    // Uno solo, y es el que el servidor marcó: con los cuatro abiertos en
-    // 360 px el botón del conteo queda cuatro pantallas más abajo, y ése es
-    // justamente el botón que hay que ver mientras se filtra.
-    expect(bodies.filter((body) => body.visible).map((body) => body.id)).toEqual([
-      "filtros-precio",
-    ]);
-  });
+      expect(bodies).toHaveLength(4);
+      expect(bodies.filter((body) => body.visible).map((body) => body.id)).toEqual([
+        "filtros-precio",
+      ]);
+    });
+  }
 
   test("14.33: la cuadrícula gana el ancho de la barra lateral — cuatro columnas a 1280", async ({
     page,
@@ -677,44 +777,28 @@ test.describe("el panel de filtros a los dos anchos (14.32)", () => {
    * segundo en que Neon todavía no contestó desde Venezuela— y lo vuelve
    * determinista en vez de una carrera contra el reloj.
    */
-  test("14.34: el botón baja de 16 a 9 al tocar el filtro, sin esperar al servidor", async ({
-    page,
-  }) => {
+  test("28.8: el botón queda fijo y las opciones no imprimen conteos", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 1200 });
     await page.goto("/measure");
 
     const confirm = page.getByTestId("search-confirm");
-    await expect(confirm).toHaveText("Ver 16 avisos");
-
-    // Nada de `/alquiler/**` va a contestar nunca: el enlace queda navegando.
-    await page.route("**/alquiler/**", () => {});
-
-    await page.getByRole("link", { name: "2 9" }).click();
-    await expect(confirm).toHaveText("Ver 9 avisos");
-    console.log("[14.34] 16 -> 9 con la navegación todavía en vuelo");
-
-    // Y el teclado entra por la misma puerta: `Enter` sobre un enlace dispara
-    // el mismo `click`, así que no hay un segundo camino que mantener.
-    await page.getByRole("link", { name: "3 4" }).focus();
-    await page.keyboard.press("Enter");
-    await expect(confirm).toHaveText("Ver 4 avisos");
-    console.log("[14.34] 9 -> 4 con el teclado");
-
-    // El anuncio: sin esto el cambio existe sólo para quien lo ve.
-    await expect(confirm.locator("[aria-live='polite']")).toHaveAttribute("aria-live", "polite");
-
-    // Tocar algo que NO adelanta un número borra la vista previa en vez de
-    // dejarla colgada: el encabezado de un grupo no es un filtro.
-    await page.getByRole("link", { name: "Precio" }).click();
-    await expect(confirm).toHaveText("Ver 16 avisos");
-    console.log("[14.34] el encabezado de grupo devuelve el conteo del servidor");
+    await expect(confirm).toHaveText("Aplicar filtros");
+    await expect(
+      page
+        .locator("#filtros-habitaciones ul")
+        .first()
+        .getByRole("link", { name: "2", exact: true, includeHidden: true }),
+    ).toHaveAttribute("href", /hab=2/);
+    await expect(page.getByRole("link", { name: "2 9" })).toHaveCount(0);
+    await expect(page.locator("[data-preview]")).toHaveCount(0);
+    console.log("[28.8] CTA fijo y enlaces de opciones sin conteos impresos");
   });
 
   /**
-   * **El piso, medido y no afirmado.** El mismo botón dice el número correcto
-   * en los bytes que el servidor manda, sin una línea de script ejecutada.
+   * **El piso, medido y no afirmado.** El mismo botón funciona sin una línea de
+   * script ejecutada, y cada opción sigue siendo un enlace real.
    */
-  test("14.34: con el script apagado el botón sigue diciendo el número del servidor", async ({
+  test("28.8: con el script apagado el botón fijo y los enlaces siguen servidos", async ({
     browser,
   }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
@@ -722,11 +806,14 @@ test.describe("el panel de filtros a los dos anchos (14.32)", () => {
     await sinScript.setViewportSize({ width: 1280, height: 1200 });
     await sinScript.goto("/measure");
 
-    await expect(sinScript.getByTestId("search-confirm")).toHaveText("Ver 16 avisos");
-    // Y cada opción sigue siendo un enlace de verdad con su dirección: el
-    // filtro se aplica volviendo al servidor, igual que antes de la mejora.
-    await expect(sinScript.getByRole("link", { name: "2 9" })).toHaveAttribute("href", /hab=2/);
-    console.log("[14.34] piso intacto: el conteo y los enlaces sin JavaScript");
+    await expect(sinScript.getByTestId("search-confirm")).toHaveText("Aplicar filtros");
+    await expect(
+      sinScript
+        .locator("#filtros-habitaciones ul")
+        .first()
+        .getByRole("link", { name: "2", exact: true, includeHidden: true }),
+    ).toHaveAttribute("href", /hab=2/);
+    console.log("[28.8] piso intacto: CTA fijo y enlaces sin JavaScript");
     await context.close();
   });
 });
@@ -761,6 +848,22 @@ test.describe("el pie del panel no tapa la última fila (regresión de la 22.11)
       const wrap = document.querySelector('[data-testid="search-panel-harness"]') as HTMLElement;
       wrap.style.transform = "none";
     });
+
+    // Desde la 28.2 el acordeón B1 también rige en escritorio: el grupo de
+    // atributos ya no está abierto por estar en 1280px, así que la regresión
+    // del pie se mide abriendo ese grupo explícitamente antes de llevar su
+    // última fila al borde inferior del scrollport.
+    const panel = page.getByTestId("search-panel");
+    await expect(panel.locator("xpath=..")).toHaveAttribute("data-search-filter-enhanced", "");
+    const attributes = page.locator("#filtros-atributos");
+    const nativeLink = attributes.getByRole("link").first();
+    await expect(nativeLink).toHaveAttribute(
+      "href",
+      /\/alquiler\/distrito-capital\?filtros=atributos/,
+    );
+    await nativeLink.click();
+    await expect(page).toHaveURL(/\/measure(?:\?|$)/);
+    await expect(attributes).toHaveAttribute("data-open", "");
 
     const ultimaFila = page
       .locator("#filtros-atributos")

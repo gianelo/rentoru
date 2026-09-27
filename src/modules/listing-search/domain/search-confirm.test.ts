@@ -1,32 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { chooseRelief, confirmCountLabel, resolveSearchConfirm } from "./search-confirm";
+import { chooseRelief, resolveSearchConfirm } from "./search-confirm";
 
 const RESULTS = "/alquiler/distrito-capital?zona=chacao";
 
-describe("el botón dice cuántos resultados va a devolver (F7)", () => {
-  it("lleva el número adentro, en cada paso", () => {
-    // La secuencia de la lámina: 47 → 21 → 16 → 9.
-    for (const [total, label] of [
-      [47, "Ver 47 avisos"],
-      [21, "Ver 21 avisos"],
-      [16, "Ver 16 avisos"],
-      [9, "Ver 9 avisos"],
-    ] as const) {
-      expect(resolveSearchConfirm({ total, resultsHref: RESULTS }).label).toBe(label);
-    }
-  });
-
-  it("nunca dice «Aplicar» ni «Buscar» a secas", () => {
+describe("el botón aplica filtros sin repetir conteos (28.8)", () => {
+  it("dice siempre «Aplicar filtros», sin importar cuántos resultados haya", () => {
     for (const total of [0, 1, 2, 47]) {
-      const label = resolveSearchConfirm({
-        total,
-        resultsHref: RESULTS,
-        onlyListingHref: "/alquiler/distrito-capital/chacao/apto-84512",
-      }).label;
-
-      expect(label).not.toBe("Aplicar");
-      expect(label).not.toBe("Buscar");
-      expect(label).not.toBe("Filtrar");
+      expect(
+        resolveSearchConfirm({
+          total,
+          resultsHref: RESULTS,
+          onlyListingHref: "/alquiler/distrito-capital/chacao/apto-84512",
+        }).label,
+      ).toBe("Aplicar filtros");
     }
   });
 
@@ -47,7 +33,7 @@ describe("el botón dice cuántos resultados va a devolver (F7)", () => {
     const confirm = resolveSearchConfirm({ total: 1, resultsHref: RESULTS });
 
     expect(confirm.kind).toBe("results");
-    expect(confirm.label).toBe("Ver 1 aviso");
+    expect(confirm.label).toBe("Aplicar filtros");
   });
 
   it("con dos o más lleva a la lista", () => {
@@ -63,11 +49,12 @@ describe("el botón dice cuántos resultados va a devolver (F7)", () => {
 });
 
 describe("con cero resultados el botón no se apaga (F7)", () => {
-  it("dice que ninguno coincide, en vez de quedarse mudo", () => {
+  it("dice que aplica filtros y lleva a la lista, en vez de dejar el destino a la vista", () => {
     const confirm = resolveSearchConfirm({ total: 0, resultsHref: RESULTS });
 
     expect(confirm.kind).toBe("empty");
-    expect(confirm.label).toBe("Ningún aviso coincide");
+    expect(confirm.label).toBe("Aplicar filtros");
+    expect(confirm.kind === "empty" && confirm.href).toBe(RESULTS);
   });
 
   it("ofrece soltar el filtro que más resultados devuelve", () => {
@@ -97,7 +84,7 @@ describe("con cero resultados el botón no se apaga (F7)", () => {
     const confirm = resolveSearchConfirm({ total: 0, resultsHref: RESULTS, relief: null });
 
     expect(confirm.kind).toBe("empty");
-    expect(confirm.label).not.toBe("");
+    expect(confirm.label).toBe("Aplicar filtros");
   });
 });
 
@@ -168,32 +155,5 @@ describe("cuál es el filtro más restrictivo", () => {
     expect(
       chooseRelief([{ filter: "price", resultCount: 14, href: "/alquiler/dc" }])?.resultCount,
     ).toBe(14);
-  });
-});
-
-describe("la etiqueta del conteo se escribe una sola vez (14.34)", () => {
-  // El conteo en vivo tiene que decir lo MISMO que dirá el servidor cuando
-  // conteste. Dos formateos separados —uno acá y otro para la vista previa—
-  // son dos que se separan: bastaría con que uno dijera «Ver 9 avisos» y el
-  // otro «9 avisos» para que el número parpadeara al llegar la respuesta.
-  it("es la misma función que usa el botón del servidor", () => {
-    expect(confirmCountLabel(9)).toBe("Ver 9 avisos");
-    expect(resolveSearchConfirm({ total: 9, resultsHref: RESULTS })).toMatchObject({
-      label: confirmCountLabel(9),
-    });
-  });
-
-  it("singulariza en uno, porque «Ver 1 avisos» se lee como un error", () => {
-    expect(confirmCountLabel(1)).toBe("Ver 1 aviso");
-  });
-
-  it("en cero dice qué pasó, y no «Ver 0 avisos»", () => {
-    // El mismo texto que `resolveSearchConfirm` ya escribe para el vacío: un
-    // botón que dice «Ver 0 avisos» invita a tocar algo que no lleva a nada.
-    expect(confirmCountLabel(0)).toBe("Ningún aviso coincide");
-    expect(confirmCountLabel(-3)).toBe("Ningún aviso coincide");
-    expect(resolveSearchConfirm({ total: 0, resultsHref: RESULTS })).toMatchObject({
-      label: confirmCountLabel(0),
-    });
   });
 });

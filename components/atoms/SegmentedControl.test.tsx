@@ -9,29 +9,23 @@ const OPTIONS = [
   {
     key: "1",
     label: "1",
-    count: 12,
     chosen: false,
     disabled: false,
     href: "/alquiler/maracaibo?hab=1",
-    previewLabel: null,
   },
   {
     key: "2",
     label: "2",
-    count: 8,
     chosen: true,
     disabled: false,
     href: "/alquiler/maracaibo",
-    previewLabel: null,
   },
   {
     key: "3",
     label: "3+",
-    count: 0,
     chosen: false,
     disabled: true,
     href: "/alquiler/maracaibo?hab=3",
-    previewLabel: null,
   },
 ] as const;
 
@@ -44,11 +38,12 @@ describe("SegmentedControl", () => {
     expect(markup).not.toContain("<button");
   });
 
-  it("la opción elegida lleva aria-current y su conteo real", () => {
+  it("la opción elegida lleva aria-current sin imprimir conteos", () => {
     const markup = renderToStaticMarkup(<SegmentedControl options={OPTIONS} />);
 
     expect(markup).toMatch(/aria-current="true"[^>]*>[\s\S]*?>2</);
-    expect(markup).toContain(">8<");
+    expect(markup).not.toContain(">8<");
+    expect(markup).not.toContain(">0<");
   });
 
   it("una opción deshabilitada se dibuja como span sin enlace, y no como ancla apagada", () => {

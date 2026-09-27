@@ -1,5 +1,6 @@
 import type { FooterLinkGroup } from "@/modules/site-footer/domain/footer-links";
 import { AppLink } from "../atoms/AppLink";
+import { Container } from "../layout/Container";
 import styles from "./SiteFooter.module.css";
 
 /**
@@ -54,34 +55,38 @@ export interface SiteFooterProps {
 export function SiteFooter({ linkGroups }: SiteFooterProps) {
   return (
     <footer className={styles.footer}>
-      <div className={styles.top}>
-        <div className={styles.brand}>
-          <AppLink className={styles.wordmark} href="/">
-            {WORDMARK}
-          </AppLink>
-          <p className={styles.tagline}>{TAGLINE}</p>
-        </div>
-
-        {linkGroups.map((group) => (
-          <div className={styles.column} key={group.category}>
-            <span className={styles.heading}>{CATEGORY_LABELS[group.category]}</span>
-            <ul className={styles.list}>
-              {group.links.map((link) => (
-                <li key={link.href}>
-                  <AppLink className={styles.link} href={link.href}>
-                    {link.label}
-                  </AppLink>
-                </li>
-              ))}
-            </ul>
+      <Container>
+        <div className={styles.top}>
+          <div className={styles.brand}>
+            <AppLink className={styles.wordmark} href="/">
+              {WORDMARK}
+            </AppLink>
+            <p className={styles.tagline}>{TAGLINE}</p>
           </div>
-        ))}
-      </div>
 
-      <div className={styles.strip}>
-        <span className={styles.legal}>{COPYRIGHT_LINE}</span>
-        <span className={styles.legal}>{DISCLAIMER_LINE}</span>
-      </div>
+          {linkGroups.map((group) => (
+            <div className={styles.column} key={group.category}>
+              <span className={styles.heading}>{CATEGORY_LABELS[group.category]}</span>
+              <ul className={styles.list}>
+                {group.links.map((link) => (
+                  <li key={link.href}>
+                    <AppLink className={styles.link} href={link.href}>
+                      {link.label}
+                    </AppLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </Container>
+
+      <Container>
+        <div className={styles.strip}>
+          <span className={styles.legal}>{COPYRIGHT_LINE}</span>
+          <span className={styles.legal}>{DISCLAIMER_LINE}</span>
+        </div>
+      </Container>
     </footer>
   );
 }

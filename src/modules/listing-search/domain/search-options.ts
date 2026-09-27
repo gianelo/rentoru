@@ -176,15 +176,6 @@ export interface AttributeOption {
   readonly attribute: ListingAttribute;
   readonly label: string;
   readonly count: number;
-  /**
-   * «9 de 16» — cuántos de los resultados actuales lo declaran.
-   *
-   * **Acá el cero SÍ se escribe**, al revés que en la zona, y la diferencia es
-   * el motivo: la opción está deshabilitada y este número es la respuesta a
-   * «¿por qué no puedo tocar esto?». En la zona el número contesta «¿cuánto
-   * hay ahí?», y para "nada" la lista ya lo dice sin un cero.
-   */
-  readonly note: string;
   readonly chosen: boolean;
   readonly disabled: boolean;
   /** `"1"` para pedirlo, `null` para soltarlo. Los atributos se combinan con Y. */
@@ -203,7 +194,7 @@ export interface AttributeOption {
  */
 export function resolveAttributeOptions(
   byAttribute: Readonly<Record<ListingAttribute, number>>,
-  total: number,
+  _total: number,
   chosen: readonly ListingAttribute[],
 ): readonly AttributeOption[] {
   return LISTING_ATTRIBUTES.map((attribute) => {
@@ -214,7 +205,6 @@ export function resolveAttributeOptions(
       attribute,
       label: ATTRIBUTE_LABELS[attribute],
       count,
-      note: `${count} de ${total}`,
       chosen: isChosen,
       disabled: count === 0 && !isChosen,
       nextValue: isChosen ? null : "1",

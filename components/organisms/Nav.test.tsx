@@ -76,6 +76,63 @@ const PILL = {
  * medio de un embudo de nueve pasos es una salida justo donde menos
  * conviene) y `/renovar/[token]` (ruta bare, sin estilo, deliberadamente).
  */
+describe("Nav — dock móvil servido", () => {
+  const publish = { bar: { label: "Publicar gratis", emphasis: "accent" as const }, menu: null };
+
+  it("sirve tres enlaces reales con iconos decorativos y rótulos para visitantes", () => {
+    const html = renderToStaticMarkup(
+      <Nav
+        account={{ kind: "anonymous" }}
+        publish={publish}
+        pill={PILL}
+        signInHref="/signin?callbackUrl=%2Fpublicar"
+      />,
+    );
+    const dock = html.match(/<nav[^>]*aria-label="Navegación principal"[^>]*>(.*?)<\/nav>/)?.[1];
+    expect(dock).toBeDefined();
+    expect(dock?.match(/<a /g)).toHaveLength(3);
+    expect(dock).toMatch(/href="\/"[^>]*>.*?<svg[^>]*aria-hidden="true".*?<\/svg>Inicio<\/a>/);
+    expect(dock).toMatch(/href="\/publicar"[^>]*>.*?<svg[^>]*aria-hidden="true".*?<\/svg>Publicar/);
+    expect(dock).toMatch(
+      /href="\/signin\?callbackUrl=%2Fpublicar"[^>]*>.*?<svg[^>]*aria-hidden="true".*?<\/svg>Entrar<\/a>/,
+    );
+  });
+
+  it("sirve Mi cuenta para una sesión sin depender de hidratación", () => {
+    const html = renderToStaticMarkup(
+      <Nav
+        account={{
+          kind: "authenticated",
+          displayName: "Ana",
+          email: "a@example.com",
+          initials: "A",
+          imageUrl: null,
+          canImportListings: false,
+          hasListings: false,
+        }}
+        publish={publish}
+        pill={PILL}
+        signInHref="/signin"
+      />,
+    );
+    const dock = html.match(/<nav[^>]*aria-label="Navegación principal"[^>]*>(.*?)<\/nav>/)?.[1];
+    expect(dock).toMatch(
+      /href="\/mis-avisos"[^>]*>.*?<svg[^>]*aria-hidden="true".*?<\/svg>Mi cuenta<\/a>/,
+    );
+    expect(dock).not.toContain("Entrar");
+  });
+
+  it("mantiene la barra de búsqueda en 60px y oculta sólo el cromo viejo con pastilla bajo 768px", () => {
+    expect(navCss).toMatch(/@media \(max-width: 767px\)/);
+    expect(rule(navCss, "barWithPill")).toContain("min-block-size: var(--nav-h)");
+    expect(MOBILE_CSS).toContain("min-block-size: var(--nav-h)");
+    expect(navCss).toMatch(
+      /\.barWithPill \.brand\s*,\s*\.barWithPill \.actions\s*\{[^}]*display:\s*none/,
+    );
+    expect(DESKTOP_CSS).toMatch(/\.dock\s*\{[^}]*display:\s*none/);
+  });
+});
+
 describe("Nav — sin sesión", () => {
   const account = { kind: "anonymous" as const };
   const publish = { bar: { label: "Publicar gratis", emphasis: "accent" as const }, menu: null };
@@ -281,7 +338,9 @@ describe("Nav — una sola forma (14.54)", () => {
 
 describe("Nav — geometría de escritorio (14a: 250 / 420 / 250)", () => {
   it("las dos columnas laterales fijas están en la hoja de estilos — la del medio la da la pastilla (SearchPill)", () => {
-    expect(navCss).toMatch(/grid-template-columns:\s*250px\s+1fr\s+250px/);
+    expect(navCss).toMatch(
+      /grid-template-columns:\s*minmax\(120px, 250px\)\s+minmax\(0, 1fr\)\s+minmax\(0, 250px\)/,
+    );
   });
 
   it("con sesión, Publicar se esconde en móvil — se muda al menú (14.38)", () => {

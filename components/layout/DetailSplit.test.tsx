@@ -4,8 +4,8 @@ import { describe, expect, it } from "vitest";
 import { DetailSplit } from "./DetailSplit";
 
 const css = readFileSync("components/layout/DetailSplit.module.css", "utf-8");
-const BREAKPOINT = "@media (min-width: 768px)";
-const mobile = css.slice(0, css.indexOf(BREAKPOINT));
+const BREAKPOINT = "@media (min-width: 1100px)";
+const stacked = css.slice(0, css.indexOf(BREAKPOINT));
 const desktop = css.slice(css.indexOf(BREAKPOINT));
 
 /** El bloque de una regla, admitiendo que el selector venga agrupado. */
@@ -36,23 +36,23 @@ describe("DetailSplit", () => {
    * los ítems de la grilla y la página ordena los suyos, que es donde ese
    * orden se decide.
    */
-  it("disuelve las dos columnas en móvil para que la página ordene sus bloques", () => {
-    expect(rule(mobile, "media")).toMatch(/display:\s*contents/);
-    expect(rule(mobile, "data")).toMatch(/display:\s*contents/);
+  it("disuelve las dos columnas en móvil y tablet para que la página ordene sus bloques", () => {
+    expect(rule(stacked, "media")).toMatch(/display:\s*contents/);
+    expect(rule(stacked, "data")).toMatch(/display:\s*contents/);
+    expect(stacked).not.toMatch(/grid-template-columns:|position:\s*sticky/);
   });
 
-  it("arma las dos columnas y pega la derecha sólo a partir del punto de quiebre", () => {
+  it("arma las dos columnas y pega la derecha sólo desde los 1100px que requiere el split", () => {
     expect(desktop).toMatch(/grid-template-columns:\s*640px 420px/);
     expect(desktop).toMatch(/\.data\s*\{[^}]*position:\s*sticky/);
-    // Y en móvil no se pega nada: una columna pegada dentro de una sola
-    // columna se queda flotando sobre el resto de la ficha.
-    expect(mobile).not.toMatch(/position:\s*sticky/);
+    // En móvil y tablet no se pega nada sobre la pila de lectura.
+    expect(stacked).not.toMatch(/position:\s*sticky/);
   });
 
-  /** Un único punto de quiebre, y es el del proyecto. */
+  /** Un único punto de quiebre: 640 + 40 + 420 sólo caben desde 1100px. */
   it("declara un solo punto de quiebre", () => {
     const queries = [...css.matchAll(/@media([^{]+)\{/g)].map((match) => match[1]?.trim());
 
-    expect(new Set(queries)).toEqual(new Set(["(min-width: 768px)"]));
+    expect(queries).toEqual(["(min-width: 1100px)"]);
   });
 });

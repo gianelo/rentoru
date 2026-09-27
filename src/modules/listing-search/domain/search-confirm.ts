@@ -1,24 +1,15 @@
 import type { ListingAttribute } from "./search-criteria";
 
 /**
- * **El botón dice cuántos resultados va a devolver, nunca «Aplicar»** (F7).
+ * **El botón principal aplica filtros con copia fija desde la 28.8.**
  *
- * Es lo más importante de esta pantalla, y la razón es medible: un botón que
- * dice «Aplicar» obliga a aplicar para saber si valió la pena, y con 47 avisos
- * en una ciudad ese viaje de ida y vuelta es la diferencia entre filtrar y
- * abandonar. Con el número adentro —«Ver 47 avisos» → «Ver 21» → «Ver 16» →
- * «Ver 9»— cada paso se decide antes de darlo.
- *
- * El número sale de `FacetedSearchPort.total`, que lo cuenta sobre las filas
- * reales: la regla transversal 3 del fundador dice «todo conteo es real, si una
- * etiqueta dice 9, hay 9», y un botón que promete 9 sobre una lista de 7 rompe
- * lo único para lo que existe.
- *
- * **Sin JavaScript el número sigue siendo real**, y eso es lo que este archivo
- * hace posible: cada opción del acordeón es un enlace `GET`, así que el
- * servidor vuelve a contar con los filtros de la dirección y vuelve a escribir
- * esta etiqueta. No hay estado en el cliente que pueda quedar desfasado porque
- * no hay estado en el cliente.
+ * Antes este archivo escribía el conteo dentro del CTA. El fundador corrigió
+ * esa forma: los números de faceta y el botón azul que cambiaba de texto eran
+ * ruido en un conjunto de filtros que se activan y desactivan. La regla viva
+ * ahora es separar responsabilidades: `FacetedSearchPort` sigue trayendo
+ * conteos reales para deshabilitar opciones que llevarían a cero, y este
+ * módulo decide adónde lleva el CTA fijo «Aplicar filtros» y qué sugerencia de
+ * alivio se muestra como texto aparte cuando no coincide nada.
  */
 
 /** Los filtros que se pueden soltar cuando la búsqueda se queda sin nada. */
@@ -158,18 +149,23 @@ export function chooseRelief(candidates: readonly ReliefCandidate[]): SearchReli
  * Tres formas, porque son tres situaciones distintas y una sola etiqueta las
  * confundiría:
  *
- * - `results` — el caso normal. Lleva a la lista y dice cuántos hay.
+ * - `results` — el caso normal. Lleva a la lista con una copia fija.
  * - `listing` — **con un solo resultado va directo a la ficha** (F7). Pasar
  *   por una lista de un elemento es una pantalla intermedia que no informa
- *   nada: ya se sabe que hay uno, porque el botón lo dijo.
+ *   nada.
  * - `empty` — cero resultados. **No se deshabilita**: un botón apagado no
  *   explica nada y deja la pantalla sin salida, contra la regla transversal 5.
- *   Dice qué pasó y ofrece un cambio con su número.
+ *   Mantiene la misma copia del CTA y puede traer un texto de alivio aparte.
  */
 export type SearchConfirm =
   | { readonly kind: "results"; readonly label: string; readonly href: string }
   | { readonly kind: "listing"; readonly label: string; readonly href: string }
-  | { readonly kind: "empty"; readonly label: string; readonly relief: ReliefOffer | null };
+  | {
+      readonly kind: "empty";
+      readonly label: string;
+      readonly href: string;
+      readonly relief: ReliefOffer | null;
+    };
 
 export interface SearchConfirmInput {
   readonly total: number;
@@ -186,33 +182,23 @@ export interface SearchConfirmInput {
   readonly relief?: ReliefOffer | null;
 }
 
-/**
- * **Cómo se escribe un total, y se escribe UNA sola vez** (14.34).
- *
- * El conteo en vivo tiene que decir exactamente lo mismo que dirá el servidor
- * cuando conteste, porque los dos aparecen en el mismo botón con menos de un
- * segundo de diferencia. Dos formateos escritos por separado son dos que se
- * separan, y el número parpadearía de forma distinta al llegar la respuesta —
- * que es justo lo que este botón existe para que no pase.
- *
- * El cero dice qué pasó en vez de «Ver 0 avisos»: un botón que ofrece ver nada
- * es una salida a otra pantalla vacía (regla transversal 4).
- */
-export function confirmCountLabel(total: number): string {
-  if (total <= 0) return "Ningún aviso coincide";
-  return total === 1 ? "Ver 1 aviso" : `Ver ${total} avisos`;
-}
+const APPLY_FILTERS_LABEL = "Aplicar filtros";
 
 export function resolveSearchConfirm(input: SearchConfirmInput): SearchConfirm {
   const { total, resultsHref, onlyListingHref } = input;
 
   if (total <= 0) {
-    return { kind: "empty", label: confirmCountLabel(total), relief: input.relief ?? null };
+    return {
+      kind: "empty",
+      label: APPLY_FILTERS_LABEL,
+      href: resultsHref,
+      relief: input.relief ?? null,
+    };
   }
 
   if (total === 1 && onlyListingHref !== undefined) {
-    return { kind: "listing", label: "Ver el único aviso", href: onlyListingHref };
+    return { kind: "listing", label: APPLY_FILTERS_LABEL, href: onlyListingHref };
   }
 
-  return { kind: "results", label: confirmCountLabel(total), href: resultsHref };
+  return { kind: "results", label: APPLY_FILTERS_LABEL, href: resultsHref };
 }

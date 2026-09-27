@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es" data-theme="menta" data-layout="compacto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>28.12 · Vistas de ayuda y legales</title>
+  <style>
+    @import url("../../src/styles/tokens.css");
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 16px; font-family: var(--sans); color: var(--ink); background: var(--bg); }
+    h1 { font-size: var(--title-fs); }
+    fieldset { border: 0; margin: 0 0 16px; padding: 0; }
+    legend { margin-bottom: 8px; font-weight: 700; }
+    .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+    .choices input { position: absolute; inline-size: 1px; block-size: 1px; opacity: 0; }
+    label, .choices a { display: grid; place-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--strong); border-radius: var(--r); color: var(--ink); background: var(--surface); cursor: pointer; text-decoration: none; }
+    input:focus-visible + label, a:focus-visible { outline: 3px solid var(--accent); }
+    input:checked + label { background: var(--tint); border-color: var(--accent); }
+    .stage { width: 100%; overflow: auto; text-align: center; }
+    iframe { display: block; width: 390px; height: 840px; max-width: none; margin: 0 auto; border: 0; background: var(--surface); }
+    body:has(#tablet:checked) iframe { width: 768px; height: 1024px; }
+    body:has(#desktop:checked) iframe { width: 1440px; height: 900px; }
+  </style>
+</head>
+<body>
+  <h1>Ayuda y legales · vistas</h1>
+  <fieldset>
+    <legend>Tamaño de pantalla</legend>
+    <div class="choices">
+      <input type="radio" name="size" id="mobile" aria-label="390×840" checked><label for="mobile">Móvil 390×840</label>
+      <input type="radio" name="size" id="tablet" aria-label="768×1024"><label for="tablet">iPad 768×1024</label>
+      <input type="radio" name="size" id="desktop" aria-label="1440×900"><label for="desktop">Escritorio 1440×900</label>
+    </div>
+  </fieldset>
+  <nav class="choices" aria-label="Contenido">
+    <a href="28-12-ayuda-legales.html#frame-faq" target="preview">Preguntas frecuentes</a>
+    <a href="28-12-ayuda-legales.html#frame-contacto" target="preview">Escribinos</a>
+    <a href="28-12-ayuda-legales.html#frame-legal" target="preview">Términos y condiciones</a>
+  </nav>
+  <div class="stage">
+    <iframe name="preview" title="Vista de ayuda y legales" src="28-12-ayuda-legales.html#frame-faq"></iframe>
+  </div>
+</body>
+</html>

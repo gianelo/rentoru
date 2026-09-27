@@ -209,6 +209,24 @@
   cursor: pointer;
 }
 
+/* «Cerrar sesión» (tasks.md 28.11) — el camino servido, gemelo del botón
+   del menú de cuenta (`AccountMenu.module.css`), nunca su reemplazo. */
+.cerrarSesion {
+  margin: 8px 0 0;
+}
+
+.cerrarSesionBoton {
+  min-block-size: var(--target-min);
+  padding-inline: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: none;
+  color: var(--soft);
+  font-family: var(--sans);
+  font-size: var(--control-fs);
+  cursor: pointer;
+}
+
 .fotoOk {
   margin: 0;
   color: var(--ink);

@@ -270,7 +270,7 @@ test.describe("el camino de lectura con el script apagado (11.16)", () => {
     const menu = page.getByTestId("order-menu");
     const primera = page.getByTestId("listing-card").first();
     // Cerrado, la etiqueta es el orden puesto: el de por defecto.
-    await expect(menu).toContainText("Recientes");
+    await expect(menu).toContainText("Publicación: más recientes");
 
     /** Abrir es del navegador: `<details>` no necesita un script para desplegarse. */
     const elegir = async (etiqueta: string) => {
@@ -291,9 +291,9 @@ test.describe("el camino de lectura con el script apagado (11.16)", () => {
     await expect(primera).toContainText(tituloDe(ID.mcboBellaVista));
 
     // **Y la vuelta deja la dirección canónica, sin `?orden=`.** Es la mitad
-    // que decide lo de Google: si «Recientes» escribiera su token, la única
-    // página indexable de la ciudad sería la que nadie enlaza.
-    await elegir("Recientes");
+    // que decide lo de Google: si «Publicación: más recientes» escribiera su token,
+    // la única página indexable de la ciudad sería la que nadie enlaza.
+    await elegir("Publicación: más recientes");
     await expect(page).toHaveURL((url) => `${url.pathname}${url.search}` === CIUDAD_MARACAIBO);
   });
 });

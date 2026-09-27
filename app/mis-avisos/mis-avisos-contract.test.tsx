@@ -355,6 +355,20 @@ describe("/mis-avisos — la lista de avisos (14d)", () => {
   });
 
   /**
+   * tasks.md 28.11 — el camino servido de «Cerrar sesión». El menú de
+   * cuenta (14b) sólo existe con JavaScript; sin él, `/mis-avisos` es
+   * exactamente a dónde el control de cuenta ya lleva sin script (`href`
+   * real, `AccountMenu.test.tsx`), así que es acá donde tiene que estar el
+   * mismo botón servido — la misma razón por la que «Importar cartera»
+   * también vive acá y no sólo en el panel.
+   */
+  it("ofrece «Cerrar sesión» en un <form> real, no en el menú de cuenta", async () => {
+    const html = await draw();
+
+    expect(html).toMatch(/<form[^>]*>[\s\S]*?<button type="submit"[^>]*>Cerrar sesión<\/button>/);
+  });
+
+  /**
    * **tasks.md 22.15 — la acción, en su propia columna a partir de 768px**
    * (SISTEMA.md, "Layout escritorio: grid 120px 1fr 200px"). Se comprueba por
    * fila y no por presencia global: un aviso activo ofrece Editar, un

@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useId, useState } from "react";
+import { useDismissLayer } from "../../../components/hooks/useDismissLayer";
 import {
   type DraftPhotoAction,
   movePhotoBy,
@@ -445,31 +446,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
                   para el teclado y el lector en los dos anchos — el arrastre
                   de escritorio se suma a esto, no lo reemplaza. */}
               {photo.status === "ready" ? (
-                <details className={styles.menu}>
-                  <summary className={styles.menuTrigger} aria-label={`Acciones de ${photo.name}`}>
-                    ⋯
-                  </summary>
-                  <div className={styles.menuSheet}>
-                    {photoActionsFor(orderIds, photo.id).map((action) => (
-                      <button
-                        key={action}
-                        type="button"
-                        className={styles.menuItem}
-                        onClick={() => runPhotoAction(action, photo.id)}
-                        aria-label={photoActionLabel(action, photo.name)}
-                      >
-                        <span className={styles.menuItemLabel}>
-                          {PHOTO_ACTION_COPY[action].label}
-                        </span>
-                        {PHOTO_ACTION_COPY[action].hint ? (
-                          <span className={styles.menuItemHint}>
-                            {PHOTO_ACTION_COPY[action].hint}
-                          </span>
-                        ) : null}
-                      </button>
-                    ))}
-                  </div>
-                </details>
+                <PhotoActionsMenu photo={photo} orderIds={orderIds} onRunAction={runPhotoAction} />
               ) : (
                 <button
                   type="button"
@@ -527,5 +504,67 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
         </Fragment>
       ))}
     </div>
+  );
+}
+
+/**
+ * El menú de tres puntos (tasks.md 28.1), la segunda instancia que el
+ * fundador confirmó: *"ningún menú que abre se cierra"*. Sigue siendo un
+ * `<details>` de verdad — el mismo mecanismo que el comentario de arriba
+ * documenta, sin una pantalla propia — y **sigue sin una línea de
+ * JavaScript para abrir**: el navegador abre y cierra el disclosure con su
+ * propio evento `toggle`, que es lo único que este componente escucha.
+ *
+ * Lo único que cambia es que ahora TAMBIÉN escucha `useDismissLayer`, así
+ * que un clic afuera o Escape lo cierran — antes ninguno de los dos hacía
+ * nada, y había que volver a tocar el mismo botón. **Sin JavaScript el
+ * `open` controlado nunca se adjunta** (React no serializa `onToggle` a
+ * HTML), así que el `<details>` sigue siendo exactamente el de antes: la
+ * mejora se monta encima, nunca reemplaza el mecanismo.
+ */
+function PhotoActionsMenu({
+  photo,
+  orderIds,
+  onRunAction,
+}: {
+  readonly photo: Photo;
+  readonly orderIds: readonly string[];
+  readonly onRunAction: (action: DraftPhotoAction, id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const { triggerRef, panelRef } = useDismissLayer<HTMLElement, HTMLDivElement>(open, () =>
+    setOpen(false),
+  );
+
+  return (
+    <details
+      className={styles.menu}
+      open={open}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary
+        ref={triggerRef}
+        className={styles.menuTrigger}
+        aria-label={`Acciones de ${photo.name}`}
+      >
+        ⋯
+      </summary>
+      <div ref={panelRef} className={styles.menuSheet}>
+        {photoActionsFor(orderIds, photo.id).map((action) => (
+          <button
+            key={action}
+            type="button"
+            className={styles.menuItem}
+            onClick={() => onRunAction(action, photo.id)}
+            aria-label={photoActionLabel(action, photo.name)}
+          >
+            <span className={styles.menuItemLabel}>{PHOTO_ACTION_COPY[action].label}</span>
+            {PHOTO_ACTION_COPY[action].hint ? (
+              <span className={styles.menuItemHint}>{PHOTO_ACTION_COPY[action].hint}</span>
+            ) : null}
+          </button>
+        ))}
+      </div>
+    </details>
   );
 }

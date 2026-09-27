@@ -110,18 +110,18 @@ Alcance: inicio, búsqueda y resultados. Referencia visual: `Rentoru - Filtros.d
 
 ---
 
-## F7 · Contar resultados en vivo
+## F7 · Aplicar filtros y evitar vacíos
 
 **Disparador:** cualquier cambio en cualquier filtro.
 
 **Comportamiento**
-- El botón de confirmación muestra **la cantidad exacta de resultados** que va a devolver: "Ver 47 avisos" → "Ver 21 avisos" → "Ver 16 avisos" → "Ver 9 avisos".
-- El conteo se recalcula en cada paso, antes de confirmar.
-- Nunca dice "Aplicar" ni "Buscar" a secas.
+- El botón de confirmación dice siempre **"Aplicar filtros"**.
+- Los conteos de faceta no se imprimen dentro del panel. La señal de cero resultados es visual: la opción queda apagada, en gris y sin tocarse.
+- El precio conserva un formulario GET real; escribir el valor y aplicar los filtros debe funcionar sin JavaScript.
 
 **Casos borde**
-- Con 0 resultados, el botón no se deshabilita: dice "Ningún aviso coincide" y ofrece el filtro más restrictivo para soltar.
-- Con 1 resultado, el botón lleva directo a la ficha en vez de a una lista de uno.
+- Con 0 resultados, el botón no se deshabilita: la sugerencia para soltar el filtro más restrictivo sube como texto encima del CTA fijo.
+- Con 1 resultado, el botón puede llevar directo a la ficha en vez de a una lista de uno, pero mantiene la copia "Aplicar filtros".
 
 ---
 
@@ -223,7 +223,7 @@ Alcance: inicio, búsqueda y resultados. Referencia visual: `Rentoru - Filtros.d
 
 **Comportamiento**
 - Buscar, filtrar, paginar y navegar funcionan con JavaScript apagado: cada filtro es un formulario o un enlace `GET`, y el acordeón usa `<details>` nativo.
-- Con JavaScript disponible se agregan encima, como mejora: carga automática al bajar, conteo en vivo sin recargar, y compresión de fotos al publicar.
+- Con JavaScript disponible se agregan encima, como mejora: carga automática al bajar, sugerencias mientras se escribe, y compresión de fotos al publicar.
 
 **Único lugar donde JavaScript es obligatorio:** subir fotos (comprimir en el dispositivo) e importar cartera (vista previa del archivo).
 

@@ -7,7 +7,7 @@ import { AppLink } from "../atoms/AppLink";
 import { FilterIcon, MagnifierIcon } from "../atoms/icons";
 // **Importado derecho, y `next/dynamic` está medido y descartado.** Esta isla
 // entra en el primer paquete de toda ruta que dibuja el `Nav` —la ficha
-// incluida, que ni siquiera lleva pastilla—: +2,5 KB gzip en ocho rutas.
+// incluida (hoy con pastilla sólo en móvil por decisión posterior)—: +2,5 KB gzip en ocho rutas.
 // Partirla con `next/dynamic` para que sólo la pidan las pantallas que traen
 // vocabulario **sube el número en vez de bajarlo**: medido ruta por ruta, +0,5
 // KB MÁS en las trece, porque el cargador perezoso pesa más que lo que evita y
@@ -34,6 +34,8 @@ export interface SearchPillProps {
    * es `"selected"` — sin zona no hay filtro que enlazar.
    */
   readonly filtersHref?: string;
+  /** El panel de filtros está abierto en la dirección servida. */
+  readonly filtersOpen?: boolean;
   /**
    * **El vocabulario acotado de esta pantalla, si la pantalla lo tiene**
    * (14.51): las zonas con avisos activos y su conteo, que en las dos rutas de
@@ -57,7 +59,8 @@ export interface SearchPillProps {
  * barra.
  *
  * **Sin JavaScript es un `<form method="get">`.** El texto es un
- * `input name="zona"`, la lupa su `button type="submit"`, y el filtro un
+ * `input` con el nombre que decide el caller (`q` en el inicio), la lupa su
+ * `button type="submit"`, y el filtro un
  * enlace real — no un botón que sólo abre un panel con un script. Con
  * JavaScript, encima: **las sugerencias mientras se escribe** (14.51), que
  * cuelgan del campo en `SearchSuggestions` y sólo aparecen cuando la pantalla
@@ -76,6 +79,7 @@ export function SearchPill({
   submitLabel,
   state,
   filtersHref,
+  filtersOpen = false,
   suggestions,
 }: SearchPillProps) {
   return (
@@ -113,9 +117,12 @@ export function SearchPill({
           // Un enlace real a la misma URL con el panel abierto desde el
           // servidor — no un botón que sólo funciona con el bundle cargado.
           <AppLink
-            className={state.filterAccent ? styles.filterAccent : styles.filter}
+            className={state.filterAccent || filtersOpen ? styles.filterAccent : styles.filter}
             href={filtersHref ?? action}
             aria-label={state.filterLabel}
+            aria-expanded={filtersOpen}
+            data-search-filter-trigger=""
+            data-filter-open={filtersOpen ? "" : undefined}
           >
             <FilterIcon />
             <span className={styles.filterWord} aria-hidden="true">

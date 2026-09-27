@@ -79,11 +79,11 @@ function findForm(node: ReactNode): ReactElement<Record<string, unknown>> | null
   }
   if (!isValidElement(node)) return null;
   const element = node as ReactElement<{ children?: ReactNode }>;
-  if (element.type === "form") return element as ReactElement<Record<string, unknown>>;
-  if (typeof element.type === "function") {
-    const rendered = (element.type as (props: unknown) => ReactNode)(element.props);
-    return findForm(rendered);
-  }
+  if (
+    element.type === "form" &&
+    (element as ReactElement<{ action?: unknown }>).props.action === reportarAviso
+  )
+    return element as ReactElement<Record<string, unknown>>;
   return findForm(element.props.children ?? null);
 }
 
@@ -112,6 +112,18 @@ describe("abrir la pantalla no reporta nada", () => {
     await open({ [REPORT_SENT_PARAM]: "" });
 
     expect(reportarAviso).not.toHaveBeenCalled();
+  });
+});
+
+describe("la búsqueda servida al reportar", () => {
+  it("offers a cityless GET search without replacing the report action or sign-in callback", async () => {
+    const markup = renderToStaticMarkup(await open());
+    expect(markup).toMatch(/<form[^>]*action="\/"[^>]*method="get"[^>]*>/);
+    expect(markup).toMatch(/<input[^>]*name="q"[^>]*>/);
+    expect(markup).toMatch(/<button[^>]*type="submit"[^>]*>.*?<\/button>/);
+    expect(markup).not.toContain('name="zona"');
+    expect(markup).toContain("callbackUrl=");
+    expect(markup).toContain('name="listingId"');
   });
 });
 

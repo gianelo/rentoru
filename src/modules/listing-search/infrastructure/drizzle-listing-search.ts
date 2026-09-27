@@ -72,6 +72,7 @@ export type SearchDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
  */
 const ORDER_BY: Readonly<Record<SearchOrder, () => readonly SQL[]>> = {
   recent: () => [desc(listings.publishedAt), asc(listings.id)],
+  oldest: () => [asc(listings.publishedAt), asc(listings.id)],
   priceAsc: () => [asc(listings.priceUsd), asc(listings.id)],
   priceDesc: () => [desc(listings.priceUsd), asc(listings.id)],
 };

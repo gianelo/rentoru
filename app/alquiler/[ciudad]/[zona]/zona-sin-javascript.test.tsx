@@ -88,7 +88,7 @@ vi.mock("@/modules/listing-discovery/infrastructure/drizzle-listing-photos", () 
   },
 }));
 
-import ZonaPage from "./page";
+import ZonaPage, { generateMetadata } from "./page";
 
 beforeEach(() => {
   process.env.R2_BUCKET_PUBLIC_URL = "https://fotos.rentoru.test";
@@ -222,7 +222,70 @@ describe("27.7: la ruta de zona busca en todas las zonas que comparten el nombre
   });
 });
 
+describe("the curated long Maracaibo zone URL", () => {
+  const name = "Barrio Tierra Negra del Sector Bella Vista";
+  const slug = "barrio-tierra-negra-del-sector-bella-vista";
+  const path = `/alquiler/maracaibo/${slug}`;
+
+  beforeEach(() => {
+    findZoneBySlug.mockImplementation(async (citySlug: string, zoneSlug: string) => {
+      if (citySlug !== "maracaibo" || zoneSlug !== slug) return null;
+      return { city: MARACAIBO, zones: [{ id: "long-zone", name, cityId: MARACAIBO.id }] };
+    });
+  });
+
+  it("serves the full H1 and a native link to the exact long path", async () => {
+    const html = await servedBody("maracaibo", slug);
+    expect(html).toMatch(new RegExp(`<h1[^>]*>Alquiler en ${name}<\\/h1>`));
+    expect(html).toMatch(new RegExp(`<a[^>]+href="${path}(?:\\?[^"]*)?"`));
+  });
+
+  it("canonizes the unfiltered path but not the filtered page", async () => {
+    const params = Promise.resolve({ ciudad: "maracaibo", zona: slug });
+    const plain = await generateMetadata({ params, searchParams: Promise.resolve({}) });
+    const filtered = await generateMetadata({
+      params,
+      searchParams: Promise.resolve({ max: "500" }),
+    });
+    expect(plain.title).toContain(name);
+    expect(plain.alternates?.canonical).toBe(path);
+    expect(filtered.alternates?.canonical).toBeUndefined();
+    expect(filtered.robots).toEqual({ index: false, follow: true });
+  });
+});
+
 describe("la página de zona sin JavaScript", () => {
+  it.each<Record<string, string>>([{}, { max: "500", pag: "2" }])(
+    "sirve la salida móvil a ciudad sin filtros (%j)",
+    async (query) => {
+      const html = await servedBody("maracaibo", "tierra-negra", query);
+      expect(html).toMatch(
+        /<a[^>]*data-testid="results-mobile-back"[^>]*aria-label="Volver a Maracaibo"[^>]*href="\/alquiler\/maracaibo"[^>]*>← Maracaibo<\/a>/,
+      );
+    },
+  );
+
+  it("sirve limpiar todo junto al título sólo con filtros activos", async () => {
+    const filtered = await servedBody("maracaibo", "tierra-negra", { max: "500" });
+    expect(filtered).toMatch(
+      /<h1[^>]*>[^<]*<\/h1>\s*<a[^>]*data-testid="mobile-clear-all"[^>]*href="\/alquiler\/maracaibo"[^>]*>Limpiar todo<\/a>/,
+    );
+  });
+  it("sirve cuatro enlaces de orden dentro de la zona, con filtros y sin página anterior", async () => {
+    const html = await servedBody("maracaibo", "tierra-negra", {
+      max: "500",
+      pag: "2",
+      orden: "fecha-asc",
+    });
+    const menu = html.match(/<details[^>]*data-testid="order-menu"[\s\S]*?<\/details>/)?.[0];
+
+    expect(menu).toContain("Ordenar por");
+    expect(menu).toContain('href="/alquiler/maracaibo/tierra-negra?max=500"');
+    for (const token of ["fecha-asc", "precio-asc", "precio-desc"]) {
+      expect(menu).toContain(`href="/alquiler/maracaibo/tierra-negra?max=500&amp;orden=${token}"`);
+    }
+    expect(menu).not.toContain("pag=2");
+  });
   /** 11.5 */
   it("trae los avisos activos de la zona en el cuerpo de la respuesta", async () => {
     const html = await servedBody("maracaibo", "tierra-negra");
@@ -352,9 +415,12 @@ describe("«Limpiar todo» vuelve a la ciudad, no a la zona (14.22b)", () => {
       max: "500",
       hab: "2",
       pag: "2",
+      filtros: "precio",
     });
 
-    expect(html).toContain('href="/alquiler/maracaibo">Limpiar todo');
+    expect(html).toContain('href="/alquiler/maracaibo?filtros=precio">Limpiar todo');
+    expect(html).toContain("Aplicar filtros");
+    expect(html).not.toContain("Usar este precio");
     // Y el otro lado, porque un enlace a la ciudad pelada podría ser cualquier
     // otro de la miga de pan: la zona no viaja adentro de ESE enlace.
     expect(html).not.toContain('href="/alquiler/maracaibo/tierra-negra">Limpiar todo');

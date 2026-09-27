@@ -56,7 +56,18 @@ const ZONE = randomUUID();
 // pasaba con esa consulta borrada. Lo encontró una mutación, no una lectura.
 const ZONE_NAME = `Oficina Postal Telegrafica ${randomUUID()}`;
 // El nombre por el que la gente busca, que vive sólo en `zone_alias`.
-const ZONE_ALIAS = `Bellavistona ${randomUUID()}`;
+//
+// **17.17 — arranca con «Z» a propósito, y no es cosmético.** Era
+// «Bellavistona»: sorteaba temprano entre las filas reales que también
+// contienen «en» y sobrevivía al recorte de `LOOKUP_LIMIT` por pura suerte
+// alfabética. Con la taxonomía real sembrada, cambiar sólo esta letra
+// bastaba para tumbar la prueba sin tocar una línea de código — es
+// exactamente la evidencia que probó que el `ORDER BY name ASC` de
+// `drizzle-search-vocabulary.ts` era el defecto, no la frase. Se deja en
+// «Z» adrede como guardia de regresión: si el corte alguna vez vuelve a
+// ser alfabético, esta prueba cae de nuevo sin que nadie tenga que
+// acordarse de probarlo a mano.
+const ZONE_ALIAS = `Zetavistona ${randomUUID()}`;
 
 const USER = randomUUID();
 
@@ -203,6 +214,41 @@ describe("el buscador del inicio, contra filas reales", () => {
    * **Sin JavaScript el mecanismo es éste**: lo escrito llega por `?q=` y el
    * servidor devuelve una dirección canónica con los filtros pegados. Nada de
    * esto necesita que el navegador ejecute nada.
+   *
+   * **17.17 — sin la palabra «en», y no es cosmético.** La frase natural
+   * llevaba «en»: `wordsOf` (`drizzle-search-vocabulary.ts`) la deja pasar por
+   * tener 2+ caracteres, así que el `ILIKE` la busca en TODA `zone`/`zone_alias`
+   * — 1.052 de las 5.796 zonas reales la contienen («23 de Enero»,
+   * «Independencia»…) — y con `LOOKUP_LIMIT = 60` y `ORDER BY name ASC` esa
+   * competencia puede empujar el propio alias de esta prueba fuera de la
+   * página, según cuántas filas reales ordenen antes que él: exactamente lo
+   * que decidía el resultado por el ORDEN en que corrían los archivos, no por
+   * el código. Medido de las dos formas: con un alias que ordena temprano
+   * («Bellavistona») sobrevivía casi siempre; con uno que ordena tarde
+   * («Zetavistona») quedaba afuera y `resolveSearchDestination` caía a
+   * `choices`. El propio dominio ya trata «en» como `STOPWORDS`
+   * (`suggest-filters.ts`) — no aporta nada a la decisión de a dónde ir —, así
+   * que quitarla de esta frase no prueba menos: sigue siendo texto libre con
+   * los mismos filtros y la misma zona, y ahora depende sólo de lo que esta
+   * prueba sembró.
+   *
+   * **Corrección, 2026-09-13/14 — ese arreglo era cosmético y no aguantó.**
+   * Reproducido de nuevo contra la taxonomía real: sacar «en» de la frase
+   * quitó el DISPARADOR de este caso puntual, pero dejó viva la DEPENDENCIA
+   * — cualquier palabra común de la frase (`ORDER BY name ASC` no distingue
+   * una de otra) puede volver a empujar el alias fuera de las 60 filas.
+   * Medido: reinsertando «en» con `ZONE_ALIAS` sorteando tarde
+   * («Zetavistona»), 20/20 corridas contra la taxonomía real caían a
+   * `choices`; con «Bellavistona» (sorteando temprano), 0/20. La causa real
+   * era `drizzle-search-vocabulary.ts` cortando por abecedario y no por
+   * relevancia — ver `relevanceRank` ahí. Con la relevancia arreglada, la
+   * frase natural con «en» pasa 20/20 con `ZONE_ALIAS` sorteando tarde (que
+   * es justo lo que este archivo deja sembrado permanentemente arriba, como
+   * guardia de regresión). **Los dos atajos que la nota de 2026-09-06 ya
+   * había descartado seguían descartados** — no se tocó `LOOKUP_LIMIT` ni se
+   * le aplicó `STOPWORDS` al SQL —, y la frase original con «en» queda
+   * restaurada, como prueba de que el arreglo es el correcto y no otro
+   * parche sobre el síntoma.
    */
   it("pega a la ruta los filtros que la misma frase trae", async () => {
     const text = `apartamento amoblado en ${ZONE_ALIAS} hasta 400`;

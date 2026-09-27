@@ -32,6 +32,7 @@ export const metadata: Metadata = {
 export default function ComoReportarPage() {
   return (
     <article>
+      <p className={styles.category}>Ayuda / Cómo reportar un aviso</p>
       <h1 className={styles.title}>Cómo reportar un aviso</h1>
 
       <p className={styles.text}>

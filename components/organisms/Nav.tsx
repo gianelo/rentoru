@@ -4,9 +4,11 @@ import {
   resolveAccountMenuItems,
 } from "@/modules/identity/domain/nav-account";
 import { AppLink } from "../atoms/AppLink";
+import { AccountIcon, EnterIcon, HomeIcon, PlusIcon } from "../atoms/icons";
 import { SearchPill, type SearchPillProps } from "../molecules/SearchPill";
 import { AccountMenu } from "./AccountMenu";
 import styles from "./Nav.module.css";
+import { NavDockScrollBehavior } from "./NavDockScrollBehavior";
 
 /**
  * Una sola copia. SISTEMA.md fija que no hay logotipo y que la marca ES la
@@ -35,8 +37,9 @@ const WORDMARK = "Rentoru";
  *   del nombre y del teléfono, que es donde el inquilino la lee justo antes de
  *   escribir. La 14.43 la había subido acá y esta tarea la revierte entera.
  *
- * `pill` queda opcional y sigue distinguiendo algo real: una ficha no es una
- * búsqueda, y ninguna de sus dos láminas dibuja la pastilla.
+ * `pill` queda opcional. La decisión posterior del fundador agrega búsqueda
+ * en todas las barras móviles; `pillDisplay` conserva la ficha sin pastilla
+ * en escritorio, como muestran sus láminas.
  */
 export interface NavProps {
   /** Ya resuelto por quien la usa (`resolveNavAccount`) — acá no se decide nada. */
@@ -45,8 +48,10 @@ export interface NavProps {
   readonly publish: NavPublish;
   /** A dónde manda "Entrar" — incluye el `callbackUrl`, si aplica. */
   readonly signInHref: string;
-  /** El inicio, las dos pantallas de resultados y `/mis-avisos`; la ficha no. */
+  /** Formulario ya resuelto por el caller; la ficha lo sirve sólo en móvil. */
   readonly pill?: SearchPillProps;
+  /** Presentation only: callers choose whether their pill occupies desktop. */
+  readonly pillDisplay?: "all" | "mobile-only";
 }
 
 /**
@@ -64,14 +69,15 @@ export interface NavProps {
  * embudo de nueve pasos es una salida justo donde menos conviene. Tampoco
  * `/renovar/[token]`, deliberadamente sin estilo.
  */
-export function Nav({ account, publish, pill, signInHref }: NavProps) {
+export function Nav({ account, publish, pill, pillDisplay = "all", signInHref }: NavProps) {
   const publishClass =
     publish.bar.emphasis === "accent" ? styles.publishAccent : styles.publishOutline;
 
   return (
-    <header className={styles.bar}>
-      <div className={styles.inner}>
-        {/* **La marca, en el primer slot y una sola vez** (14.54). Había una
+    <>
+      <header className={`${styles.bar} ${pill ? styles.barWithPill : ""}`}>
+        <div className={styles.inner}>
+          {/* **La marca, en el primer slot y una sola vez** (14.54). Había una
             segunda copia corrida al centro (`.brandCentre`) porque en la ficha
             el primer slot se lo llevaba `← Resultados`; sin la vuelta, esa
             segunda copia dibujaría «Rentoru» dos veces en toda pantalla sin
@@ -79,54 +85,80 @@ export function Nav({ account, publish, pill, signInHref }: NavProps) {
             exporta: el `.dc.html` es una referencia, no código a copiar
             (AGENTS.md §2), y una marca sin destino le quita a la ficha su
             camino al inicio. */}
-        <AppLink className={styles.brand} href="/">
-          {WORDMARK}
-        </AppLink>
-
-        {pill ? (
-          <div className={styles.pillCol}>
-            <SearchPill {...pill} />
-          </div>
-        ) : null}
-
-        <div className={styles.actions}>
-          <AppLink
-            className={
-              account.kind === "authenticated"
-                ? `${publishClass} ${styles.publishAuth}`
-                : publishClass
-            }
-            href="/publicar"
-          >
-            {publish.bar.label}
+          <AppLink className={styles.brand} href="/">
+            {WORDMARK}
           </AppLink>
 
-          {account.kind === "anonymous" ? (
-            <AppLink className={styles.enter} href={signInHref}>
-              Entrar
+          {pill ? (
+            <div
+              className={`${styles.pillCol} ${pillDisplay === "mobile-only" ? styles.mobileOnly : ""}`}
+            >
+              <SearchPill {...pill} />
+            </div>
+          ) : null}
+
+          <div className={styles.actions}>
+            <AppLink
+              className={
+                account.kind === "authenticated"
+                  ? `${publishClass} ${styles.publishAuth}`
+                  : publishClass
+              }
+              href="/publicar"
+            >
+              {publish.bar.label}
             </AppLink>
-          ) : (
-            <AccountMenu
-              href="/mis-avisos"
-              triggerLabel="Mis avisos"
-              // **Ya decidido** (`resolveNavAccount` -> `hasListings`, 14.56):
-              // acá no hay un `if` sobre datos, se pasa el estado tal cual.
-              // Prometerle «Mis avisos» a quien no publicó ninguno lo manda a
-              // una página vacía; el nombre accesible no se pierde, y el enlace
-              // a `/mis-avisos` tampoco.
-              triggerLabelVisible={account.hasListings}
-              initials={account.initials}
-              imageUrl={account.imageUrl}
-              panelTitle={account.displayName}
-              panelEmail={account.email}
-              // Ya decididas (`resolveAccountMenuItems`). Escritas a mano acá,
-              // «Importar cartera» era una fila que ningún dominio podía
-              // encender: `canImportListings` se calculaba y no lo leía nadie.
-              items={resolveAccountMenuItems(account, publish)}
-            />
-          )}
+
+            {account.kind === "anonymous" ? (
+              <AppLink className={styles.enter} href={signInHref}>
+                Entrar
+              </AppLink>
+            ) : (
+              <AccountMenu
+                href="/mis-avisos"
+                triggerLabel="Mis avisos"
+                // **Ya decidido** (`resolveNavAccount` -> `hasListings`, 14.56):
+                // acá no hay un `if` sobre datos, se pasa el estado tal cual.
+                // Prometerle «Mis avisos» a quien no publicó ninguno lo manda a
+                // una página vacía; el nombre accesible no se pierde, y el enlace
+                // a `/mis-avisos` tampoco.
+                triggerLabelVisible={account.hasListings}
+                initials={account.initials}
+                imageUrl={account.imageUrl}
+                panelTitle={account.displayName}
+                panelEmail={account.email}
+                // Ya decididas (`resolveAccountMenuItems`). Escritas a mano acá,
+                // «Importar cartera» era una fila que ningún dominio podía
+                // encender: `canImportListings` se calculaba y no lo leía nadie.
+                items={resolveAccountMenuItems(account, publish)}
+              />
+            )}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      <NavDockScrollBehavior fallback={!pill}>
+        <AppLink className={styles.dockLink} href="/">
+          <HomeIcon />
+          Inicio
+        </AppLink>
+        <AppLink className={styles.dockLink} href="/publicar">
+          <span className={styles.dockAction}>
+            <PlusIcon />
+            Publicar
+          </span>
+        </AppLink>
+        {account.kind === "anonymous" ? (
+          <AppLink className={styles.dockLink} href={signInHref}>
+            <EnterIcon />
+            Entrar
+          </AppLink>
+        ) : (
+          <AppLink className={styles.dockLink} href="/mis-avisos">
+            <AccountIcon />
+            Mi cuenta
+          </AppLink>
+        )}
+      </NavDockScrollBehavior>
+    </>
   );
 }

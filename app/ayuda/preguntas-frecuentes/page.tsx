@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 export default function PreguntasFrecuentesPage() {
   return (
     <article>
+      <p className={styles.category}>Ayuda / Preguntas frecuentes</p>
       <h1 className={styles.title}>Preguntas frecuentes</h1>
 
       <h2 className={styles.heading}>¿Cuánto cuesta publicar o contactar a un dueño?</h2>
