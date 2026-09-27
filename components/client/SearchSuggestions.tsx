@@ -128,8 +128,8 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
     form.addEventListener("focusout", onFocusOut);
     document.addEventListener("pointerdown", onPointerDown);
 
-    // A keystroke between SSR and listener installation has no listener to
-    // notify. Recover only the still-focused field, not an untouched GET query.
+    // Recuperar texto escrito antes de instalar los oyentes, pero no abrir
+    // sugerencias por el valor inicial de una zona seleccionada en reposo.
     if (document.activeElement === field && field.value !== field.defaultValue) onType();
 
     return () => {

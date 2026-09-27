@@ -43,7 +43,9 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
     });
     await page.reload();
     const pastilla = page.getByTestId(PASTILLA);
-    await expect(pastilla.getByRole("searchbox")).toHaveValue("alta");
+    const campo = pastilla.getByRole("searchbox");
+    await expect(campo).toHaveAttribute("data-early-typing", "true");
+    await expect(campo).toHaveValue("alta");
     const opcion = pastilla.getByRole("link", { name: /Altamira/ });
     await expect(opcion).toHaveAttribute("href", "/alquiler/distrito-capital/altamira");
     await expect(opcion).toContainText("Chacao · Distrito Capital");

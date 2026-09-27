@@ -155,6 +155,18 @@
     display: none;
   }
 
+  .dockHidden {
+    transform: translateY(
+      calc(100% + var(--nav-dock-bottom) + env(safe-area-inset-bottom, 0px) + 8px)
+    );
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dock {
+      transition: transform 200ms ease;
+    }
+  }
+
   .dockLink {
     flex: 1 1 0;
     min-inline-size: 0;
