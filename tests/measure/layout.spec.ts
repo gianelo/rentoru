@@ -490,6 +490,70 @@ test.describe("search filters (5.7)", () => {
  * geometría renderizada, y para eso existe este arnés (1b.10).
  */
 test.describe("la barra del producto (14a, 14.41)", () => {
+  test("desktop Nav actions align on Help with a mobile-only pill", async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    try {
+      const page = await context.newPage();
+      for (const [width, height] of [
+        [768, 1024],
+        [1440, 900],
+      ] as const) {
+        await page.setViewportSize({ width, height });
+        await page.goto("/ayuda/preguntas-frecuentes");
+        const geometry = await page
+          .locator("header > div")
+          .first()
+          .evaluate((inner) => {
+            const brand = inner.querySelector('a[href="/"]');
+            const actions = inner.querySelector('a[href="/publicar"]')?.parentElement;
+            const pill = inner.querySelector("search")?.parentElement;
+            if (!brand || !actions || !pill) throw new Error("Nav slots missing");
+            const frame = inner.getBoundingClientRect();
+            const b = brand.getBoundingClientRect();
+            const a = actions.getBoundingClientRect();
+            const p = pill.getBoundingClientRect();
+            return {
+              left: frame.left,
+              right: frame.right,
+              brandLeft: b.left,
+              actionsRight: a.right,
+              pillWidth: p.width,
+              pillHeight: p.height,
+            };
+          });
+        console.log(`[Help Nav] ${width}x${height}: ${JSON.stringify(geometry)}`);
+        expect(Math.abs((geometry.left + geometry.right) / 2 - width / 2)).toBeLessThanOrEqual(1);
+        expect(geometry.brandLeft).toBeGreaterThanOrEqual(geometry.left);
+        expect(geometry.brandLeft - geometry.left).toBeLessThanOrEqual(16);
+        expect(geometry.right - geometry.actionsRight).toBeGreaterThanOrEqual(0);
+        expect(geometry.right - geometry.actionsRight).toBeLessThanOrEqual(16);
+        expect(geometry.pillWidth * geometry.pillHeight).toBe(0);
+      }
+      await page.setViewportSize({ width: 390, height: 840 });
+      await page.goto("/ayuda/preguntas-frecuentes");
+      const mobile = await page
+        .locator("header > div")
+        .first()
+        .evaluate((inner) => {
+          const boxes = [
+            inner.querySelector("search"),
+            inner.querySelector('a[href="/"]'),
+            inner.querySelector('a[href="/publicar"]')?.parentElement,
+          ];
+          return boxes.map((box) => {
+            if (!box) throw new Error("Nav slots missing on mobile");
+            const rect = box.getBoundingClientRect();
+            return rect.width * rect.height;
+          });
+        });
+      console.log(`[Help Nav] 390x840: search/brand/actions areas ${JSON.stringify(mobile)}`);
+      expect(mobile[0]).toBeGreaterThan(0);
+      expect(mobile[1]).toBe(0);
+      expect(mobile[2]).toBe(0);
+    } finally {
+      await context.close();
+    }
+  });
   test("mobile-only pill is usable at 390 and absent at 768 and 1440", async ({ browser }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
