@@ -23,6 +23,32 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
     await page.goto("/measure");
   });
 
+  test("14.51: texto antes de hidratar ofrece Altamira con su ámbito", async ({ page }) => {
+    await page.addInitScript(() => {
+      const observer = new MutationObserver(() => {
+        const field = document.querySelector<HTMLInputElement>(
+          '[data-testid="nav-harness-busqueda"] input[type="search"]',
+        );
+        if (!field || field.dataset.earlyTyping) return;
+        field.dataset.earlyTyping = "true";
+        field.focus();
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set?.call(
+          field,
+          "alta",
+        );
+        field.dispatchEvent(new Event("input", { bubbles: true }));
+        observer.disconnect();
+      });
+      observer.observe(document, { childList: true, subtree: true });
+    });
+    await page.reload();
+    const pastilla = page.getByTestId(PASTILLA);
+    await expect(pastilla.getByRole("searchbox")).toHaveValue("alta");
+    const opcion = pastilla.getByRole("link", { name: /Altamira/ });
+    await expect(opcion).toHaveAttribute("href", "/alquiler/distrito-capital/altamira");
+    await expect(opcion).toContainText("Chacao · Distrito Capital");
+  });
+
   test("14.51: escribir «alta» ofrece Altamira con su ámbito", async ({ page }) => {
     const pastilla = page.getByTestId(PASTILLA);
     // Nada dibujado antes de escribir: la mejora no ocupa la pantalla de nadie.
