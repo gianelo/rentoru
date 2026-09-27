@@ -37,9 +37,11 @@ import { expect, test } from "@playwright/test";
  * **Y son las dos únicas cotas de esta pantalla que las dos plataformas
  * firman.** Medido: sobre el mismo commit, macOS mide la tarjeta del teléfono
  * en 222 px y el Linux de CI en 239 —una caja de línea de metadato de
- * diferencia—, y aun así las dos cuentan 2 y 4. Una cota en píxeles sobre esta
- * pantalla mide la máquina; el conteo, no. El porqué está medido abajo, en «el
- * metadato del teléfono va a un pelo de plegarse».
+ * diferencia—. El conteo considera sólo tarjetas no tapadas por el dock fijo
+ * del teléfono; en escritorio el pliegue sigue siendo el borde del viewport.
+ * Una cota en píxeles sobre esta pantalla mide la máquina; el conteo, no.
+ * El porqué está medido abajo, en «el metadato del teléfono va a un pelo de
+ * plegarse».
  *
  * **De dónde salían los dos objetivos de las láminas.** El enunciado de la
  * 14.29 dice «6 a 1280» y ese 6 es anterior a la 14.33: la lámina 7c lo escribe
@@ -88,11 +90,22 @@ async function avisosCompletosSobreElPliegue(page: import("@playwright/test").Pa
     .getByTestId("lista-grid")
     .locator("ol > li")
     .evaluateAll((nodes) => {
-      const alto = window.innerHeight;
+      const dock = document.querySelector<HTMLElement>("nav[aria-label='Navegación principal']");
+      const estilo = dock && getComputedStyle(dock);
+      const dockVisible =
+        dock &&
+        estilo?.position === "fixed" &&
+        estilo.display !== "none" &&
+        estilo.visibility !== "hidden" &&
+        dock.getBoundingClientRect().width > 0 &&
+        dock.getBoundingClientRect().height > 0;
+      const pliegue = dockVisible
+        ? Math.min(window.innerHeight, dock.getBoundingClientRect().top)
+        : window.innerHeight;
       const fondos = nodes.map((node) => Math.round(node.getBoundingClientRect().bottom));
 
       return {
-        completos: fondos.filter((fondo) => fondo <= alto).length,
+        completos: fondos.filter((fondo) => fondo <= pliegue).length,
         dibujadas: nodes.length,
         fondos,
       };
