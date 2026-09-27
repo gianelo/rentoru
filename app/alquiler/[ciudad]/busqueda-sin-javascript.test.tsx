@@ -152,6 +152,16 @@ describe("el histograma de precio se sirve desde el servidor", () => {
 });
 
 describe("la búsqueda sin JavaScript", () => {
+  it.each<Record<string, string>>([{}, { min: "300", pag: "2" }])(
+    "sirve la salida móvil a Inicio sin filtros (%j)",
+    async (query) => {
+      const html = await servedBody(query);
+      expect(html).toMatch(
+        /<a[^>]*data-testid="results-mobile-back"[^>]*aria-label="Volver a Inicio"[^>]*href="\/"[^>]*>← Inicio<\/a>/,
+      );
+    },
+  );
+
   it("sirve limpiar todo junto al título sólo con filtros activos", async () => {
     const filtered = await servedBody({ min: "300" });
     expect(filtered).toMatch(

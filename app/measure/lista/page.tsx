@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { resolveNavAccount, resolveNavPublish } from "@/modules/identity/domain/nav-account";
 import { homeSearchForm } from "@/modules/listing-catalogue/domain/search-destination";
 import { resolveSearchPill } from "@/modules/listing-catalogue/domain/search-pill";
+import { resultsBackLink } from "@/modules/listing-discovery/domain/zone-route";
 import { buildSearchPanel } from "@/modules/listing-search/domain/search-panel";
 import { Container } from "../../../components/layout/Container";
 import { ListingCard, ListingGrid } from "../../../components/molecules/ListingCard";
@@ -80,6 +81,7 @@ export default function MeasureListaPage() {
 
       <Container>
         <SearchResultsHeader
+          backLink={resultsBackLink({ kind: "zone", city: { id: "dc", name: "Distrito Capital" } })}
           crumbs={[
             { label: "Inicio", href: "/" },
             { label: "Distrito Capital", href: "/alquiler/distrito-capital" },

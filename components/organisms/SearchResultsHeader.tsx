@@ -26,6 +26,7 @@ export interface SearchResultsNotice {
 
 export interface SearchResultsHeaderProps {
   readonly crumbs: readonly SearchResultsCrumb[];
+  readonly backLink: { readonly href: string; readonly label: string };
   readonly title: string;
   readonly notice?: SearchResultsNotice | null;
   readonly priceNotices?: readonly string[];
@@ -60,6 +61,7 @@ export interface SearchResultsHeaderProps {
  */
 export function SearchResultsHeader({
   crumbs,
+  backLink,
   title,
   notice = null,
   priceNotices = [],
@@ -71,6 +73,14 @@ export function SearchResultsHeader({
   return (
     <>
       <nav className={styles.breadcrumb} aria-label="Miga de pan">
+        <AppLink
+          className={styles.mobileBack}
+          data-testid="results-mobile-back"
+          href={backLink.href}
+          aria-label={`Volver a ${backLink.label}`}
+        >
+          ← {backLink.label}
+        </AppLink>
         <ol className={styles.crumbs}>
           {crumbs.map((crumb, index) =>
             index === crumbs.length - 1 ? (

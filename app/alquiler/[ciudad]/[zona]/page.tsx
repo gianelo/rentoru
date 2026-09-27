@@ -16,6 +16,7 @@ import { buildListingGrid } from "@/modules/listing-discovery/domain/listing-gri
 import {
   isFilteredZoneRoute,
   resolveZoneRoute,
+  resultsBackLink,
   zoneRoutePath,
 } from "@/modules/listing-discovery/domain/zone-route";
 import { DrizzleListingPhotos } from "@/modules/listing-discovery/infrastructure/drizzle-listing-photos";
@@ -436,6 +437,7 @@ export default async function ZonaPage({ params, searchParams }: ZonaProps) {
             dejaron de ser dos cosas que mantener sincronizadas. */}
         <SearchResultsHeader
           crumbs={crumbs}
+          backLink={resultsBackLink({ kind: "zone", city: place.city })}
           title={`Alquiler en ${place.zones[0].name}`}
           notice={notice}
           priceNotices={priceNotices}

@@ -4,6 +4,7 @@ import {
   isFilteredZoneRoute,
   resolveCityRoute,
   resolveZoneRoute,
+  resultsBackLink,
   zoneRoutePath,
 } from "./zone-route";
 
@@ -24,6 +25,23 @@ const zones = [
   { id: "barrio-nuevo-cristo", name: "Barrio Nuevo", cityId: "mcbo" },
   { id: "barrio-nuevo-juana", name: "Barrio Nuevo", cityId: "mcbo" },
 ];
+
+describe("resultsBackLink", () => {
+  it("sale de ciudad a Inicio aun con filtros y página", () => {
+    expect(resultsBackLink({ kind: "city", city: { id: "dc", name: "Distrito Capital" } })).toEqual(
+      { href: "/", label: "Inicio" },
+    );
+  });
+
+  it("sale de zona a la ciudad canónica, sin filtros ni página", () => {
+    expect(resultsBackLink({ kind: "zone", city: { id: "dc", name: "Distrito Capital" } })).toEqual(
+      {
+        href: "/alquiler/distrito-capital",
+        label: "Distrito Capital",
+      },
+    );
+  });
+});
 
 describe("resolveZoneRoute", () => {
   it("devuelve la ciudad y el conjunto de zonas que nombran los dos segmentos", () => {
@@ -92,6 +110,32 @@ describe("resolveZoneRoute", () => {
   it("devuelve null con un catálogo vacío en vez de romper", () => {
     expect(resolveZoneRoute([], [], "distrito-capital", "chacao")).toBeNull();
   });
+});
+
+it("keeps the curated Barrio Tierra Negra del Sector Bella Vista path distinct in Maracaibo", () => {
+  const extended = [
+    { id: "bella", name: "Barrio Tierra Negra del Sector Bella Vista", cityId: "mcbo" },
+    { id: "otro", name: "Barrio Tierra Negra del Sector Otro Lugar", cityId: "mcbo" },
+  ];
+  const path = "/alquiler/maracaibo/barrio-tierra-negra-del-sector-bella-vista";
+  const place = resolveZoneRoute(
+    cities,
+    extended,
+    "maracaibo",
+    "barrio-tierra-negra-del-sector-bella-vista",
+  );
+
+  expect(path).toHaveLength(62);
+  expect(place?.zones.map((zone) => zone.id)).toEqual(["bella"]);
+  expect(place && zoneRoutePath(place)).toBe(path);
+  const other = resolveZoneRoute(
+    cities,
+    extended,
+    "maracaibo",
+    "barrio-tierra-negra-del-sector-otro-lugar",
+  );
+  expect(other?.zones.map((zone) => zone.id)).toEqual(["otro"]);
+  expect(other && zoneRoutePath(other)).not.toBe(path);
 });
 
 describe("isFilteredZoneRoute", () => {
