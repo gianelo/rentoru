@@ -284,6 +284,8 @@ El color aparece solo en los dos estados que piden algo. Activa y vencida son ne
 
 **Publicar depende de la sesión** (14.38, resuelto por el fundador el 2026-08-25): sin sesión queda afuera y en acento, que es cuando hay que provocar; con sesión se muda a la primera fila del menú de cuenta.
 
+**Corrección 28.6 — dock A móvil:** debajo de 768px, cuando hay pastilla, la barra superior mide 60px y contiene sólo la SearchPill existente; abajo flota un dock unificado de 64px, a 16px de los costados y 12px del borde inferior, con tres destinos de igual área táctil. Publicar lleva relleno `--accent` en una pieza de 96×44; Inicio no se tiñe como estado activo. Sin sesión el tercero es Entrar; con sesión es Mi cuenta. Cada destino tiene icono y rótulo visible, enlaces reales servidos sin JS. En 768px y más se conserva la barra anterior; sin pastilla se conserva la barra anterior como fallback. La puerta de contacto y el panel de filtros se superponen al dock (z-index 30 y 3 respectivamente); el dock queda por debajo de ambos. La geometría propia usa `--nav-dock-*` y el rótulo `--nav-dock-label-fs` en los tokens de producción. Ocultamiento al desplazar y medición de colisiones corresponden a T2b2/T2c.
+
 ### 6. Importar cartera
 
 **Propósito:** el corredor carga 20–50 propiedades de un archivo. Requiere habilitación por cuenta, hecha a mano por el operador.
@@ -332,20 +334,21 @@ Ninguno propio. No hay logotipo: la marca es la palabra "Rentoru" en el stack de
 
 **Glifos de texto por defecto.** `←`, `✓`, `✱`, `×`, `·` son caracteres, no imágenes: no piden red, heredan el color y la métrica del texto que los rodea, y escalan con el tipo.
 
-**Y un conjunto de tres SVG en línea**, dos cerrados por decisión del fundador (2026-08-25) y un tercero admitido como excepción de marca (DESBLOQUEADO 2026-09-05, tasks.md 22.20):
+**SVG en línea: filtro, lupa, cuatro destinos del dock y marca Google.** La decisión del fundador para 28.6 (A, 2026-09-25) extiende explícitamente el conjunto cerrado con Inicio, Publicar, Entrar y Mi cuenta, exclusivamente en el dock móvil bajo 768px. Google sigue siendo una excepción de marca:
 
 | Glifo | Uso | Por qué no es un carácter |
 |---|---|---|
 | tres rayas | el contador de filtros | no hay carácter que signifique "filtro" sin ambigüedad |
 | lupa | la acción de buscar | `◎` se lee como un ojo, no como una lupa |
+| casa, más, entrar y persona | destinos Inicio, Publicar, Entrar y Mi cuenta del dock móvil aprobado A | los caracteres sueltos no identifican estos destinos con suficiente claridad; cada icono acompaña un rótulo visible |
 | disco de Google | el botón «Continuar con Google» (láminas 8a/8b/9a/9b) | **excepción de marca, no una tercera decisión de icono propio.** Las reglas de marca de Google exigen su logo exacto y no admiten una versión propia — acá el sistema no puede derivar nada, así que se reproduce tal cual en vez de discutirse como los otros dos |
 
 Las condiciones son parte de la regla, no una sugerencia:
 
 - **En línea, nunca un paquete de iconos.** Los SVG de este sistema pesan bytes, no kilobytes; una librería de iconos trae decenas de KB y cientos que nadie usa.
 - **`aria-hidden="true"`** y su etiqueta accesible al lado. La lupa va dentro de un enlace con `aria-label="Buscar"`; el disco de Google va dentro de un botón cuyo texto visible ya dice «Continuar con Google» — ninguno de los tres SVG es su propio nombre accesible.
-- **`stroke="currentColor"`** en los dos primeros, así heredan el color como lo haría un carácter. **El disco de Google es la única excepción a esto también**: sus cuatro colores son parte de la marca y no del tema — `currentColor` los borraría.
-- **El conjunto de los dos primeros sigue cerrado.** Un cuarto icono de interfaz no se agrega: se discute. El disco de Google no abre la puerta a un cuarto — es una excepción de marca, con su razón escrita, y no una regla nueva de "hasta tres iconos".
+- **`stroke="currentColor"`** en los seis iconos de interfaz, así heredan el color como lo haría un carácter. **El disco de Google es la única excepción a esto también**: sus cuatro colores son parte de la marca y no del tema — `currentColor` los borraría.
+- **El conjunto de seis iconos de interfaz queda cerrado.** Los cuatro nuevos sólo sirven al dock móvil aprobado, no habilitan nuevos iconos en otras superficies.
 
 ## Contenido real usado
 

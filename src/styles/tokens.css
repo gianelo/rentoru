@@ -452,6 +452,12 @@
      (36 → 44, tasks.md 16.24). */
   --nav-h: 60px;
   --nav-h-desktop: 68px;
+  /* Dock A móvil (28.6): geometría propia y rótulo visible. */
+  --nav-dock-h: 64px;
+  --nav-dock-inset: 16px;
+  --nav-dock-bottom: 12px;
+  --nav-dock-action-w: 96px;
+  --nav-dock-label-fs: 12px;
   --nav-brand-fs: 17px;
   --nav-brand-fs-desktop: 19px;
 
