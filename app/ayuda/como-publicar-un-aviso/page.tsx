@@ -47,6 +47,7 @@ const STEPS: readonly Step[] = [
 export default function ComoPublicarPage() {
   return (
     <article>
+      <p className={styles.category}>Ayuda / Cómo publicar un aviso</p>
       <h1 className={styles.title}>Cómo publicar un aviso</h1>
 
       <p className={styles.text}>
