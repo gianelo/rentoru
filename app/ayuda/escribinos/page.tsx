@@ -47,6 +47,7 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
 
   return (
     <article>
+      <p className={ayudaStyles.category}>Ayuda / Escribinos</p>
       <h1 className={ayudaStyles.title}>Escribinos</h1>
 
       {screen.state === "sent" ? (
