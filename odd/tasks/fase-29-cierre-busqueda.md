@@ -1,0 +1,12 @@
+# Fase 29 — entrega independiente 29.2: paginación del catálogo
+
+**Intención.** Ejercitar página 2 y regreso con más de 24 avisos sin cambiar reglas de producto. Esta unidad sale directamente contra `dev` desde la rama aislada `test/fase-29-paginacion-catalogo`; PR #327 entrega 29.1 por separado y aún no está integrado. El fundador autorizó publicar PR independientes hacia `dev`; la publicación y los commits los gestiona el parent.
+
+## Dependencias y alcance
+
+- [ ] **29.1 Selección de sugerencias.** Pendiente vía PR #327; no incluir aquí su código, documentación de entrega ni evidencia como si estuviera en `dev`.
+- [x] **29.2 Catálogo de más de 24 avisos.** `scripts/seed-pagination-e2e.ts` suma 24 avisos sin borrar datos y rechaza destinos no locales/no propietarios. `scripts/seed-pagination-e2e.test.ts`: RED por módulo ausente, GREEN 3/3 y mutación temporal 24→23 roja en el test propio, restaurada. `tests/e2e/paginacion-catalogo.spec.ts` («29.2: 25 Altamira cards paginate through native next and previous links»): RED por ausencia de «Página 1 de 2» con un único Altamira activo; GREEN 1/1 Chromium con JS y 1/1 crawlability sin JS tras añadir 24 avisos. Verifica 24/1 tarjetas, URL `?pag=2` y enlaces nativos de ida/regreso en HTML servido. La expectativa inicial `?page=2` se corrigió al parámetro canónico antes del RED de navegador. Base local aislada `rentas_pagination_ephemeral` con Postgres propio y seis avisos base: 25 Altamira, 30 en total; `pnpm build` pasó. Sin tocar producción ni modificar fuente de paginación: no se reprodujo un bug de producto. `.github/workflows/ci.yml` conecta la prueba aislada; GitHub Actions remoto pendiente, no declarado verde. Commit de la unidad: `4bffbaf` (cherry-pick de 29.2 sobre `dev`); rollback aislado mediante reversión de sólo esta unidad, sin depender de #327.
+- [ ] **29.3 Geometría de zona larga.** Verificar 390×844, 768×1024 y 1440×900; preservar estrés 360×640, grilla ≤225 px y blancos táctiles ≥44 px. Sólo corregir fallos reproducidos.
+- [ ] **29.4 Verificación y eventual cierre de #287.** Registrar resultados actuales de geometría y CI remoto antes de decidir cierre; no cambiar el estado del issue por este plan.
+
+**Límites.** No presentar 29.1 como fusionada ni su evidencia como resultado de 29.2. No cambiar políticas para zonas vacías ni inferir defecto de `tierra` sin reproducción. Mantener GET nativo y reglas fuera del front. La auditoría global de pantallas no queda cubierta por esta prueba.

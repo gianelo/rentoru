@@ -2875,3 +2875,14 @@ Textual: *«entiendo que esto fue una de las peticiones que se hicieron al princ
 
     **Nota de método**: esta tarea se implementó con escritor delegado común y no con `sdd-apply`, porque el hook de preflight de gentle-ai 3.4.0 rechaza todo despacho del ejecutor en Claude Code. Guarda la confirmación en un `Map` en memoria por sesión, y el hook de Claude Code es un proceso nuevo en cada llamada, así que nunca la encuentra. No es configuración: es un defecto del adaptador.
 
+## Fase 29 — Cierre acotado de búsqueda (#287; entregas independientes hacia dev)
+
+**Frontera.** La Fase 28 ya entregó modal, facetas, salto de zona larga, filtros, orden, sugerencias, regreso y URL canónica; no se reabren aquí. Seguimiento de esta entrega: `odd/tasks/fase-29-cierre-busqueda.md`. Los PR 29.1 y 29.2 apuntan independientemente a `dev`; #327 (29.1) aún no está integrado.
+
+- [ ] 29.1 **Selección de sugerencia con teclado.** Pendiente de integración vía PR #327; su código y evidencia no forman parte de esta entrega. No marcar como entregada en `dev` por el cherry-pick de 29.2.
+- [x] 29.2 **Página 2 y regreso con más de 24 avisos.** `scripts/seed-pagination-e2e.ts` agrega 24 avisos en base aislada sin borrar datos y rechaza destinos no locales/no propietarios. `scripts/seed-pagination-e2e.test.ts`: RED por módulo ausente, GREEN 3/3; mutación temporal 24→23 volvió rojo su test propio y fue revertida. `tests/e2e/paginacion-catalogo.spec.ts` («29.2: 25 Altamira cards paginate through native next and previous links»): RED de navegador por falta de «Página 1 de 2» con un solo aviso activo; GREEN 1/1 Chromium con JS y 1/1 crawlability sin JS tras sembrar 24 avisos adicionales en Postgres local aislado (25 en Altamira, 30 en total). Verifica 24/1 tarjetas, enlaces nativos y URL canónica `?pag=2` de ida/regreso sobre HTML servido; la expectativa inicial `?page=2` se corrigió antes del RED de navegador. `pnpm build` pasó. Sin cambio en paginación de producto: faltaba un catálogo >24 para ejercitarla. Commit de 29.2: `4bffbaf`; rollback aislado al revertir sólo esa unidad, sin depender de #327. `.github/workflows/ci.yml` conecta el arnés; CI remoto pendiente, no se afirma GitHub Actions verde.
+- [ ] 29.3 **Geometría de zona larga.** Medir recortes y desbordes en 390×844, 768×1024 y 1440×900; conservar estrés 360×640, inicio de grilla ≤225 px y objetivos táctiles ≥44 px. Corregir sólo defectos reproducidos.
+- [ ] 29.4 **Verificación y eventual cierre de #287.** Registrar resultados actuales de pruebas, HTML servido, navegación con/sin JS y geometría; decidir cierre sólo con evidencia observada, incluido CI remoto cuando exista.
+
+**Límites.** No inferir un defecto de `tierra` sin oferta controlada ni cambiar reglas de zonas vacías, modal, iconos o flags. Mantener GET nativo y reglas de producto fuera del front. El resultado de 29.1 pertenece a #327, no a este PR.
+
