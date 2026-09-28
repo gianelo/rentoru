@@ -2875,3 +2875,13 @@ Textual: *«entiendo que esto fue una de las peticiones que se hicieron al princ
 
     **Nota de método**: esta tarea se implementó con escritor delegado común y no con `sdd-apply`, porque el hook de preflight de gentle-ai 3.4.0 rechaza todo despacho del ejecutor en Claude Code. Guarda la confirmación en un `Map` en memoria por sesión, y el hook de Claude Code es un proceso nuevo en cada llamada, así que nunca la encuentra. No es configuración: es un defecto del adaptador.
 
+## Fase 29 — Cierre acotado de búsqueda (#287)
+
+La Fase 28 ya cubrió modal, facetas, salto de zona larga, filtros, orden, sugerencias, regreso y URL canónica. No reabrirla. La observación de producción a 390×840 del 27 de septiembre es histórica, no una reproducción actual. #288 fija 390×844, 768×1024 y 1440×900; 440×956 es un ancho adicional. Seguimiento: `odd/tasks/fase-29-cierre-busqueda.md`.
+
+- [ ] 29.1 **Selección de sugerencia con teclado.** Pendiente en `dev`: PR #327 abierto, no integrado. No atribuir su evidencia a este PR.
+- [ ] 29.2 **Paginación real >24 avisos.** Pendiente en `dev`: PR #328 abierto, no integrado. No atribuir su evidencia a este PR.
+- [x] 29.3 **Geometría de zona larga.** `tests/measure/lista.spec.ts` («29.3: zona larga en resultados») y `tests/measure/sugerencias.spec.ts` («29.3: zona larga en sugerencias») prueban fragmentos `Range` dentro del span y sus contenedores, chip y opción dentro del panel, en 390×844, 440×956, 768×1024 y 1440×900. RED inicial 8/8 por fixture ausente; GREEN 8/8; mutaciones temporales de `nowrap`, recorte vertical y dimensiones del enlace hicieron fallar pruebas propias y se restauraron. Suite de medida 172/172, incluido histórico 360×640 (dos tarjetas y grilla ≤225 px). Sólo fixtures y pruebas: ningún cambio de CSS productivo. Rollback: retirar sólo fixtures y pruebas 29.3. Detalle: `odd/tasks/fase-29-cierre-busqueda.md`.
+- [x] 29.4 **Verificación/decisión agregada local, no cierre de #287.** En HEAD original de la rama completa `92265db`: unitarios 3014/3014, medida 172/172, E2E base completo 35 pasan/5 omitidos y 39 pasan/1 omitido, paginación 1/1 en ambos proyectos, bundle 111,84/130 KB, lint, tipos y build verdes. Integración DB omitida en el lote final; GitHub Actions pendiente; #287 sigue abierto. Esta evidencia local de la rama completa **no demuestra** que este PR independiente ni #327/#328 pasen CI. Reconciliar documentos compartidos después de integrar los predecesores antes de decidir el cierre.
+
+**Límites:** sin política nueva para zonas vacías ni arreglo de `tierra` sin reproducción controlada; conservar GET nativo y reglas fuera del front. PR independiente a `dev`, presupuesto total ≤400 líneas cambiadas. Push/PR autorizados; cierre de issue no autorizado.

@@ -481,6 +481,114 @@ test.describe("14.29: los avisos completos sobre el pliegue", () => {
  * habitaciones y quién publica—, que es un conjunto que un visitante produce
  * caminando la pantalla. Medir con un conjunto inventado mediría otra cosa.
  */
+test.describe("29.3: zona larga en resultados", () => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 440, height: 956 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`${viewport.width}×${viewport.height}: metadato y filtros no se recortan`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/measure/lista");
+      const label = "Barrio Tierra Negra del Sector Bella Vista";
+      const card = page.getByTestId("lista-grid").locator("ol > li").nth(2);
+      const meta = card.locator("p").last();
+      await expect(meta).toContainText(label);
+      const geometry = await meta.evaluate((node, text) => {
+        const part = [...node.querySelectorAll("span")].find((span) => span.textContent === text);
+        if (!part) throw new Error("Missing real zone metadata part");
+        const range = document.createRange();
+        range.selectNodeContents(part);
+        const bounds = [...range.getClientRects()].map((r) => ({
+          left: r.left,
+          right: r.right,
+          top: r.top,
+          bottom: r.bottom,
+        }));
+        const card = node.closest("li")?.getBoundingClientRect();
+        const container = part.getBoundingClientRect();
+        return {
+          bounds,
+          left: card?.left,
+          right: card?.right,
+          top: container.top,
+          bottom: container.bottom,
+          documentWidth: document.documentElement.scrollWidth,
+        };
+      }, label);
+      expect(geometry.bounds.length).toBeGreaterThan(0);
+      for (const bound of geometry.bounds) {
+        expect(bound.left).toBeGreaterThanOrEqual((geometry.left ?? 0) - 1);
+        expect(bound.right).toBeLessThanOrEqual((geometry.right ?? 0) + 1);
+        expect(bound.top).toBeGreaterThanOrEqual(geometry.top - 1);
+        expect(bound.bottom).toBeLessThanOrEqual(geometry.bottom + 1);
+      }
+      expect(geometry.documentWidth).toBeLessThanOrEqual(viewport.width);
+      const chips = page.getByTestId("filter-chips");
+      if (viewport.width < 768) {
+        await expect(chips).toBeHidden();
+        await expect(page.getByTestId("pill-filter-count")).toBeVisible();
+      } else {
+        await expect(chips).toBeVisible();
+        const chip = chips.locator("li").filter({ hasText: label });
+        await expect(chip).toBeVisible();
+        const bounds = await chip.evaluate((node) => {
+          const label = node.querySelector("span");
+          if (!label) throw new Error("Missing long-zone chip label");
+          const range = document.createRange();
+          range.selectNodeContents(label);
+          const rect = node.getBoundingClientRect();
+          const labelRect = label.getBoundingClientRect();
+          return {
+            text: [...range.getClientRects()].map((r) => ({
+              left: r.left,
+              right: r.right,
+              top: r.top,
+              bottom: r.bottom,
+            })),
+            left: rect.left,
+            right: rect.right,
+            top: rect.top,
+            bottom: rect.bottom,
+            label: {
+              left: labelRect.left,
+              right: labelRect.right,
+              top: labelRect.top,
+              bottom: labelRect.bottom,
+            },
+            width: document.documentElement.scrollWidth,
+          };
+        });
+        expect(bounds.text.length).toBeGreaterThan(0);
+        for (const fragment of bounds.text) {
+          expect(fragment.left).toBeGreaterThanOrEqual(bounds.left - 1);
+          expect(fragment.right).toBeLessThanOrEqual(bounds.right + 1);
+          expect(fragment.top).toBeGreaterThanOrEqual(bounds.top - 1);
+          expect(fragment.bottom).toBeLessThanOrEqual(bounds.bottom + 1);
+          expect(fragment.left).toBeGreaterThanOrEqual(bounds.label.left - 1);
+          expect(fragment.right).toBeLessThanOrEqual(bounds.label.right + 1);
+          expect(fragment.top).toBeGreaterThanOrEqual(bounds.label.top - 1);
+          expect(fragment.bottom).toBeLessThanOrEqual(bounds.label.bottom + 1);
+        }
+        expect(bounds.width).toBeLessThanOrEqual(viewport.width);
+        const remove = chip.getByRole("link");
+        await expect(remove).toBeVisible();
+        const target = await remove.boundingBox();
+        if (!target) throw new Error("Missing long-zone chip removal target");
+        expect(target.width, `${viewport.width}: ancho del enlace quitar`).toBeGreaterThanOrEqual(
+          44,
+        );
+        expect(target.height, `${viewport.width}: alto del enlace quitar`).toBeGreaterThanOrEqual(
+          44,
+        );
+      }
+    });
+  }
+});
+
 test.describe("14.53: las fichas quitables y el ancho de la pantalla", () => {
   test("a 360 no se dibujan, y el número de filtros lo dice la pastilla", async ({ page }) => {
     await page.setViewportSize(MOVIL);
