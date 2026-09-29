@@ -1,0 +1,46 @@
+# Fase 30 — cierre de ficha (#288)
+
+**Estado: plan, no aceptación.** Rama de implementación `feat/fase-30-ficha` creada desde `dev` f420bf1 (mismo árbol que `main` tras #330); el worktree original `docs/fase-30-ficha` y sus tres archivos sin commit permanecen intactos. Los comentarios y las 13 imágenes son evidencia histórica del fundador, no reproducción actual: confirmar cada defecto antes de corregir. 30.0 prepara y reconcilia el plan; 30.1–30.7 están pendientes. Cada cierre de comportamiento exige archivo y prueba nombrada, RED/GREEN observado, mutación del sujeto y prueba del HTML servido para toda regla nueva. TDD estricto: AGENTS.md §1; runners `pnpm test:unit`, `pnpm test:measure`, `pnpm test:e2e`, integración con Postgres de prueba. No usar DB de producción sin autorización separada.
+
+**Entrega y rutas.** Previsión ~1.200–1.700 líneas de implementación y tests, excluyendo la evidencia de planificación; supera 400 en conjunto. El fundador eligió PR independientes y secuenciales hacia `dev`, como en Fase 29; cada rebanada revisable ≤400 líneas y cada tarea con commit convencional en español. No hacer push, abrir PR ni fusionar sin decisión de entrega del fundador. Ruta: 30.0 documentación mecánica; 30.1 diagnóstico delegado por mapeo de 4+ archivos; 30.2–30.7 escritores delegados por cambios no triviales multiarchivo; verificador independiente según `gentle_review assess` (RDD apagado). Mirror Engram: pendiente de sincronización si el proveedor informa sesión terminada.
+
+## Decisiones que gobiernan el trabajo
+
+- Ficha: flechas visibles y swipe táctil **fuera** del visor, sin perder el enlace de cada foto al visor. Dentro del visor también debe navegar la imagen grande; miniaturas que se desplazan no equivalen a navegar la imagen. Preservar enlaces sin JS y accesibilidad táctil ≥44 px.
+- Pie global debajo de la ficha: revisión **sólo para ficha** de la excepción 23.3; el visor inmersivo sigue sin pie global. Se aprueban deliberadamente dos secciones apiladas: pie propio con ID/reporte y luego pie global con navegación/aviso legal, sin contenido duplicado.
+- Reporte: razón obligatoria entre «posible estafa», «datos incorrectos», «duplicado», «no disponible», «otro»; explicación opcional; identidad de quien reporta privada. POST nativo, nunca GET mutante. Cuenta ya registrada: no duplicar petición de identidad.
+- Medidas canónicas para **todas** las pantallas: 390×844, 768×1024, 1440×900; cualquier ancho <768 usa composición móvil. En esta fase sólo se acepta la ficha; auditar las demás superficies en seguimiento independiente. Conservar los resultados anteriores a 390×840 como historia, no reemplazarlos ni tratarlos como medida vigente. Probar además 440×956.
+- D13 exige lectura sin JS; su «no carousel» se exceptúa sólo en ficha para flechas/swipe con enlaces nativos. D14 y tokens Compacto/Menta gobiernan visuales. No introducir reglas en componentes. Preservar mensaje requerido para revelar contacto según decisión de diseño: aclarar copia y errores, no eliminar el requisito. Inspeccionar WhatsApp condicional ya implementado antes de tocarlo.
+
+## Secuencia verificable
+
+- [ ] **30.0 Reconciliar planificación sin tocar originales.** Transferir D30 y las siete tareas del worktree de planificación sobre `dev` f420bf1 preservando íntegras las tareas entregadas de Fase 29. Corregir referencias cronológicas obsoletas; comprobar `git diff --check`, numeración y alcance, registrar commit de planificación en la rama de implementación. Rollback: sólo las tres adiciones documentales de Fase 30; no revertir Fase 29.
+- [ ] **30.1 Diagnóstico y contrato de medidas.** Reproducir contra dev ficha servida en 390×844, 440×956, 768×1024 y 1440×900: ancho documento, contenido sin recorte, objetivos táctiles, foto y pie. Registrar qué proviene del código y qué sólo de capturas; conservar 390×840 histórico. Separar auditoría transversal posterior. Evidencia: pruebas de medida/HTML servido y capturas comparables.
+- [ ] **30.2 Composición y lectura.** StatStrip muestra las cuatro métricas (habitaciones, baños, m² y estacionamiento) en móvil; DeclaredFeatures, descripción, contacto, botón y Reportar quedan visibles, con texto «PUESTOS» comprensible y sin desborde a 440; revisar franja azul y ratios variados de tablet. Verificar ausencia de overflow horizontal en documento y pie propio con ID/reporte seguido del global, sin contenido repetido. Evidencia: medición de geometría y HTML servido en las cuatro medidas, crawlability.
+- [ ] **30.3 Fotos.** Tira navegable con flechas y swipe fuera del visor; tocar imagen mantiene destino de visor; dentro, swipe cambia imagen grande además de permitir scroll de miniaturas. Alternativas href sin JS, teclado, foco y objetivos ≥44 px. Evidencia: tests interactivos y crawlability, fotos con distintas proporciones.
+- [ ] **30.4 Rutas y sesión.** Zona «Coquivacoa» enlaza a su ruta canónica; dirección de ficha inexistente devuelve HTTP 404 en GET directo de documento; la transición cliente muestra not-found y conserva URL correcta sin avisos ajenos. Observar por separado el status del fetch RSC: 200 de Flight no es por sí solo un error. La regla general de salida de 28.11 lleva a `/`; para ficha, excepción de retorno seguro a la misma URL pública en estado anónimo, sin filtrar contacto. Evidencia: GET directo, transición cliente, HTML servido y prueba de sesión.
+- [ ] **30.5 Revelación de contacto.** Separar visualmente texto y botón; tras envío válido autenticado mostrar contacto/email cuando corresponda y verificar persistencia del evento. Mensaje requerido permanece; mostrar error útil cuando falta. Caracterizar enlace WhatsApp condicional existente antes de modificarlo; no duplicar funcionalidad. Evidencia: dominio, integración en DB de prueba y HTML servido antes/después, sin JS.
+- [ ] **30.6 Reporte confiable.** Formulario POST con los cinco motivos y explicación opcional; validar en dominio/aplicación, persistir motivo y mantener identidad de quien reporta privada en HTML/acuse. Reproducir el caso del ID `99d25b3d-4d23-48d3-b134-f720781b1eb3` sólo con evidencia segura: consulta de producción **read-only únicamente con autorización explícita**, nunca reenviar reporte, sembrar producción ni asumir que su existencia actual prueba persistencia. DB de prueba prueba persistencia; migración, si necesaria, serial. Evidencia: RED/GREEN, mutación, integración y respuesta servida.
+- [ ] **30.7 Puerta de inicio de sesión y cierre.** Clic fuera cierra la puerta sin bloquear enlace/formulario base; Escape/foco según primitiva existente. Correr pruebas enfocadas primero, luego HTML servido, crawlability, medidas, presupuesto de bundle, tokens, tipos y suites afectadas; registrar fallos, no declarar verde por plan ni por descripción marcada del issue.
+
+## Trazabilidad cronológica (#288)
+
+| Comentario | Imágenes | Trabajo |
+|---|---:|---|
+| 5872418522 — StatStrip 3, features recortadas | 1 | 30.1–30.2 |
+| 5872482477 — PUESTOS, franja azul, navegación de galería | 2 | 30.2–30.3 |
+| 5872763482 — ruta inventada y 200 | 3 | 30.4 |
+| 5872803322 — Coquivacoa sin enlace | 4 | 30.4 |
+| 5872851947 — features/descripción/contacto/botón | 5 | 30.2, 30.5 |
+| 5872886915 — salida de sesión manda a inicio | — | 30.4 |
+| 5872998897 — 440×956, móvil bajo 768 | 6 | 30.1–30.2 |
+| 5873054769 — texto pegado y email invisible | 7 | 30.5 |
+| 5873167170 — mensaje requerido y WhatsApp | — | 30.5 |
+| 5873238292 — tira, desborde, swipe grande vs miniaturas | 8, 9, 10 | 30.2–30.3 |
+| 5873332898 — Reportar y pie | 11 | 30.2, 30.6 |
+| 5873387379 — fotos tablet, ratios distintos | 12 | 30.2–30.3 |
+| 5873424406 — reporte producción, razón e identidad | — | 30.6 |
+| 5873480123 — cerrar puerta con clic afuera | 13 | 30.7 |
+| 5873505887 — tres medidas de todas las pantallas | — | 30.1; auditoría transversal posterior |
+
+**Orden entre ramas:** Fase 29 ya está fusionada en `dev` mediante #327–#329 y en `main` mediante #330; #287 permanece abierto por decisión separada. Conservar íntegra su evidencia en `openspec/changes/mvp-rental-listings/tasks.md` al añadir Fase 30 y conservar 390×840 sólo como historia. #288 sigue abierto. Fase 30 no afirma cumplimiento de las demás pantallas.
