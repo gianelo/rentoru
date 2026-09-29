@@ -229,7 +229,7 @@ export function ContactBlock({
                  sigue cobrándose antes del contacto, sólo que después de la
                  puerta y no antes. */
               <div className={styles.control}>
-                <ActionLink href={doorHref}>
+                <ActionLink href={doorHref} data-contact-door-trigger="">
                   {lockedLabel(contact.method, publisherType)}
                 </ActionLink>
               </div>

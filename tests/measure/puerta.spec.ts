@@ -29,6 +29,34 @@ test.describe("la puerta de entrar (15.8)", () => {
     expect(box.y + box.height).toBeLessThan(900);
   });
 
+  for (const { width, height } of [
+    { width: 390, height: 844 },
+    { width: 440, height: 956 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`30.7: puerta medible a ${width}×${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto("/measure?entrar=si");
+
+      const box = await panel(page);
+      console.log(
+        `[30.7] ${width}×${height}: x=${box.x}px y=${box.y}px ancho=${box.width}px alto=${box.height}px fondo=${box.y + box.height}px`,
+      );
+
+      if (width < 768) {
+        expect(box.width).toBe(width);
+        expect(box.x).toBe(0);
+        expect(Math.round(box.y + box.height)).toBe(height);
+        expect(box.y).toBeGreaterThan(0);
+      } else {
+        expect(box.width).toBe(460);
+        expect(box.x).toBe((width - 460) / 2);
+        expect(box.y + box.height).toBeLessThan(height);
+      }
+    });
+  }
+
   test("15.8: a 360 sube desde abajo y deja el aviso a la vista", async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     await page.goto("/measure?entrar=si");
