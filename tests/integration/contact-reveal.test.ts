@@ -1,13 +1,17 @@
 import { randomUUID } from "node:crypto";
+import { count, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { revealContact } from "../../src/modules/contact-reveal/application/reveal-contact";
+import { MissingRevealMessageError } from "../../src/modules/contact-reveal/domain/reveal-message";
 import {
   type ContactRevealDatabase,
   DrizzleContactRevealEvents,
   DrizzleContactRevealMetrics,
   DrizzleRevealableListing,
 } from "../../src/modules/contact-reveal/infrastructure/drizzle-contact-reveal";
+import type { SessionPort } from "../../src/modules/identity/application/ports/session.port";
 import * as schema from "../../src/shared/db/schema";
 
 /**
@@ -29,6 +33,26 @@ function getTestDatabaseUrl(): string {
         "`pnpm db:test:up && pnpm db:test:migrate`.",
     );
   }
+  const parsed = new URL(url);
+  const ownedLocal = parsed.hostname === "127.0.0.1" && parsed.port === "55431";
+  const ownedCi =
+    process.env.GITHUB_ACTIONS === "true" &&
+    parsed.hostname === "localhost" &&
+    parsed.port === "5432";
+  if (
+    process.env.DATABASE_URL ||
+    parsed.protocol !== "postgresql:" ||
+    !(ownedLocal || ownedCi) ||
+    parsed.pathname !== "/rentas_test" ||
+    parsed.username !== "postgres" ||
+    parsed.password !== "postgres" ||
+    parsed.search ||
+    parsed.hash
+  ) {
+    throw new Error(
+      "Contact reveal integration requires the owned local/CI test database only, with DATABASE_URL unset.",
+    );
+  }
   return url;
 }
 
@@ -37,6 +61,11 @@ const db = drizzle(pool, { schema }) as unknown as ContactRevealDatabase;
 const events = new DrizzleContactRevealEvents(db);
 const metrics = new DrizzleContactRevealMetrics(db);
 const revealable = new DrizzleRevealableListing(db);
+// DrizzleContactRevealEvents also implements RevealRateLimitPort; there is no
+// separate DrizzleRevealRateLimit class or second database handle.
+const sessionPort: SessionPort = {
+  getSession: async () => ({ userId: ANA, email: `${ANA}@ej.com`, name: null }),
+};
 
 const CITY = randomUUID();
 const ZONE = randomUUID();
@@ -416,5 +445,65 @@ describe("DrizzleContactRevealEvents as RevealMessageHistoryPort (tasks.md 6.14)
 
     await pool.query(`DELETE FROM "contact_reveal_event" WHERE id = $1`, [eventId]);
     await pool.query(`DELETE FROM "listing" WHERE id = $1`, [listingId]);
+  });
+});
+
+describe("revealContact with real Drizzle ports", () => {
+  it("returns the authenticated tenant's WhatsApp contact and records exactly one complete event", async () => {
+    const message = "Hola, quiero visitar el apartamento.";
+    const now = new Date();
+    const before = await db
+      .select({ total: count() })
+      .from(schema.contactRevealEvents)
+      .where(eq(schema.contactRevealEvents.cityId, CITY));
+
+    const result = await revealContact(
+      { listingId: LISTING, message },
+      { sessionPort, listings: revealable, events, rateLimit: events, now: () => now },
+    );
+
+    expect(result).toEqual({
+      state: "revealed",
+      method: "whatsapp",
+      value: "04121234567",
+      message,
+    });
+    const rows = await db
+      .select()
+      .from(schema.contactRevealEvents)
+      .where(eq(schema.contactRevealEvents.cityId, CITY));
+    expect(rows).toHaveLength((before[0]?.total ?? 0) + 1);
+    expect(rows.filter((row) => row.tenantUserId === ANA && row.message === message)).toEqual([
+      expect.objectContaining({
+        listingId: LISTING,
+        publisherId: PUBLISHER,
+        tenantUserId: ANA,
+        cityId: CITY,
+        message,
+        revealedAt: now,
+      }),
+    ]);
+  });
+
+  it("rejects a blank message before listing read and without another event", async () => {
+    const listings = { findRevealable: vi.fn(revealable.findRevealable.bind(revealable)) };
+    const before = await db
+      .select({ total: count() })
+      .from(schema.contactRevealEvents)
+      .where(eq(schema.contactRevealEvents.cityId, CITY));
+
+    await expect(
+      revealContact(
+        { listingId: LISTING, message: "   " },
+        { sessionPort, listings, events, rateLimit: events, now: () => new Date() },
+      ),
+    ).rejects.toThrow(MissingRevealMessageError);
+
+    expect(listings.findRevealable).not.toHaveBeenCalled();
+    const after = await db
+      .select({ total: count() })
+      .from(schema.contactRevealEvents)
+      .where(eq(schema.contactRevealEvents.cityId, CITY));
+    expect(after[0]?.total).toBe(before[0]?.total);
   });
 });

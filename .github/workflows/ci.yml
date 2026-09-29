@@ -447,7 +447,7 @@ jobs:
           # runs, so both the loop and the "no tests yet" tolerance below would
           # be dead code and one real failure would skip the remaining project.
           for project in chromium crawlability; do
-            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3' 2>&1); then
+            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:' 2>&1); then
               echo "$output"
             else
               echo "$output"
@@ -477,6 +477,22 @@ jobs:
         run: |
           pnpm build
           pnpm exec playwright test tests/e2e/ficha-diagnostico.spec.ts tests/e2e/ficha-rutas.spec.ts --project=chromium --project=crawlability
+
+      # Authenticated logout needs the owned local session table, not the preview.
+      # Build with a fake pooled URL, then start with Playwright's local DB proxy.
+      - name: 30.4b2 authenticated logout (local production build)
+        env:
+          PLAYWRIGHT_BASE_URL: ''
+          AUTH_URL: http://localhost:3000
+          AUTH_TRUST_HOST: 'true'
+          AUTH_SECRET: build-time-placeholder-not-a-real-secret
+          RENEWAL_TOKEN_SECRET: e2e-fake-secret-signs-nothing-real
+          SITE_URL: https://ci-build-no-es-el-dominio-real.invalid
+          R2_BUCKET_PUBLIC_URL: https://fotos-de-prueba.rentas.invalid
+          PLAYWRIGHT_WEB_COMMAND: pnpm start
+        run: |
+          DATABASE_URL=postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require pnpm build
+          pnpm exec playwright test tests/e2e/ficha-logout.spec.ts --project=chromium
 
       # Append only after the six-row suite succeeds. Never point this step at
       # the preview: it has a separate catalogue and may be protected.

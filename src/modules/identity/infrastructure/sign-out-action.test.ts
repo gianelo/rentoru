@@ -21,6 +21,18 @@ describe("signOutAction", () => {
     vi.clearAllMocks();
   });
 
+  it("uses a safe detail pathname but refuses a malicious pathname", async () => {
+    const id = "99d25b3d-4d23-48d3-b134-f720781b1eb3";
+    const path = `/alquiler/maracaibo/coquivacoa/piso-${id}`;
+    const data = new FormData();
+    data.set("pathname", path);
+    await signOutAction(data);
+    expect(signOut).toHaveBeenCalledWith({ redirectTo: path });
+    data.set("pathname", `https://evil.test${path}`);
+    await signOutAction(data);
+    expect(signOut).toHaveBeenLastCalledWith({ redirectTo: "/" });
+  });
+
   it("cierra la sesión y vuelve a SIGN_OUT_DESTINATION, nunca a la página en curso", async () => {
     await signOutAction();
 

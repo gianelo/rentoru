@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { signOutAction } from "@/modules/identity/infrastructure/sign-out-action";
 import { AppLink } from "../atoms/AppLink";
@@ -62,6 +63,7 @@ export function AccountMenu({
   items,
 }: AccountMenuProps) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   // La primitiva compartida (tasks.md 28.1): clic afuera, Escape y el foco
   // que vuelve al control — antes cada menú lo resolvía a mano, y ninguno
   // cerraba con ninguna de las dos cosas.
@@ -122,8 +124,9 @@ export function AccountMenu({
             sesión cambia estado (invalida la fila de `session` en la
             base), y un `GET` que hace eso es el defecto que esta tarea
             cierra — un prefetch, un rastreador o un "atrás" mal dado
-            podría dispararlo. `signOutAction` decide a dónde vuelve
-            (`SIGN_OUT_DESTINATION`); acá no se decide nada.
+            podría dispararlo. La acción le entrega la ruta actual al dominio,
+            que decide si vuelve a una ficha pública o al inicio; acá no se
+            decide nada.
 
             **Este panel sólo existe con JavaScript** (`useDismissLayer`,
             28.1) — la misma razón por la que «Importar cartera» también
@@ -131,6 +134,7 @@ export function AccountMenu({
             ahí, servido, para quien no tiene script.
           */}
           <form action={signOutAction} className={styles.signOutForm}>
+            <input type="hidden" name="pathname" value={pathname} />
             <button type="submit" className={styles.signOutButton} role="menuitem">
               Cerrar sesión
             </button>

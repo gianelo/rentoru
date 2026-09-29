@@ -15,8 +15,28 @@
  * a redirigir de inmediato hacia `/signin`, y quien acaba de salir vería la
  * puerta de entrada pensando que el clic no hizo nada.
  *
- * **El inicio es el único destino que nunca falla esa prueba**: es público,
- * no exige sesión, y es exactamente la pantalla donde la barra ya vuelve a
- * ofrecer «Entrar» — la prueba visible de que la sesión terminó de verdad.
+ * **El inicio sigue siendo el respaldo seguro**: es público y no exige sesión.
+ * La excepción es una ficha pública con forma canónica; al salir se vuelve a
+ * esa ficha anónimamente, nunca a un paso privado ni a un origen ajeno.
  */
+import { listingIdFromSlug, MAX_SLUG_LENGTH } from "../../listing-discovery/domain/listing-url";
+
 export const SIGN_OUT_DESTINATION = "/";
+
+/** Only a canonical-shaped public detail may survive a sign-out redirect. */
+export function safeSignOutDestination(candidate: unknown): string {
+  if (typeof candidate !== "string") return SIGN_OUT_DESTINATION;
+  const parts = candidate.split("/");
+  if (parts.length !== 5 || parts[0] !== "" || parts[1] !== "alquiler") return SIGN_OUT_DESTINATION;
+  const [, , city, zone, tail] = parts;
+  if (!city || !zone || !tail) return SIGN_OUT_DESTINATION;
+  const segment = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  if (!segment.test(city) || !segment.test(zone) || !segment.test(tail))
+    return SIGN_OUT_DESTINATION;
+  const id = listingIdFromSlug(tail);
+  if (!id) return SIGN_OUT_DESTINATION;
+  const title = tail === id ? "" : tail.slice(0, -(id.length + 1));
+  if (title.length > MAX_SLUG_LENGTH || (title && !segment.test(title)))
+    return SIGN_OUT_DESTINATION;
+  return candidate;
+}
