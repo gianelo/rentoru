@@ -1,8 +1,7 @@
 import type { ListingPhotoView } from "@/modules/listing-discovery/application/ports/listing-photos.port";
-import { photoAltText, photoUrl } from "@/modules/listing-discovery/domain/listing-photo-view";
-import { photoNumberOf, photoViewerPath } from "@/modules/listing-discovery/domain/photo-viewer";
+import { photoAltText } from "@/modules/listing-discovery/domain/listing-photo-view";
 import { MAX_PHOTOS_PER_LISTING } from "@/modules/listing-publication/domain/publishable-listing";
-import { AppLink } from "../atoms/AppLink";
+import { PhotoStripNavigation } from "../client/PhotoStripNavigation";
 import styles from "./PhotoStrip.module.css";
 
 export interface PhotoStripProps {
@@ -57,40 +56,16 @@ export function PhotoStrip({ photos, publicBaseUrl, title, zone, href }: PhotoSt
 
   return (
     <figure className={styles.gallery} data-testid="photo-strip">
-      <ul className={styles.track}>
-        {frames.map((frame, index) => {
-          const lead = index === 0;
-          return (
-            <li className={styles.item} key={frame.strip}>
-              {/* El número sale del dominio y no de un `index + 1` escrito
-                  acá: la traducción entre el `<n>` de la URL (base uno) y
-                  `listing_photo.position` (base cero) es una regla, y una
-                  regla copiada en un componente es la que termina corrida en
-                  uno. Se numera sobre lo que se DIBUJA — igual que el
-                  alternativo — para que "/foto/2" y "Foto 2 de 5" hablen de la
-                  misma fotografía cuando una fila rota quedó salteada. */}
-              <AppLink className={styles.frame} href={photoViewerPath(href, photoNumberOf(index))}>
-                <picture>
-                  {/* La derivada de escritorio, elegida por el navegador antes
-                      de pedir nada: la principal es la de 640×360 y las demás
-                      son miniaturas de 120×90. */}
-                  <source
-                    media="(min-width: 768px)"
-                    srcSet={photoUrl(publicBaseUrl, lead ? frame.detail : frame.thumb)}
-                  />
-                  <img
-                    className={styles.image}
-                    src={photoUrl(publicBaseUrl, frame.strip)}
-                    alt={photoAltText({ position: index, total: frames.length, title, zone })}
-                    loading={lead ? "eager" : "lazy"}
-                  />
-                </picture>
-              </AppLink>
-            </li>
-          );
-        })}
-      </ul>
-
+      <PhotoStripNavigation
+        photos={frames.map((frame, index) => ({
+          strip: frame.strip,
+          detail: frame.detail,
+          thumb: frame.thumb,
+          alt: photoAltText({ position: index, total: frames.length, title, zone }),
+        }))}
+        base={publicBaseUrl}
+        href={href}
+      />
       {/* Los puntos dicen cuántas fotos hay, y ninguno se dibuja encendido.
           Sin JavaScript nada puede seguir el scroll, así que un primer punto
           iluminado sería cierto al cargar y mentira apenas se arrastra el
