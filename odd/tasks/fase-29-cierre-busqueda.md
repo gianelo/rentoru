@@ -1,8 +1,6 @@
 # Fase 29 — Cierre acotado de búsqueda (#287)
 
-**Intención.** Cerrar sólo el residuo comprobable de Fase 28, tarea por tarea; no cerrar el issue con evidencia histórica. Base `dev` `4bb92b6`, rama actual `feat/fase-29-cierre-busqueda`. El plan previo fue documental; 29.1 ahora tiene implementación y pruebas.
-
-**Entrega:** estrategia `ask-on-risk`. 29.1 sumó 127 líneas de autoría (122 altas y 5 bajas, incluido el plan). Proyección orientativa restante: 29.2 ~180, 29.3 ~180 y 29.4 ~40, total ~527 líneas. Medir el acumulado real y decidir rebanadas antes de superar 400; no omitir pruebas para ahorrar líneas. No hay push ni PR autorizados.
+**Intención.** Cerrar sólo el residuo comprobable de Fase 28, tarea por tarea; no cerrar el issue con evidencia histórica. 29.1 ya se integró en `dev` mediante PR #327 (merge `173d36e`); #328 está abierto hasta su merge, #329 queda para después y #287 permanece abierto.
 
 ## Evidencia y límites
 
@@ -14,7 +12,7 @@
 ## Tareas
 
 - [x] **29.1 Teclado y destino.** RED en navegador con sugerencia poblada y destino distinto del GET genérico; ArrowDown/ArrowUp/Enter, Tab/enlace y Escape. Admitir foco en la opción o selección accesible mediante `aria-activedescendant`: probar selección observable y destino, no imponer ambos mecanismos. GREEN mínimo, mutación que vuelva rojo el test, aserción de enlace/formulario en HTML servido y GET nativo sin JS.
-- [ ] **29.2 Paginación real >24.** Catálogo efímero aislado en CI, nunca semilla local de producción o desconocida; RED antes de atribuir bug, página 2 y regreso con JS activado y desactivado.
+- [x] **29.2 Catálogo de más de 24 avisos.** `scripts/seed-pagination-e2e.ts` suma 24 avisos con fotos sin borrar datos y rechaza destinos no locales/no propietarios; `scripts/seed-pagination-e2e.test.ts`: RED por módulo ausente, GREEN 3/3, mutación 24→23 roja en su test y restaurada. `tests/e2e/paginacion-catalogo.spec.ts` («29.2: 25 Altamira cards paginate through native next and previous links»): RED sin «Página 1 de 2» con un solo Altamira; GREEN 1/1 Chromium y 1/1 crawlability sin JS tras sumar 24 avisos (25 Altamira, 30 en total) en Postgres descartable propio. Comprueba 24/1 tarjetas, `?pag=2` y enlaces nativos de ida/regreso en HTML servido; la expectativa errónea `?page=2` se corrigió antes del RED de navegador. `pnpm build` pasó; no hubo arreglo en fuente porque faltaba catálogo >24, no un defecto de paginación reproducido. `.github/workflows/ci.yml` conecta el arnés; GitHub Actions del PR #328 original pasó, incluido el paso «29.2 isolated pagination»; el CI de este candidato reconciliado queda pendiente. Commit de rama `ff52adf` (original `4bffbaf`); rollback aislado revirtiendo sólo la unidad 29.2, sin tocar 29.1 ni los otros contenedores.
 - [ ] **29.3 Geometría de zona larga.** Fixture de metadatos/chip/sugerencia en 390×844, 768×1024 y 1440×900, opcionalmente 440×956 para composición móvil bajo 768; conservar además la aserción histórica de estrés a 360×640 de dos tarjetas sin obstrucción. Arreglar sólo recortes reproducidos, sin perder inicio de grilla ≤225 px ni objetivos táctiles ≥44 px.
 - [ ] **29.4 Verificación y cierre.** Registrar nombres y resultados actuales de pruebas por tarea, pruebas mutadas y HTML servido; sólo entonces decidir cierre de #287. Ningún cambio de estado del issue en este plan.
 
