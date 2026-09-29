@@ -75,6 +75,8 @@ export class DrizzleListingReports implements ListingReportPort {
         listingId: report.listingId,
         reporterId: report.reporterId,
         reportedAt: report.reportedAt,
+        reason: report.reason ?? null,
+        explanation: report.explanation ?? null,
       })
       .onConflictDoNothing();
   }

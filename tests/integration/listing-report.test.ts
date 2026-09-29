@@ -70,6 +70,7 @@ import {
 } from "../../src/modules/listing-trust/infrastructure/drizzle-listing-moderation";
 import type { TrustDatabase } from "../../src/modules/listing-trust/infrastructure/drizzle-photo-hash";
 import * as schema from "../../src/shared/db/schema";
+import { ownedDatabase } from "../e2e/owned-test-database";
 
 /**
  * listing-trust spec, Requirements: Authenticated Reporting, Auto-Hide
@@ -87,18 +88,7 @@ import * as schema from "../../src/shared/db/schema";
  *    persists and is read back correctly through Drizzle's real driver.
  */
 
-function getTestDatabaseUrl(): string {
-  const url = process.env.TEST_DATABASE_URL;
-  if (!url) {
-    throw new Error(
-      "TEST_DATABASE_URL is not set. Start the disposable database with " +
-        "`pnpm db:test:up && pnpm db:test:migrate`.",
-    );
-  }
-  return url;
-}
-
-const pool = new Pool({ connectionString: getTestDatabaseUrl() });
+const pool = new Pool({ connectionString: ownedDatabase() });
 const db = drizzle(pool, { schema }) as unknown as TrustDatabase;
 // Desde acá el proxy del cliente doblado tiene a quién delegarle: la acción de
 // servidor escribe en ESTA base y no en ninguna otra.
@@ -187,6 +177,39 @@ afterAll(async () => {
   await pool.query(`DELETE FROM "zone" WHERE city_id = $1`, [CITY]);
   await pool.query(`DELETE FROM "city" WHERE id = $1`, [CITY]);
   await pool.end();
+});
+
+describe("report metadata — backwards-compatible persistence", () => {
+  const listingId = randomUUID();
+
+  beforeAll(async () => {
+    await insertListing(listingId, "active", new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+  });
+
+  it("persists supplied reason and explanation through the real adapter", async () => {
+    await reports.record({
+      listingId,
+      reporterId: REPORTER_A,
+      reportedAt: new Date(),
+      reason: "possible_fraud",
+      explanation: "Datos inconsistentes",
+    });
+
+    const { rows } = await pool.query(
+      'SELECT reason, explanation FROM "listing_report" WHERE listing_id = $1 AND reporter_id = $2',
+      [listingId, REPORTER_A],
+    );
+    expect(rows).toEqual([{ reason: "possible_fraud", explanation: "Datos inconsistentes" }]);
+  });
+
+  it("continues to accept the old report path without metadata", async () => {
+    await reportListing({ listingId }, { sessionPort: sessionOf(REPORTER_B), listings, reports });
+    const { rows } = await pool.query(
+      'SELECT reason, explanation FROM "listing_report" WHERE listing_id = $1 AND reporter_id = $2',
+      [listingId, REPORTER_B],
+    );
+    expect(rows).toEqual([{ reason: null, explanation: null }]);
+  });
 });
 
 describe("reportListing — el conteo distinto es la restricción, no un `if`", () => {

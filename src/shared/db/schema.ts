@@ -957,6 +957,8 @@ export const listingReports = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),
     reportedAt: timestamp("reported_at", { mode: "date", withTimezone: true }).notNull(),
+    reason: text("reason"),
+    explanation: text("explanation"),
   },
   (report) => [
     // The guarantee, not an application check — see the file comment above.
