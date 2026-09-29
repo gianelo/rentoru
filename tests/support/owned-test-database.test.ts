@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { ownedDatabase } from "./owned-test-database";
+import { ownedDatabase } from "../e2e/owned-test-database";
 
 const local = "postgresql://postgres:postgres@127.0.0.1:55431/rentas_test";
 const ci = "postgresql://postgres:postgres@localhost:5432/rentas_test";
