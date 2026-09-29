@@ -17,6 +17,83 @@ import { expect, test } from "@playwright/test";
  */
 const PASTILLA = "nav-harness-busqueda";
 
+test.describe("29.3: zona larga en sugerencias", () => {
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 440, height: 956 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`${viewport.width}×${viewport.height}: texto y destino dentro de la pastilla`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/measure");
+      const label = "Barrio Tierra Negra del Sector Bella Vista";
+      const pill = page.getByTestId(PASTILLA);
+      await pill.getByRole("searchbox").fill("barrio tierra");
+      const option = pill.getByRole("link", { name: new RegExp(label) });
+      await expect(option).toBeVisible();
+      const geometry = await option.evaluate((node, text) => {
+        const range = document.createRange();
+        const labelNode = [...node.querySelectorAll("span")].find(
+          (span) => span.textContent === text,
+        );
+        if (!labelNode) throw new Error("Missing long suggestion label");
+        range.selectNodeContents(labelNode);
+        const optionBox = node.getBoundingClientRect();
+        const labelBox = labelNode.getBoundingClientRect();
+        const panelBox = node.closest("ul")?.getBoundingClientRect();
+        return {
+          fragments: [...range.getClientRects()].map((r) => ({
+            left: r.left,
+            right: r.right,
+            top: r.top,
+            bottom: r.bottom,
+          })),
+          left: optionBox.left,
+          right: optionBox.right,
+          top: optionBox.top,
+          bottom: optionBox.bottom,
+          label: {
+            left: labelBox.left,
+            right: labelBox.right,
+            top: labelBox.top,
+            bottom: labelBox.bottom,
+          },
+          panel: panelBox && {
+            left: panelBox.left,
+            right: panelBox.right,
+            top: panelBox.top,
+            bottom: panelBox.bottom,
+          },
+          documentWidth: document.documentElement.scrollWidth,
+          height: optionBox.height,
+        };
+      }, label);
+      expect(geometry.fragments.length).toBeGreaterThan(0);
+      for (const fragment of geometry.fragments) {
+        expect(fragment.left).toBeGreaterThanOrEqual(geometry.left - 1);
+        expect(fragment.right).toBeLessThanOrEqual(geometry.right + 1);
+        expect(fragment.top).toBeGreaterThanOrEqual(geometry.top - 1);
+        expect(fragment.bottom).toBeLessThanOrEqual(geometry.bottom + 1);
+        expect(fragment.left).toBeGreaterThanOrEqual(geometry.label.left - 1);
+        expect(fragment.right).toBeLessThanOrEqual(geometry.label.right + 1);
+        expect(fragment.top).toBeGreaterThanOrEqual(geometry.label.top - 1);
+        expect(fragment.bottom).toBeLessThanOrEqual(geometry.label.bottom + 1);
+      }
+      if (!geometry.panel) throw new Error("Missing suggestion panel");
+      expect(geometry.left).toBeGreaterThanOrEqual(geometry.panel.left - 1);
+      expect(geometry.right).toBeLessThanOrEqual(geometry.panel.right + 1);
+      expect(geometry.top).toBeGreaterThanOrEqual(geometry.panel.top - 1);
+      expect(geometry.bottom).toBeLessThanOrEqual(geometry.panel.bottom + 1);
+      expect(geometry.panel.right).toBeLessThanOrEqual(viewport.width + 1);
+      expect(geometry.documentWidth).toBeLessThanOrEqual(viewport.width);
+      if (viewport.width < 768) expect(geometry.height).toBeGreaterThanOrEqual(44);
+    });
+  }
+});
+
 test.describe("14.51 — las sugerencias mientras se escribe", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
