@@ -101,7 +101,7 @@ export default function MeasureListaPage() {
                   href={`/alquiler/distrito-capital/chacao/aviso-${indice}`}
                   priceUsd={aviso.priceUsd}
                   title={aviso.title}
-                  zone="Chacao"
+                  zone={indice === 2 ? LONG_ZONE : "Chacao"}
                   rooms={aviso.rooms}
                   areaM2={aviso.areaM2}
                   publisherType={indice % 3 === 0 ? "broker" : "owner"}
@@ -121,6 +121,9 @@ export default function MeasureListaPage() {
   );
 }
 
+// Artificial stress label in the synthetic Chacao /measure/lista fixture;
+// not a claim about production routes or listing content.
+const LONG_ZONE = "Barrio Tierra Negra del Sector Bella Vista";
 const BASE_PATH = "/alquiler/distrito-capital/chacao";
 const CITY_PATH = "/alquiler/distrito-capital";
 const TOTAL = 24;
@@ -241,7 +244,7 @@ function harnessPanel() {
     cityName: "Distrito Capital",
     zones: [
       { id: "chacao", name: "Chacao", slug: "chacao", path: `${CITY_PATH}/chacao` },
-      { id: "altamira", name: "Altamira", slug: "altamira", path: `${CITY_PATH}/altamira` },
+      { id: "altamira", name: LONG_ZONE, slug: "altamira", path: `${CITY_PATH}/altamira` },
     ],
     chosenZoneIds: ["chacao", "altamira"],
     counts: {

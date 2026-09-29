@@ -79,7 +79,8 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
   const abierto = useRef(false);
 
   useEffect(() => {
-    const form = anchor.current?.closest("form");
+    const panelAnchor = anchor.current;
+    const form = panelAnchor?.closest("form");
     const field = form?.querySelector<HTMLInputElement>('input[type="search"]');
     if (!form || !field) return;
 
@@ -99,9 +100,31 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
      * segundo Escape ya no encuentra lista y el navegador hace lo suyo.
      */
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      if (abierto.current) event.preventDefault();
-      mostrar([]);
+      if (event.key === "ArrowDown" && abierto.current) {
+        const first = panelAnchor?.querySelector<HTMLAnchorElement>("a");
+        if (first) {
+          event.preventDefault();
+          first.focus();
+        }
+      } else if (event.key === "Escape") {
+        if (abierto.current) event.preventDefault();
+        mostrar([]);
+      }
+    };
+
+    const onOptionKeyDown = (event: KeyboardEvent) => {
+      if (!(event.target instanceof HTMLAnchorElement)) return;
+      const options = Array.from(panelAnchor?.querySelectorAll<HTMLAnchorElement>("a") ?? []);
+      const index = options.indexOf(event.target);
+      if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+        event.preventDefault();
+        const next = index + (event.key === "ArrowDown" ? 1 : -1);
+        (options[next] ?? field).focus();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        field.focus();
+        mostrar([]);
+      }
     };
 
     // **Cerrar al salir del foco, y sólo cuando el foco fue a otra parte de
@@ -125,6 +148,7 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
 
     field.addEventListener("input", onType);
     field.addEventListener("keydown", onKeyDown);
+    panelAnchor?.addEventListener("keydown", onOptionKeyDown);
     form.addEventListener("focusout", onFocusOut);
     document.addEventListener("pointerdown", onPointerDown);
 
@@ -135,6 +159,7 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
     return () => {
       field.removeEventListener("input", onType);
       field.removeEventListener("keydown", onKeyDown);
+      panelAnchor?.removeEventListener("keydown", onOptionKeyDown);
       form.removeEventListener("focusout", onFocusOut);
       document.removeEventListener("pointerdown", onPointerDown);
     };

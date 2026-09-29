@@ -605,6 +605,12 @@ const SUGERENCIAS_CIUDADES = [
 
 const SUGERENCIAS_ZONAS = [
   { id: "z-altamira", name: "Altamira", cityId: "dc", parentName: "Chacao" },
+  {
+    id: "z-barrio-tierra-negra",
+    name: "Barrio Tierra Negra del Sector Bella Vista",
+    cityId: "mcbo",
+    parentName: "Maracaibo",
+  },
   { id: "z-chacao", name: "Chacao", cityId: "dc", parentName: "Chacao" },
   { id: "z-centro-dc", name: "Centro", cityId: "dc", parentName: "Catedral" },
   { id: "z-centro-mcbo", name: "Centro", cityId: "mcbo", parentName: "Coquivacoa" },
@@ -612,6 +618,7 @@ const SUGERENCIAS_ZONAS = [
 
 const SUGERENCIAS_CONTEOS = {
   "z-altamira": 9,
+  "z-barrio-tierra-negra": 3,
   "z-chacao": 0,
   "z-centro-dc": 4,
   "z-centro-mcbo": 2,
