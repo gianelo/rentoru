@@ -39,10 +39,10 @@ for (const viewport of sizes) {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(listing.title);
     // A real served listing must have its own identity and native viewer destination.
     await expect(page.locator("main")).toContainText(`ID ${listing.id.slice(0, 8)}`);
-    const viewer = page.locator(`main a[href="${path}/foto/1"]`);
+    const viewer = page.locator(`[data-testid="photo-strip"] ul a[href="${path}/foto/1"]`);
     await expect(viewer).toHaveCount(1);
     await page
-      .locator('[data-testid="photo-strip"] img')
+      .locator('[data-testid="photo-strip"] ul img')
       .first()
       .evaluate(async (image: HTMLImageElement) => {
         if (!image.complete)
@@ -109,17 +109,19 @@ for (const viewport of sizes) {
           })),
           ownFooterWidth: ownFooter?.scrollWidth,
           globalFooterWidths: globalFooters.map((footer) => footer.scrollWidth),
-          photos: [...(gallery?.querySelectorAll("img") ?? [])].map((image) => ({
-            alt: image.alt,
-            box: box(image),
-            frame: box(image.closest("a")),
-            naturalWidth: image.naturalWidth,
-            naturalHeight: image.naturalHeight,
-            currentSrc: image.currentSrc,
-            objectFit: getComputedStyle(image).objectFit,
-            complete: image.complete,
-            viewerHref: image.closest("a")?.getAttribute("href"),
-          })),
+          photos: [...(gallery?.querySelectorAll<HTMLImageElement>("ul img") ?? [])].map(
+            (image) => ({
+              alt: image.alt,
+              box: box(image),
+              frame: box(image.closest("a")),
+              naturalWidth: image.naturalWidth,
+              naturalHeight: image.naturalHeight,
+              currentSrc: image.currentSrc,
+              objectFit: getComputedStyle(image).objectFit,
+              complete: image.complete,
+              viewerHref: image.closest("a")?.getAttribute("href"),
+            }),
+          ),
           ownFooter: {
             box: box(ownFooter ?? null),
             text: ownFooter?.textContent?.trim() ?? null,
@@ -235,7 +237,7 @@ test("30.3: served listing has three ordered native photo links and distinct loa
   const images = await serveSeededListingImages(page, listing.id);
   const response = await page.goto(path);
   expect(response?.status()).toBe(200);
-  const photos = page.locator('[data-testid="photo-strip"] a:has(img)');
+  const photos = page.locator('[data-testid="photo-strip"] ul a:has(img)');
   await expect(photos).toHaveCount(3);
   expect(
     await photos.evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
@@ -261,6 +263,118 @@ test("30.3: served listing has three ordered native photo links and distinct loa
   expect(observed.every(({ width, height }) => width > 0 && height > 0)).toBe(true);
   expect(new Set(observed.map(({ src }) => src)).size).toBe(3);
   expect(images.requested).toContain("strip");
+});
+
+test("30.3b: arrows and keyboard change the hero and viewer destination without wrapping", async ({
+  page,
+}, testInfo) => {
+  await serveSeededListingImages(page, listing.id);
+  await page.goto(path);
+  const hero = page.getByTestId("photo-hero");
+  const next = page.getByRole("button", { name: "Foto siguiente" });
+  const previous = page.getByRole("button", { name: "Foto anterior" });
+  if (testInfo.project.name === "crawlability") {
+    // The crawlability project disables scripts: native links remain the only controls.
+    await expect(next).toHaveCount(0);
+    await expect(previous).toHaveCount(0);
+    await expect(page.locator('[data-testid="photo-strip"] a[href*="/foto/"]')).toHaveCount(3);
+    return;
+  }
+  for (const button of [next, previous]) {
+    const box = await button.boundingBox();
+    expect(box?.width).toBeGreaterThanOrEqual(44);
+    expect(box?.height).toBeGreaterThanOrEqual(44);
+  }
+  await expect(previous).toBeDisabled();
+  await next.click();
+  await expect(hero).toHaveAttribute("href", `${path}/foto/2`);
+  await expect(hero.locator("img")).toHaveAttribute("src", /\/2\/strip\.webp/);
+  const links = page.locator('[data-testid="photo-strip"] ul a:has(img)');
+  await expect
+    .poll(() => links.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href"))))
+    .toEqual([`${path}/foto/2`, `${path}/foto/1`, `${path}/foto/3`]);
+  await expect(links.nth(1).locator("img")).toHaveAttribute("src", /\/strip\.webp/);
+  await expect(links.nth(1).locator("img")).toHaveAttribute("alt", /^Foto 1 de 3/);
+  await next.focus();
+  await page.keyboard.press("Enter");
+  await expect(hero).toHaveAttribute("href", `${path}/foto/3`);
+  await expect(next).toBeDisabled();
+  await previous.focus();
+  await page.keyboard.press("Space");
+  await expect(hero).toHaveAttribute("href", `${path}/foto/2`);
+  await previous.click();
+  await expect(hero).toHaveAttribute("href", `${path}/foto/1`);
+  await expect(previous).toBeDisabled();
+  await next.click();
+  await expect(hero).toHaveAttribute("href", `${path}/foto/2`);
+  await hero.click();
+  await expect(page).toHaveURL(new RegExp(`${path}/foto/2$`));
+});
+
+test("30.3b: horizontal swipe changes hero, vertical gesture does not", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await serveSeededListingImages(page, listing.id);
+  await page.goto(path);
+  const hero = page.getByTestId("photo-hero");
+  if (testInfo.project.name === "crawlability") {
+    await expect(hero).toHaveAttribute("href", `${path}/foto/1`);
+    await expect(page.locator('[data-testid="photo-strip"] a[href*="/foto/"]')).toHaveCount(3);
+    return;
+  }
+  const box = await hero.boundingBox();
+  if (!box) throw new Error("Missing hero");
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const gesture = async (endX: number, endY: number) => {
+    await hero.dispatchEvent("touchstart", {
+      touches: [{ identifier: 1, clientX: x, clientY: y }],
+    });
+    await hero.dispatchEvent("touchend", {
+      changedTouches: [{ identifier: 1, clientX: endX, clientY: endY }],
+    });
+  };
+  await gesture(x, y - 100);
+  await expect(hero).toHaveAttribute("href", `${path}/foto/1`);
+  await gesture(x - 100, y);
+  await expect(hero).toHaveAttribute("href", `${path}/foto/2`);
+  await expect(hero.locator("img")).toHaveAttribute("src", /\/2\/strip\.webp/);
+  await hero.click();
+  await expect(page).toHaveURL(new RegExp(`${path}/foto/2$`));
+  await page.goto(path);
+  await gesture(x - 100, y);
+  await expect(hero).toHaveAttribute("href", `${path}/foto/2`);
+  const touchClick = await hero.evaluate((link) => {
+    const event = new PointerEvent("click", {
+      pointerType: "touch",
+      bubbles: true,
+      cancelable: true,
+    });
+    if (event.pointerType !== "touch") throw new Error("Touch pointerType unavailable");
+    return link.dispatchEvent(event);
+  });
+  expect(touchClick).toBe(false);
+  await expect(page).toHaveURL(new RegExp(`${path}$`));
+  await gesture(x - 100, y);
+  await expect(hero).toHaveAttribute("href", `${path}/foto/3`);
+  const ambiguousClick = await hero.evaluate((link) => {
+    const pointerEvent = window.PointerEvent;
+    try {
+      Object.defineProperty(window, "PointerEvent", { configurable: true, value: undefined });
+      return link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    } finally {
+      Object.defineProperty(window, "PointerEvent", { configurable: true, value: pointerEvent });
+    }
+  });
+  expect(ambiguousClick).toBe(false);
+  await expect(page).toHaveURL(new RegExp(`${path}$`));
+  await hero.dispatchEvent("touchstart", {
+    touches: [{ identifier: 1, clientX: x, clientY: y }],
+  });
+  await hero.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new RegExp(`${path}/foto/3$`));
 });
 
 test("30.2: served photo viewer remains immersive without site footer", async ({ page }) => {

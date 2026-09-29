@@ -7,6 +7,32 @@
   margin: 0;
 }
 
+.navigation {
+  position: relative;
+  width: 100%;
+}
+.controls {
+  display: flex;
+  justify-content: space-between;
+  width: min(100%, var(--ficha-photo-w));
+}
+.arrow {
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  border: 1px solid var(--line);
+  border-radius: var(--rs);
+  background: var(--thumb);
+  color: var(--ink);
+  cursor: pointer;
+}
+.arrow:disabled {
+  cursor: default;
+}
+.arrow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .track {
   display: flex;
   gap: 8px;
@@ -85,6 +111,10 @@
     /* 10 y no los 8 del teléfono, como los dibuja la lámina: acá el aire no
        cuesta ancho de tira — cuesta ancho de columna, y sobra. */
     gap: 10px;
+  }
+
+  .navigation .controls {
+    width: 100%;
   }
 
   .item:first-child {

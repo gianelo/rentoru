@@ -447,7 +447,7 @@ jobs:
           # runs, so both the loop and the "no tests yet" tolerance below would
           # be dead code and one real failure would skip the remaining project.
           for project in chromium crawlability; do
-            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:' 2>&1); then
+            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3' 2>&1); then
               echo "$output"
             else
               echo "$output"
@@ -464,7 +464,7 @@ jobs:
       # The diagnostic needs the seeded local catalogue even when the main
       # suite runs against a protected preview. Run it before pagination changes
       # those six rows, and never send it to the preview.
-      - name: 30.2 served listing diagnostic (local production build)
+      - name: 30.2/30.3 served listing diagnostic (local production build)
         env:
           PLAYWRIGHT_BASE_URL: ''
           VERCEL_AUTOMATION_BYPASS_SECRET: ''
