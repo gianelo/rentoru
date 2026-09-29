@@ -57,6 +57,8 @@ export default defineConfig({
       // `TEST_DATABASE_URL` — la misma razón por la que `scripts/` tiene su
       // propia entrada arriba.
       "tests/integration/support/**/*.{test,spec}.{ts,tsx}",
+      // Only this pure helper test belongs to Vitest; e2e/*.spec.ts stays in Playwright.
+      "tests/e2e/owned-test-database.test.ts",
     ],
     coverage: {
       provider: "v8",
