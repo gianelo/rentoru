@@ -127,6 +127,7 @@ const DISTRITO = { id: "ciudad-dc", name: "Distrito Capital" };
 const TIERRA_NEGRA = { id: "zona-tierra-negra", name: "Tierra Negra", cityId: MARACAIBO.id };
 const BELLA_VISTA = { id: "zona-bella-vista", name: "Bella Vista", cityId: MARACAIBO.id };
 const CHACAO = { id: "zona-chacao", name: "Chacao", cityId: DISTRITO.id };
+const COQUIVACOA = { id: "zona-coquivacoa", name: "Coquivacoa", cityId: MARACAIBO.id };
 
 /**
  * Las zonas activas de las DOS ciudades, como las devolvería
@@ -246,6 +247,19 @@ async function servedBody(slug: string = VENCIDO_SLUG, query: Record<string, str
     }),
   );
 }
+
+it("enlaza la zona Coquivacoa desde el HTML servido de la ficha", async () => {
+  findForDetail.mockResolvedValue(detail({ zoneId: COQUIVACOA.id, zoneName: COQUIVACOA.name }));
+  const html = renderToStaticMarkup(
+    await FichaPage({
+      params: Promise.resolve({ ciudad: "maracaibo", zona: "coquivacoa", slug: VENCIDO_SLUG }),
+      searchParams: Promise.resolve({}),
+    }),
+  );
+  expect(html).toMatch(
+    /<a\b[^>]*href="\/alquiler\/maracaibo\/coquivacoa"[^>]*>Ver avisos activos en Coquivacoa<\/a>/,
+  );
+});
 
 /** La zona trae dos activos; la ciudad nunca debería preguntarse. */
 function zonaConAvisos() {
