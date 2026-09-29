@@ -161,12 +161,8 @@ export const LISTING_ROWS = [
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Las dos derivadas que la regla F9 exige para que una tarjeta se dibuje, más
- * las de la ficha. **Las claves apuntan a objetos que no existen**, y está
- * bien: lo que estas pruebas miden es que los avisos estén en el cuerpo servido
- * con el script apagado, y para eso hace falta que el aviso PASE la regla F9,
- * no que la imagen cargue. Servir bytes de imagen desde acá sería un segundo
- * almacenamiento de mentira que nadie pidió.
+ * Derivadas para tarjetas y ficha. Las claves no existen en R2: la fixture
+ * de navegador sirve WebP reales únicamente para el aviso diagnóstico.
  */
 const DERIVATIVES = [
   { name: "thumb", bytes: 4_096 },
@@ -243,20 +239,21 @@ export async function seedE2e(): Promise<void> {
       })),
     );
 
-    await db.insert(listingPhotos).values(
-      LISTING_ROWS.map((listing) => ({
-        id: `${listing.id}-foto`,
+    const photos = LISTING_ROWS.flatMap((listing) =>
+      (listing.id === ID.mcboTierraNegra1 ? [0, 1, 2] : [0]).map((position) => ({
+        id: position === 0 ? `${listing.id}-foto` : `${listing.id}-foto-${position + 1}`,
         listingId: listing.id,
-        position: 0,
+        position,
         createdAt: now,
       })),
     );
+    await db.insert(listingPhotos).values(photos);
     await db.insert(listingPhotoDerivatives).values(
-      LISTING_ROWS.flatMap((listing) =>
+      photos.flatMap((photo) =>
         DERIVATIVES.map((derivative) => ({
-          photoId: `${listing.id}-foto`,
+          photoId: photo.id,
           name: derivative.name,
-          key: `e2e/${listing.id}/${derivative.name}.webp`,
+          key: `e2e/${photo.listingId}/${photo.position === 0 ? "" : `${photo.position + 1}/`}${derivative.name}.webp`,
           bytes: derivative.bytes,
         })),
       ),
@@ -264,7 +261,7 @@ export async function seedE2e(): Promise<void> {
 
     console.log(
       `seed-e2e: ${LISTING_ROWS.length} avisos en ${ZONE_ROWS.length} zonas de dos ciudades, ` +
-        "con portada.",
+        `${photos.length} fotos (${DERIVATIVES.length} derivadas cada una).`,
     );
   } finally {
     await pool.end();

@@ -74,6 +74,8 @@ for (const viewport of sizes) {
         const main = document.querySelector("main");
         const strip = main?.querySelector('[data-testid="stat-strip"]');
         const gallery = main?.querySelector('[data-testid="photo-strip"]');
+        const grid = gallery?.parentElement;
+        const track = gallery?.querySelector("ul");
         const ownFooter = main?.querySelector("footer");
         const globalFooters = [...document.querySelectorAll("footer")].filter(
           (item) => !main?.contains(item),
@@ -98,7 +100,9 @@ for (const viewport of sizes) {
             valueBox: textBox(label.parentElement?.querySelector("dd") ?? null),
           })),
           gallery: box(gallery ?? null),
-          galleryTrack: box(gallery?.querySelector("ul") ?? null),
+          galleryGrid: box(grid ?? null),
+          galleryTrack: box(track ?? null),
+          trackWidths: track ? { client: track.clientWidth, scroll: track.scrollWidth } : null,
           content: [...(main?.querySelectorAll("section, article") ?? [])].map((element) => ({
             text: element.textContent?.trim().slice(0, 180),
             box: box(element),
@@ -155,6 +159,17 @@ for (const viewport of sizes) {
       ),
     ).toBe(true);
     expect(evidence.photos.some((photo) => photo.viewerHref === `${path}/foto/1`)).toBe(true);
+    expect(evidence.gallery?.right, `gallery right at ${viewport.width}`).toBeLessThanOrEqual(
+      viewport.width + 1,
+    );
+    expect(evidence.galleryGrid?.right, `grid right at ${viewport.width}`).toBeLessThanOrEqual(
+      viewport.width + 1,
+    );
+    if (viewport.width < 768) {
+      expect(evidence.trackWidths?.scroll, `native scroll at ${viewport.width}`).toBeGreaterThan(
+        evidence.trackWidths?.client ?? 0,
+      );
+    }
     expect(evidence.documentWidth).toBeLessThanOrEqual(viewport.width);
     expect(evidence.bodyWidth).toBeLessThanOrEqual(viewport.width);
     expect(evidence.ownFooterWidth).toBeLessThanOrEqual(viewport.width);
@@ -212,6 +227,41 @@ for (const viewport of sizes) {
     );
   });
 }
+
+test("30.3: served listing has three ordered native photo links and distinct loaded WebP ratios", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const images = await serveSeededListingImages(page, listing.id);
+  const response = await page.goto(path);
+  expect(response?.status()).toBe(200);
+  const photos = page.locator('[data-testid="photo-strip"] a:has(img)');
+  await expect(photos).toHaveCount(3);
+  expect(
+    await photos.evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
+  ).toEqual([1, 2, 3].map((number) => `${path}/foto/${number}`));
+  const observed = await photos.locator("img").evaluateAll(async (elements) => {
+    const images = elements as HTMLImageElement[];
+    await Promise.all(
+      images.map(async (image) => {
+        if (!image.complete)
+          await new Promise<void>((resolve) => {
+            image.addEventListener("load", () => resolve(), { once: true });
+            image.addEventListener("error", () => resolve(), { once: true });
+          });
+      }),
+    );
+    return images.map((image) => ({
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      src: new URL(image.currentSrc).pathname,
+    }));
+  });
+  expect(observed.map(({ width, height }) => width / height)).toEqual([16 / 9, 4 / 3, 3 / 4]);
+  expect(observed.every(({ width, height }) => width > 0 && height > 0)).toBe(true);
+  expect(new Set(observed.map(({ src }) => src)).size).toBe(3);
+  expect(images.requested).toContain("strip");
+});
 
 test("30.2: served photo viewer remains immersive without site footer", async ({ page }) => {
   const response = await page.goto(`${path}/foto/1`);

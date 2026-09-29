@@ -21,6 +21,7 @@
    derecha. */
 .gallery {
   order: 1;
+  min-width: 0;
 }
 
 /* **El aire lo pone cada pieza, no un `gap` parejo.** El precio pesa más que
