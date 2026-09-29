@@ -64,12 +64,21 @@ function dependencies(
 }
 
 describe("reportListing", () => {
+  it("rejects invalid reason after auth without touching either port", async () => {
+    const deps = dependencies(REPORTER);
+    await expect(
+      reportListing({ listingId: "listing-1", reason: ["other"] }, deps),
+    ).rejects.toThrow("Invalid report reason");
+    expect(deps.listings.findModerated).not.toHaveBeenCalled();
+    expect(deps.written).toHaveLength(0);
+  });
+
   // listing-trust spec, Requirement: Authenticated Reporting, Scenario
   // "Unauthenticated visitor cannot report" (tasks.md 8.2).
   it("refuses an anonymous visitor and records nothing", async () => {
     const deps = dependencies(null);
 
-    await expect(reportListing({ listingId: "listing-1" }, deps)).rejects.toThrow(
+    await expect(reportListing({ listingId: "listing-1", reason: "other" }, deps)).rejects.toThrow(
       UnauthenticatedError,
     );
     expect(deps.written).toHaveLength(0);
@@ -82,7 +91,7 @@ describe("reportListing", () => {
   it("reads the session before touching the listing at all", async () => {
     const deps = dependencies(null);
 
-    await expect(reportListing({ listingId: "listing-1" }, deps)).rejects.toThrow(
+    await expect(reportListing({ listingId: "listing-1", reason: "other" }, deps)).rejects.toThrow(
       UnauthenticatedError,
     );
     expect(deps.listings.findModerated).not.toHaveBeenCalled();
@@ -91,7 +100,9 @@ describe("reportListing", () => {
   it("throws when the listing does not exist and records nothing", async () => {
     const deps = dependencies(REPORTER, null);
 
-    await expect(reportListing({ listingId: "gone" }, deps)).rejects.toThrow(ListingNotFoundError);
+    await expect(reportListing({ listingId: "gone", reason: "other" }, deps)).rejects.toThrow(
+      ListingNotFoundError,
+    );
     expect(deps.written).toHaveLength(0);
   });
 
@@ -102,10 +113,19 @@ describe("reportListing", () => {
   it("records the report and does not hide the listing below the threshold", async () => {
     const deps = dependencies(REPORTER, ACTIVE_LISTING, 1);
 
-    const result = await reportListing({ listingId: "listing-1" }, deps);
+    const result = await reportListing(
+      { listingId: "listing-1", reason: "possible_fraud", explanation: "  Detalle  " },
+      deps,
+    );
 
     expect(deps.written).toEqual([
-      { listingId: "listing-1", reporterId: "tenant-1", reportedAt: deps.now() },
+      {
+        listingId: "listing-1",
+        reporterId: "tenant-1",
+        reportedAt: deps.now(),
+        reason: "possible_fraud",
+        explanation: "Detalle",
+      },
     ]);
     expect(deps.statusChanges).toHaveLength(0);
     expect(result).toEqual({ autoHidden: false });
@@ -116,7 +136,7 @@ describe("reportListing", () => {
   it("hides the listing when the third distinct reporter arrives", async () => {
     const deps = dependencies(REPORTER, ACTIVE_LISTING, 3);
 
-    const result = await reportListing({ listingId: "listing-1" }, deps);
+    const result = await reportListing({ listingId: "listing-1", reason: "other" }, deps);
 
     expect(deps.statusChanges).toEqual([{ listingId: "listing-1", status: "hidden" }]);
     expect(result).toEqual({ autoHidden: true });
@@ -128,7 +148,7 @@ describe("reportListing", () => {
     const hidden: ModeratedListing = { ...ACTIVE_LISTING, status: "hidden" };
     const deps = dependencies(REPORTER, hidden, 5);
 
-    const result = await reportListing({ listingId: "listing-1" }, deps);
+    const result = await reportListing({ listingId: "listing-1", reason: "other" }, deps);
 
     expect(deps.written).toHaveLength(1);
     expect(deps.statusChanges).toHaveLength(0);
@@ -142,7 +162,7 @@ describe("reportListing", () => {
     const expired: ModeratedListing = { ...ACTIVE_LISTING, status: "expired" };
     const deps = dependencies(REPORTER, expired, 3);
 
-    const result = await reportListing({ listingId: "listing-1" }, deps);
+    const result = await reportListing({ listingId: "listing-1", reason: "other" }, deps);
 
     expect(deps.written).toHaveLength(1);
     expect(deps.statusChanges).toHaveLength(0);
@@ -159,10 +179,12 @@ describe("reportListing", () => {
       listingId: "listing-1",
       reporterId: REPORTER.userId,
       reportedAt: new Date("2026-03-01T10:00:00.000Z"),
+      reason: "other",
+      explanation: undefined,
     };
     const deps = dependencies(REPORTER, ACTIVE_LISTING, 1);
 
-    await reportListing({ listingId: "listing-1" }, deps);
+    await reportListing({ listingId: "listing-1", reason: "other" }, deps);
 
     expect(deps.written).toEqual([own]);
   });
@@ -190,7 +212,7 @@ describe("el reloj por defecto", () => {
 
     const antes = Date.now();
     await reportListing(
-      { listingId: "listing-1" },
+      { listingId: "listing-1", reason: "other" },
       { sessionPort, listings: listings.port, reports: reports.port },
     );
     const despues = Date.now();

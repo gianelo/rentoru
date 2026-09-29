@@ -202,13 +202,23 @@ describe("report metadata — backwards-compatible persistence", () => {
     expect(rows).toEqual([{ reason: "possible_fraud", explanation: "Datos inconsistentes" }]);
   });
 
-  it("continues to accept the old report path without metadata", async () => {
-    await reportListing({ listingId }, { sessionPort: sessionOf(REPORTER_B), listings, reports });
+  it("requires reason on the new path while retaining nullable historical columns", async () => {
+    await expect(
+      reportListing(
+        { listingId, reason: null },
+        { sessionPort: sessionOf(REPORTER_B), listings, reports },
+      ),
+    ).rejects.toThrow("Invalid report reason");
+    expect(await countReportRows(listingId)).toBe(1);
+    await reportListing(
+      { listingId, reason: "other" },
+      { sessionPort: sessionOf(REPORTER_B), listings, reports },
+    );
     const { rows } = await pool.query(
       'SELECT reason, explanation FROM "listing_report" WHERE listing_id = $1 AND reporter_id = $2',
       [listingId, REPORTER_B],
     );
-    expect(rows).toEqual([{ reason: null, explanation: null }]);
+    expect(rows).toEqual([{ reason: "other", explanation: null }]);
   });
 });
 
@@ -221,8 +231,14 @@ describe("reportListing — el conteo distinto es la restricción, no un `if`", 
   });
 
   it("repeat reports from the same account leave exactly one row and no hide", async () => {
-    await reportListing({ listingId }, { sessionPort: sessionOf(REPORTER_A), listings, reports });
-    await reportListing({ listingId }, { sessionPort: sessionOf(REPORTER_A), listings, reports });
+    await reportListing(
+      { listingId, reason: "other" },
+      { sessionPort: sessionOf(REPORTER_A), listings, reports },
+    );
+    await reportListing(
+      { listingId, reason: "other" },
+      { sessionPort: sessionOf(REPORTER_A), listings, reports },
+    );
 
     expect(await countReportRows(listingId)).toBe(1);
     expect(await readListingStatus(listingId)).toBe("active");
@@ -230,7 +246,7 @@ describe("reportListing — el conteo distinto es la restricción, no un `if`", 
 
   it("a second distinct account still does not reach the threshold", async () => {
     const result = await reportListing(
-      { listingId },
+      { listingId, reason: "other" },
       { sessionPort: sessionOf(REPORTER_B), listings, reports },
     );
 
@@ -243,7 +259,7 @@ describe("reportListing — el conteo distinto es la restricción, no un `if`", 
   // auto-hide" — proven against the real constraint and the real UPDATE.
   it("the third distinct account auto-hides the listing", async () => {
     const result = await reportListing(
-      { listingId },
+      { listingId, reason: "other" },
       { sessionPort: sessionOf(REPORTER_C), listings, reports },
     );
 
@@ -260,7 +276,10 @@ describe("reportListing — un aviso vencido no se puede esconder por reportes",
   beforeAll(async () => {
     await insertListing(listingId, "expired", past);
     for (const reporter of [REPORTER_A, REPORTER_B, REPORTER_C]) {
-      await reportListing({ listingId }, { sessionPort: sessionOf(reporter), listings, reports });
+      await reportListing(
+        { listingId, reason: "other" },
+        { sessionPort: sessionOf(reporter), listings, reports },
+      );
     }
   });
 
@@ -297,6 +316,8 @@ describe("reportar desde la pantalla — la cadena entera contra Postgres", () =
     const data = new FormData();
     data.set("listingId", listingId);
     data.set("listingPath", FICHA);
+    data.set("reason", "possible_fraud");
+    data.set("explanation", "  Datos inconsistentes  ");
     return data;
   }
 
@@ -326,10 +347,27 @@ describe("reportar desde la pantalla — la cadena entera contra Postgres", () =
     expect(await readListingStatus(listingId)).toBe("active");
   });
 
+  it("un POST con motivo falso no guarda fila ni muestra acuse", async () => {
+    sesion.actual = REPORTER_A;
+    const data = formulario();
+    data.set("reason", "forged");
+    const error = await reportarAviso(data).catch((thrown: unknown) => thrown);
+    expect(error).toBeInstanceOf(RedirectSignal);
+    expect((error as InstanceType<typeof RedirectSignal>).url).toBe(
+      `${FICHA}/reportar?error=motivo`,
+    );
+    expect(await countReportRows(listingId)).toBe(0);
+  });
+
   it("el primer reportante deja una fila y el aviso sigue activo", async () => {
     expect(await enviar(REPORTER_A)).toBe(ACUSE);
 
     expect(await countReportRows(listingId)).toBe(1);
+    const { rows } = await pool.query(
+      'SELECT reason, explanation FROM "listing_report" WHERE listing_id = $1 AND reporter_id = $2',
+      [listingId, REPORTER_A],
+    );
+    expect(rows).toEqual([{ reason: "possible_fraud", explanation: "Datos inconsistentes" }]);
     expect(await readListingStatus(listingId)).toBe("active");
   });
 

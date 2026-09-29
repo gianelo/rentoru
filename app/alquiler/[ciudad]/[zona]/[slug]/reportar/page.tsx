@@ -4,10 +4,15 @@ import { AppLink } from "@/../components/atoms/AppLink";
 import { ActionButton } from "@/../components/atoms/buttons";
 import { Container } from "@/../components/layout/Container";
 import { FormShell } from "@/../components/layout/FormShell";
+import { Field } from "@/../components/molecules/Field";
 import { Nav } from "@/../components/organisms/Nav";
 import { resolveNavAccount, resolveNavPublish } from "@/modules/identity/domain/nav-account";
 import { homeSearchForm } from "@/modules/listing-catalogue/domain/search-destination";
 import { listingIdFromSlug } from "@/modules/listing-discovery/domain/listing-url";
+import {
+  REPORT_REASON_OPTIONS,
+  reportReasonFeedback,
+} from "@/modules/listing-trust/domain/report-reason";
 import {
   REPORT_SENT_PARAM,
   resolveReportScreen,
@@ -131,8 +136,30 @@ export default async function ReportarPage({ params, searchParams }: ReportarPro
                 <input type="hidden" name="listingId" value={listingId} />
                 {/* La acción no conoce los segmentos de la ruta, así que la
                     vuelta viaja acá. Llega del navegador, así que la acción la
-                    pasa por `safeReturnPath` antes de redirigir a ella. */}
+                    pasa por `safePublicListingPath` antes de redirigir a ella. */}
                 <input type="hidden" name="listingPath" value={listingPath} />
+                <div className={styles.fields}>
+                  <Field
+                    name="reason"
+                    label="Motivo"
+                    required
+                    error={reportReasonFeedback(query.error)}
+                  >
+                    {(attributes) => (
+                      <select {...attributes} required>
+                        <option value="">Elegí un motivo</option>
+                        {REPORT_REASON_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </Field>
+                  <Field name="explanation" label="Explicación (opcional)">
+                    {(attributes) => <textarea {...attributes} rows={4} />}
+                  </Field>
+                </div>
                 <ActionButton type="submit">{screen.submitLabel}</ActionButton>
               </form>
             ) : (

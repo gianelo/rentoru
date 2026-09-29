@@ -1,5 +1,6 @@
 import type { SessionPort } from "../../identity/application/ports/session.port";
 import { requireAuthenticatedSession } from "../../identity/application/require-authenticated-session";
+import { parseReportReason } from "../domain/report-reason";
 import { resolveReportOutcome } from "../domain/report-threshold";
 import type { ListingModerationPort } from "./ports/listing-moderation.port";
 import type { ListingReportPort } from "./ports/listing-report.port";
@@ -24,6 +25,8 @@ export class ListingNotFoundError extends Error {
 
 export interface ReportListingRequest {
   readonly listingId: string;
+  readonly reason: unknown;
+  readonly explanation?: unknown;
 }
 
 export interface ReportListingDependencies {
@@ -46,6 +49,7 @@ export async function reportListing(
 
   const session = await requireAuthenticatedSession(sessionPort);
 
+  const metadata = parseReportReason(request.reason, request.explanation);
   const listing = await listings.findModerated(request.listingId);
   if (!listing) {
     throw new ListingNotFoundError(request.listingId);
@@ -58,6 +62,8 @@ export async function reportListing(
     listingId: listing.listingId,
     reporterId: session.userId,
     reportedAt: now(),
+    reason: metadata.reason,
+    explanation: metadata.explanation ?? undefined,
   });
 
   const distinctReporterCount = await reports.countDistinctReporters(listing.listingId);
