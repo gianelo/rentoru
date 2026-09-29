@@ -3,14 +3,9 @@ import { describe, expect, it } from "vitest";
 import { config, middleware } from "./middleware";
 
 /**
- * tasks.md 23.3 — the header this file proves gets stamped is the only way
- * app/layout.tsx (a plain Server Component, no client hook — design.md
- * D13/D14) can know it is serving the listing detail page or the photo
- * viewer, so it can stay silent there instead of stacking a second footer.
- *
- * Both directions are proven: the `matcher` names exactly these two route
- * shapes and nothing broader, and calling the function once that matcher
- * would have let a request through does set the header.
+ * D30: only the immersive viewer gets the hide header. The listing detail
+ * renders both its own footer and the site footer. Matcher still scopes both
+ * routes because malformed listing slugs need the rewrite.
  */
 describe("middleware", () => {
   it("scopes itself to exactly the listing detail and photo viewer routes", () => {
@@ -26,14 +21,14 @@ describe("middleware", () => {
   // que esa distinción existiera.
   const ID_DE_PRUEBA = "a1b2c3d4-0000-4000-8000-0123456789ab";
 
-  it("stamps a listing detail request with x-hide-site-footer", () => {
+  it("leaves the site footer visible on a valid listing detail request", () => {
     const request = new NextRequest(
       `https://rentoru.test/alquiler/caracas/altamira/av-${ID_DE_PRUEBA}`,
     );
 
     const response = middleware(request);
 
-    expect(response.headers.get("x-middleware-request-x-hide-site-footer")).toBe("1");
+    expect(response.headers.get("x-middleware-request-x-hide-site-footer")).toBeNull();
   });
 
   it("stamps a photo viewer request with x-hide-site-footer", () => {
@@ -76,6 +71,6 @@ describe("middleware", () => {
     const response = middleware(request);
 
     expect(response.headers.get("x-middleware-rewrite")).toBeNull();
-    expect(response.headers.get("x-middleware-request-x-hide-site-footer")).toBe("1");
+    expect(response.headers.get("x-middleware-request-x-hide-site-footer")).toBeNull();
   });
 });

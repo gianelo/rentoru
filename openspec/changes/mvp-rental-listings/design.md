@@ -530,6 +530,14 @@ No provider tier is tighter than this design assumed, with the exception of Neon
 
 **The binding consequence: PR10 may be built, but its invitation MUST NOT be enabled in production before the Pro migration.** This is the one place where a completed, merged, passing work unit is still not allowed to be live. It therefore needs a switch rather than a memo — the invitation ships behind an environment flag that is off by default, so shipping the code and soliciting the money are two separate acts. A guarantee that depends on remembering not to deploy something is not a guarantee.
 
+## D30 — Cierre de ficha (decisiones del fundador, issue #288)
+
+La ficha adopta navegación visible con flechas y gesto táctil fuera del visor, conservando que tocar una foto abra su URL de visor; allí el gesto debe cambiar la imagen grande, no sólo desplazar miniaturas. Es una excepción **sólo para ficha** al «no carousel» original de D13: los enlaces nativos mantienen la lectura sin JavaScript. El pie propio con ID/reporte y el pie global debajo son **dos secciones apiladas deliberadamente**, sin contenido repetido; se revierte 23.3 sólo para ficha, no para el visor inmersivo.
+
+El reporte pide un motivo obligatorio entre «posible estafa», «datos incorrectos», «duplicado», «no disponible» y «otro», con explicación opcional. La identidad de quien reporta ya está en su sesión y permanece privada; persistencia y validación corresponden a dominio/aplicación, no al componente. El mensaje obligatorio de revelación decidido en Open Questions sigue vigente; estudiar el enlace WhatsApp condicional existente antes de cualquier modificación. La salida de sesión de 28.11 dirige por defecto a `/`; la ficha requiere una excepción de retorno seguro a esa misma URL pública, ya anónima.
+
+Medidas canónicas compartidas: móvil 390×844, tablet 768×1024 y escritorio 1440×900; todo ancho inferior a 768 usa composición móvil, incluido 440×956. Las pruebas previas a 390×840 permanecen como evidencia histórica. **Esta fase sólo corrige y acepta la ficha**: una auditoría separada debe verificar las otras pantallas antes de afirmar cumplimiento transversal. Las capturas del issue son hipótesis a contrastar con dev, no resultados actuales. Plan, imágenes y trazabilidad: `odd/tasks/fase-30-cierre-ficha.md`; la Fase 29 ya está integrada en `dev` y `main`; #287 permanece abierto y #288 sigue abierto.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.
