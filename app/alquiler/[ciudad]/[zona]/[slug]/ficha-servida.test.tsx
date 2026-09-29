@@ -32,6 +32,9 @@ const {
   coversFor,
   allFor,
   findVerifiedAt,
+  findUniquePairs,
+  findRevealable,
+  findLatestMessage,
   notFound,
   permanentRedirect,
   redirect,
@@ -46,6 +49,16 @@ const {
   // antes de dibujarse; `null` es «sin fila», el mismo default en falso que
   // el resto del módulo usa.
   findVerifiedAt: vi.fn(async (): Promise<Date | null> => null),
+  findUniquePairs: vi.fn(async () => [] as { tenantUserId: string; listingId: string }[]),
+  findRevealable: vi.fn(
+    async () =>
+      null as null | {
+        publisherId: string;
+        contactMethod: "whatsapp" | "email";
+        contactValue: string;
+      },
+  ),
+  findLatestMessage: vi.fn(async () => null as string | null),
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
@@ -75,13 +88,13 @@ vi.mock("../../../../_lib/session", () => ({
 }));
 vi.mock("@/modules/contact-reveal/infrastructure/drizzle-contact-reveal", () => ({
   DrizzleContactRevealEvents: class {
-    findLatestMessage = async () => null;
+    findLatestMessage = findLatestMessage;
   },
   DrizzleContactRevealMetrics: class {
-    findUniquePairs = async () => [];
+    findUniquePairs = findUniquePairs;
   },
   DrizzleRevealableListing: class {
-    findRevealable = async () => null;
+    findRevealable = findRevealable;
   },
 }));
 vi.mock("@/modules/listing-discovery/infrastructure/drizzle-listing-detail", () => ({
@@ -247,7 +260,43 @@ beforeEach(() => {
     ACTIVE_ZONES.filter((zone) => zone.cityId === cityId),
   );
   search.mockResolvedValue([]);
+  findUniquePairs.mockResolvedValue([]);
+  findRevealable.mockResolvedValue(null);
+  findLatestMessage.mockResolvedValue(null);
 });
+
+it.each([
+  { method: "whatsapp" as const, value: TELEFONO, href: "https://wa.me/584127654321?text=" },
+  {
+    method: "email" as const,
+    value: "publisher@example.invalid",
+    href: "mailto:publisher@example.invalid?subject=",
+  },
+])(
+  "serves only the revealed $method channel with the tenant's saved message",
+  async ({ method, value, href }) => {
+    const message = "Hola, quisiera visitar este aviso";
+    sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+    findForDetail.mockResolvedValue(
+      detail({ status: "active", expiresAt: VIGENTE(), contactMethod: method }),
+    );
+    findUniquePairs.mockResolvedValue([{ tenantUserId: "tenant-1", listingId: VENCIDO_ID }]);
+    findRevealable.mockResolvedValue({
+      publisherId: "publisher-1",
+      contactMethod: method,
+      contactValue: value,
+    });
+    findLatestMessage.mockResolvedValue(message);
+    const html = await servedBody();
+    expect(html).toContain(`data-testid="contact-value">${value}`);
+    expect(html).toContain(`href="${href}${encodeURIComponent(message)}"`);
+    expect(html).not.toContain(method === "email" ? "wa.me/" : "mailto:");
+    sessionForPage.mockResolvedValue(null);
+    const anonymous = await servedBody();
+    expect(anonymous).not.toContain(value);
+    expect(anonymous).not.toContain(href);
+  },
+);
 
 /** El cuerpo servido de la ficha, sin ejecutar un solo script. */
 async function servedBody(slug: string = VENCIDO_SLUG, query: Record<string, string> = {}) {
