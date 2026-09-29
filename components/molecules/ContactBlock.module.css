@@ -102,6 +102,10 @@
   min-height: var(--action-h);
 }
 
+.control > button {
+  margin-top: var(--gap);
+}
+
 /* El de copiar es el control secundario y no debe pesar como el de acción,
    pero sigue siendo un objetivo táctil: 44px en las dos pantallas, donde el
    átomo bajaría a 36 en escritorio. */
