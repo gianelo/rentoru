@@ -74,7 +74,7 @@ import {
 } from "@/modules/identity/domain/safe-return-destination";
 import { revealListingContact } from "./reveal-actions";
 
-const FICHA = "/alquiler/caracas/chacao/apartamento-listing-1";
+const FICHA = "/alquiler/caracas/chacao/apartamento-3f2a91cb-04d7-b8e0-1a55-9c7e2d4f6b03";
 /** La puerta abre SOBRE la ficha, así que el destino es la ficha misma (15.8). */
 const PUERTA = `${FICHA}?entrar=si`;
 
@@ -161,7 +161,6 @@ describe("los tres rechazos que no son pantallas rotas", () => {
    */
   it.each([
     ["el aviso no se puede revelar", new ListingNotRevealableError("listing-1")],
-    ["falta el mensaje", new MissingRevealMessageError()],
     ["la cuenta pasó el límite", new RevealRateLimitExceededError("user-1")],
   ])("vuelve sin romper ni redirigir cuando %s", async (_caso, error) => {
     revealContact.mockRejectedValueOnce(error);
@@ -169,6 +168,18 @@ describe("los tres rechazos que no son pantallas rotas", () => {
     await expect(submit()).resolves.toBeUndefined();
     expect(redirect).not.toHaveBeenCalled();
   });
+});
+
+it("redirects missing message to a safe detail marker", async () => {
+  revealContact.mockRejectedValueOnce(new MissingRevealMessageError());
+  await expect(submit()).rejects.toBeInstanceOf(RedirectSignal);
+  expect(redirect).toHaveBeenCalledWith(`${FICHA}?revelar=mensaje-requerido`);
+
+  revealContact.mockRejectedValueOnce(new MissingRevealMessageError());
+  await expect(submit({ doorHref: "https://evil.test/alquiler/anything" })).rejects.toBeInstanceOf(
+    RedirectSignal,
+  );
+  expect(redirect).toHaveBeenLastCalledWith("/");
 });
 
 describe("lo que no está previsto", () => {

@@ -1,18 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { MissingRevealMessageError, requireRevealMessage } from "./reveal-message";
+import { missingRevealMessageDestination, revealMessageFeedback } from "./reveal-message";
 
-describe("requireRevealMessage", () => {
-  it.each([null, undefined, "", "   ", "\n\t "])(
-    "refuses a blank or whitespace-only message (%j)",
-    (raw) => {
-      expect(() => requireRevealMessage(raw)).toThrow(MissingRevealMessageError);
-    },
-  );
+const DETAIL = "/alquiler/maracaibo/tierra-negra/apartamento-3f2a91cb-04d7-b8e0-1a55-9c7e2d4f6b03";
 
-  it("keeps the message exactly as submitted, without trimming it", () => {
-    // The database CHECK constraint uses btrim only to decide "blank or not"
-    // (tasks.md 6.11); the stored text must survive untouched, because the
-    // spec calls it "the authoritative record of what the tenant wrote".
-    expect(requireRevealMessage("  Hola, me interesa  ")).toBe("  Hola, me interesa  ");
+describe("missing reveal message feedback", () => {
+  it("returns a fixed marker on the detail path without carrying door, search, or user text", () => {
+    expect(
+      missingRevealMessageDestination(`${DETAIL}?entrar=si&volver=%2Fbuscar&message=secreto`),
+    ).toBe(`${DETAIL}?revelar=mensaje-requerido`);
+  });
+
+  it.each([
+    "https://evil.test/alquiler/maracaibo/tierra-negra/aviso",
+    "//evil.test/alquiler/maracaibo/tierra-negra/aviso",
+    "/\\evil.test/alquiler/maracaibo/tierra-negra/aviso",
+    "/alquiler/maracaibo/tierra-negra",
+    "/alquiler/maracaibo/tierra-negra/aviso",
+    "/alquiler/maracaibo/tierra-negra/aviso-3f2a91cb-04d7-b8e0-1a55-9c7e2d4f6b03/extra",
+    "/signin",
+    "",
+  ])("fails closed for %s", (candidate) => {
+    expect(missingRevealMessageDestination(candidate)).toBe("/");
+  });
+
+  it("maps only the exact scalar marker to helpful text", () => {
+    expect(revealMessageFeedback("mensaje-requerido")).toMatch(/mensaje/i);
+    expect(revealMessageFeedback(undefined)).toBeNull();
+    expect(revealMessageFeedback("other")).toBeNull();
+    expect(revealMessageFeedback(["mensaje-requerido"])).toBeNull();
   });
 });

@@ -6,7 +6,10 @@ import {
   RevealRateLimitExceededError,
   revealContact,
 } from "@/modules/contact-reveal/application/reveal-contact";
-import { MissingRevealMessageError } from "@/modules/contact-reveal/domain/reveal-message";
+import {
+  MissingRevealMessageError,
+  missingRevealMessageDestination,
+} from "@/modules/contact-reveal/domain/reveal-message";
 import {
   DrizzleContactRevealEvents,
   DrizzleRevealableListing,
@@ -75,7 +78,8 @@ export async function revealListingContact(formData: FormData): Promise<void> {
     // los dos casos no se reveló nada, y una pantalla rota no es la respuesta
     // — el `required` del formulario ya evita el primer caso en el uso
     // normal; esto es el respaldo del servidor.
-    if (error instanceof MissingRevealMessageError) return;
+    if (error instanceof MissingRevealMessageError)
+      redirect(missingRevealMessageDestination(doorHref));
     if (error instanceof RevealRateLimitExceededError) return;
 
     throw error;

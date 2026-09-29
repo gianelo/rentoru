@@ -26,6 +26,7 @@ import type { SearchCriteria } from "@/modules/listing-search/domain/search-crit
 
 const {
   search,
+  sessionForPage,
   listActiveZones,
   findForDetail,
   coversFor,
@@ -36,6 +37,7 @@ const {
   redirect,
 } = vi.hoisted(() => ({
   search: vi.fn(),
+  sessionForPage: vi.fn(async (): Promise<{ user: { id: string } } | null> => null),
   listActiveZones: vi.fn(),
   findForDetail: vi.fn(),
   coversFor: vi.fn(),
@@ -55,13 +57,21 @@ const {
   }),
 }));
 
-vi.mock("next/navigation", () => ({ notFound, permanentRedirect, redirect }));
+vi.mock("next/navigation", () => ({
+  notFound,
+  permanentRedirect,
+  redirect,
+  usePathname: () => "/",
+}));
 vi.mock("@/shared/db/client", () => ({ db: {} }));
+vi.mock("../../../../_lib/nav-account", () => ({
+  readNavAccountFlags: async () => ({ hasListings: false }),
+}));
 // Anónimo, y sin arrastrar Auth.js: el mismo doble que el resto de las pruebas
 // de render de este repositorio.
 vi.mock("../../../../_lib/session", () => ({
-  readSession: async () => null,
-  requestSessionPort: { getSession: async () => null },
+  readSession: sessionForPage,
+  requestSessionPort: { getSession: sessionForPage },
 }));
 vi.mock("@/modules/contact-reveal/infrastructure/drizzle-contact-reveal", () => ({
   DrizzleContactRevealEvents: class {
@@ -229,6 +239,7 @@ beforeEach(() => {
   process.env.R2_BUCKET_PUBLIC_URL = "https://fotos.rentoru.test";
   process.env.SITE_URL = "https://rentoru.test";
   vi.clearAllMocks();
+  sessionForPage.mockResolvedValue(null);
   findForDetail.mockResolvedValue(detail());
   allFor.mockResolvedValue([]);
   coversFor.mockImplementation(async (ids: readonly string[]) => covers(ids));
@@ -247,6 +258,21 @@ async function servedBody(slug: string = VENCIDO_SLUG, query: Record<string, str
     }),
   );
 }
+
+it("serves missing-message feedback in the locked authenticated contact form only for the exact marker", async () => {
+  sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+  findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
+  const html = await servedBody(VENCIDO_SLUG, { revelar: "mensaje-requerido" });
+  expect(html).toMatch(/<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error"/);
+  expect(html).toMatch(/<p[^>]*id="message-error"[^>]*>[^<]*mensaje[^<]*<\/p>/i);
+  expect(html).toContain('data-testid="contact-value">+58 ••• ••• ••••');
+  expect(html).not.toContain(TELEFONO);
+  for (const query of [{} as Record<string, string>, { revelar: "desconocido" }]) {
+    const clean = await servedBody(VENCIDO_SLUG, query);
+    expect(clean).not.toContain('aria-invalid="true"');
+    expect(clean).not.toContain('id="message-error"');
+  }
+});
 
 it("enlaza la zona Coquivacoa desde el HTML servido de la ficha", async () => {
   findForDetail.mockResolvedValue(detail({ zoneId: COQUIVACOA.id, zoneName: COQUIVACOA.name }));

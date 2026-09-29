@@ -44,6 +44,7 @@ export interface ContactBlockProps {
    * hay nada que decir» y no se dibuja ninguna línea.
    */
   readonly verificationNotice: string | null;
+  readonly error: string | null;
   readonly expiresAt: Date;
   readonly zoneName: string;
   readonly zoneHref: string;
@@ -127,6 +128,7 @@ export function ContactBlock({
   revealAction,
   hasSession,
   verificationNotice,
+  error,
   expiresAt,
   zoneName,
   zoneHref,
@@ -199,7 +201,12 @@ export function ContactBlock({
                     inquilino y dejaría el revelado costando un clic, que es
                     justo el costo que este campo existe para cobrar. El
                     `defaultValue` vacío sale del propio `Field`. */}
-                <Field name="message" label="Tu mensaje para quien publica" required>
+                <Field
+                  name="message"
+                  label="Tu mensaje para quien publica"
+                  error={error ?? undefined}
+                  required
+                >
                   {(attrs) => (
                     <textarea
                       {...attrs}
