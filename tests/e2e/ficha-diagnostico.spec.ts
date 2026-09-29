@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { ID, LISTING_ROWS, MARACAIBO, ZONE_ROWS } from "../../scripts/seed-e2e";
 import { buildListingPath } from "../../src/modules/listing-discovery/domain/listing-url";
+import { serveSeededListingImages } from "./ficha-imagenes-fixture";
 
 const listing = LISTING_ROWS.find((row) => row.id === ID.mcboTierraNegra1);
 const zone = ZONE_ROWS.find((row) => row.id === listing?.zoneId);
@@ -27,10 +28,11 @@ test.beforeAll(() => {
 });
 
 for (const viewport of sizes) {
-  test(`served listing diagnostic ${viewport.width}x${viewport.height}`, async ({
+  test(`30.2: served listing diagnostic ${viewport.width}x${viewport.height}`, async ({
     page,
   }, testInfo) => {
     await page.setViewportSize(viewport);
+    const images = await serveSeededListingImages(page, listing.id);
     const response = await page.goto(path);
     expect(response?.status()).toBe(200);
     expect(new URL(page.url()).pathname).toBe(path);
@@ -39,9 +41,19 @@ for (const viewport of sizes) {
     await expect(page.locator("main")).toContainText(`ID ${listing.id.slice(0, 8)}`);
     const viewer = page.locator(`main a[href="${path}/foto/1"]`);
     await expect(viewer).toHaveCount(1);
+    await page
+      .locator('[data-testid="photo-strip"] img')
+      .first()
+      .evaluate(async (image: HTMLImageElement) => {
+        if (!image.complete)
+          await new Promise<void>((resolve) => {
+            image.addEventListener("load", () => resolve(), { once: true });
+            image.addEventListener("error", () => resolve(), { once: true });
+          });
+      });
     const evidence = await page.evaluate(
       ({ listingPath }) => {
-        const box = (element: Element | null) => {
+        const box = (element: Element | Range | null) => {
           if (!element) return null;
           const rect = element.getBoundingClientRect();
           return {
@@ -52,6 +64,12 @@ for (const viewport of sizes) {
             right: rect.right,
             bottom: rect.bottom,
           };
+        };
+        const textBox = (element: Element | null) => {
+          if (!element) return null;
+          const range = document.createRange();
+          range.selectNodeContents(element);
+          return box(range);
         };
         const main = document.querySelector("main");
         const strip = main?.querySelector('[data-testid="stat-strip"]');
@@ -76,12 +94,25 @@ for (const viewport of sizes) {
           stats: [...(strip?.querySelectorAll("dt") ?? [])].map((label) => ({
             label: label.textContent?.trim(),
             box: box(label.parentElement),
+            labelBox: textBox(label),
+            valueBox: textBox(label.parentElement?.querySelector("dd") ?? null),
           })),
           gallery: box(gallery ?? null),
+          galleryTrack: box(gallery?.querySelector("ul") ?? null),
+          content: [...(main?.querySelectorAll("section, article") ?? [])].map((element) => ({
+            text: element.textContent?.trim().slice(0, 180),
+            box: box(element),
+          })),
+          ownFooterWidth: ownFooter?.scrollWidth,
+          globalFooterWidths: globalFooters.map((footer) => footer.scrollWidth),
           photos: [...(gallery?.querySelectorAll("img") ?? [])].map((image) => ({
             alt: image.alt,
             box: box(image),
+            frame: box(image.closest("a")),
             naturalWidth: image.naturalWidth,
+            naturalHeight: image.naturalHeight,
+            currentSrc: image.currentSrc,
+            objectFit: getComputedStyle(image).objectFit,
             complete: image.complete,
             viewerHref: image.closest("a")?.getAttribute("href"),
           })),
@@ -124,6 +155,50 @@ for (const viewport of sizes) {
       ),
     ).toBe(true);
     expect(evidence.photos.some((photo) => photo.viewerHref === `${path}/foto/1`)).toBe(true);
+    expect(evidence.documentWidth).toBeLessThanOrEqual(viewport.width);
+    expect(evidence.bodyWidth).toBeLessThanOrEqual(viewport.width);
+    expect(evidence.ownFooterWidth).toBeLessThanOrEqual(viewport.width);
+    expect(evidence.globalFooterWidths.every((width) => width <= viewport.width)).toBe(true);
+    expect(evidence.stats).toHaveLength(4);
+    expect(evidence.stats.map((stat) => stat.label?.toLowerCase()).join(" ")).toMatch(/puestos?/);
+    expect(
+      evidence.stats.every((stat) => stat.box && stat.box.width > 0 && stat.box.height > 0),
+    ).toBe(true);
+    const contains = (outer: typeof evidence.gallery, inner: typeof evidence.gallery) =>
+      outer !== null &&
+      inner !== null &&
+      inner.x >= outer.x - 1 &&
+      inner.y >= outer.y - 1 &&
+      inner.right <= outer.right + 1 &&
+      inner.bottom <= outer.bottom + 1;
+    for (const stat of evidence.stats) {
+      expect(contains(stat.box, stat.labelBox), `${stat.label} label at ${viewport.width}`).toBe(
+        true,
+      );
+      expect(contains(stat.box, stat.valueBox), `${stat.label} value at ${viewport.width}`).toBe(
+        true,
+      );
+    }
+    await expect(page.locator("main")).toContainText("La propiedad tiene");
+    await expect(page.locator("main")).toContainText("Puesto de estacionamiento");
+    await expect(page.locator("main")).toContainText("Descripción");
+    await expect(page.locator("main")).toContainText("Planta eléctrica");
+    await expect(page.locator("main")).toContainText("Ver WhatsApp del dueño");
+    const lead = evidence.photos[0];
+    if (!lead) throw new Error("Seeded listing has no rendered photo");
+    expect(lead.naturalWidth).toBeGreaterThan(0);
+    expect(lead.naturalHeight).toBeGreaterThan(0);
+    const source = viewport.width >= 768 ? images.dimensions.detail : images.dimensions.strip;
+    expect(lead.naturalWidth / lead.naturalHeight).toBe(source.width / source.height);
+    expect(lead.objectFit).toBe("cover");
+    expect(lead.box?.width).toBeGreaterThan(0);
+    expect(lead.box?.height).toBeGreaterThan(0);
+    // The loaded image fills its frame; object-fit: cover deliberately crops the source.
+    console.log(
+      `IMAGE_FRAME ${testInfo.project.name} ${viewport.width} ${JSON.stringify({ image: lead.box, frame: lead.frame })}`,
+    );
+    expect(contains(lead.box, lead.frame), `image covers frame at ${viewport.width}`).toBe(true);
+    expect(images.requested).toContain(viewport.width >= 768 ? "detail" : "strip");
     await testInfo.attach("served-geometry.json", {
       body: JSON.stringify(evidence, null, 2),
       contentType: "application/json",
@@ -138,7 +213,7 @@ for (const viewport of sizes) {
   });
 }
 
-test("served photo viewer remains immersive without site footer", async ({ page }) => {
+test("30.2: served photo viewer remains immersive without site footer", async ({ page }) => {
   const response = await page.goto(`${path}/foto/1`);
   expect(response?.status()).toBe(200);
   await expect(page.locator("body > footer")).toHaveCount(0);
