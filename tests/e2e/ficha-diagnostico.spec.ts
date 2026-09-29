@@ -105,6 +105,24 @@ for (const viewport of sizes) {
       { listingPath: path },
     );
     expect(evidence.url).toBe(path);
+    // D30: two distinct, ordered sections on the served listing, even without JS.
+    const ownFooter = page.locator("main footer");
+    const siteFooter = page.locator("body > footer");
+    await expect(ownFooter).toHaveCount(1);
+    await expect(siteFooter).toHaveCount(1);
+    await expect(ownFooter).toContainText(`ID ${listing.id.slice(0, 8)}`);
+    await expect(ownFooter.locator(`a[href="${path}/reportar"]`)).toHaveCount(1);
+    await expect(siteFooter).toContainText("rentoru.com no interviene en el contrato");
+    await expect(siteFooter.locator('a[href="/"]')).toHaveCount(1);
+    await expect(siteFooter).not.toContainText(`ID ${listing.id.slice(0, 8)}`);
+    await expect(siteFooter.locator(`a[href="${path}/reportar"]`)).toHaveCount(0);
+    expect(
+      await ownFooter.evaluate(
+        (own, global) =>
+          Boolean(global && own.compareDocumentPosition(global) & Node.DOCUMENT_POSITION_FOLLOWING),
+        await siteFooter.elementHandle(),
+      ),
+    ).toBe(true);
     expect(evidence.photos.some((photo) => photo.viewerHref === `${path}/foto/1`)).toBe(true);
     await testInfo.attach("served-geometry.json", {
       body: JSON.stringify(evidence, null, 2),
@@ -119,3 +137,10 @@ for (const viewport of sizes) {
     );
   });
 }
+
+test("served photo viewer remains immersive without site footer", async ({ page }) => {
+  const response = await page.goto(`${path}/foto/1`);
+  expect(response?.status()).toBe(200);
+  await expect(page.locator("body > footer")).toHaveCount(0);
+  await expect(page.locator("main footer")).toHaveCount(1);
+});

@@ -12,8 +12,8 @@ import { SiteFooter } from "../components/organisms/SiteFooter";
 import "@/styles/tokens.css";
 import "@/styles/base.css";
 
-// The read path ships no client-side JavaScript and no webfonts (design.md,
-// D13/D14). The root layout stays plain HTML with the system font stack —
+// The read path works without client-side JavaScript and ships no webfonts
+// (design.md D13/D14). The root layout uses the system font stack —
 // no <link> to a webfont, no font-loading component, no client component.
 // `SiteFooter` (tasks.md 23.1) is not the first thing to break that: it
 // carries no "use client" and no state, and its own file says so.
@@ -68,16 +68,11 @@ export const metadata: Metadata = {
 const FOOTER_LINK_GROUPS = groupResolvedFooterLinks(resolveFooterLinks(FOOTER_LINK_CATALOGUE));
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  // tasks.md 23.3 — DECIDIDA 2026-09-04. The site footer stays silent on the
-  // listing detail page and the photo viewer: the detail page's own
-  // <footer> already carries the listing's ID and expiry (16.35), which is
-  // data about the LISTING, not the site, and the photo viewer's <footer>
-  // is a control bar for an immersive full-screen view, not a footer at
-  // all. Stacking the site footer under either one is a defect, not a sum;
-  // both keep exactly the footer they already had. This layout has no
-  // client hook and no state to ask which route it is serving, so
-  // middleware.ts scopes itself to exactly those two routes and stamps this
-  // one header; its absence means "render the site footer".
+  // D30 reverses the detail-page exception in tasks.md 23.3: its own
+  // ID/report footer is followed by the distinct site footer. Only the
+  // immersive photo viewer hides the site footer. This layout has no route
+  // context, so middleware stamps the hide header for the viewer alone;
+  // absence means "render the site footer".
   //
   // Known cost, measured 2026-09-04: calling `headers()` here opts every
   // route into dynamic rendering. `/_not-found`, `/measure`, and
