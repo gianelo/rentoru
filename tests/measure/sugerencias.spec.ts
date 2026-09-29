@@ -111,6 +111,47 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
     console.log("[14.51] Chacao (0 avisos) no se ofrece; Altamira (9) sí");
   });
 
+  test("29.1: flechas seleccionan Altamira y Enter sigue su enlace, no el GET genérico", async ({
+    page,
+  }) => {
+    const pastilla = page.getByTestId(PASTILLA);
+    const campo = pastilla.getByRole("searchbox");
+    await campo.fill("alta");
+    const opcion = pastilla.getByRole("link", { name: /Altamira/ });
+    await expect(opcion).toHaveAttribute("href", "/alquiler/distrito-capital/altamira");
+    await campo.press("ArrowDown");
+    await expect
+      .poll(async () =>
+        opcion.evaluate(
+          (node) =>
+            document.activeElement === node ||
+            document.activeElement?.getAttribute("aria-activedescendant") === node.id,
+        ),
+      )
+      .toBe(true);
+    await page.keyboard.press("ArrowUp");
+    await expect(campo).toBeFocused();
+    await campo.press("ArrowDown");
+    await page.route("**/alquiler/distrito-capital/altamira", (route) =>
+      route.fulfill({ body: "Destino Altamira" }),
+    );
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/alquiler\/distrito-capital\/altamira$/);
+    await expect(page.locator("body")).toContainText("Destino Altamira");
+  });
+
+  test("29.1: Tab llega al enlace y Escape conserva el texto", async ({ page }) => {
+    const pastilla = page.getByTestId(PASTILLA);
+    const campo = pastilla.getByRole("searchbox");
+    await campo.fill("alta");
+    await campo.press("Tab");
+    await expect(pastilla.getByRole("link", { name: /Altamira/ })).toBeFocused();
+    await campo.focus();
+    await campo.press("Escape");
+    await expect(campo).toHaveValue("alta");
+    await expect(pastilla.getByRole("list", { name: "Sugerencias" })).toHaveCount(0);
+  });
+
   test("14.51: Escape cierra la lista sin borrar lo escrito", async ({ page }) => {
     const pastilla = page.getByTestId(PASTILLA);
     const campo = pastilla.getByRole("searchbox");
@@ -147,7 +188,17 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
     await expect(pastilla.locator("form")).toHaveAttribute("method", "get");
     await expect(pastilla.locator("form")).toHaveAttribute("action", "/");
     await expect(pastilla.getByRole("button", { name: "Buscar" })).toHaveCount(1);
-    console.log("[14.51] piso intacto: sin script no hay panel y el GET sigue ahí");
+    await sinScript.route("**/?q=alta", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<body>GET alta recibido</body>",
+      }),
+    );
+    await pastilla.getByRole("button", { name: "Buscar" }).click();
+    await expect(sinScript).toHaveURL(/\/?\?q=alta$/);
+    await expect(sinScript.locator("body")).toHaveText("GET alta recibido");
+    await expect(sinScript.getByRole("list", { name: "Sugerencias" })).toHaveCount(0);
     await context.close();
   });
 });

@@ -152,6 +152,15 @@ describe("el histograma de precio se sirve desde el servidor", () => {
 });
 
 describe("la búsqueda sin JavaScript", () => {
+  it("29.1: sirve un formulario GET y un enlace de destino sin depender de sugerencias", async () => {
+    const html = await servedBody();
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
+    expect(html).toContain('name="q"');
+    // La sugerencia de zona aparece al escribir; el HTML inicial enlaza a la ficha.
+    expect(html).toMatch(
+      /href="\/alquiler\/distrito-capital\/altamira\/penthouse-en-altamira-dc-2(?:\?[^"]*)?"/,
+    );
+  });
   it.each<Record<string, string>>([{}, { min: "300", pag: "2" }])(
     "sirve la salida móvil a Inicio sin filtros (%j)",
     async (query) => {
