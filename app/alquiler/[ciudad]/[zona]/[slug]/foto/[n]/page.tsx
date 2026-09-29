@@ -128,6 +128,7 @@ export default async function VisorPage({ params }: VisorProps) {
       <div className={styles.stage}>
         <img
           className={styles.photo}
+          data-viewer-large
           src={photoUrl(publicBaseUrl, frame.full)}
           // El alternativo sale del dominio y lleva la posición adelante
           // ("Foto 2 de 6 — …", F28): quien usa lector de pantalla necesita

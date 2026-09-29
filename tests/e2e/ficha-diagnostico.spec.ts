@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import sharp from "sharp";
 import { ID, LISTING_ROWS, MARACAIBO, ZONE_ROWS } from "../../scripts/seed-e2e";
 import { buildListingPath } from "../../src/modules/listing-discovery/domain/listing-url";
 import { serveSeededListingImages } from "./ficha-imagenes-fixture";
@@ -376,6 +377,124 @@ test("30.3b: horizontal swipe changes hero, vertical gesture does not", async ({
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(new RegExp(`${path}/foto/3$`));
 });
+
+test("30.3c: swipe on the loaded large viewer image navigates native neighbours", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await serveSeededListingImages(page, listing.id);
+  const fullRequests: string[] = [];
+  await page.route(
+    new RegExp(
+      `^https://fotos-de-prueba\\.rentas\\.invalid/e2e/${listing.id}/(?:[23]/)?full\\.webp$`,
+    ),
+    async (route) => {
+      const pathname = new URL(route.request().url()).pathname;
+      const number = pathname.includes("/2/") ? 2 : pathname.includes("/3/") ? 3 : 1;
+      fullRequests.push(pathname);
+      const body = await sharp({
+        create: {
+          width: number === 1 ? 720 : number === 2 ? 800 : 600,
+          height: number === 1 ? 960 : number === 2 ? 600 : 800,
+          channels: 3,
+          background: "#80a599",
+        },
+      })
+        .webp()
+        .toBuffer();
+      await route.fulfill({ status: 200, contentType: "image/webp", body });
+    },
+  );
+  const response = await page.goto(`${path}/foto/1`);
+  expect(response?.status()).toBe(200);
+  const large = page.locator("main img[data-viewer-large]");
+  const previous = page.locator('a[data-viewer-key="previous"]');
+  const next = page.locator('a[data-viewer-key="next"]');
+  const thumbs = page.getByRole("navigation", { name: "Fotos del aviso" }).locator("a");
+  await expect(thumbs).toHaveCount(3);
+  await expect(previous).toHaveCount(0);
+  await expect(next).toHaveAttribute("href", `${path}/foto/2`);
+  await expect(thumbs.nth(2)).toHaveAttribute("href", `${path}/foto/3`);
+  const loaded = async (number: number) => {
+    await expect(page).toHaveURL(new RegExp(`${path}/foto/${number}$`));
+    await expect(large).toHaveAttribute("alt", new RegExp(`^Foto ${number} de 3`));
+    await expect(large).toHaveAttribute(
+      "src",
+      new RegExp(`${number === 1 ? "" : `/${number}`}/full\\.webp`),
+    );
+    await expect
+      .poll(() => large.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
+    return large.getAttribute("src");
+  };
+  const first = await loaded(1);
+  if (testInfo.project.name === "crawlability") {
+    // GET and native anchors work without scripts; no synthetic swipe in this project.
+    await next.click();
+    const second = await loaded(2);
+    expect(second).not.toBe(first);
+    await expect(previous).toHaveAttribute("href", `${path}/foto/1`);
+    await thumbs.nth(2).click();
+    await loaded(3);
+    await expect(next).toHaveCount(0);
+    await previous.click();
+    await loaded(2);
+    return;
+  }
+  const swipe = async (dx: number, dy: number) => {
+    const box = await large.boundingBox();
+    if (!box) throw new Error("Missing large image");
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await large.dispatchEvent("touchstart", {
+      touches: [{ identifier: 1, clientX: x, clientY: y }],
+    });
+    await large.dispatchEvent("touchend", {
+      changedTouches: [{ identifier: 1, clientX: x + dx, clientY: y + dy }],
+    });
+  };
+  await swipe(0, -110);
+  await loaded(1);
+  await swipe(-110, 0);
+  const second = await loaded(2);
+  expect(second).not.toBe(first);
+  await swipe(-110, 0);
+  const third = await loaded(3);
+  expect(third).not.toBe(second);
+  await expect(next).toHaveCount(0);
+  await swipe(-110, 0);
+  await loaded(3);
+  await swipe(110, 0);
+  await loaded(2);
+  expect(fullRequests.some((url) => url.includes("/3/full.webp"))).toBe(true);
+});
+
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 768, height: 1024 },
+  { width: 1440, height: 900 },
+]) {
+  test(`30.3: viewer native neighbour targets meet minimum size at ${viewport.width}`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize(viewport);
+    const response = await page.goto(`${path}/foto/2`);
+    expect(response?.status()).toBe(200);
+    for (const [direction, destination] of [
+      ["previous", 1],
+      ["next", 3],
+    ] as const) {
+      const link = page.locator(`main a[data-viewer-key="${direction}"]`);
+      await expect(link).toHaveAttribute("href", `${path}/foto/${destination}`);
+      const box = await link.boundingBox();
+      console.log(
+        `VIEWER_TARGET ${testInfo.project.name} ${viewport.width} ${direction} ${JSON.stringify(box)}`,
+      );
+      expect(box?.width, `${direction} width at ${viewport.width}`).toBeGreaterThanOrEqual(44);
+      expect(box?.height, `${direction} height at ${viewport.width}`).toBeGreaterThanOrEqual(44);
+    }
+  });
+}
 
 test("30.2: served photo viewer remains immersive without site footer", async ({ page }) => {
   const response = await page.goto(`${path}/foto/1`);
