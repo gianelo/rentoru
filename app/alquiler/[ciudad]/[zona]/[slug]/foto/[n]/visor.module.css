@@ -272,6 +272,7 @@
   .previous,
   .next {
     width: var(--viewer-arrow-size);
+    min-width: var(--target-min);
   }
 
   .previous {

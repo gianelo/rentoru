@@ -461,10 +461,10 @@ jobs:
           done
           exit $fail
 
-      # The diagnostic needs the seeded local catalogue even when the main
-      # suite runs against a protected preview. Run it before pagination changes
-      # those six rows, and never send it to the preview.
-      - name: 30.2/30.3 served listing diagnostic (local production build)
+      # The listing and missing-route diagnostics need the seeded local catalogue
+      # even when the main suite runs against a protected preview. Run them before
+      # pagination changes those six rows, and never send them to the preview.
+      - name: 30.2–30.4 served listing and route diagnostics (local production build)
         env:
           PLAYWRIGHT_BASE_URL: ''
           VERCEL_AUTOMATION_BYPASS_SECRET: ''
@@ -476,7 +476,7 @@ jobs:
           PLAYWRIGHT_WEB_COMMAND: pnpm start
         run: |
           pnpm build
-          pnpm exec playwright test tests/e2e/ficha-diagnostico.spec.ts --project=chromium --project=crawlability
+          pnpm exec playwright test tests/e2e/ficha-diagnostico.spec.ts tests/e2e/ficha-rutas.spec.ts --project=chromium --project=crawlability
 
       # Append only after the six-row suite succeeds. Never point this step at
       # the preview: it has a separate catalogue and may be protected.
