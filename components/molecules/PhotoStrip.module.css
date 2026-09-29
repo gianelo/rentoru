@@ -98,7 +98,7 @@
   }
 
   .item:first-child .image {
-    width: var(--ficha-photo-w-desktop);
+    width: max(100%, var(--ficha-photo-w-desktop));
     height: var(--ficha-photo-h-desktop);
   }
 

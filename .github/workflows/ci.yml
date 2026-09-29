@@ -447,7 +447,7 @@ jobs:
           # runs, so both the loop and the "no tests yet" tolerance below would
           # be dead code and one real failure would skip the remaining project.
           for project in chromium crawlability; do
-            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:' 2>&1); then
+            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:' 2>&1); then
               echo "$output"
             else
               echo "$output"
@@ -460,6 +460,23 @@ jobs:
             fi
           done
           exit $fail
+
+      # The diagnostic needs the seeded local catalogue even when the main
+      # suite runs against a protected preview. Run it before pagination changes
+      # those six rows, and never send it to the preview.
+      - name: 30.2 served listing diagnostic (local production build)
+        env:
+          PLAYWRIGHT_BASE_URL: ''
+          VERCEL_AUTOMATION_BYPASS_SECRET: ''
+          DATABASE_URL: postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require
+          AUTH_SECRET: build-time-placeholder-not-a-real-secret
+          RENEWAL_TOKEN_SECRET: e2e-fake-secret-signs-nothing-real
+          SITE_URL: https://ci-build-no-es-el-dominio-real.invalid
+          R2_BUCKET_PUBLIC_URL: https://fotos-de-prueba.rentas.invalid
+          PLAYWRIGHT_WEB_COMMAND: pnpm start
+        run: |
+          pnpm build
+          pnpm exec playwright test tests/e2e/ficha-diagnostico.spec.ts --project=chromium --project=crawlability
 
       # Append only after the six-row suite succeeds. Never point this step at
       # the preview: it has a separate catalogue and may be protected.
