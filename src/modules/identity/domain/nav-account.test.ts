@@ -109,6 +109,17 @@ describe("resolveNavPublish", () => {
     expect(publish.menu).toBeNull();
   });
 
+  it("sin permiso de publicación omite barra y menú, pero conserva cuenta", () => {
+    const account = resolveNavAccount({ name: "María", email: "m@example.com" });
+    const publish = resolveNavPublish(account, false);
+    expect(publish.bar).toBeNull();
+    expect(publish.menu).toBeNull();
+    expect(resolveAccountMenuItems(account, publish).map((item) => item.href)).toEqual([
+      "/mis-avisos",
+    ]);
+    expect(resolveNavPublish({ kind: "anonymous" }, false).bar).toBeNull();
+  });
+
   it("con sesión: «Publicar» en la barra (neutro) y «Publicar una propiedad» en el menú (acento)", () => {
     const publish = resolveNavPublish({
       kind: "authenticated",

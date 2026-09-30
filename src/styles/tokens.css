@@ -370,6 +370,14 @@
   --wait-mark-size: 56px;
   --wait-mark-fs: 22px;
 
+  /* Home vacío, concepto 03: escala exclusiva del hero (390/768/1440).
+     --title-fs conserva el papel de título de página en resultados y demás. */
+  --home-hero-fs: 27px;
+  --home-hero-fs-tablet: 36px;
+  --home-hero-fs-desktop: 46px;
+  /* Margen exterior del hero vacío, no parte de la altura útil bajo el Nav. */
+  --home-invite-margin: 32px;
+
   --title-fs: 20px;
   --title-fw: 700;
   --title-lh: 1.25;

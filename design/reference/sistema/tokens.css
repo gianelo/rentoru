@@ -9,6 +9,12 @@
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   --serif:Georgia,"Times New Roman",serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,monospace;
+  /* Inicio sin avisos, concepto 03: título hero, no título de página. */
+  --home-hero-fs:27px;
+  --home-hero-fs-tablet:36px;
+  --home-hero-fs-desktop:46px;
+  /* Margen exterior del hero vacío; se descuenta del viewport al centrarlo. */
+  --home-invite-margin:32px;
 }
 
 /* ---------- Eje 1 · estructura ---------- */

@@ -6,8 +6,10 @@ import {
   HOME_STRIP_SIZE,
   type HomeCollectionPage,
   homeAvailabilitySpecs,
+  homeCanPublish,
   homeCityChips,
   homeCollections,
+  homeLanding,
   homeSearchBar,
   resolveHomeCity,
 } from "./home-collections";
@@ -296,6 +298,58 @@ describe("buildHome — la misma propiedad en dos tiras", () => {
     for (const strip of home.strips) {
       expect(strip.cards.map((card) => card.id)).toEqual(["mismo"]);
     }
+  });
+});
+
+describe("landing de lanzamiento", () => {
+  it("la publicación depende de ciudades curadas, no de tarjetas disponibles", () => {
+    expect(homeCanPublish([])).toBe(false);
+    expect(homeCanPublish(CITIES)).toBe(true);
+  });
+
+  it("sin ciudades no promete una ubicación donde publicar", () => {
+    const landing = homeLanding(
+      buildHome(homeCollections([]), new Map(), new Map(), BASE_URL),
+      null,
+      [],
+    );
+    expect(landing?.lead).toBe(
+      "Todavía no hay avisos disponibles. Consulta las ciudades habilitadas antes de publicar.",
+    );
+    expect(landing?.lead).not.toContain("en ,");
+    expect(landing?.action).toBeNull();
+  });
+
+  it("explica el vacío global sin inventar oferta", () => {
+    const landing = homeLanding(
+      buildHome(homeCollections(CITIES), new Map(), new Map(), BASE_URL),
+      null,
+      CITIES,
+    );
+    expect(landing?.lead).toContain("Distrito Capital y Maracaibo");
+    expect(landing?.title).toBe("Gratis para publicar. Sin comisión.");
+    expect(landing?.action).toEqual({ label: "Publicar un aviso", href: "/publicar" });
+    expect(landing?.facts.map((fact) => fact.value)).toEqual([
+      "Gratis",
+      "Ninguna",
+      "WhatsApp tras registrarse",
+    ]);
+  });
+
+  it("limita el vacío a la ciudad elegida aunque haya oferta en otra", () => {
+    const home = buildHome(homeCollections(CITIES, "dc"), new Map(), new Map(), BASE_URL);
+    expect(homeLanding(home, CITIES[0], CITIES)?.lead).toContain("Distrito Capital");
+    expect(homeLanding(home, CITIES[0], CITIES)?.lead).not.toContain("Maracaibo");
+  });
+
+  it("no ofrece landing si hay tarjetas visibles", () => {
+    const home = buildHome(
+      homeCollections(CITIES),
+      new Map([[MCBO, page(["a"], 1)]]),
+      coversFor("a"),
+      BASE_URL,
+    );
+    expect(homeLanding(home, null, CITIES)).toBeNull();
   });
 });
 
