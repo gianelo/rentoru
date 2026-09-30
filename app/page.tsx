@@ -20,6 +20,7 @@ import { DrizzleSearchVocabulary } from "@/modules/listing-catalogue/infrastruct
 import {
   buildHome,
   HOME_CITY_PARAM,
+  homeAvailabilitySpecs,
   homeCityChips,
   homeCollections,
   resolveHomeCity,
@@ -159,7 +160,10 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // ciudad y no una consecuencia de que la tira de la otra haya desaparecido.
   const specs = homeCollections(cities, selectedCity?.id ?? null);
 
-  const collections = await new DrizzleHomeCollections(db).collectionsFor(specs);
+  const collections = await new DrizzleHomeCollections(db).collectionsFor([
+    ...specs,
+    ...homeAvailabilitySpecs(cities, specs),
+  ]);
 
   // **UNA llamada para todas las portadas de todas las tiras.** Pedirlas por
   // tira serían cuatro viajes, y por aviso hasta veinte — el N+1 clásico
@@ -169,7 +173,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // reciente aparece en tres colecciones (14.23) y ahí se queda, pero pedir su
   // portada tres veces sería pedirle a Postgres la misma fila tres veces.
   const listingIds = [
-    ...new Set([...collections.values()].flatMap((page) => page.rows.map((row) => row.id))),
+    ...new Set(specs.flatMap((spec) => collections.get(spec.key)?.rows.map((row) => row.id) ?? [])),
   ];
   const covers = await new DrizzleListingPhotos(db).coversFor(listingIds);
 
@@ -178,7 +182,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // Qué pregunta la caja, cómo se llama su parámetro y a dónde vuelve, y cuál
   // ficha de ciudad está activa: son decisiones de producto y llegan resueltas.
   const searchForm = homeSearchForm(typed);
-  const cityChips = homeCityChips(cities, selectedCity?.id ?? null);
+  const cityChips = homeCityChips(cities, selectedCity?.id ?? null, collections);
 
   // **La sesión, y lo que cuesta.** Auth.js está en estrategia `database`, así
   // que una lectura CON cookie es un viaje a Postgres. **Sin cookie no cuesta

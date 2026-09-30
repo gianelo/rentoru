@@ -295,20 +295,49 @@ export function resolveHomeCity<C extends HomeCity>(
  * ciudad existe para cerrar. Se cae por construcción: esta dirección se compone
  * desde cero y no encima de la que había.
  */
+export function homeAvailabilitySpecs(
+  cities: readonly HomeCity[],
+  strips: readonly HomeCollectionSpec[],
+): readonly HomeCollectionSpec[] {
+  const requested = new Set(
+    strips.filter((spec) => spec.kind === "city").map((spec) => spec.cityId),
+  );
+  return cities
+    .filter((city) => !requested.has(city.id))
+    .map((city) => ({
+      key: `disponibilidad:${city.id}`,
+      kind: "city" as const,
+      title: city.name,
+      cityId: city.id,
+      maxPriceUsd: null,
+      limit: HOME_STRIP_SIZE,
+      href: null,
+    }));
+}
+
 export function homeCityChips(
   cities: readonly HomeCity[],
   selectedCityId: string | null,
+  collections: ReadonlyMap<string, HomeCollectionPage>,
 ): readonly HomeCityChip[] {
-  return cities.map((city) => {
-    const selected = city.id === selectedCityId;
+  const selectedId = cities.some((city) => city.id === selectedCityId) ? selectedCityId : null;
+  return cities
+    .filter(
+      (city) =>
+        city.id === selectedId ||
+        ((collections?.get(`ciudad:${city.id}`) ?? collections?.get(`disponibilidad:${city.id}`))
+          ?.total ?? 0) > 0,
+    )
+    .map((city) => {
+      const selected = city.id === selectedId;
 
-    return {
-      cityId: city.id,
-      label: city.name,
-      href: selected ? "/" : `/?${HOME_CITY_PARAM}=${slugify(city.name)}`,
-      selected,
-    };
-  });
+      return {
+        cityId: city.id,
+        label: city.name,
+        href: selected ? "/" : `/?${HOME_CITY_PARAM}=${slugify(city.name)}`,
+        selected,
+      };
+    });
 }
 
 /**
