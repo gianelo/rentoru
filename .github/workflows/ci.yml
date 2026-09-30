@@ -447,7 +447,7 @@ jobs:
           # runs, so both the loop and the "no tests yet" tolerance below would
           # be dead code and one real failure would skip the remaining project.
           for project in chromium crawlability; do
-            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:' 2>&1); then
+            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:' 2>&1); then
               echo "$output"
             else
               echo "$output"
@@ -480,7 +480,7 @@ jobs:
 
       # Authenticated logout needs the owned local session table, not the preview.
       # Build with a fake pooled URL, then start with Playwright's local DB proxy.
-      - name: 30.4b2 logout + 30.5b2c reveal (local production build)
+      - name: 30.4b2 logout + 30.5b2c reveal + 30.6c report (local production build)
         env:
           PLAYWRIGHT_BASE_URL: ''
           AUTH_URL: http://localhost:3000
@@ -494,6 +494,7 @@ jobs:
           DATABASE_URL=postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require pnpm build
           pnpm exec playwright test tests/e2e/ficha-logout.spec.ts --project=chromium
           pnpm exec playwright test tests/e2e/ficha-contacto-revelacion.spec.ts --project=chromium --project=crawlability --workers=1
+          pnpm exec playwright test tests/e2e/reporte-con-motivo.spec.ts --project=chromium --project=crawlability --workers=1
 
       # Append only after the six-row suite succeeds. Never point this step at
       # the preview: it has a separate catalogue and may be protected.
