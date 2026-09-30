@@ -308,7 +308,7 @@ async function servedBody(slug: string = VENCIDO_SLUG, query: Record<string, str
   );
 }
 
-it("serves native iPad gallery thumbnails and selected position without client scripts", async () => {
+it("serves native iPad gallery thumbnails without stale selection when scripts are off", async () => {
   allFor.mockResolvedValue(
     [0, 1, 2].map((position) => ({
       position,
