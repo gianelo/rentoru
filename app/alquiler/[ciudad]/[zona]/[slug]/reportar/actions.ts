@@ -2,12 +2,16 @@
 
 import { redirect } from "next/navigation";
 import { UnauthenticatedError } from "@/modules/identity/application/require-authenticated-session";
-import { safeReturnPath } from "@/modules/identity/domain/safe-return-destination";
 import { nextAuthSessionPort } from "@/modules/identity/infrastructure/session-port";
+import { safePublicListingPath } from "@/modules/listing-discovery/domain/listing-url";
 import {
   ListingNotFoundError,
   reportListing,
 } from "@/modules/listing-trust/application/report-listing";
+import {
+  InvalidReportReasonError,
+  REPORT_REASON_ERROR_MARKER,
+} from "@/modules/listing-trust/domain/report-reason";
 import { REPORT_SENT_PARAM } from "@/modules/listing-trust/domain/report-screen";
 import {
   DrizzleListingModeration,
@@ -36,7 +40,7 @@ import { db } from "@/shared/db/client";
  * **Ninguna decisión de producto vive acá.** Si hay sesión, si el aviso existe,
  * cuántas cuentas distintas lo reportaron y si eso lo oculta lo resuelve
  * `reportListing`; a dónde se puede mandar a alguien lo resuelve
- * `safeReturnPath`; qué se dibuja y qué se dice lo resuelve
+ * `safePublicListingPath`; qué se dibuja y qué se dice lo resuelve
  * `resolveReportScreen`. Esto sólo traduce cada resultado en una redirección.
  */
 export async function reportarAviso(formData: FormData): Promise<void> {
@@ -45,7 +49,7 @@ export async function reportarAviso(formData: FormData): Promise<void> {
   // esta acción es un redirector abierto con nuestro dominio en la barra. Un
   // formulario que no dibujamos nosotros no es un formulario sobre el que
   // actuemos, así que el rechazo es no hacer nada — ni reportar, ni acusar.
-  const listingPath = safeReturnPath(String(formData.get("listingPath") ?? ""));
+  const listingPath = safePublicListingPath(formData.get("listingPath"));
   if (!listingPath) redirect("/");
 
   const reportPath = `${listingPath}/reportar`;
@@ -57,7 +61,11 @@ export async function reportarAviso(formData: FormData): Promise<void> {
     // necesita. `ReportSentScreen` no tiene dónde ponerlo y esta acción no
     // tiene por dónde pasarlo.
     await reportListing(
-      { listingId: String(formData.get("listingId") ?? "") },
+      {
+        listingId: String(formData.get("listingId") ?? ""),
+        reason: formData.get("reason"),
+        explanation: formData.get("explanation"),
+      },
       {
         sessionPort: nextAuthSessionPort,
         listings: new DrizzleListingModeration(db),
@@ -77,6 +85,8 @@ export async function reportarAviso(formData: FormData): Promise<void> {
     // borrado por igual, así que quien sondea URLs no aprende nada. Inventar
     // acá una segunda forma de decirlo sería decirlo dos veces y distinto.
     if (error instanceof ListingNotFoundError) redirect(listingPath);
+    if (error instanceof InvalidReportReasonError)
+      redirect(`${reportPath}?error=${REPORT_REASON_ERROR_MARKER}`);
 
     // Tragar todo sería peor que romper: con el acuse dibujado, quien reportó
     // se va creyendo que su reporte quedó guardado.
