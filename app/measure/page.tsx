@@ -472,6 +472,7 @@ export default async function MeasureHarnessPage({
                     // abajo, montada aparte.
                     hasSession={true}
                     verificationNotice={null}
+                    error={null}
                     expiresAt={new Date("2026-09-12T00:00:00.000Z")}
                     zoneName="Chacao"
                     zoneHref="/alquiler/distrito-capital/chacao"
