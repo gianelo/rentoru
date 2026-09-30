@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es" data-theme="menta" data-layout="compacto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rentoru · Fotos en iPad vertical</title>
+  <link rel="stylesheet" href="../reference/sistema/tokens.css">
+  <style>
+    /* Viewer reference values from src/styles/tokens.css :root (lines 323–326). */
+    :root { --viewer-bg: #131517; --viewer-ink: #f2f3f3; --viewer-soft: rgba(242, 243, 243, 0.62); --viewer-line: rgba(242, 243, 243, 0.24); }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); font-family: var(--sans); color: var(--ink); }
+    main { padding: 24px; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 17px; }
+    p { font-size: 13px; line-height: 1.6; max-width: 850px; }
+    .option { border-top: 1px solid var(--line); margin-top: 32px; padding-top: 16px; }
+    .boards { display: flex; flex-wrap: wrap; gap: 24px; }
+    .sample { width: 768px; }
+    .label { font-size: 12px; font-weight: 600; }
+    .tablet { width: 768px; height: 1024px; overflow: auto; background: var(--surface); border: 1px solid var(--line); }
+    .bar { height: 68px; padding: 0 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+    .bar a { min-width: 44px; min-height: 44px; display: flex; align-items: center; color: var(--accent); }
+    .brand { font-weight: 700; }
+    .layout { padding: 24px; display: grid; grid-template-columns: minmax(0, 1fr) 245px; gap: 24px; }
+    .gallery { min-width: 0; position: relative; }
+    .strip { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain; scrollbar-width: none; padding-bottom: 8px; }
+    .strip a { min-width: 100%; height: 330px; scroll-snap-align: center; text-decoration: none; display: flex; align-items: end; padding: 16px; border-radius: var(--r); color: var(--ink); }
+    .photo { position: relative; background: var(--thumb); }
+    .photo::before { content: ""; position: absolute; inset: 16% 18%; border: 2px solid var(--strong); border-radius: var(--r); }
+    .photo.portrait::before { inset: 8% 34%; }
+    .photo.square::before { inset: 12% 27%; }
+    .photo span { position: relative; padding: 6px; background: var(--surface); border-radius: var(--rs); }
+    .dots { display: flex; gap: 8px; height: 32px; align-items: center; justify-content: center; }
+    .dots i { width: 5px; height: 5px; background: var(--line); border-radius: var(--rs); }
+    .dots i.on { width: 16px; background: var(--accent); }
+    .count { text-align: center; font: 12px var(--mono); color: var(--soft); }
+    .details { padding: 16px; border: 1px solid var(--line); border-radius: var(--r); }
+    .details strong { font: 700 30px var(--mono); }
+    .details h3 { font-size: 17px; }
+    .details p { color: var(--soft); }
+    .listing-context { margin: 0 24px 24px; padding: 16px; border-top: 1px solid var(--line); }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+    .stats span { padding: 8px; border: 1px solid var(--line); border-radius: var(--r); font-size: 13px; }
+    .listing-context p { margin: 0 0 16px; }
+    .contact { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; padding: 8px 16px; background: var(--accent); color: var(--surface); border-radius: var(--r); text-decoration: none; }
+    .thumbs { display: flex; flex: none; gap: 7px; padding: 0 24px 14px; overflow-x: auto; overscroll-behavior-inline: contain; scrollbar-width: none; }
+    .thumbnail { flex: none; width: 72px; height: 54px; background: var(--thumb); border-radius: var(--r); outline: 1px solid var(--viewer-line); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+    .thumbnail[aria-current] { outline: 2px solid var(--viewer-ink); }
+    .thumbnail.landscape span { width: 58px; height: 42px; border: 1px solid var(--strong); }
+    .thumbnail.portrait span { width: 36px; height: 48px; border: 1px solid var(--strong); }
+    .thumbnail.square span { width: 46px; height: 46px; border: 1px solid var(--strong); }
+    .gallery .thumbs { padding: 8px 2px 6px; }
+    .gallery .thumbnail { min-width: 72px; min-height: 54px; outline-color: var(--line); }
+    .gallery .thumbnail[aria-current] { outline-color: var(--accent); }
+    .viewer { height: 1024px; background: var(--viewer-bg); color: var(--viewer-ink); display: flex; flex-direction: column; }
+    .viewer .bar { border-color: var(--viewer-line); }
+    .viewer .bar a { color: var(--viewer-ink); text-decoration: none; font-size: 20px; }
+    .viewer .bar span { font: 12px var(--mono); }
+    .stage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; }
+    .image { width: 85%; height: 52%; background: var(--thumb); display: flex; align-items: center; justify-content: center; }
+    .image.portrait { width: 49%; height: 85%; }
+    .image.square { width: 65%; height: 60%; }
+    .image b { background: var(--surface); color: var(--ink); padding: 8px; border-radius: var(--r); }
+    .viewer .dots i { background: var(--viewer-line); }
+    .viewer .dots i.on { background: var(--viewer-ink); }
+    .viewer .count { color: var(--viewer-soft); }
+    .caption { padding: 12px 24px; }
+    .caption small { display: block; color: var(--viewer-soft); }
+    .footer { padding: 12px 24px; border-top: 1px solid var(--viewer-line); display: flex; justify-content: space-between; align-items: center; }
+    .footer a { min-width: 44px; min-height: 44px; padding: 0 16px; border-radius: var(--r); background: var(--viewer-ink); color: var(--viewer-bg); display: flex; align-items: center; justify-content: center; text-decoration: none; }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .viewer a:focus-visible { outline-color: var(--viewer-ink); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Galería de la ficha · iPad vertical 768 × 1024</h1>
+    <p>Decisión A · revisión visual de 768 × 1024, no implementación. Primera, media y última: sala horizontal 4:3, habitación vertical 3:4 y cocina cuadrada 1:1. Ficha con recorte; visor conserva la foto entera con contain, su cierre, caption, miniaturas y pie de precio.</p>
+    <p>Tira de ficha con scroll horizontal y snap nativos; fotos enlazadas a /foto/n. En el visor, las miniaturas debajo de la imagen conservan navegación nativa por foto, con contorno activo, blancos de al menos 44 × 44 px y scroll horizontal si hace falta. Los puntos indican posición, no son controles; ninguna flecha visible. Swipe sobre la imagen grande sería una mejora, no reemplaza los enlaces. Las anclas locales de esta maqueta representan las rutas /foto/n.</p>
+    <section class="option" id="a">
+      <h2>A · Tira nativa y visor con miniaturas</h2>
+      <p>Comparación de ficha y visor en las tres posiciones; cada ficha y visor tiene miniaturas debajo de la foto grande.</p>
+      <div class="boards" id="a-boards"></div>
+    </section>
+    <p>Maqueta de referencia: JavaScript sólo arma los tres estados de esta lámina. La aceptación sin JS corresponde al HTML servido del producto, no a esta maqueta.</p>
+  </main>
+  <script>
+    const photos = [
+      ['Sala comedor', 'landscape'],
+      ['Habitación principal', 'portrait'],
+      ['Cocina', 'square'],
+    ];
+
+    function dots(n) {
+      return `<div class="dots" aria-label="Foto ${n} de 3">
+        ${photos.map((_, i) => `<i class="${i === n - 1 ? 'on' : ''}"></i>`).join('')}
+      </div>`;
+    }
+
+    function board(variant, n) {
+      const [title, shape] = photos[n - 1];
+      const id = `${variant}-${n}`;
+      const strip = photos.map((p, i) => `<a class="photo ${p[1]}"
+        href="#${variant}-visor-${i + 1}" aria-label="Ver foto ${i + 1} de 3: ${p[0]}">
+        <span>${p[0]}</span></a>`).join('');
+      const thumbnails = photos.map((p, i) => `<a class="thumbnail ${p[1]}"
+        href="#${variant}-visor-${i + 1}" data-route="/foto/${i + 1}"
+        aria-label="Ver foto ${i + 1} de 3: ${p[0]}" ${i === n - 1 ? 'aria-current="true"' : ''}>
+        <span aria-hidden="true"></span></a>`).join('');
+      const ratio = shape === 'landscape' ? '4:3' : shape === 'portrait' ? '3:4' : '1:1';
+
+      return `<article class="sample" id="${id}">
+        <p class="label">768 × 1024 · ${n === 1 ? 'primera' : n === 2 ? 'media' : 'última'} · ficha</p>
+        <div class="tablet">
+          <div class="bar"><a href="#${id}">← Resultados</a><span class="brand">Rentoru</span><span>Dueño</span></div>
+          <div class="layout">
+            <div class="gallery">
+              <div class="strip">${strip}</div>
+              <nav class="thumbs" aria-label="Miniaturas de fotos de la ficha">${thumbnails}</nav>
+              ${dots(n)}<div class="count">${n} / 3 · Deslizá para ver más fotos</div>
+            </div>
+            <div class="details">
+              <strong>$450</strong> / mes
+              <h3>Apartamento 2 habitaciones con puesto de estacionamiento</h3>
+              <p>Chacao · Distrito Capital</p>
+            </div>
+          </div>
+          <div class="listing-context">
+            <div class="stats"><span>2 habitaciones</span><span>2 baños</span><span>78 m²</span><span>1 estacionamiento</span></div>
+            <p>Sala iluminada, cocina equipada y espacio para trabajar. Cerca de comercios y transporte.</p>
+            <a class="contact" href="#${id}">Contactar al anunciante</a>
+          </div>
+        </div>
+        <p class="label">768 × 1024 · visor · foto ${n} de 3</p>
+        <div class="viewer" id="${variant}-visor-${n}">
+          <div class="bar"><a href="#${id}" aria-label="Cerrar visor y volver al aviso">×</a><span>${n} / 3</span><span style="width:44px"></span></div>
+          <div class="stage"><div class="image ${shape}"><b>${title} · ${ratio}</b></div></div>
+          ${dots(n)}
+          <div class="caption">${title}<small>Apartamento 2 habitaciones · Chacao</small></div>
+          <nav class="thumbs" aria-label="Miniaturas de fotos">${thumbnails}</nav>
+          <div class="footer"><strong>$450 / mes</strong><a href="#${id}">Ver el aviso</a></div>
+        </div>
+      </article>`;
+    }
+
+    document.getElementById('a-boards').innerHTML = [1, 2, 3]
+      .map(n => board('a', n)).join('');
+    document.querySelectorAll('#a-boards .sample').forEach((sample, index) => {
+      const strip = sample.querySelector('.strip');
+      strip.scrollLeft = strip.children[index].offsetLeft - strip.children[0].offsetLeft;
+    });
+  </script>
+</body>
+</html>
