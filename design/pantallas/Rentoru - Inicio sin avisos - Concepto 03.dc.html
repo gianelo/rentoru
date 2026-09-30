@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="es-VE">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rentoru · Inicio sin avisos · Concepto 03</title>
+  <style>
+    /* Lámina autónoma de diseño Compacto/Menta; no es una pantalla de producción. */
+    :root {
+      --surface: #FFFFFF;
+      --bg: #F0F5F9;
+      --line: #e1e4e6;
+      --ink: #1E2022;
+      --soft: #52616B;
+      --accent: #272343;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 system-ui, sans-serif; }
+    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .intro { padding: 24px; background: var(--surface); border-bottom: 1px solid var(--line); }
+    .intro h1, .intro p { margin: 0 0 8px; }
+    .intro p { max-width: 720px; color: var(--soft); }
+    .comparison { display: flex; gap: 24px; overflow-x: auto; padding: 24px; }
+    figure { flex: none; margin: 0; }
+    figcaption { margin-bottom: 8px; color: var(--soft); font-size: 12px; font-weight: 600; }
+    .canvas { width: var(--w); height: var(--h); overflow: hidden; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; position: relative; }
+    .mobile { --w: 390px; --h: 844px; --pad: 16px; --title: 27px; }
+    .tablet { --w: 768px; --h: 1024px; --pad: 32px; --title: 36px; }
+    .desktop { --w: 1440px; --h: 900px; --pad: 48px; --title: 46px; }
+    .site-nav { min-height: 68px; padding: 0 var(--pad); display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); }
+    .mobile .site-nav { min-height: 60px; }
+    .brand { font: 700 19px/1 ui-monospace, monospace; }
+    .search { min-width: 220px; padding: 9px 16px; border: 1px solid var(--line); border-radius: 999px; color: var(--soft); font-size: 13px; }
+    .nav-end { font-size: 12px; font-weight: 600; }
+    .mobile .brand, .mobile .nav-end { display: none; }
+    .mobile .search { min-width: 0; flex: 1; padding: 12px 16px; }
+    .content { width: 100%; max-width: 1100px; margin: 0 auto; padding: var(--pad); flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .layout { display: grid; grid-template-columns: 3fr 2fr; gap: 48px; align-items: center; }
+    .eyebrow { margin: 0; color: var(--soft); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .hero-title { max-width: 660px; margin: 12px 0 16px; font-size: var(--title); line-height: 1.17; letter-spacing: -.025em; }
+    .lead { max-width: 520px; margin: 0; font-size: 16px; }
+    .action { display: inline-flex; min-height: 46px; margin-top: 24px; padding: 0 24px; align-items: center; justify-content: center; border-radius: 12px; background: var(--accent); color: white; font-weight: 600; text-decoration: none; }
+    .ledger { padding: 32px; border-radius: 12px; background: var(--bg); }
+    .ledger div { padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .ledger div:last-child { border: 0; }
+    .ledger span { display: block; color: var(--soft); font-size: 12px; font-weight: 600; }
+    .ledger strong { display: block; font-size: 18px; }
+    .truth { max-width: 560px; margin: 16px 0 0; color: var(--soft); font-size: 12px; }
+    .tablet .layout { gap: 24px; }
+    .mobile .layout { display: block; }
+    .mobile .lead { font-size: 15px; }
+    .mobile .ledger { margin-top: 32px; padding: 12px 20px; }
+    .mobile .ledger div { padding: 10px 0; }
+    .mobile .content { padding-bottom: 108px; }
+    .mobile .content .action { display: none; }
+    .dock { display: none; }
+    .mobile .dock { position: absolute; bottom: 12px; left: 16px; right: 16px; height: 64px; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; padding: 0 8px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+    .dock a { display: flex; min-height: 44px; align-items: center; justify-content: center; color: var(--ink); font-size: 11px; font-weight: 600; text-decoration: none; }
+    .dock .dock-publish { width: 96px; height: 44px; justify-self: center; border-radius: 12px; background: var(--accent); color: white; }
+  </style>
+</head>
+<body>
+  <header class="intro">
+    <h1>03 · La alternativa sin comisión</h1>
+    <p>Una propuesta sobria con datos verificables, sin precios de competidores ni promesas.</p>
+    <p>Exploración de diseño, no producción. Tres lienzos fijos: desplázate horizontalmente para verlos sin reducirlos. La búsqueda es contexto visual estático, no un formulario funcional. No se muestran avisos ficticios.</p>
+  </header>
+  <main class="comparison" aria-label="Concepto 03 en tres tamaños">
+    <figure>
+      <figcaption>Móvil · 390 × 844</figcaption>
+      <div class="canvas mobile">
+        <div class="site-nav"><span class="brand">Rentoru</span><span class="search">¿En qué zona buscas?</span><span class="nav-end">Entrar</span></div>
+        <div class="content">
+          <div class="layout">
+            <div>
+              <p class="eyebrow">Una forma directa de publicar</p>
+              <h2 class="hero-title">Gratis para publicar. Sin comisión.</h2>
+              <p class="lead">Todavía no hay avisos disponibles. Si alquilas una vivienda de larga estadía, puedes anunciarla aquí.</p>
+              <a class="action" href="/publicar">Publicar un aviso</a>
+            </div>
+            <div class="ledger">
+              <div><span>Publicación y búsqueda</span><strong>Gratis</strong></div>
+              <div><span>Comisión de Rentoru</span><strong>Ninguna</strong></div>
+              <div><span>Contacto</span><strong>WhatsApp tras registrarse</strong></div>
+            </div>
+          </div>
+          <p class="truth">Rentoru no recibe pagos ni escribe contratos.</p>
+        </div>
+        <nav class="dock" aria-label="Navegación móvil">
+          <a href="/" aria-label="Inicio">Inicio</a>
+          <a class="dock-publish" href="/publicar" aria-label="Publicar un aviso">Publicar</a>
+          <a href="/signin" aria-label="Entrar">Entrar</a>
+        </nav>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Tablet · 768 × 1024</figcaption>
+      <div class="canvas tablet">
+        <div class="site-nav"><span class="brand">Rentoru</span><span class="search">¿En qué zona buscas?</span><span class="nav-end">Entrar</span></div>
+        <div class="content">
+          <div class="layout">
+            <div>
+              <p class="eyebrow">Una forma directa de publicar</p>
+              <h2 class="hero-title">Gratis para publicar. Sin comisión.</h2>
+              <p class="lead">Todavía no hay avisos disponibles. Si alquilas una vivienda de larga estadía, puedes anunciarla aquí.</p>
+              <a class="action" href="/publicar">Publicar un aviso</a>
+            </div>
+            <div class="ledger">
+              <div><span>Publicación y búsqueda</span><strong>Gratis</strong></div>
+              <div><span>Comisión de Rentoru</span><strong>Ninguna</strong></div>
+              <div><span>Contacto</span><strong>WhatsApp tras registrarse</strong></div>
+            </div>
+          </div>
+          <p class="truth">Rentoru no recibe pagos ni escribe contratos.</p>
+        </div>
+      </div>
+    </figure>
+    <figure>
+      <figcaption>Escritorio · 1440 × 900</figcaption>
+      <div class="canvas desktop">
+        <div class="site-nav"><span class="brand">Rentoru</span><span class="search">¿En qué zona buscas?</span><span class="nav-end">Entrar</span></div>
+        <div class="content">
+          <div class="layout">
+            <div>
+              <p class="eyebrow">Una forma directa de publicar</p>
+              <h2 class="hero-title">Gratis para publicar. Sin comisión.</h2>
+              <p class="lead">Todavía no hay avisos disponibles. Si alquilas una vivienda de larga estadía, puedes anunciarla aquí.</p>
+              <a class="action" href="/publicar">Publicar un aviso</a>
+            </div>
+            <div class="ledger">
+              <div><span>Publicación y búsqueda</span><strong>Gratis</strong></div>
+              <div><span>Comisión de Rentoru</span><strong>Ninguna</strong></div>
+              <div><span>Contacto</span><strong>WhatsApp tras registrarse</strong></div>
+            </div>
+          </div>
+          <p class="truth">Rentoru no recibe pagos ni escribe contratos.</p>
+        </div>
+      </div>
+    </figure>
+  </main>
+</body>
+</html>

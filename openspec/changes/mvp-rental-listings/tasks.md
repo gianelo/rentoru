@@ -2901,3 +2901,12 @@ No marcar por la descripción del issue ni por capturas antiguas: aceptación re
 - [x] 29.4 **Verificación/decisión agregada local, no cierre de #287.** En HEAD original de la rama completa `92265db`: unitarios 3014/3014, medida 172/172, E2E base completo 35 pasan/5 omitidos y 39 pasan/1 omitido, paginación 1/1 en ambos proyectos, bundle 111,84/130 KB, lint, tipos y build verdes. Integración DB omitida en el lote final. CI original de #327 y #328 pasó; posteriormente CI reconciliado de #329 `36511589739` pasó E2E/crawlability y paginación aislada, y CI del push a `dev` `36512038582` pasó incluida integración. #330 se fusionó en `main` (`84f6e1b`). #287 permanece abierto; la verificación local del HEAD original `92265db` no constituye cierre del issue ni sustituye el CI final.
 
 **Exclusiones explícitas.** Ninguna decisión de política para zonas vacías, ningún arreglo de `tierra` sin reproducción controlada, rediseño del modal ni copia de capturas antiguas del issue. Ningún estado/flag de configuración ni icono nuevo. Mantener GET nativo y las reglas de producto en dominio/aplicación. Mantener las entregas por unidades revisables.
+
+## Fase 32 — Inicio de lanzamiento sin avisos (planificación)
+
+Plan canónico: `odd/tasks/fase-32-home-lanzamiento.md`. Lámina seleccionada: `design/pantallas/Rentoru - Inicio sin avisos - Concepto 03.dc.html` (390×844, 768×1024 y 1440×900). Esta entrega sólo documenta el concepto «Gratis para publicar. Sin comisión»; la búsqueda de la lámina es contexto visual estático, no funcional, y no hay avisos ficticios.
+
+- El inicio global sin oferta mostrable presenta la landing; si la ciudad seleccionada está vacía, también la presenta aunque otra ciudad tenga oferta.
+- Las pastillas del inicio representan ciudades con inventario realmente mostrable; se conserva siempre la pastilla de la ciudad seleccionada vacía para volver a `/`. No se invalidan otras ciudades para publicar ni sus URL directas.
+- `DrizzleActiveZones` no sirve como señal de disponibilidad: cuenta avisos sin portada completa, mientras que las tarjetas del inicio la exigen. La implementación futura deberá compartir la elegibilidad de inventario mostrable sin alterar las sugerencias de búsqueda.
+- Pendiente: TDD estricto de disponibilidad y decisión de landing, pruebas de HTML servido y mutación de las reglas; nombres exactos de checks y archivos probatorios se completarán al implementar. Fase 31 queda intacta.
