@@ -67,12 +67,12 @@ describe("el inicio y el dominio que lo decide", () => {
    * de ahí salió una barra que aparecía únicamente en ese estado. La lámina la
    * dibuja arriba de todo, con las cuatro tiras debajo.
    */
-  it("dibuja la barra antes de decidir si hay oferta que mostrar", () => {
-    // El sujeto cambió de pieza —`SearchBar` pasó a ser la pastilla dentro del
-    // `Nav` (14g)— y la regla no: la búsqueda va arriba de todo y no depende
-    // de que haya avisos. Se actualiza a qué mira, nunca qué exige.
+  it("dibuja la barra antes de la rama que muestra la landing o la oferta", () => {
+    // `SearchBar` pasó al `Nav` (14g); la decisión de vacío ahora llega del
+    // dominio como `landing`. La búsqueda sigue antes de las dos alternativas
+    // visibles, sin depender de que haya avisos.
     const bar = PAGE.indexOf("<Nav");
-    const invite = PAGE.indexOf("home.invitesToPublish");
+    const invite = PAGE.indexOf("{landing ? (");
 
     expect(bar).toBeGreaterThan(-1);
     expect(invite).toBeGreaterThan(-1);
