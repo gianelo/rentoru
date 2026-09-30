@@ -883,6 +883,14 @@ describe("la puerta del WhatsApp no saca al inquilino de la ficha (15.8)", () =>
 
     expect(html).toContain(`href="${RUTA}"`);
     expect(html).toContain('aria-label="Cerrar sin entrar"');
+    expect(html).toMatch(
+      new RegExp(`<a[^>]*data-contact-door-trigger=""[^>]*href="${RUTA}\\?entrar=si"`),
+    );
+    expect(html).toContain(`href="${RUTA}">Seguir mirando sin entrar</a>`);
+    expect(html).toMatch(/<form\b[^>]*>[\s\S]*?Continuar con Google[\s\S]*?<\/form>/);
+    expect(html).toMatch(
+      /<form\b[^>]*>[\s\S]*?name="correo"[\s\S]*?Enviarme el enlace[\s\S]*?<\/form>/,
+    );
     expect(html).toContain(`name="callbackUrl" value="${RUTA}"`);
   });
 });
