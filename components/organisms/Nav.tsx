@@ -71,7 +71,7 @@ export interface NavProps {
  */
 export function Nav({ account, publish, pill, pillDisplay = "all", signInHref }: NavProps) {
   const publishClass =
-    publish.bar.emphasis === "accent" ? styles.publishAccent : styles.publishOutline;
+    publish.bar?.emphasis === "accent" ? styles.publishAccent : styles.publishOutline;
 
   return (
     <>
@@ -98,16 +98,18 @@ export function Nav({ account, publish, pill, pillDisplay = "all", signInHref }:
           ) : null}
 
           <div className={styles.actions}>
-            <AppLink
-              className={
-                account.kind === "authenticated"
-                  ? `${publishClass} ${styles.publishAuth}`
-                  : publishClass
-              }
-              href="/publicar"
-            >
-              {publish.bar.label}
-            </AppLink>
+            {publish.bar && (
+              <AppLink
+                className={
+                  account.kind === "authenticated"
+                    ? `${publishClass} ${styles.publishAuth}`
+                    : publishClass
+                }
+                href="/publicar"
+              >
+                {publish.bar.label}
+              </AppLink>
+            )}
 
             {account.kind === "anonymous" ? (
               <AppLink className={styles.enter} href={signInHref}>
@@ -141,12 +143,14 @@ export function Nav({ account, publish, pill, pillDisplay = "all", signInHref }:
           <HomeIcon />
           Inicio
         </AppLink>
-        <AppLink className={styles.dockLink} href="/publicar">
-          <span className={styles.dockAction}>
-            <PlusIcon />
-            Publicar
-          </span>
-        </AppLink>
+        {publish.bar && (
+          <AppLink className={styles.dockLink} href="/publicar">
+            <span className={styles.dockAction}>
+              <PlusIcon />
+              Publicar
+            </span>
+          </AppLink>
+        )}
         {account.kind === "anonymous" ? (
           <AppLink className={styles.dockLink} href={signInHref}>
             <EnterIcon />

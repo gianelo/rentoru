@@ -67,6 +67,8 @@ interface Fixture {
   readonly expiresInDays?: number;
   /** Qué derivadas tiene su portada. Sin portada, la F9 lo descarta. */
   readonly cover?: readonly string[];
+  /** Permite probar claves presentes pero no utilizables por la cuadrícula. */
+  readonly derivativeKeys?: Readonly<Partial<Record<"thumb" | "card", string>>>;
   /** Minutos hacia atrás desde ahora. Cuanto menos, más reciente. */
   readonly publishedMinutesAgo?: number;
 }
@@ -80,6 +82,7 @@ async function insert(fixture: Fixture): Promise<void> {
     status = "active",
     expiresInDays = 30,
     cover = ["thumb", "card"],
+    derivativeKeys = {},
     publishedMinutesAgo = 60,
   } = fixture;
 
@@ -117,7 +120,7 @@ async function insert(fixture: Fixture): Promise<void> {
   for (const name of cover) {
     await pool.query(
       'INSERT INTO "listing_photo_derivative" (photo_id, name, key, bytes) VALUES ($1,$2,$3,1024)',
-      [photoId, name, `photos/${id}/${name}.webp`],
+      [photoId, name, derivativeKeys[name as "thumb" | "card"] ?? `photos/${id}/${name}.webp`],
     );
   }
 }
@@ -130,6 +133,11 @@ const HIDDEN = randomUUID();
 const PAST_EXPIRY = randomUUID();
 const NO_COVER = randomUUID();
 const HALF_COVER = randomUUID();
+const BLANK_THUMB = randomUUID();
+const WHITESPACE_THUMB = randomUUID();
+const BLANK_CARD = randomUUID();
+const WHITESPACE_CARD = randomUUID();
+const UNICODE_WHITESPACE_CARD = randomUUID();
 const NEWEST = randomUUID();
 
 beforeAll(async () => {
@@ -207,6 +215,26 @@ beforeAll(async () => {
   // alcanza con excluir la fila.
   await insert({ id: NO_COVER, zoneId: ZONE_A3, cityId: CITY_A, cover: [] });
   await insert({ id: HALF_COVER, zoneId: ZONE_A, cityId: CITY_A, cover: ["thumb"] });
+  await insert({ id: BLANK_THUMB, zoneId: ZONE_B, cityId: CITY_B, derivativeKeys: { thumb: "" } });
+  await insert({
+    id: WHITESPACE_THUMB,
+    zoneId: ZONE_B,
+    cityId: CITY_B,
+    derivativeKeys: { thumb: " \t " },
+  });
+  await insert({ id: BLANK_CARD, zoneId: ZONE_B, cityId: CITY_B, derivativeKeys: { card: "" } });
+  await insert({
+    id: WHITESPACE_CARD,
+    zoneId: ZONE_B,
+    cityId: CITY_B,
+    derivativeKeys: { card: " \n " },
+  });
+  await insert({
+    id: UNICODE_WHITESPACE_CARD,
+    zoneId: ZONE_B,
+    cityId: CITY_B,
+    derivativeKeys: { card: "\u00a0\u2003" },
+  });
 });
 
 afterAll(async () => {
@@ -264,6 +292,13 @@ describe("collectionsFor — las filas y el total, del mismo predicado", () => {
 });
 
 describe("collectionsFor — qué queda afuera, de las filas Y del total", () => {
+  it("excluye claves vacías o de sólo espacios en ambas derivadas, de filas y total", async () => {
+    const pages = await collections.collectionsFor([cityRequest("ciudad-b", CITY_B)]);
+    expect(pages.get("ciudad-b")?.rows.map((row) => row.id)).toEqual([IN_CITY_B]);
+    expect(pages.get("ciudad-b")?.total).toBe(1);
+    expect(pages.get("ciudad-b")?.zoneCount).toBe(1);
+  });
+
   /**
    * Vencidos, ocultos y sin portada quedan fuera de las dos mitades de la
    * respuesta. Si sólo salieran de las filas, el total los seguiría contando y

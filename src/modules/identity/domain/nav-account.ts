@@ -89,18 +89,19 @@ export interface NavPublishAction {
 
 export interface NavPublish {
   /**
-   * Siempre presente. Sin sesión va afuera en acento — "es cuando hay que
+   * Presente si el caller permite publicar. Sin sesión va afuera en acento — "es cuando hay que
    * provocar" (14.38). Con sesión sigue en la barra (neutro) en escritorio;
    * en móvil la hoja de estilos la esconde bajo el punto de quiebre porque
    * se muda al menú — la MISMA decisión, resuelta en CSS y no en una
    * segunda rama de este dominio, porque "dónde cabe" es geometría.
    */
-  readonly bar: NavPublishAction;
+  readonly bar: NavPublishAction | null;
   /** Sólo con sesión: la primera fila del menú de cuenta, en acento. */
   readonly menu: NavPublishAction | null;
 }
 
-export function resolveNavPublish(account: NavAccount): NavPublish {
+export function resolveNavPublish(account: NavAccount, canPublish = true): NavPublish {
+  if (!canPublish) return { bar: null, menu: null };
   if (account.kind === "anonymous") {
     return { bar: { label: "Publicar gratis", emphasis: "accent" }, menu: null };
   }

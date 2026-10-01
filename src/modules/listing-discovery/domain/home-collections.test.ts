@@ -5,8 +5,11 @@ import {
   HOME_SEARCH_LABEL,
   HOME_STRIP_SIZE,
   type HomeCollectionPage,
+  homeAvailabilitySpecs,
+  homeCanPublish,
   homeCityChips,
   homeCollections,
+  homeLanding,
   homeSearchBar,
   resolveHomeCity,
 } from "./home-collections";
@@ -298,6 +301,58 @@ describe("buildHome — la misma propiedad en dos tiras", () => {
   });
 });
 
+describe("landing de lanzamiento", () => {
+  it("la publicación depende de ciudades curadas, no de tarjetas disponibles", () => {
+    expect(homeCanPublish([])).toBe(false);
+    expect(homeCanPublish(CITIES)).toBe(true);
+  });
+
+  it("sin ciudades no promete una ubicación donde publicar", () => {
+    const landing = homeLanding(
+      buildHome(homeCollections([]), new Map(), new Map(), BASE_URL),
+      null,
+      [],
+    );
+    expect(landing?.lead).toBe(
+      "Todavía no hay avisos disponibles. Consulta las ciudades habilitadas antes de publicar.",
+    );
+    expect(landing?.lead).not.toContain("en ,");
+    expect(landing?.action).toBeNull();
+  });
+
+  it("explica el vacío global sin inventar oferta", () => {
+    const landing = homeLanding(
+      buildHome(homeCollections(CITIES), new Map(), new Map(), BASE_URL),
+      null,
+      CITIES,
+    );
+    expect(landing?.lead).toContain("Distrito Capital y Maracaibo");
+    expect(landing?.title).toBe("Gratis para publicar. Sin comisión.");
+    expect(landing?.action).toEqual({ label: "Publicar un aviso", href: "/publicar" });
+    expect(landing?.facts.map((fact) => fact.value)).toEqual([
+      "Gratis",
+      "Ninguna",
+      "WhatsApp tras registrarse",
+    ]);
+  });
+
+  it("limita el vacío a la ciudad elegida aunque haya oferta en otra", () => {
+    const home = buildHome(homeCollections(CITIES, "dc"), new Map(), new Map(), BASE_URL);
+    expect(homeLanding(home, CITIES[0], CITIES)?.lead).toContain("Distrito Capital");
+    expect(homeLanding(home, CITIES[0], CITIES)?.lead).not.toContain("Maracaibo");
+  });
+
+  it("no ofrece landing si hay tarjetas visibles", () => {
+    const home = buildHome(
+      homeCollections(CITIES),
+      new Map([[MCBO, page(["a"], 1)]]),
+      coversFor("a"),
+      BASE_URL,
+    );
+    expect(homeLanding(home, null, CITIES)).toBeNull();
+  });
+});
+
 describe("buildHome — el inicio sin nada que mostrar", () => {
   it("invita a publicar cuando no hay ningún aviso activo", () => {
     const home = buildHome(homeCollections(CITIES), new Map(), new Map(), BASE_URL);
@@ -488,26 +543,69 @@ describe("resolveHomeCity — qué ciudad nombra el parámetro", () => {
  * **Las fichas de ciudad (F2).** Son la única forma de elegir ciudad sin
  * JavaScript: cada una es un enlace a una dirección que ya existe.
  */
+describe("disponibilidad de ciudades", () => {
+  it("sin páginas elegibles no ofrece ciudades ajenas y sólo conserva la elegida válida", () => {
+    expect(homeCityChips(CITIES, null, new Map())).toEqual([]);
+    expect(homeCityChips(CITIES, "dc", new Map())).toEqual([
+      { cityId: "dc", label: "Distrito Capital", href: "/", selected: true },
+    ]);
+    expect(homeCityChips(CITIES, "narnia", new Map())).toEqual([]);
+    // A runtime caller that bypasses TypeScript must also fail closed.
+    const untypedCall = homeCityChips as unknown as (
+      cities: typeof CITIES,
+      selected: null,
+    ) => unknown;
+    expect(untypedCall(CITIES, null)).toEqual([]);
+  });
+
+  it("pide las ciudades ausentes con claves únicas y sin añadir tiras visibles", () => {
+    const strips = homeCollections(CITIES, "mcbo");
+    const availability = homeAvailabilitySpecs(CITIES, strips);
+    expect(availability.map((spec) => spec.key)).toEqual(["disponibilidad:dc"]);
+    expect(new Set([...strips, ...availability].map((spec) => spec.key)).size).toBe(4);
+    expect(availability[0]).toMatchObject({ cityId: "dc", kind: "city" });
+  });
+
+  it("sólo muestra ciudades con total mostrable y conserva la seleccionada vacía", () => {
+    const totals = new Map([
+      [DC, page([], 0)],
+      ["disponibilidad:mcbo", page([], 2)],
+    ]);
+    expect(homeCityChips(CITIES, null, totals)).toEqual([
+      { cityId: "mcbo", label: "Maracaibo", href: "/?ciudad=maracaibo", selected: false },
+    ]);
+    expect(homeCityChips(CITIES, "dc", totals)).toMatchObject([
+      { cityId: "dc", href: "/", selected: true },
+      { cityId: "mcbo", href: "/?ciudad=maracaibo", selected: false },
+    ]);
+    expect(homeCityChips(CITIES, "narnia", totals).some((chip) => chip.selected)).toBe(false);
+  });
+});
+
 describe("homeCityChips — las fichas de ciudad", () => {
+  const eligible = new Map([
+    [DC, page(["a"], 1)],
+    [MCBO, page(["b"], 1)],
+  ]);
   it("emite una ficha por ciudad del catálogo, en su orden", () => {
-    expect(homeCityChips(CITIES, null).map((chip) => chip.label)).toEqual([
+    expect(homeCityChips(CITIES, null, eligible).map((chip) => chip.label)).toEqual([
       "Distrito Capital",
       "Maracaibo",
     ]);
   });
 
   it("sin ciudad elegida ninguna ficha está activa", () => {
-    expect(homeCityChips(CITIES, null).every((chip) => !chip.selected)).toBe(true);
+    expect(homeCityChips(CITIES, null, eligible).every((chip) => !chip.selected)).toBe(true);
   });
 
   it("marca activa exactamente la ciudad elegida", () => {
-    const chips = homeCityChips(CITIES, "mcbo");
+    const chips = homeCityChips(CITIES, "mcbo", eligible);
 
     expect(chips.filter((chip) => chip.selected).map((chip) => chip.cityId)).toEqual(["mcbo"]);
   });
 
   it("una ficha inactiva lleva a su ciudad, con el slug del nombre", () => {
-    const dc = homeCityChips(CITIES, "mcbo").find((chip) => chip.cityId === "dc");
+    const dc = homeCityChips(CITIES, "mcbo", eligible).find((chip) => chip.cityId === "dc");
 
     expect(dc?.href).toBe("/?ciudad=distrito-capital");
   });
@@ -518,13 +616,13 @@ describe("homeCityChips — las fichas de ciudad", () => {
    * inicio completo depende del botón «atrás» del navegador.
    */
   it("la ficha activa vuelve al inicio sin ciudad", () => {
-    const mcbo = homeCityChips(CITIES, "mcbo").find((chip) => chip.cityId === "mcbo");
+    const mcbo = homeCityChips(CITIES, "mcbo", eligible).find((chip) => chip.cityId === "mcbo");
 
     expect(mcbo?.href).toBe("/");
   });
 
   it("sin catálogo no hay fichas que dibujar", () => {
-    expect(homeCityChips([], null)).toEqual([]);
+    expect(homeCityChips([], null, eligible)).toEqual([]);
   });
 });
 
