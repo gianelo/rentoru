@@ -15,7 +15,7 @@
 
 ## C2 — Resolver ciudad vacía en dominio y servirla en resultados
 
-**Estado:** verificado, pendiente de registrar commit.
+**Estado:** verificado y commiteado (`8dca138`; evidencia `81340b7`).
 
 - [x] `cityEmptyLanding` en `src/modules/listing-discovery/domain/home-collections.ts` exige URL sin filtros y `cityTotal === total === 0` (falla cerrado ante señales contradictorias); comparte el constructor de `HomeLanding` con el inicio sin fabricar una vista. `home-collections.test.ts` («reutiliza la landing completa para la ciudad canónica sin inventario», «rechaza filtros, inventario activo y totales contradictorios») prueba positivos y negativos.
 - [x] `app/alquiler/[ciudad]/page.tsx` dibuja la decisión de dominio dentro del mismo `Container`, conserva Nav/GET y los estados de resultados restantes. `app/alquiler/[ciudad]/busqueda-sin-javascript.test.tsx` («sirve La Guaira sin encabezado de resultados en su slug canónico», «caracteriza metadata canónica y filtros de La Guaira», «sirve la landing completa y el GET de Nav en la ciudad canónica sin avisos», «no confunde una búsqueda filtrada ni avisos sin portada con ciudad vacía») protege el **HTML servido**, CTA y SEO. RED real 3 pruebas (2 dominio, 1 HTML); el test adicional de La Guaira falló sin `Container` y GREEN tras el ajuste; caracterización SEO ya era GREEN. Mutación de regla y de cableado hizo fallar las nuevas pruebas de HTML, ambas restauradas. Verificador independiente: 84/84, typecheck, Biome 4 archivos y diff check verdes. Commit de C2: `8dca138`.
@@ -24,9 +24,9 @@
 
 ## C3 — Verificar el conjunto y registrar evidencia
 
-**Estado:** en curso; C1/C2 acumulan 319 líneas revisables antes de este registro y de los checks globales.
+**Estado:** en curso; `origin/dev` avanzó por F31 (#356) sin rutas coincidentes, así que falta verificar el árbol combinado antes de publicar.
 
-- [ ] Tests focalizados y unitarios, typecheck, lint, lint:tokens, build, budget:bundle, `git diff --check` y revisión de tamaño; integración/E2E completos sólo si hay base de prueba propia o por CI tras autorización de entrega.
-- [ ] Registrar resultados, límites y commits aquí; cerrar el último work-unit commit. Si un check falla, mantener tarea abierta y corregir antes de afirmar cierre. Commit: pendiente.
+- [ ] Sobre base anterior `4ea928e`, verificador independiente: `pnpm test:unit` **3124/3124** (278 archivos), typecheck, lint (7 warnings y 2 infos no bloqueantes), lint:tokens (289 hojas), build (23 páginas) y bundle **112,43/130 KB gzip**, diff check verdes. 315 líneas commiteadas antes de este registro (282 de código revisable); falta sincronizar y repetir checks del árbol combinado. Integración/E2E completos no se ejecutaron localmente: ninguna base F30/F31 fue usada; se dejan a CI del nuevo PR.
+- [ ] Registrar resultados tras sincronización, límites y commit final; si un check falla, mantener tarea abierta y corregir antes de afirmar cierre. Commit: pendiente.
 
-**Entrega:** pendiente de implementación y verificación. El PR #354 ya fusionado pertenece a la landing del inicio, no a esta corrección nueva.
+**Entrega:** el fundador indicó que la prueba manual local «va bien» y autorizó **commit, push y PR a `dev`**, no merge. El PR #354 ya fusionado pertenece a la landing del inicio, no a esta corrección nueva.
