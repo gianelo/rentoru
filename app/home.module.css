@@ -50,11 +50,6 @@
 
 .invite {
   box-sizing: border-box;
-  min-block-size: calc(100svh - var(--nav-h) - 2 * var(--home-invite-margin));
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  margin-block: var(--home-invite-margin);
   padding: 24px;
   background: var(--surface);
 }
@@ -161,7 +156,6 @@
   }
 
   .invite {
-    min-block-size: calc(100svh - var(--nav-h-desktop) - 2 * var(--home-invite-margin));
     padding: 48px;
   }
 
