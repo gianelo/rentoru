@@ -1,6 +1,6 @@
 import { buildListingGrid, type GridCard, type GridCover, type GridListing } from "./listing-grid";
 import { slugify } from "./listing-url";
-import { resolveCityRoute } from "./zone-route";
+import { isFilteredZoneRoute, resolveCityRoute } from "./zone-route";
 
 /**
  * El inicio: qué colecciones existen, cuáles se dibujan y qué promete cada una.
@@ -174,6 +174,14 @@ export function homeLanding(
 ): HomeLanding | null {
   if (!home.invitesToPublish) return null;
 
+  return buildLandingModel(selectedCity, cities);
+}
+
+/** Copia y promesas compartidas entre inicio y ciudad canónica vacía. */
+function buildLandingModel(
+  selectedCity: HomeCity | null,
+  cities: readonly HomeCity[],
+): HomeLanding {
   const lead = selectedCity
     ? `Todavía no hay avisos disponibles en ${selectedCity.name}. Si alquilas una vivienda de larga estadía allí, puedes anunciarla aquí.`
     : cities.length === 0
@@ -192,6 +200,17 @@ export function homeLanding(
     ],
     disclaimer: "Rentoru no recibe pagos ni escribe contratos.",
   };
+}
+
+/** La ciudad vacía usa la misma propuesta del inicio, sólo en su ruta canónica. */
+export function cityEmptyLanding(
+  city: HomeCity,
+  cities: readonly HomeCity[],
+  query: Record<string, string | undefined>,
+  counts: { readonly cityTotal: number; readonly total: number },
+): HomeLanding | null {
+  if (isFilteredZoneRoute(query) || counts.cityTotal !== 0 || counts.total !== 0) return null;
+  return buildLandingModel(city, cities);
 }
 
 /**

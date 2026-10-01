@@ -15,10 +15,12 @@
 
 ## C2 — Resolver ciudad vacía en dominio y servirla en resultados
 
-**Estado:** en curso tras verificar C1.
+**Estado:** verificado, pendiente de registrar commit.
 
-- [ ] Función pura que exige URL sin filtros y `cityTotal === 0`, con modelo de landing de la ciudad sin duplicar la copia; pruebas negativas para filtro sin coincidencias, inventario activo sin portadas y estado no canónico.
-- [ ] `app/alquiler/[ciudad]/page.tsx` sólo renderiza la decisión, conservando Nav y GET. Pruebas del **HTML servido** sin JavaScript: ciudad vacía recibe CTA y texto de su ciudad; búsqueda filtrada vacía mantiene sus salidas, inventario sin portada no invita a publicar, metadata de filtros conserva noindex. RED → GREEN → mutación y restauración. Commit: pendiente.
+- [x] `cityEmptyLanding` en `src/modules/listing-discovery/domain/home-collections.ts` exige URL sin filtros y `cityTotal === total === 0` (falla cerrado ante señales contradictorias); comparte el constructor de `HomeLanding` con el inicio sin fabricar una vista. `home-collections.test.ts` («reutiliza la landing completa para la ciudad canónica sin inventario», «rechaza filtros, inventario activo y totales contradictorios») prueba positivos y negativos.
+- [x] `app/alquiler/[ciudad]/page.tsx` dibuja la decisión de dominio dentro del mismo `Container`, conserva Nav/GET y los estados de resultados restantes. `app/alquiler/[ciudad]/busqueda-sin-javascript.test.tsx` («sirve La Guaira sin encabezado de resultados en su slug canónico», «caracteriza metadata canónica y filtros de La Guaira», «sirve la landing completa y el GET de Nav en la ciudad canónica sin avisos», «no confunde una búsqueda filtrada ni avisos sin portada con ciudad vacía») protege el **HTML servido**, CTA y SEO. RED real 3 pruebas (2 dominio, 1 HTML); el test adicional de La Guaira falló sin `Container` y GREEN tras el ajuste; caracterización SEO ya era GREEN. Mutación de regla y de cableado hizo fallar las nuevas pruebas de HTML, ambas restauradas. Verificador independiente: 84/84, typecheck, Biome 4 archivos y diff check verdes. Commit: registrar al cerrar.
+
+**Límite de C2:** no hubo navegador real ni base de prueba propia; `renderToStaticMarkup` afirma HTML sin ejecutar JavaScript. CI/E2E completos siguen pendientes de una entrega autorizada.
 
 ## C3 — Verificar el conjunto y registrar evidencia
 

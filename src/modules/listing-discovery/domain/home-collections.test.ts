@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildHome,
+  cityEmptyLanding,
   HOME_BUDGET_CEILING_USD,
   HOME_SEARCH_LABEL,
   HOME_STRIP_SIZE,
@@ -351,6 +352,25 @@ describe("landing de lanzamiento", () => {
       BASE_URL,
     );
     expect(homeLanding(home, null, CITIES)).toBeNull();
+  });
+});
+
+describe("landing de ciudad vacía", () => {
+  it("reutiliza la landing completa para la ciudad canónica sin inventario", () => {
+    expect(cityEmptyLanding(CITIES[0], CITIES, {}, { cityTotal: 0, total: 0 })?.lead).toContain(
+      "Distrito Capital",
+    );
+    expect(cityEmptyLanding(CITIES[0], CITIES, {}, { cityTotal: 0, total: 0 })?.facts).toHaveLength(
+      3,
+    );
+  });
+
+  it("rechaza filtros, inventario activo y totales contradictorios", () => {
+    expect(
+      cityEmptyLanding(CITIES[0], CITIES, { min: "5000" }, { cityTotal: 0, total: 0 }),
+    ).toBeNull();
+    expect(cityEmptyLanding(CITIES[0], CITIES, {}, { cityTotal: 2, total: 0 })).toBeNull();
+    expect(cityEmptyLanding(CITIES[0], CITIES, {}, { cityTotal: 0, total: 1 })).toBeNull();
   });
 });
 

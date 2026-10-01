@@ -12,6 +12,7 @@ import { boundedVocabulary } from "@/modules/listing-catalogue/domain/bounded-vo
 import { homeSearchForm } from "@/modules/listing-catalogue/domain/search-destination";
 import { resolveSearchPill } from "@/modules/listing-catalogue/domain/search-pill";
 import { DrizzleCatalogue } from "@/modules/listing-catalogue/infrastructure/drizzle-catalogue";
+import { cityEmptyLanding } from "@/modules/listing-discovery/domain/home-collections";
 import { buildListingGrid } from "@/modules/listing-discovery/domain/listing-grid";
 import {
   cityRoutePath,
@@ -38,6 +39,7 @@ import { resolveZoneTokens, toSearchZones } from "@/modules/listing-search/domai
 import { DrizzleFacetedSearch } from "@/modules/listing-search/infrastructure/drizzle-faceted-search";
 import { DrizzleListingSearch } from "@/modules/listing-search/infrastructure/drizzle-listing-search";
 import { db } from "@/shared/db/client";
+import { LaunchLanding } from "../../_components/LaunchLanding";
 import { readNavAccountFlags } from "../../_lib/nav-account";
 import { readSession } from "../../_lib/session";
 
@@ -224,6 +226,7 @@ export default async function CiudadPage({ params, searchParams }: CiudadProps) 
   });
 
   const total = counts.total;
+  const landing = cityEmptyLanding(city, cities, rawQuery, counts);
 
   // **La barra del producto** (14a), en lugar de la barra resumen que sólo
   // existía bajo 768 px. Lo que aquélla llevaba —dónde se está buscando, el
@@ -338,38 +341,45 @@ export default async function CiudadPage({ params, searchParams }: CiudadProps) 
 
           Que esté abierto o no lo decide la dirección, no esta página:
           `SearchPanel` devuelve `null` cuando el dominio dice que está cerrado. */}
-      <SearchPanel model={panel} />
-
-      <Container>
-        {/* **El encabezado de resultados, compartido con la ruta de zona**
+      {landing ? (
+        <Container>
+          <LaunchLanding landing={landing} />
+        </Container>
+      ) : (
+        <>
+          <SearchPanel model={panel} />
+          <Container>
+            {/* **El encabezado de resultados, compartido con la ruta de zona**
             (tasks.md 22.6): miga de pan, título, avisos, conteo con el orden
             y las fichas de filtro puesto. `SearchResultsHeader` es el único
             sitio donde se dibuja — dos hojas y dos bloques de JSX idénticos
             dejaron de ser dos cosas que mantener sincronizadas. */}
-        <SearchResultsHeader
-          crumbs={crumbs}
-          backLink={resultsBackLink({ kind: "city", city })}
-          title={`Alquiler en ${city.name}`}
-          notice={notice}
-          priceNotices={priceNotices}
-          countText={countText}
-          orderMenu={buildOrderMenu(cityPath, query)}
-          chips={panel.chips}
-          clearAllHref={panel.clearAllHref}
-        />
+            <SearchResultsHeader
+              crumbs={crumbs}
+              backLink={resultsBackLink({ kind: "city", city })}
+              title={`Alquiler en ${city.name}`}
+              notice={notice}
+              priceNotices={priceNotices}
+              countText={countText}
+              orderMenu={buildOrderMenu(cityPath, query)}
+              chips={panel.chips}
+              clearAllHref={panel.clearAllHref}
+            />
 
-        {/* **La carcasa de resultados, misma razón** (tasks.md 22.6): la
+            {/* **La carcasa de resultados, misma razón** (tasks.md 22.6): la
             página que ya no existe, el vacío, la cuadrícula y la paginación
             —«la consulta ya recortaba a 24 y la página no ofrecía ni un
             enlace» (14.10)— también se dibujaban dos veces. */}
-        <SearchResultsList
-          pagination={pagination}
-          pageHref={pageHref}
-          total={total}
-          cards={cards}
-          outcome={outcome}
-        />
-      </Container>
+            <SearchResultsList
+              pagination={pagination}
+              pageHref={pageHref}
+              total={total}
+              cards={cards}
+              outcome={outcome}
+            />
+          </Container>
+        </>
+      )}
     </>
   );
 }
