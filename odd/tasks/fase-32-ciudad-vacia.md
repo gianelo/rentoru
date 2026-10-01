@@ -11,9 +11,11 @@
 ## C1 — Extraer sólo presentación compartida
 
 - [x] `app/_components/LaunchLanding.tsx` recibe `HomeLanding` ya resuelto y reutiliza `app/home.module.css`; `app/page.tsx` mantiene el HTML, CTA, tokens y semántica. Prueba: `app/_components/LaunchLanding.test.tsx`, más `app/inicio-servido.test.tsx`.
-- [x] RED real: importación ausente (falló 1); GREEN 1/1 y regresión 27/27; mutación del `href` del CTA hizo fallar **esta** prueba (1/1), restaurada a GREEN. Verificador independiente: Biome 3 archivos, 27/27 y `git diff --check` verdes. Instalación aislada `pnpm install --frozen-lockfile --ignore-scripts`, sin modificar lockfile. Commit: registrar al cerrar.
+- [x] RED real: importación ausente (falló 1); GREEN 1/1 y regresión 27/27; mutación del `href` del CTA hizo fallar **esta** prueba (1/1), restaurada a GREEN. Verificador independiente: Biome 3 archivos, 27/27 y `git diff --check` verdes. Instalación aislada `pnpm install --frozen-lockfile --ignore-scripts`, sin modificar lockfile. Commit de C1: `197b3be`.
 
 ## C2 — Resolver ciudad vacía en dominio y servirla en resultados
+
+**Estado:** en curso tras verificar C1.
 
 - [ ] Función pura que exige URL sin filtros y `cityTotal === 0`, con modelo de landing de la ciudad sin duplicar la copia; pruebas negativas para filtro sin coincidencias, inventario activo sin portadas y estado no canónico.
 - [ ] `app/alquiler/[ciudad]/page.tsx` sólo renderiza la decisión, conservando Nav y GET. Pruebas del **HTML servido** sin JavaScript: ciudad vacía recibe CTA y texto de su ciudad; búsqueda filtrada vacía mantiene sus salidas, inventario sin portada no invita a publicar, metadata de filtros conserva noindex. RED → GREEN → mutación y restauración. Commit: pendiente.
