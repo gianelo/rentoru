@@ -1,6 +1,6 @@
 "use server";
 
-import { SIGN_OUT_DESTINATION } from "../domain/sign-out-destination";
+import { safeSignOutDestination } from "../domain/sign-out-destination";
 
 /**
  * Cerrar sesión (tasks.md 28.11) — la MISMA acción para el menú de cuenta
@@ -14,7 +14,7 @@ import { SIGN_OUT_DESTINATION } from "../domain/sign-out-destination";
  * dispararlo. Es la misma razón que `activarBorrador`
  * (`app/mis-avisos/actions.ts`) ya documenta para activar un aviso.
  *
- * A dónde vuelve lo decide `SIGN_OUT_DESTINATION`, nunca esta pieza.
+ * A dónde vuelve lo decide `safeSignOutDestination` en el dominio, nunca esta pieza.
  *
  * **`auth.ts` entra por importación diferida y no arriba**, la misma razón
  * que `(auth)/signin/actions.ts` ya documenta para la base: `auth.ts`
@@ -24,7 +24,7 @@ import { SIGN_OUT_DESTINATION } from "../domain/sign-out-destination";
  * importación estática de `auth.ts` la arrastraría a cada página del sitio
  * sin que nada la necesite todavía.
  */
-export async function signOutAction(): Promise<void> {
+export async function signOutAction(formData?: FormData): Promise<void> {
   const { signOut } = await import("./auth");
-  await signOut({ redirectTo: SIGN_OUT_DESTINATION });
+  await signOut({ redirectTo: safeSignOutDestination(formData?.get("pathname")) });
 }

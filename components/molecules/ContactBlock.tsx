@@ -44,6 +44,7 @@ export interface ContactBlockProps {
    * hay nada que decir» y no se dibuja ninguna línea.
    */
   readonly verificationNotice: string | null;
+  readonly error: string | null;
   readonly expiresAt: Date;
   readonly zoneName: string;
   readonly zoneHref: string;
@@ -127,6 +128,7 @@ export function ContactBlock({
   revealAction,
   hasSession,
   verificationNotice,
+  error,
   expiresAt,
   zoneName,
   zoneHref,
@@ -199,11 +201,17 @@ export function ContactBlock({
                     inquilino y dejaría el revelado costando un clic, que es
                     justo el costo que este campo existe para cobrar. El
                     `defaultValue` vacío sale del propio `Field`. */}
-                <Field name="message" label="Tu mensaje para quien publica" required>
+                <Field
+                  name="message"
+                  label="Tu mensaje para quien publica"
+                  error={error ?? undefined}
+                  help="Escribí con tus palabras qué querés consultar. El ejemplo no se envía."
+                  required
+                >
                   {(attrs) => (
                     <textarea
                       {...attrs}
-                      rows={3}
+                      rows={4}
                       required
                       placeholder={defaultRevealMessage(listingTitle)}
                     />
@@ -222,7 +230,7 @@ export function ContactBlock({
                  sigue cobrándose antes del contacto, sólo que después de la
                  puerta y no antes. */
               <div className={styles.control}>
-                <ActionLink href={doorHref}>
+                <ActionLink href={doorHref} data-contact-door-trigger="">
                   {lockedLabel(contact.method, publisherType)}
                 </ActionLink>
               </div>
@@ -258,7 +266,7 @@ export function ContactBlock({
               </ActionLink>
             </div>
 
-            <div className={styles.copy}>
+            <div className={styles.copy} data-method={contact.method}>
               <CopyContact
                 value={contact.value}
                 label={`Copiar el ${contactChannelNoun(contact.method)}`}

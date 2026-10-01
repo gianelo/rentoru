@@ -49,24 +49,33 @@
 }
 
 .invite {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 12px;
-  margin-block: 32px;
+  box-sizing: border-box;
+  margin-block: var(--home-invite-outer-gap);
   padding: 24px;
-  border: 1px solid var(--line);
-  border-radius: var(--r);
   background: var(--surface);
+}
+
+.inviteLayout {
+  display: grid;
+  gap: 28px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  font-family: var(--sans);
+  font-size: var(--meta-fs);
+  font-weight: 700;
+  color: var(--soft);
 }
 
 .inviteTitle {
   margin: 0;
   font-family: var(--sans);
-  font-size: var(--title-fs);
+  font-size: var(--home-hero-fs);
   font-weight: var(--title-fw);
-  line-height: var(--title-lh);
+  line-height: 1.17;
   color: var(--ink);
+  max-inline-size: 660px;
 }
 
 .inviteText {
@@ -74,13 +83,18 @@
   font-family: var(--sans);
   font-size: var(--control-fs);
   line-height: 1.55;
-  color: var(--soft);
+  color: var(--ink);
+  max-inline-size: 520px;
+  margin-block-start: 16px;
 }
 
+/* A diferencia del dock estático del board, el Nav real se oculta al hacer
+   scroll: el CTA inline sigue disponible también en móvil y sin JavaScript. */
 .inviteAction {
   min-block-size: var(--target-min);
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  margin-block-start: 24px;
   padding-inline: 20px;
   border-radius: var(--r);
   background: var(--accent);
@@ -97,6 +111,41 @@
   outline-offset: 2px;
 }
 
+.ledger {
+  margin: 0;
+  padding: 12px 20px;
+  border-radius: var(--r);
+  background: var(--bg);
+}
+
+.fact {
+  padding-block: 12px;
+  border-block-end: 1px solid var(--line);
+}
+
+.fact:last-child {
+  border: 0;
+}
+
+.fact dt,
+.disclaimer {
+  font-family: var(--sans);
+  font-size: var(--meta-fs);
+  color: var(--soft);
+}
+
+.fact dd {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: var(--control-fs);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.disclaimer {
+  margin-block: 16px 0;
+}
+
 /* ---------- 768 px en adelante: la disposición de escritorio ----------
 
    El mismo marcado, otra disposición. La lámina de 1280 pone la búsqueda entre
@@ -105,6 +154,31 @@
 @media (min-width: 768px) {
   .chips {
     padding-block: 14px;
+  }
+
+  .invite {
+    margin-block: var(--home-invite-outer-gap-desktop);
+    padding: 48px;
+  }
+
+  .inviteTitle {
+    font-size: var(--home-hero-fs-tablet);
+  }
+
+  .inviteLayout {
+    grid-template-columns: 3fr 2fr;
+    align-items: center;
+    gap: 48px;
+  }
+
+  .ledger {
+    padding: 32px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .inviteTitle {
+    font-size: var(--home-hero-fs-desktop);
   }
 }
 

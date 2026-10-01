@@ -51,8 +51,32 @@ export function PhotoViewerKeys() {
       link.click();
     }
 
+    const image = document.querySelector<HTMLImageElement>("img[data-viewer-large]");
+    let start: { x: number; y: number } | null = null;
+    function touchStart(event: TouchEvent) {
+      const touch = event.touches[0];
+      start = touch ? { x: touch.clientX, y: touch.clientY } : null;
+    }
+    function touchEnd(event: TouchEvent) {
+      const touch = event.changedTouches[0];
+      if (!start || !touch) return;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      start = null;
+      if (Math.abs(dx) < 50 || Math.abs(dx) <= Math.abs(dy)) return;
+      const selector = dx < 0 ? KEY_TARGETS.ArrowRight : KEY_TARGETS.ArrowLeft;
+      if (!selector) return;
+      const link = document.querySelector<HTMLAnchorElement>(selector);
+      link?.click();
+    }
     window.addEventListener("keydown", handle);
-    return () => window.removeEventListener("keydown", handle);
+    image?.addEventListener("touchstart", touchStart, { passive: true });
+    image?.addEventListener("touchend", touchEnd, { passive: true });
+    return () => {
+      window.removeEventListener("keydown", handle);
+      image?.removeEventListener("touchstart", touchStart);
+      image?.removeEventListener("touchend", touchEnd);
+    };
   }, []);
 
   // No dibuja nada: la pantalla entera ya está en el servidor.

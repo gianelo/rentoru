@@ -230,11 +230,20 @@ describe("reglas transversales de la hoja", () => {
     expect(css).not.toMatch(/opacity/);
   });
 
-  it("declara un único punto de quiebre, el del proyecto", () => {
+  it("usa sólo 768px para el diseño de escritorio y 1023px para ocultar flechas táctiles", () => {
     const queries = [...css.matchAll(/@media([^{]+)\{/g)].map((match) => match[1]?.trim());
 
-    expect(queries.length).toBeGreaterThan(0);
-    expect(new Set(queries)).toEqual(new Set(["(min-width: 768px)"]));
+    expect(queries).toHaveLength(2);
+    expect(new Set(queries)).toEqual(new Set(["(min-width: 768px)", "(max-width: 1023px)"]));
+    expect(css).toMatch(
+      /@media \(max-width: 1023px\)\s*\{[^}]*\.previous,\s*\.next\s*\{[^}]*pointer-events:\s*none;/,
+    );
+    expect(css).toMatch(
+      /@media \(max-width: 1023px\)\s*\{[^}]*\.previous,\s*\.next\s*\{[^}]*\}[^}]*\.arrow\s*\{[^}]*visibility:\s*hidden;/,
+    );
+    expect(css).toMatch(
+      /@media \(min-width: 768px\)\s*\{[^}]*\.previous,\s*\.next\s*\{[^}]*width:\s*var\(--viewer-arrow-size\);/,
+    );
   });
 
   /** Las zonas de toque de cada lado son del diseño, y salen de un token. */

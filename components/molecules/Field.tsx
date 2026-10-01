@@ -78,7 +78,14 @@ export function Field({
         name,
         defaultValue: value,
         className: error ? `${styles.control} ${styles.controlInvalid}` : styles.control,
-        ...(error ? { "aria-invalid": "true", "aria-describedby": `${name}-error` } : {}),
+        ...(error ? { "aria-invalid": "true" } : {}),
+        ...(error || help
+          ? {
+              "aria-describedby": [error && `${name}-error`, help && `${name}-help`]
+                .filter(Boolean)
+                .join(" "),
+            }
+          : {}),
       })}
 
       {error ? (
@@ -86,7 +93,11 @@ export function Field({
           {error}
         </p>
       ) : null}
-      {help ? <p className={styles.help}>{help}</p> : null}
+      {help ? (
+        <p className={styles.help} id={`${name}-help`}>
+          {help}
+        </p>
+      ) : null}
     </div>
   );
 }

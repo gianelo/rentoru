@@ -61,10 +61,11 @@ vi.mock("@/modules/listing-trust/application/report-listing", async (importOrigi
 
 import { UnauthenticatedError } from "@/modules/identity/application/require-authenticated-session";
 import { ListingNotFoundError } from "@/modules/listing-trust/application/report-listing";
+import { InvalidReportReasonError } from "@/modules/listing-trust/domain/report-reason";
 import { REPORT_SENT_PARAM } from "@/modules/listing-trust/domain/report-screen";
 import { reportarAviso } from "./actions";
 
-const FICHA = "/alquiler/caracas/chacao/apartamento-listing-1";
+const FICHA = "/alquiler/caracas/chacao/apartamento-3f7b1c2a-1234-5678-9abc-def012345678";
 const REPORTAR = `${FICHA}/reportar`;
 const ACUSE = `${REPORTAR}?${REPORT_SENT_PARAM}`;
 
@@ -73,6 +74,8 @@ function submit(overrides: Record<string, string> = {}) {
   for (const [name, value] of Object.entries({
     listingId: "listing-1",
     listingPath: FICHA,
+    reason: "other",
+    explanation: "Detalles",
     ...overrides,
   })) {
     data.set(name, value);
@@ -102,7 +105,24 @@ describe("la acción de reportar — el cable", () => {
   it("le pasa al caso de uso el aviso que vino del formulario", async () => {
     await destinationOf(submit({ listingId: "listing-42" }));
 
-    expect(reportListing).toHaveBeenCalledWith({ listingId: "listing-42" }, expect.anything());
+    expect(reportListing).toHaveBeenCalledWith(
+      { listingId: "listing-42", reason: "other", explanation: "Detalles" },
+      expect.anything(),
+    );
+  });
+});
+
+describe("el motivo inválido", () => {
+  it("returns to the reason error rather than showing success", async () => {
+    reportListing.mockRejectedValueOnce(new InvalidReportReasonError());
+    expect(await destinationOf(submit({ reason: "forged" }))).toBe(`${REPORTAR}?error=motivo`);
+  });
+  it("passes missing reason as untrusted input, never defaults it", async () => {
+    await destinationOf(submit({ reason: "" }));
+    expect(reportListing).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: "" }),
+      expect.anything(),
+    );
   });
 });
 
@@ -178,6 +198,8 @@ describe("cuando la vuelta no es nuestra", () => {
     ["otro origen escrito completo", "https://evil.test/alquiler/x"],
     ["el origen relativo al protocolo", "//evil.test/alquiler/x"],
     ["una pantalla que no es una ficha", "/publicar"],
+    ["una ruta de informe anidada", `${REPORTAR}?enviado`],
+    ["una ficha con slug inválido", "/alquiler/caracas/chacao/forged"],
     ["el campo vacío", ""],
   ])("no reporta nada y manda al inicio con %s", async (_caso, listingPath) => {
     expect(await destinationOf(submit({ listingPath }))).toBe("/");

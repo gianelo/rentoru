@@ -83,6 +83,22 @@ export function buildListingPath({ cityName, zoneName, title, id }: ListingUrlPa
   return `/alquiler/${slugify(cityName)}/${slugify(zoneName)}/${tail}`;
 }
 
+/** Accept only the existing canonical-shaped public detail redirect path. */
+export function safePublicListingPath(candidate: unknown): string | null {
+  if (typeof candidate !== "string") return null;
+  const parts = candidate.split("/");
+  if (parts.length !== 5 || parts[0] !== "" || parts[1] !== "alquiler") return null;
+  const [, , city, zone, tail] = parts;
+  if (!city || !zone || !tail) return null;
+  const segment = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+  if (!segment.test(city) || !segment.test(zone) || !segment.test(tail)) return null;
+  const id = listingIdFromSlug(tail);
+  if (!id) return null;
+  const title = tail === id ? "" : tail.slice(0, -(id.length + 1));
+  if (title.length > MAX_SLUG_LENGTH || (title && !segment.test(title))) return null;
+  return candidate;
+}
+
 /**
  * The listing id carried by the last path segment, or `null` when the
  * segment is not one this module could have produced.

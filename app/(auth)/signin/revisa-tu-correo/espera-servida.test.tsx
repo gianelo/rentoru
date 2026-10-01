@@ -102,6 +102,9 @@ describe("la pantalla de espera sale entera en el HTML (15.9)", () => {
     const html = await servida();
 
     expect(titulo(html)).toBe("Revisá tu correo");
+    expect(html).not.toContain("Al entrar aceptás los ");
+    expect(html).not.toContain('href="/legal/terminos"');
+    expect(html).not.toContain('href="/legal/privacidad"');
     // La frase entera y la dirección DENTRO del `<b>`: la lámina la destaca, y
     // afirmar sólo que la cadena aparece pasaría con la dirección en cualquier
     // parte del documento.

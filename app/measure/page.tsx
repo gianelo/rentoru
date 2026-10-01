@@ -472,6 +472,7 @@ export default async function MeasureHarnessPage({
                     // abajo, montada aparte.
                     hasSession={true}
                     verificationNotice={null}
+                    error={null}
                     expiresAt={new Date("2026-09-12T00:00:00.000Z")}
                     zoneName="Chacao"
                     zoneHref="/alquiler/distrito-capital/chacao"
@@ -483,6 +484,35 @@ export default async function MeasureHarnessPage({
           />
         </Container>
       </div>
+
+      {params.revealed === "1" && (
+        <Container>
+          {(["email", "whatsapp", "telefono"] as const).map((method) => (
+            <div key={method} data-testid={`revealed-${method}`} style={{ maxWidth: 420 }}>
+              <ContactBlock
+                contact={{
+                  state: "revealed",
+                  method,
+                  value: method === "email" ? "publisher@example.invalid" : "+58 412 7654321",
+                  message: null,
+                }}
+                publisherType="owner"
+                publisherName="María F."
+                listingId="00000000-0000-4000-8000-000000000000"
+                listingTitle="Apartamento en Chacao"
+                revealAction={measureRevealAction}
+                hasSession={true}
+                verificationNotice={null}
+                error={null}
+                expiresAt={new Date("2026-09-12T00:00:00.000Z")}
+                zoneName="Chacao"
+                zoneHref="/alquiler/distrito-capital/chacao"
+                doorHref="/alquiler/distrito-capital/chacao/apartamento-medida"
+              />
+            </div>
+          ))}
+        </Container>
+      )}
 
       {/* **La puerta, montada de verdad** (15.8): el mismo componente que sirve
           la ficha, para que la medición lea geometría dibujada. */}

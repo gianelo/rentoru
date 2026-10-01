@@ -12,6 +12,8 @@ export interface NewListingReport {
   readonly listingId: string;
   readonly reporterId: string;
   readonly reportedAt: Date;
+  readonly reason?: string;
+  readonly explanation?: string;
 }
 
 export interface ListingReportPort {

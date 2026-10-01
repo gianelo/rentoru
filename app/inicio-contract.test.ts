@@ -26,6 +26,25 @@ const PAGE = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
  * el texto crudo se quejaría justamente de la frase que documenta la regla.
  */
 const CODE = PAGE.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+const HOME_CSS = readFileSync(new URL("./home.module.css", import.meta.url), "utf8");
+
+describe("la altura natural del inicio vacío", () => {
+  it("separa el panel de Nav y footer con margen exterior tokenizado, sin perder padding ni altura natural", () => {
+    const inviteRules = [...HOME_CSS.matchAll(/\.invite\s*\{([^}]*)\}/g)].map((match) => match[1]);
+    expect(inviteRules).toHaveLength(2);
+    expect(inviteRules[0]).toMatch(/padding:\s*24px\s*;/);
+    expect(inviteRules[1]).toMatch(/padding:\s*48px\s*;/);
+    expect(inviteRules[0]).toMatch(/margin-block:\s*var\(--home-invite-outer-gap\)\s*;/);
+    expect(inviteRules[1]).toMatch(/margin-block:\s*var\(--home-invite-outer-gap-desktop\)\s*;/);
+    for (const declarations of inviteRules) {
+      expect(declarations).not.toMatch(/(?:min-|max-)?(?:block-size|height)\s*:/);
+      expect(declarations).not.toMatch(
+        /(?:justify-content|place-content|align-content)\s*:\s*center\s*;/,
+      );
+      expect(declarations).not.toMatch(/(?:svh|dvh|vh)/);
+    }
+  });
+});
 
 describe("el inicio y el dominio que lo decide", () => {
   it("la guarda: el archivo que se está midiendo es el inicio", () => {
@@ -67,12 +86,12 @@ describe("el inicio y el dominio que lo decide", () => {
    * de ahí salió una barra que aparecía únicamente en ese estado. La lámina la
    * dibuja arriba de todo, con las cuatro tiras debajo.
    */
-  it("dibuja la barra antes de decidir si hay oferta que mostrar", () => {
-    // El sujeto cambió de pieza —`SearchBar` pasó a ser la pastilla dentro del
-    // `Nav` (14g)— y la regla no: la búsqueda va arriba de todo y no depende
-    // de que haya avisos. Se actualiza a qué mira, nunca qué exige.
+  it("dibuja la barra antes de la rama que muestra la landing o la oferta", () => {
+    // `SearchBar` pasó al `Nav` (14g); la decisión de vacío ahora llega del
+    // dominio como `landing`. La búsqueda sigue antes de las dos alternativas
+    // visibles, sin depender de que haya avisos.
     const bar = PAGE.indexOf("<Nav");
-    const invite = PAGE.indexOf("home.invitesToPublish");
+    const invite = PAGE.indexOf("{landing ? (");
 
     expect(bar).toBeGreaterThan(-1);
     expect(invite).toBeGreaterThan(-1);

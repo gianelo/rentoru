@@ -26,16 +26,21 @@ import type { SearchCriteria } from "@/modules/listing-search/domain/search-crit
 
 const {
   search,
+  sessionForPage,
   listActiveZones,
   findForDetail,
   coversFor,
   allFor,
   findVerifiedAt,
+  findUniquePairs,
+  findRevealable,
+  findLatestMessage,
   notFound,
   permanentRedirect,
   redirect,
 } = vi.hoisted(() => ({
   search: vi.fn(),
+  sessionForPage: vi.fn(async (): Promise<{ user: { id: string } } | null> => null),
   listActiveZones: vi.fn(),
   findForDetail: vi.fn(),
   coversFor: vi.fn(),
@@ -44,6 +49,16 @@ const {
   // antes de dibujarse; `null` es «sin fila», el mismo default en falso que
   // el resto del módulo usa.
   findVerifiedAt: vi.fn(async (): Promise<Date | null> => null),
+  findUniquePairs: vi.fn(async () => [] as { tenantUserId: string; listingId: string }[]),
+  findRevealable: vi.fn(
+    async () =>
+      null as null | {
+        publisherId: string;
+        contactMethod: "whatsapp" | "email";
+        contactValue: string;
+      },
+  ),
+  findLatestMessage: vi.fn(async () => null as string | null),
   notFound: vi.fn(() => {
     throw new Error("NEXT_NOT_FOUND");
   }),
@@ -55,23 +70,31 @@ const {
   }),
 }));
 
-vi.mock("next/navigation", () => ({ notFound, permanentRedirect, redirect }));
+vi.mock("next/navigation", () => ({
+  notFound,
+  permanentRedirect,
+  redirect,
+  usePathname: () => "/",
+}));
 vi.mock("@/shared/db/client", () => ({ db: {} }));
+vi.mock("../../../../_lib/nav-account", () => ({
+  readNavAccountFlags: async () => ({ hasListings: false }),
+}));
 // Anónimo, y sin arrastrar Auth.js: el mismo doble que el resto de las pruebas
 // de render de este repositorio.
 vi.mock("../../../../_lib/session", () => ({
-  readSession: async () => null,
-  requestSessionPort: { getSession: async () => null },
+  readSession: sessionForPage,
+  requestSessionPort: { getSession: sessionForPage },
 }));
 vi.mock("@/modules/contact-reveal/infrastructure/drizzle-contact-reveal", () => ({
   DrizzleContactRevealEvents: class {
-    findLatestMessage = async () => null;
+    findLatestMessage = findLatestMessage;
   },
   DrizzleContactRevealMetrics: class {
-    findUniquePairs = async () => [];
+    findUniquePairs = findUniquePairs;
   },
   DrizzleRevealableListing: class {
-    findRevealable = async () => null;
+    findRevealable = findRevealable;
   },
 }));
 vi.mock("@/modules/listing-discovery/infrastructure/drizzle-listing-detail", () => ({
@@ -127,6 +150,7 @@ const DISTRITO = { id: "ciudad-dc", name: "Distrito Capital" };
 const TIERRA_NEGRA = { id: "zona-tierra-negra", name: "Tierra Negra", cityId: MARACAIBO.id };
 const BELLA_VISTA = { id: "zona-bella-vista", name: "Bella Vista", cityId: MARACAIBO.id };
 const CHACAO = { id: "zona-chacao", name: "Chacao", cityId: DISTRITO.id };
+const COQUIVACOA = { id: "zona-coquivacoa", name: "Coquivacoa", cityId: MARACAIBO.id };
 
 /**
  * Las zonas activas de las DOS ciudades, como las devolvería
@@ -228,6 +252,7 @@ beforeEach(() => {
   process.env.R2_BUCKET_PUBLIC_URL = "https://fotos.rentoru.test";
   process.env.SITE_URL = "https://rentoru.test";
   vi.clearAllMocks();
+  sessionForPage.mockResolvedValue(null);
   findForDetail.mockResolvedValue(detail());
   allFor.mockResolvedValue([]);
   coversFor.mockImplementation(async (ids: readonly string[]) => covers(ids));
@@ -235,7 +260,60 @@ beforeEach(() => {
     ACTIVE_ZONES.filter((zone) => zone.cityId === cityId),
   );
   search.mockResolvedValue([]);
+  findUniquePairs.mockResolvedValue([]);
+  findRevealable.mockResolvedValue(null);
+  findLatestMessage.mockResolvedValue(null);
 });
+
+it("31.6: serves revealed email with native mailto and scoped copy styling hook", async () => {
+  sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+  findForDetail.mockResolvedValue(
+    detail({ status: "active", expiresAt: VIGENTE(), contactMethod: "email" }),
+  );
+  findUniquePairs.mockResolvedValue([{ tenantUserId: "tenant-1", listingId: VENCIDO_ID }]);
+  findRevealable.mockResolvedValue({
+    publisherId: "publisher-1",
+    contactMethod: "email",
+    contactValue: "publisher@example.invalid",
+  });
+  const html = await servedBody();
+  expect(html).toContain('data-testid="contact-value">publisher@example.invalid');
+  expect(html).toMatch(/href="mailto:publisher@example\.invalid\?subject=[^"]*"/);
+  expect(html).toMatch(/<div[^>]*data-method="email"[^>]*><\/div>/);
+});
+
+it.each([
+  { method: "whatsapp" as const, value: TELEFONO, href: "https://wa.me/584127654321?text=" },
+  {
+    method: "email" as const,
+    value: "publisher@example.invalid",
+    href: "mailto:publisher@example.invalid?subject=",
+  },
+])(
+  "serves only the revealed $method channel with the tenant's saved message",
+  async ({ method, value, href }) => {
+    const message = "Hola, quisiera visitar este aviso";
+    sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+    findForDetail.mockResolvedValue(
+      detail({ status: "active", expiresAt: VIGENTE(), contactMethod: method }),
+    );
+    findUniquePairs.mockResolvedValue([{ tenantUserId: "tenant-1", listingId: VENCIDO_ID }]);
+    findRevealable.mockResolvedValue({
+      publisherId: "publisher-1",
+      contactMethod: method,
+      contactValue: value,
+    });
+    findLatestMessage.mockResolvedValue(message);
+    const html = await servedBody();
+    expect(html).toContain(`data-testid="contact-value">${value}`);
+    expect(html).toContain(`href="${href}${encodeURIComponent(message)}"`);
+    expect(html).not.toContain(method === "email" ? "wa.me/" : "mailto:");
+    sessionForPage.mockResolvedValue(null);
+    const anonymous = await servedBody();
+    expect(anonymous).not.toContain(value);
+    expect(anonymous).not.toContain(href);
+  },
+);
 
 /** El cuerpo servido de la ficha, sin ejecutar un solo script. */
 async function servedBody(slug: string = VENCIDO_SLUG, query: Record<string, string> = {}) {
@@ -246,6 +324,77 @@ async function servedBody(slug: string = VENCIDO_SLUG, query: Record<string, str
     }),
   );
 }
+
+it("serves native iPad gallery thumbnails without stale selection when scripts are off", async () => {
+  allFor.mockResolvedValue(
+    [0, 1, 2].map((position) => ({
+      position,
+      photoCount: 3,
+      keys: {
+        strip: `photos/${position}/strip.webp`,
+        detail: `photos/${position}/detail.webp`,
+        thumb: `photos/${position}/thumb.webp`,
+      },
+    })),
+  );
+  const html = await servedBody();
+  const gallery = html.match(/<figure[^>]*data-testid="photo-strip"[\s\S]*?<\/figure>/)?.[0];
+  expect(gallery).toBeDefined();
+  const thumbs = gallery?.match(
+    /<nav[^>]*aria-label="Miniaturas de fotos de la ficha"[\s\S]*?<\/nav>/,
+  )?.[0];
+  expect(thumbs).toBeDefined();
+  for (const n of [1, 2, 3]) expect(thumbs).toContain(`/foto/${n}"`);
+  expect(thumbs).not.toContain('aria-current="true"');
+  expect(gallery).toContain('aria-hidden="true"');
+  expect(gallery).toContain('aria-label="Foto 1 de 3"');
+});
+
+it("31.4: serves an empty four-row message field with its external, announced help", async () => {
+  sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+  findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
+  const html = await servedBody();
+  const textarea = html.match(/<textarea[^>]*name="message"[^>]*>[\s\S]*?<\/textarea>/)?.[0];
+  expect(textarea).toBeDefined();
+  expect(textarea).toContain('rows="4"');
+  expect(textarea).toContain("required");
+  expect(textarea).toContain('placeholder="Hola, vi tu aviso');
+  expect(textarea).toContain('aria-describedby="message-help"');
+  expect(textarea).toMatch(/><\/textarea>$/);
+  expect(html).toContain(
+    'id="message-help">Escribí con tus palabras qué querés consultar. El ejemplo no se envía.</p>',
+  );
+});
+
+it("serves missing-message feedback in the locked authenticated contact form only for the exact marker", async () => {
+  sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+  findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
+  const html = await servedBody(VENCIDO_SLUG, { revelar: "mensaje-requerido" });
+  expect(html).toMatch(
+    /<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error message-help"/,
+  );
+  expect(html).toMatch(/<p[^>]*id="message-error"[^>]*>[^<]*mensaje[^<]*<\/p>/i);
+  expect(html).toContain('data-testid="contact-value">+58 ••• ••• ••••');
+  expect(html).not.toContain(TELEFONO);
+  for (const query of [{} as Record<string, string>, { revelar: "desconocido" }]) {
+    const clean = await servedBody(VENCIDO_SLUG, query);
+    expect(clean).not.toContain('aria-invalid="true"');
+    expect(clean).not.toContain('id="message-error"');
+  }
+});
+
+it("enlaza la zona Coquivacoa desde el HTML servido de la ficha", async () => {
+  findForDetail.mockResolvedValue(detail({ zoneId: COQUIVACOA.id, zoneName: COQUIVACOA.name }));
+  const html = renderToStaticMarkup(
+    await FichaPage({
+      params: Promise.resolve({ ciudad: "maracaibo", zona: "coquivacoa", slug: VENCIDO_SLUG }),
+      searchParams: Promise.resolve({}),
+    }),
+  );
+  expect(html).toMatch(
+    /<a\b[^>]*href="\/alquiler\/maracaibo\/coquivacoa"[^>]*>Ver avisos activos en Coquivacoa<\/a>/,
+  );
+});
 
 /** La zona trae dos activos; la ciudad nunca debería preguntarse. */
 function zonaConAvisos() {
@@ -284,6 +433,49 @@ describe("la búsqueda servida en la ficha", () => {
     expect(html).not.toContain('name="zona"');
     expect(html).toContain("callbackUrl=");
   });
+});
+
+describe("31.3: ubicación legible sin miga navegable", () => {
+  it.each([
+    { parent: null, text: "Apartamento · Tierra Negra · Maracaibo" },
+    {
+      parent: "Municipio Maracaibo",
+      text: "Apartamento · Tierra Negra · Municipio Maracaibo · Maracaibo",
+    },
+  ])(
+    "sirve el tipo, zona, padre opcional y ciudad como texto ($parent)",
+    async ({ parent, text }) => {
+      findForDetail.mockResolvedValue(detail({ zoneParentName: parent }));
+      const html = await servedBody();
+      const location = html.match(/<p\b[^>]*class="[^"]*location[^"]*"[^>]*>[\s\S]*?<\/p>/)?.[0];
+      expect(location).toBeDefined();
+      expect(location).toContain(`>${text}</p>`);
+      expect(location).not.toMatch(/<a\b|<nav\b/);
+      // Una miga envolviendo el párrafo también cambia su semántica.
+      expect(html).not.toMatch(/<nav\b[^>]*>(?:(?!<\/nav>)[\s\S])*?<p\b[^>]*class="[^"]*location/);
+    },
+  );
+
+  it.each([
+    {
+      origin: undefined,
+      label: "Ver avisos en Tierra Negra",
+      href: "/alquiler/maracaibo/tierra-negra",
+    },
+    {
+      origin: "/alquiler/maracaibo?min=200",
+      label: "← Resultados",
+      href: "/alquiler/maracaibo?min=200",
+    },
+  ])(
+    "conserva la vuelta contextual sin convertir la ubicación en enlace ($origin)",
+    async ({ origin, label, href }) => {
+      const html = await servedBody(VENCIDO_SLUG, origin ? { [RETURN_PARAM]: origin } : {});
+      const main = html.slice(html.indexOf("<main"));
+      expect(main).toContain(`href="${href.replaceAll("&", "&amp;")}">${label}</a>`);
+      expect(main.indexOf(`>${label}</a>`)).toBeLessThan(main.indexOf("<h1"));
+    },
+  );
 });
 
 describe("la vuelta vive dentro del contenido, no en la barra (14.54)", () => {
@@ -788,12 +980,27 @@ describe("la puerta del WhatsApp no saca al inquilino de la ficha (15.8)", () =>
     expect(html).toContain("$480");
   });
 
-  /** Las dos salidas son anclas de verdad, y la vuelta de Google es a la ficha. */
+  /** El aviso legal completo viaja en el HTML; la × es la única salida visible. */
   it("sale por esta misma ficha y vuelve a ella después de Google", async () => {
     const html = await servedBody(VENCIDO_SLUG, { entrar: "si" });
 
     expect(html).toContain(`href="${RUTA}"`);
     expect(html).toContain('aria-label="Cerrar sin entrar"');
+    expect(html).toMatch(
+      new RegExp(`<a[^>]*data-contact-door-trigger=""[^>]*href="${RUTA}\\?entrar=si"`),
+    );
+    expect(html).not.toContain("Seguir mirando sin entrar");
+    expect(html).toMatch(new RegExp(`<a[^>]*aria-label="Cerrar sin entrar"[^>]*href="${RUTA}"`));
+    expect(html).toContain("Al entrar aceptás los ");
+    expect(html).toContain('href="/legal/terminos">términos</a>');
+    expect(html).toContain('href="/legal/privacidad">privacidad</a>');
+    expect(html).toContain(
+      ". Rentoru no participa en el trato: no cobramos comisión, no retenemos pagos y no redactamos contratos.",
+    );
+    expect(html).toMatch(/<form\b[^>]*>[\s\S]*?Continuar con Google[\s\S]*?<\/form>/);
+    expect(html).toMatch(
+      /<form\b[^>]*>[\s\S]*?name="correo"[\s\S]*?Enviarme el enlace[\s\S]*?<\/form>/,
+    );
     expect(html).toContain(`name="callbackUrl" value="${RUTA}"`);
   });
 });

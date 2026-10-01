@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { AppLink } from "@/../components/atoms/AppLink";
 import { SelectionChip } from "@/../components/atoms/SelectionChip";
 import type { SearchPillProps } from "@/../components/molecules/SearchPill";
 import { Nav } from "@/../components/organisms/Nav";
@@ -20,9 +19,12 @@ import { DrizzleSearchVocabulary } from "@/modules/listing-catalogue/infrastruct
 import {
   buildHome,
   HOME_CITY_PARAM,
-  homeCityChips,
+  homeAvailabilitySpecs,
+  homeCanPublish,
   homeCollections,
+  homeLanding,
   resolveHomeCity,
+  resolveHomeCityChips,
 } from "@/modules/listing-discovery/domain/home-collections";
 import { DrizzleActiveZones } from "@/modules/listing-discovery/infrastructure/drizzle-active-zones";
 import { DrizzleHomeCollections } from "@/modules/listing-discovery/infrastructure/drizzle-home-collections";
@@ -31,6 +33,7 @@ import { readPhotoPublicBaseUrl } from "@/modules/listing-discovery/infrastructu
 import { db } from "@/shared/db/client";
 import { Container } from "../components/layout/Container";
 import { ListingStrip } from "../components/molecules/ListingStrip";
+import { LaunchLanding } from "./_components/LaunchLanding";
 import { readNavAccountFlags } from "./_lib/nav-account";
 import styles from "./home.module.css";
 
@@ -159,7 +162,10 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // ciudad y no una consecuencia de que la tira de la otra haya desaparecido.
   const specs = homeCollections(cities, selectedCity?.id ?? null);
 
-  const collections = await new DrizzleHomeCollections(db).collectionsFor(specs);
+  const collections = await new DrizzleHomeCollections(db).collectionsFor([
+    ...specs,
+    ...homeAvailabilitySpecs(cities, specs),
+  ]);
 
   // **UNA llamada para todas las portadas de todas las tiras.** Pedirlas por
   // tira serían cuatro viajes, y por aviso hasta veinte — el N+1 clásico
@@ -169,16 +175,17 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // reciente aparece en tres colecciones (14.23) y ahí se queda, pero pedir su
   // portada tres veces sería pedirle a Postgres la misma fila tres veces.
   const listingIds = [
-    ...new Set([...collections.values()].flatMap((page) => page.rows.map((row) => row.id))),
+    ...new Set(specs.flatMap((spec) => collections.get(spec.key)?.rows.map((row) => row.id) ?? [])),
   ];
   const covers = await new DrizzleListingPhotos(db).coversFor(listingIds);
 
   const home = buildHome(specs, collections, covers, readPhotoPublicBaseUrl());
+  const landing = homeLanding(home, selectedCity, cities);
 
   // Qué pregunta la caja, cómo se llama su parámetro y a dónde vuelve, y cuál
   // ficha de ciudad está activa: son decisiones de producto y llegan resueltas.
   const searchForm = homeSearchForm(typed);
-  const cityChips = homeCityChips(cities, selectedCity?.id ?? null);
+  const cityChips = resolveHomeCityChips(home, cities, selectedCity?.id ?? null, collections);
 
   // **La sesión, y lo que cuesta.** Auth.js está en estrategia `database`, así
   // que una lectura CON cookie es un viaje a Postgres. **Sin cookie no cuesta
@@ -196,7 +203,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // no hay sesión y no hay consulta, que es casi todo el tráfico de esta
   // pantalla.
   const account = resolveNavAccount(session, await readNavAccountFlags(session));
-  const publish = resolveNavPublish(account);
+  const publish = resolveNavPublish(account, homeCanPublish(cities));
 
   // La pastilla del inicio es el estado "vacía" (14i): sin zona elegida el
   // filtro no existe como pieza — "sin búsqueda no hay nada que filtrar".
@@ -245,7 +252,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
           navegar — y el estado queda en la URL, que se comparte y se marca.
 
           Acá no se decide nada: cuál está activa, a dónde lleva cada una y qué
-          pasa con lo que ya estaba elegido salen de `homeCityChips`. */}
+          pasa con lo que ya estaba elegido salen de `resolveHomeCityChips`. */}
       {cityChips.length === 0 ? null : (
         <nav className={styles.cities} aria-label="Ciudades">
           <ul className={styles.chips}>
@@ -300,28 +307,11 @@ export default async function InicioPage({ searchParams }: InicioProps) {
       )}
 
       <Container>
-        {/* Un `<h1>` de verdad y visualmente oculto, igual que cuando acá
-            vivían los resultados: la dirección más fuerte del dominio necesita
-            un encabezado en el esquema del documento, y el diseño del inicio
-            arranca directo con la primera tira. */}
-        <h1 className={styles.srOnly}>Alquileres de larga estancia en Venezuela</h1>
-
-        {home.invitesToPublish ? (
-          // **Sin un solo aviso activo el problema no es la demanda, es la
-          // oferta.** Una página que dijera "no hay resultados" le echaría la
-          // culpa a quien llegó; ésta le ofrece lo único que hay para hacer.
-          // Que este estado exista lo decidió el dominio, no esta línea.
-          <section className={styles.invite}>
-            <h2 className={styles.inviteTitle}>Todavía no hay avisos publicados</h2>
-            <p className={styles.inviteText}>
-              Publicar es gratis y no se cobra comisión. Tu aviso queda activo 30 días.
-            </p>
-            <AppLink className={styles.inviteAction} href="/publicar">
-              Publicar un aviso
-            </AppLink>
-          </section>
+        {landing ? (
+          <LaunchLanding landing={landing} />
         ) : (
           <div className={styles.strips}>
+            <h1 className={styles.srOnly}>Alquileres de larga estancia en Venezuela</h1>
             {home.strips.map((strip) => (
               <ListingStrip
                 key={strip.key}

@@ -128,6 +128,7 @@ export default async function VisorPage({ params }: VisorProps) {
       <div className={styles.stage}>
         <img
           className={styles.photo}
+          data-viewer-large
           src={photoUrl(publicBaseUrl, frame.full)}
           // El alternativo sale del dominio y lleva la posición adelante
           // ("Foto 2 de 6 — …", F28): quien usa lector de pantalla necesita
@@ -167,6 +168,18 @@ export default async function VisorPage({ params }: VisorProps) {
           </AppLink>
         ) : null}
       </div>
+
+      <ol className={styles.dots} aria-label="Posición de la foto">
+        {view.photos.map((item) => (
+          <li
+            className={item.current ? styles.dotCurrent : styles.dot}
+            key={item.number}
+            aria-current={item.current ? "true" : "false"}
+          >
+            <span className={styles.srOnly}>{`Foto ${item.number} de ${view.total}`}</span>
+          </li>
+        ))}
+      </ol>
 
       <div className={styles.caption}>
         <span className={styles.title}>{detail.title}</span>

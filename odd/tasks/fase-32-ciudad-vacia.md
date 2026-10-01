@@ -1,0 +1,32 @@
+# Fase 32 — landing en ciudad vacía
+
+**Rama:** `fix/fase-32-ciudad-vacia`, worktree temporal `/Users/gianelo/Documents/Dev/py/rentoru-ciudad-vacia`, creado desde `dev` (`4ea928e`, PR #354 fusionado). No modificar el worktree principal de F31.
+
+**Decisión del fundador:** en `/alquiler/<ciudad>` sin filtros y con `cityTotal === 0`, servir la landing completa «Gratis para publicar. Sin comisión.» ya aprobada en el inicio. Una búsqueda filtrada sin coincidencias, o una ciudad con avisos activos cuyas portadas no permiten mostrar tarjetas, conserva el estado de resultados actual. No cambiar `/alquiler/<ciudad>/<zona>`, SEO de rutas refinadas, búsqueda GET ni lectura sin JavaScript.
+
+**Reglas de implementación:** ninguna decisión de negocio en `app/` o componentes; reutilizar el modelo/copia y el marcado/estilos de la landing, sin inventar otra pantalla. **TDD estricto, fuente: `AGENTS.md` §1**; runner exacto focalizado: `pnpm exec vitest run <ruta-de-test>`. RED antes de GREEN, mutación de la regla y HTML servido que falle si no llega a la ruta. Ningún acceso a la base o contenedor de F30. Pronóstico: ~280–350 líneas authored entre C1/C2/C3; estrategia `ask-on-risk` si la revisión pasa de ~400 líneas. Commit convencional en español por unidad, pruebas y docs junto con comportamiento; push/PR/merge requieren decisión aparte para este nuevo alcance.
+
+**Rutas de trabajo:** C1 y C2 delegadas a `gentle-ai-worker` por múltiples archivos no triviales; C3 a `gentle-ai-verify` por comandos de verificación. Sólo el padre registra evidencia y commits, con un único escritor activo.
+
+## C1 — Extraer sólo presentación compartida
+
+- [x] `app/_components/LaunchLanding.tsx` recibe `HomeLanding` ya resuelto y reutiliza `app/home.module.css`; `app/page.tsx` mantiene el HTML, CTA, tokens y semántica. Prueba: `app/_components/LaunchLanding.test.tsx`, más `app/inicio-servido.test.tsx`.
+- [x] RED real: importación ausente (falló 1); GREEN 1/1 y regresión 27/27; mutación del `href` del CTA hizo fallar **esta** prueba (1/1), restaurada a GREEN. Verificador independiente: Biome 3 archivos, 27/27 y `git diff --check` verdes. Instalación aislada `pnpm install --frozen-lockfile --ignore-scripts`, sin modificar lockfile. Commit de C1: `197b3be`.
+
+## C2 — Resolver ciudad vacía en dominio y servirla en resultados
+
+**Estado:** verificado y commiteado (`8dca138`; evidencia `81340b7`).
+
+- [x] `cityEmptyLanding` en `src/modules/listing-discovery/domain/home-collections.ts` exige URL sin filtros y `cityTotal === total === 0` (falla cerrado ante señales contradictorias); comparte el constructor de `HomeLanding` con el inicio sin fabricar una vista. `home-collections.test.ts` («reutiliza la landing completa para la ciudad canónica sin inventario», «rechaza filtros, inventario activo y totales contradictorios») prueba positivos y negativos.
+- [x] `app/alquiler/[ciudad]/page.tsx` dibuja la decisión de dominio dentro del mismo `Container`, conserva Nav/GET y los estados de resultados restantes. `app/alquiler/[ciudad]/busqueda-sin-javascript.test.tsx` («sirve La Guaira sin encabezado de resultados en su slug canónico», «caracteriza metadata canónica y filtros de La Guaira», «sirve la landing completa y el GET de Nav en la ciudad canónica sin avisos», «no confunde una búsqueda filtrada ni avisos sin portada con ciudad vacía») protege el **HTML servido**, CTA y SEO. RED real 3 pruebas (2 dominio, 1 HTML); el test adicional de La Guaira falló sin `Container` y GREEN tras el ajuste; caracterización SEO ya era GREEN. Mutación de regla y de cableado hizo fallar las nuevas pruebas de HTML, ambas restauradas. Verificador independiente: 84/84, typecheck, Biome 4 archivos y diff check verdes. Commit de C2: `8dca138`.
+
+**Límite de C2:** no hubo navegador real ni base de prueba propia; `renderToStaticMarkup` afirma HTML sin ejecutar JavaScript. CI/E2E completos siguen pendientes de una entrega autorizada.
+
+## C3 — Verificar el conjunto y registrar evidencia
+
+**Estado:** verificado y listo para abrir PR; `520b275` incorporó `origin/dev` (`4512576`, F31 #356) sin conflictos ni rutas F31 en el diff del PR.
+
+- [x] Sobre base `dev` actualizada, verificador independiente: `pnpm test:unit` **3125/3125** (278 archivos), typecheck, lint (7 warnings y 2 infos no bloqueantes), lint:tokens (289 hojas), build (23 páginas) y bundle **112,43/130 KB gzip**, diff check verdes. Los controles previos a sincronizar también pasaron (3124/3124); no se confunden con la evidencia del árbol combinado.
+- [x] 282 líneas de código revisables (315 incluyendo este registro y OpenSpec) contra `origin/dev`, por debajo de 400; 9 rutas exclusivas de F32. Integración/E2E completos **no se ejecutaron localmente** y ninguna base F30/F31 fue usada; corresponden a CI del nuevo PR. El fundador dijo que su prueba local «va bien», sin atribuirle una corrida JS-off o medidas de navegador no reportadas. Commit de evidencia C3: `2c22156`.
+
+**Entrega:** el fundador autorizó **commit, push y PR a `dev`**, no merge. PR [#358](https://github.com/gianelo/rentoru/pull/358) abierto y listo para revisión, base `dev` y head funcional `39e8d11` (commit de entrega); CI de ese head pasó lint, types, tokens, test, build, measure, integration, preview, e2e y budget. Ningún merge autorizado; se esperan checks del registro documental final. El PR #354 ya fusionado pertenece a la landing del inicio, no a esta corrección nueva.

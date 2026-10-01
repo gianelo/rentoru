@@ -13,6 +13,25 @@
  * decides whether it is blank, it never rewrites what the tenant actually
  * wrote.
  */
+import { safeReturnPath } from "@/modules/identity/domain/safe-return-destination";
+import { safePublicListingPath } from "@/modules/listing-discovery/domain/listing-url";
+
+const MARKER = "mensaje-requerido";
+export const REVEAL_FEEDBACK_PARAM = "revelar";
+
+/** The hidden form field is untrusted. Never carry its query or message into feedback. */
+export function missingRevealMessageDestination(doorHref: string): string {
+  const safe = safeReturnPath(doorHref);
+  if (!safe) return "/";
+  const pathname = new URL(safe, "https://destino.invalid").pathname;
+  const detail = safePublicListingPath(pathname);
+  return detail ? `${detail}?${REVEAL_FEEDBACK_PARAM}=${MARKER}` : "/";
+}
+
+export function revealMessageFeedback(raw: string | string[] | undefined): string | null {
+  return raw === MARKER ? "Escribí un mensaje para revelar el contacto." : null;
+}
+
 export class MissingRevealMessageError extends Error {
   constructor() {
     super("reveal-contact: a message to the publisher is required to reveal contact.");

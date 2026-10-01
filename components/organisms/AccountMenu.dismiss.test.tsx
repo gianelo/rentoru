@@ -13,6 +13,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { signOutAction } = vi.hoisted(() => ({ signOutAction: vi.fn(async () => undefined) }));
 vi.mock("@/modules/identity/infrastructure/sign-out-action", () => ({ signOutAction }));
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/alquiler/maracaibo/coquivacoa/piso-99d25b3d-4d23-48d3-b134-f720781b1eb3",
+}));
 const { AccountMenu } = await import("./AccountMenu");
 
 /**
@@ -115,6 +118,12 @@ describe("AccountMenu — se cierra de verdad (28.1)", () => {
    * no aparecía en ninguna parte de `app/` ni `components/`.
    */
   describe("«Cerrar sesión» (28.11)", () => {
+    it("sends the current pathname as data in the POST form", () => {
+      openMenu();
+      expect((container.querySelector('input[name="pathname"]') as HTMLInputElement)?.value).toBe(
+        "/alquiler/maracaibo/coquivacoa/piso-99d25b3d-4d23-48d3-b134-f720781b1eb3",
+      );
+    });
     beforeEach(() => {
       signOutAction.mockClear();
     });

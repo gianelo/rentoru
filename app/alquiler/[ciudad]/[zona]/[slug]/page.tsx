@@ -15,6 +15,10 @@ import { Nav } from "@/../components/organisms/Nav";
 import { SignInDoor } from "@/../components/organisms/SignInDoor";
 import { viewListingContact } from "@/modules/contact-reveal/application/view-listing-contact";
 import {
+  REVEAL_FEEDBACK_PARAM,
+  revealMessageFeedback,
+} from "@/modules/contact-reveal/domain/reveal-message";
+import {
   contactDoorFor,
   DOOR_OPEN_TOKEN,
   DOOR_QUERY_NAME,
@@ -493,6 +497,7 @@ export default async function FichaPage({ params, searchParams }: FichaProps) {
                     // esta página no puede volver a certificar —ni a callar—
                     // por su cuenta lo que `verified_contact` dice.
                     verificationNotice={verificationNotice}
+                    error={revealMessageFeedback(query[REVEAL_FEEDBACK_PARAM])}
                     expiresAt={detail.expiresAt}
                     zoneName={detail.zoneName}
                     zoneHref={`/alquiler/${ciudad}/${zona}`}

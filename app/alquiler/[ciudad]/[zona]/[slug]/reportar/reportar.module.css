@@ -40,6 +40,17 @@
   margin: 0;
 }
 
+.fields {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fields textarea {
+  resize: vertical;
+}
+
 /* **La vuelta al aviso, arriba del contenido** (14.54). Los mismos valores que
    la fila de vuelta de la ficha, que a su vez son los de la miga de pan de la
    zona: es la misma fila del mismo camino. Se comparten los tokens y no la

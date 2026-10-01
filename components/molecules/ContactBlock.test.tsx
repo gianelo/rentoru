@@ -27,6 +27,7 @@ function render(contact: ContactPresentation, overrides: Partial<ContactBlockPro
       revealAction={reveal}
       hasSession={true}
       verificationNotice={null}
+      error={null}
       expiresAt={new Date("2026-09-12T12:00:00.000Z")}
       zoneName="Chacao"
       zoneHref="/alquiler/caracas/chacao"
@@ -75,6 +76,16 @@ describe("quién publica se dice con palabras, no sólo con un tono (14.54)", ()
   it("un aviso sin nombre de publicante no dibuja la línea", () => {
     expect(render(LOCKED, { publisherName: null })).not.toContain("publica como");
   });
+});
+
+it("forwards server error to Field only on the locked form", () => {
+  const html = render(LOCKED, { error: "Escribí un mensaje para revelar el contacto." });
+  expect(html).toMatch(
+    /<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error message-help"/,
+  );
+  expect(html).toContain('id="message-error"');
+  expect(html).toContain("Escribí un mensaje para revelar el contacto.");
+  expect(render(LOCKED)).not.toContain('id="message-error"');
 });
 
 describe("sin cuenta", () => {

@@ -35,7 +35,12 @@ const { findEvidence, findForDetail, findRevealable, notFound, permanentRedirect
 
 const INQUILINO = { userId: "inquilino-1", email: "inquilino@ejemplo.com", name: "Ana" };
 
-vi.mock("next/navigation", () => ({ notFound, permanentRedirect, redirect }));
+vi.mock("next/navigation", () => ({
+  notFound,
+  permanentRedirect,
+  redirect,
+  usePathname: () => "/",
+}));
 vi.mock("@/shared/db/client", () => ({ db: {} }));
 // Con sesión Y con revelación hecha: es el único estado en el que la línea de
 // verificación se dibuja, y el que la prueba de `ficha-servida` no cubre

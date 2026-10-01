@@ -37,9 +37,10 @@ import {
  * Los dientes se los dan las mutaciones anotadas en `tasks.md`.
  */
 
-const { search, countFacets } = vi.hoisted(() => ({
+const { search, countFacets, listCities } = vi.hoisted(() => ({
   search: vi.fn(),
   countFacets: vi.fn(),
+  listCities: vi.fn(),
 }));
 
 vi.mock("@/shared/db/client", () => ({ db: {} }));
@@ -48,7 +49,7 @@ vi.mock("@/modules/identity/infrastructure/session-port", () => ({
 }));
 vi.mock("@/modules/listing-catalogue/infrastructure/drizzle-catalogue", () => ({
   DrizzleCatalogue: class {
-    listCities = async () => CITIES;
+    listCities = listCities;
     // 27.1 slice C: la página ya no pide la taxonomía entera para el panel y
     // las sugerencias — pide sólo las zonas con avisos, ya contadas.
     listActiveZones = async (cityId: string) => activeZonesFor(cityId);
@@ -82,7 +83,7 @@ vi.mock("@/modules/listing-discovery/infrastructure/drizzle-listing-photos", () 
 }));
 
 import { boundedVocabulary } from "@/modules/listing-catalogue/domain/bounded-vocabulary";
-import CiudadPage from "./page";
+import CiudadPage, { generateMetadata } from "./page";
 
 const suggestionsSpy = vi.mocked(boundedVocabulary);
 
@@ -90,6 +91,8 @@ beforeEach(() => {
   process.env.R2_BUCKET_PUBLIC_URL = "https://fotos.rentoru.test";
   search.mockReset();
   countFacets.mockReset();
+  listCities.mockReset();
+  listCities.mockResolvedValue(CITIES);
   suggestionsSpy.mockClear();
   search.mockImplementation(async (criteria: SearchCriteria) => matching(criteria));
   countFacets.mockImplementation(async (criteria: SearchCriteria, offered: readonly string[]) =>
@@ -98,10 +101,13 @@ beforeEach(() => {
 });
 
 /** El cuerpo servido de `/alquiler/<ciudad>`, sin ejecutar un solo script. */
-async function servedBody(query: Record<string, string> = {}): Promise<string> {
+async function servedBody(
+  query: Record<string, string> = {},
+  slug = "distrito-capital",
+): Promise<string> {
   return renderToStaticMarkup(
     await CiudadPage({
-      params: Promise.resolve({ ciudad: "distrito-capital" }),
+      params: Promise.resolve({ ciudad: slug }),
       searchParams: Promise.resolve(query),
     }),
   );
@@ -148,6 +154,80 @@ describe("el histograma de precio se sirve desde el servidor", () => {
     const dibujo = html.slice(html.indexOf('role="img"'), html.indexOf("la mayoría"));
     expect(dibujo).not.toMatch(/<script|onclick|<canvas|<svg|<img/i);
     expect(dibujo).toContain("<span");
+  });
+});
+
+describe("landing de ciudad vacía servida", () => {
+  it("sirve La Guaira sin encabezado de resultados en su slug canónico", async () => {
+    listCities.mockResolvedValue([{ id: "ciudad-lg", name: "La Guaira" }, ...CITIES]);
+    search.mockResolvedValue([]);
+    countFacets.mockImplementation(
+      async (criteria: SearchCriteria, offered: readonly string[]) => ({
+        ...facetsFor(criteria, offered),
+        cityTotal: 0,
+        total: 0,
+      }),
+    );
+    const html = await servedBody({}, "la-guaira");
+    expect(html).toContain("La Guaira");
+    expect(html).toMatch(/<div class="[^"]*container[^"]*"><section[^>]*>/);
+    expect(html).toContain("Gratis para publicar. Sin comisión.");
+    expect(html).toContain('href="/publicar"');
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
+    expect(html).not.toContain("Alquiler en La Guaira");
+  });
+
+  it("caracteriza metadata canónica y filtros de La Guaira", async () => {
+    listCities.mockResolvedValue([{ id: "ciudad-lg", name: "La Guaira" }, ...CITIES]);
+    const params = Promise.resolve({ ciudad: "la-guaira" });
+    const canonical = await generateMetadata({ params, searchParams: Promise.resolve({}) });
+    expect(canonical.alternates).toEqual({ canonical: "/alquiler/la-guaira" });
+    const filtered = await generateMetadata({
+      params,
+      searchParams: Promise.resolve({ min: "5000" }),
+    });
+    expect(filtered.robots).toEqual({ index: false, follow: true });
+    expect(filtered.alternates).toBeUndefined();
+  });
+
+  it("sirve la landing completa y el GET de Nav en la ciudad canónica sin avisos", async () => {
+    search.mockResolvedValue([]);
+    countFacets.mockImplementation(
+      async (criteria: SearchCriteria, offered: readonly string[]) => ({
+        ...facetsFor(criteria, offered),
+        cityTotal: 0,
+        total: 0,
+      }),
+    );
+    const html = await servedBody();
+    expect(html).toContain("Gratis para publicar. Sin comisión.");
+    expect(html).toContain("Todavía no hay avisos disponibles en Distrito Capital");
+    expect(html).toContain('href="/publicar"');
+    expect(html).toContain("Comisión de Rentoru");
+    expect(html).toContain("WhatsApp tras registrarse");
+    expect(html).toContain("Rentoru no recibe pagos ni escribe contratos.");
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
+  });
+
+  it("no confunde una búsqueda filtrada ni avisos sin portada con ciudad vacía", async () => {
+    const filtered = await servedBody({ min: "5000" });
+    expect(filtered).not.toContain("Gratis para publicar. Sin comisión.");
+    expect(filtered).toContain("0 propiedades activas");
+    search.mockResolvedValue([]);
+    const missingPhoto = await servedBody();
+    expect(missingPhoto).not.toContain("Gratis para publicar. Sin comisión.");
+  });
+
+  it("no invita a publicar si la query está refinada aunque cityTotal sea cero", async () => {
+    search.mockResolvedValue([]);
+    countFacets.mockImplementation(
+      async (criteria: SearchCriteria, offered: readonly string[]) => ({
+        ...facetsFor(criteria, offered),
+        cityTotal: 0,
+        total: 0,
+      }),
+    );
+    expect(await servedBody({ min: "5000" })).not.toContain("Gratis para publicar. Sin comisión.");
   });
 });
 

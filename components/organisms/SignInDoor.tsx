@@ -1,9 +1,11 @@
 import type { ContactDoorCopy } from "@/modules/contact-reveal/domain/sign-in-door";
+import { SIGN_IN_LEGAL } from "@/modules/identity/domain/sign-in-page";
 import { AppLink } from "../atoms/AppLink";
 import { ActionButton, NeutralButton } from "../atoms/buttons";
 import { GoogleMark } from "../atoms/icons";
 import { Label } from "../atoms/Label";
 import styles from "./SignInDoor.module.css";
+import { SignInDoorDismiss } from "./SignInDoorDismiss";
 
 export interface SignInDoorProps {
   /** Ya resuelta por `contactDoorFor` — acá no se decide nada. */
@@ -21,8 +23,8 @@ export interface SignInDoorProps {
  * La puerta que pide la cuenta **sin sacar al inquilino del aviso** (láminas 8b
  * y 9b, tasks.md 15.8, 22.28).
  *
- * **Sin `"use client"`, y ahí está todo**: la abre y la cierra la dirección, así
- * que sale entera en el HTML servido y las dos salidas son anclas de verdad.
+ * Sigue siendo servidor: la dirección abre la puerta y sirve las anclas y
+ * formularios nativos. El hijo cliente sólo mejora el cierre tras hidratar.
  *
  * **`role="dialog"` sin `aria-modal`** no es un olvido: sin script no hay trampa
  * de foco, y afirmar lo contrario sería un dato falso en el árbol de
@@ -36,60 +38,65 @@ export function SignInDoor({
   requestMagicLinkAction,
 }: SignInDoorProps) {
   return (
-    <div className={styles.door} data-testid="puerta" role="dialog" aria-labelledby="puerta-titulo">
-      <div className={styles.veil} aria-hidden="true" />
-      <section className={styles.panel} data-testid="puerta-panel">
-        <div className={styles.head}>
-          <h2 className={styles.title} id="puerta-titulo">
-            {copy.title}
-          </h2>
-          <AppLink className={styles.close} href={stayHref} aria-label={copy.closeLabel}>
-            <span aria-hidden="true">×</span>
-          </AppLink>
-        </div>
-        <p className={styles.reason}>{copy.reason}</p>
-        {/* tasks.md 22.39 — sólo cuando `isListingContactVerified` ya
-            contestó que sí: sin fila viva no hay nada que afirmar, el mismo
-            default en falso que el resto de este módulo usa. */}
-        {copy.verifiedNotice ? (
-          <p className={styles.verified} data-testid="puerta-verificado">
-            {copy.verifiedNotice}
-          </p>
-        ) : null}
-        <form className={styles.form} action={signInAction}>
-          <input type="hidden" name="callbackUrl" value={callbackUrl} />
-          {/* Nivel 3 y con la marca (tasks.md 22.20): igual que la puerta de
-              página, no el nivel 1 que la 15.8 shipeó sin el logo. */}
-          <NeutralButton type="submit">
-            <GoogleMark />
-            Continuar con Google
-          </NeutralButton>
-        </form>
-        <p className={styles.separator}>
-          <span>{copy.email.separator}</span>
-        </p>
-        <form className={styles.emailForm} action={requestMagicLinkAction}>
-          <input type="hidden" name="callbackUrl" value={callbackUrl} />
-          <Label htmlFor="puerta-correo">{copy.email.label}</Label>
-          <div className={styles.emailRow}>
-            <input
-              autoComplete="email"
-              className={styles.field}
-              id="puerta-correo"
-              name="correo"
-              placeholder={copy.email.placeholder}
-              required
-              type="email"
-            />
-            <ActionButton type="submit">{copy.email.submit}</ActionButton>
-          </div>
-          <p className={styles.emailNote}>{copy.email.note}</p>
-        </form>
-        <AppLink className={styles.stay} href={stayHref}>
-          {copy.stayLabel}
+    <SignInDoorDismiss stayHref={stayHref}>
+      <div className={styles.head}>
+        <h2 className={styles.title} id="puerta-titulo">
+          {copy.title}
+        </h2>
+        <AppLink className={styles.close} href={stayHref} aria-label={copy.closeLabel}>
+          <span aria-hidden="true">×</span>
         </AppLink>
-        <p className={styles.assurance}>{copy.assurance}</p>
-      </section>
-    </div>
+      </div>
+      <p className={styles.reason}>{copy.reason}</p>
+      {/* tasks.md 22.39 — sólo cuando `isListingContactVerified` ya
+          contestó que sí: sin fila viva no hay nada que afirmar, el mismo
+          default en falso que el resto de este módulo usa. */}
+      {copy.verifiedNotice ? (
+        <p className={styles.verified} data-testid="puerta-verificado">
+          {copy.verifiedNotice}
+        </p>
+      ) : null}
+      <form className={styles.form} action={signInAction}>
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
+        {/* Nivel 3 y con la marca (tasks.md 22.20): igual que la puerta de
+            página, no el nivel 1 que la 15.8 shipeó sin el logo. */}
+        <NeutralButton type="submit">
+          <GoogleMark />
+          Continuar con Google
+        </NeutralButton>
+      </form>
+      <p className={styles.separator}>
+        <span>{copy.email.separator}</span>
+      </p>
+      <form className={styles.emailForm} action={requestMagicLinkAction}>
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
+        <Label htmlFor="puerta-correo">{copy.email.label}</Label>
+        <div className={styles.emailRow}>
+          <input
+            autoComplete="email"
+            className={styles.field}
+            id="puerta-correo"
+            name="correo"
+            placeholder={copy.email.placeholder}
+            required
+            type="email"
+          />
+          <ActionButton type="submit">{copy.email.submit}</ActionButton>
+        </div>
+        <p className={styles.emailNote}>{copy.email.note}</p>
+      </form>
+      <p className={styles.legal}>
+        {SIGN_IN_LEGAL.map((fragment) =>
+          fragment.kind === "link" ? (
+            <AppLink href={fragment.href} key={fragment.href}>
+              {fragment.label}
+            </AppLink>
+          ) : (
+            <span key={fragment.value}>{fragment.value}</span>
+          ),
+        )}
+      </p>
+      <p className={styles.assurance}>{copy.assurance}</p>
+    </SignInDoorDismiss>
   );
 }

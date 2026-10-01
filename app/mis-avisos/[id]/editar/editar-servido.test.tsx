@@ -39,7 +39,7 @@ const { findAccount, requireSession, loadListingForEdit, loadListingPhotosForEdi
     }),
   }));
 
-vi.mock("next/navigation", () => ({ notFound }));
+vi.mock("next/navigation", () => ({ notFound, usePathname: () => "/mis-avisos" }));
 vi.mock("@/shared/db/client", () => ({ db: {} }));
 vi.mock("@/modules/identity/infrastructure/session-port", () => ({
   nextAuthSessionPort: { getSession: async () => null },

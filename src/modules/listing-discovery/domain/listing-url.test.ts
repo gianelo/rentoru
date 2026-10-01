@@ -1,5 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { buildListingPath, listingIdFromSlug, MAX_SLUG_LENGTH, slugify } from "./listing-url";
+import {
+  buildListingPath,
+  listingIdFromSlug,
+  MAX_SLUG_LENGTH,
+  safePublicListingPath,
+  slugify,
+} from "./listing-url";
+
+describe("safePublicListingPath", () => {
+  const id = "99d25b3d-4d23-48d3-b134-f720781b1eb3";
+  const detail = `/alquiler/maracaibo/coquivacoa/apartamento-${id}`;
+
+  it("preserves a canonical-shaped detail and a bare id", () => {
+    expect(safePublicListingPath(detail)).toBe(detail);
+    expect(safePublicListingPath(`/alquiler/maracaibo/coquivacoa/${id}`)).toBe(
+      `/alquiler/maracaibo/coquivacoa/${id}`,
+    );
+  });
+
+  it.each([
+    undefined,
+    null,
+    "",
+    `${detail}?x=1`,
+    `${detail}#x`,
+    `/alquiler/maracaibo/coquivacoa/a%2fb-${id}`,
+    `/alquiler/maracaibo/coquivacoa/a\\b-${id}`,
+    `//evil.test${detail}`,
+    `https://evil.test${detail}`,
+    `${detail}/foto/1`,
+    `/alquiler/maracaibo/coquivacoa/${"a".repeat(61)}-${id}`,
+    `/alquiler/maracaibo/coquivacoa/no-id`,
+  ])("rejects unsafe or malformed candidate %s", (candidate) => {
+    expect(safePublicListingPath(candidate)).toBeNull();
+  });
+});
 
 /**
  * A seeded listing id (`src/shared/db/seed.ts` `stableId`) — 8-4-4-4-12 hex,

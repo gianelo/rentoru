@@ -96,6 +96,11 @@ export class DrizzleHomeCollections implements HomeCollectionsPort {
       REQUIRED_SIZES.map((size) => sql`${size}`),
       sql`, `,
     );
+    // Caracteres eliminados por String.trim() (ECMAScript WhiteSpace + LineTerminator).
+    // btrim con su valor por defecto sólo quita espacios ASCII; una clave de
+    // tabulaciones o NBSP dejaría una ciudad visible sin tarjeta utilizable.
+    const trimWhitespace =
+      " \t\n\v\f\r\u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff";
 
     // **Las dos condiciones del `where` base, explicadas acá y no adentro** —
     // un comentario SQL no puede llevar acentos graves sin cerrar esta
@@ -146,6 +151,9 @@ export class DrizzleHomeCollections implements HomeCollectionsPort {
             where p.listing_id = l.id
               and p.position = 0
               and d.name in (${requiredSizes})
+              -- Mismo umbral que keys[size]?.trim() en buildListingGrid:
+              -- las derivadas presentes pero sin ruta no forman una portada.
+              and btrim(d.key, ${trimWhitespace}) <> ''
             group by p.id
             having count(distinct d.name) = ${REQUIRED_SIZES.length}
           )

@@ -128,6 +128,25 @@ describe("la búsqueda servida al reportar", () => {
 });
 
 describe("el formulario", () => {
+  it("serves required reasons and optional explanation with accessible error and no identity", async () => {
+    const markup = renderToStaticMarkup(await open({ error: "motivo" }));
+    expect(markup).toMatch(/<select[^>]*name="reason"[^>]*required/);
+    for (const label of [
+      "Posible estafa",
+      "Datos incorrectos",
+      "Duplicado",
+      "No disponible",
+      "Otro",
+    ]) {
+      expect(markup).toContain(label);
+    }
+    expect(markup).toMatch(/<textarea[^>]*name="explanation"/);
+    expect(markup).toContain('aria-invalid="true"');
+    expect(markup).toContain('aria-describedby="reason-error"');
+    expect(markup).toContain('id="reason-error"');
+    expect(markup).not.toContain('name="reporterId"');
+    expect(markup).not.toContain('name="email"');
+  });
   it("lleva el aviso y la vuelta que la acción necesita", async () => {
     const markup = renderToStaticMarkup(await open());
 

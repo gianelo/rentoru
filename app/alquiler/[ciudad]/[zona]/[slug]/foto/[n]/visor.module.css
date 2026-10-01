@@ -139,6 +139,28 @@
   font-size: var(--viewer-glyph-fs);
 }
 
+.dots {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0 16px 12px;
+  list-style: none;
+}
+
+.dot,
+.dotCurrent {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--rs);
+  background: var(--viewer-line);
+}
+
+.dotCurrent {
+  background: var(--viewer-ink);
+}
+
 /* ---------- El pie de foto ---------- */
 
 .caption {
@@ -265,6 +287,18 @@
   outline-offset: 2px;
 }
 
+@media (max-width: 1023px) {
+  /* Preserve native keyboard links while leaving the large image free for swipes. */
+  .previous,
+  .next {
+    pointer-events: none;
+  }
+
+  .arrow {
+    visibility: hidden;
+  }
+}
+
 @media (min-width: 768px) {
   /* En escritorio se navega con el teclado y con el ratón, no con el pulgar:
      las zonas de toque siguen existiendo pero no necesitan comerse un tercio
@@ -272,6 +306,7 @@
   .previous,
   .next {
     width: var(--viewer-arrow-size);
+    min-width: var(--target-min);
   }
 
   .previous {

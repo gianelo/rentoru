@@ -102,6 +102,10 @@
   min-height: var(--action-h);
 }
 
+.control > button {
+  margin-top: var(--gap);
+}
+
 /* El de copiar es el control secundario y no debe pesar como el de acción,
    pero sigue siendo un objetivo táctil: 44px en las dos pantallas, donde el
    átomo bajaría a 36 en escritorio. */
@@ -115,6 +119,12 @@
 .copy > button {
   margin-top: 8px;
   min-height: var(--target-min);
+}
+
+/* Sólo el correo empareja el ancho de ambas acciones; los demás canales
+   conservan su botón secundario compacto. */
+.copy[data-method="email"] > button {
+  width: 100%;
 }
 
 /* Borde punteado, como el diseño dibuja el estado vencido: se distingue de un
