@@ -20,8 +20,11 @@ import { DrizzleSearchVocabulary } from "@/modules/listing-catalogue/infrastruct
 import {
   buildHome,
   HOME_CITY_PARAM,
+  homeAvailabilitySpecs,
+  homeCanPublish,
   homeCityChips,
   homeCollections,
+  homeLanding,
   resolveHomeCity,
 } from "@/modules/listing-discovery/domain/home-collections";
 import { DrizzleActiveZones } from "@/modules/listing-discovery/infrastructure/drizzle-active-zones";
@@ -159,7 +162,10 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // ciudad y no una consecuencia de que la tira de la otra haya desaparecido.
   const specs = homeCollections(cities, selectedCity?.id ?? null);
 
-  const collections = await new DrizzleHomeCollections(db).collectionsFor(specs);
+  const collections = await new DrizzleHomeCollections(db).collectionsFor([
+    ...specs,
+    ...homeAvailabilitySpecs(cities, specs),
+  ]);
 
   // **UNA llamada para todas las portadas de todas las tiras.** Pedirlas por
   // tira serían cuatro viajes, y por aviso hasta veinte — el N+1 clásico
@@ -169,16 +175,17 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // reciente aparece en tres colecciones (14.23) y ahí se queda, pero pedir su
   // portada tres veces sería pedirle a Postgres la misma fila tres veces.
   const listingIds = [
-    ...new Set([...collections.values()].flatMap((page) => page.rows.map((row) => row.id))),
+    ...new Set(specs.flatMap((spec) => collections.get(spec.key)?.rows.map((row) => row.id) ?? [])),
   ];
   const covers = await new DrizzleListingPhotos(db).coversFor(listingIds);
 
   const home = buildHome(specs, collections, covers, readPhotoPublicBaseUrl());
+  const landing = homeLanding(home, selectedCity, cities);
 
   // Qué pregunta la caja, cómo se llama su parámetro y a dónde vuelve, y cuál
   // ficha de ciudad está activa: son decisiones de producto y llegan resueltas.
   const searchForm = homeSearchForm(typed);
-  const cityChips = homeCityChips(cities, selectedCity?.id ?? null);
+  const cityChips = homeCityChips(cities, selectedCity?.id ?? null, collections);
 
   // **La sesión, y lo que cuesta.** Auth.js está en estrategia `database`, así
   // que una lectura CON cookie es un viaje a Postgres. **Sin cookie no cuesta
@@ -196,7 +203,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // no hay sesión y no hay consulta, que es casi todo el tráfico de esta
   // pantalla.
   const account = resolveNavAccount(session, await readNavAccountFlags(session));
-  const publish = resolveNavPublish(account);
+  const publish = resolveNavPublish(account, homeCanPublish(cities));
 
   // La pastilla del inicio es el estado "vacía" (14i): sin zona elegida el
   // filtro no existe como pieza — "sin búsqueda no hay nada que filtrar".
@@ -300,28 +307,33 @@ export default async function InicioPage({ searchParams }: InicioProps) {
       )}
 
       <Container>
-        {/* Un `<h1>` de verdad y visualmente oculto, igual que cuando acá
-            vivían los resultados: la dirección más fuerte del dominio necesita
-            un encabezado en el esquema del documento, y el diseño del inicio
-            arranca directo con la primera tira. */}
-        <h1 className={styles.srOnly}>Alquileres de larga estancia en Venezuela</h1>
-
-        {home.invitesToPublish ? (
-          // **Sin un solo aviso activo el problema no es la demanda, es la
-          // oferta.** Una página que dijera "no hay resultados" le echaría la
-          // culpa a quien llegó; ésta le ofrece lo único que hay para hacer.
-          // Que este estado exista lo decidió el dominio, no esta línea.
+        {landing ? (
           <section className={styles.invite}>
-            <h2 className={styles.inviteTitle}>Todavía no hay avisos publicados</h2>
-            <p className={styles.inviteText}>
-              Publicar es gratis y no se cobra comisión. Tu aviso queda activo 30 días.
-            </p>
-            <AppLink className={styles.inviteAction} href="/publicar">
-              Publicar un aviso
-            </AppLink>
+            <div className={styles.inviteLayout}>
+              <div>
+                <p className={styles.eyebrow}>{landing.eyebrow}</p>
+                <h1 className={styles.inviteTitle}>{landing.title}</h1>
+                <p className={styles.inviteText}>{landing.lead}</p>
+                {landing.action && (
+                  <AppLink className={styles.inviteAction} href={landing.action.href}>
+                    {landing.action.label}
+                  </AppLink>
+                )}
+              </div>
+              <dl className={styles.ledger}>
+                {landing.facts.map((fact) => (
+                  <div className={styles.fact} key={fact.label}>
+                    <dt>{fact.label}</dt>
+                    <dd>{fact.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+            <p className={styles.disclaimer}>{landing.disclaimer}</p>
           </section>
         ) : (
           <div className={styles.strips}>
+            <h1 className={styles.srOnly}>Alquileres de larga estancia en Venezuela</h1>
             {home.strips.map((strip) => (
               <ListingStrip
                 key={strip.key}

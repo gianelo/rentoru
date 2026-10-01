@@ -153,6 +153,47 @@ export interface HomeView {
   readonly invitesToPublish: boolean;
 }
 
+export function homeCanPublish(cities: readonly HomeCity[]): boolean {
+  return cities.length > 0;
+}
+
+export interface HomeLanding {
+  readonly eyebrow: string;
+  readonly title: string;
+  readonly lead: string;
+  readonly action: { readonly label: string; readonly href: string } | null;
+  readonly facts: readonly { readonly label: string; readonly value: string }[];
+  readonly disclaimer: string;
+}
+
+/** Sólo las tiras seleccionadas deciden el vacío; el catálogo aporta nombres confiables. */
+export function homeLanding(
+  home: HomeView,
+  selectedCity: HomeCity | null,
+  cities: readonly HomeCity[],
+): HomeLanding | null {
+  if (!home.invitesToPublish) return null;
+
+  const lead = selectedCity
+    ? `Todavía no hay avisos disponibles en ${selectedCity.name}. Si alquilas una vivienda de larga estadía allí, puedes anunciarla aquí.`
+    : cities.length === 0
+      ? "Todavía no hay avisos disponibles. Consulta las ciudades habilitadas antes de publicar."
+      : `Todavía no hay avisos disponibles. Si alquilas una vivienda de larga estadía en ${cities.map((city) => city.name).join(" y ")}, puedes anunciarla aquí.`;
+
+  return {
+    eyebrow: "Una forma directa de publicar",
+    title: "Gratis para publicar. Sin comisión.",
+    lead,
+    action: homeCanPublish(cities) ? { label: "Publicar un aviso", href: "/publicar" } : null,
+    facts: [
+      { label: "Publicación y búsqueda", value: "Gratis" },
+      { label: "Comisión de Rentoru", value: "Ninguna" },
+      { label: "Contacto", value: "WhatsApp tras registrarse" },
+    ],
+    disclaimer: "Rentoru no recibe pagos ni escribe contratos.",
+  };
+}
+
 /**
  * Las cuatro tiras de la F1, y su orden.
  *
@@ -295,20 +336,49 @@ export function resolveHomeCity<C extends HomeCity>(
  * ciudad existe para cerrar. Se cae por construcción: esta dirección se compone
  * desde cero y no encima de la que había.
  */
+export function homeAvailabilitySpecs(
+  cities: readonly HomeCity[],
+  strips: readonly HomeCollectionSpec[],
+): readonly HomeCollectionSpec[] {
+  const requested = new Set(
+    strips.filter((spec) => spec.kind === "city").map((spec) => spec.cityId),
+  );
+  return cities
+    .filter((city) => !requested.has(city.id))
+    .map((city) => ({
+      key: `disponibilidad:${city.id}`,
+      kind: "city" as const,
+      title: city.name,
+      cityId: city.id,
+      maxPriceUsd: null,
+      limit: HOME_STRIP_SIZE,
+      href: null,
+    }));
+}
+
 export function homeCityChips(
   cities: readonly HomeCity[],
   selectedCityId: string | null,
+  collections: ReadonlyMap<string, HomeCollectionPage>,
 ): readonly HomeCityChip[] {
-  return cities.map((city) => {
-    const selected = city.id === selectedCityId;
+  const selectedId = cities.some((city) => city.id === selectedCityId) ? selectedCityId : null;
+  return cities
+    .filter(
+      (city) =>
+        city.id === selectedId ||
+        ((collections?.get(`ciudad:${city.id}`) ?? collections?.get(`disponibilidad:${city.id}`))
+          ?.total ?? 0) > 0,
+    )
+    .map((city) => {
+      const selected = city.id === selectedId;
 
-    return {
-      cityId: city.id,
-      label: city.name,
-      href: selected ? "/" : `/?${HOME_CITY_PARAM}=${slugify(city.name)}`,
-      selected,
-    };
-  });
+      return {
+        cityId: city.id,
+        label: city.name,
+        href: selected ? "/" : `/?${HOME_CITY_PARAM}=${slugify(city.name)}`,
+        selected,
+      };
+    });
 }
 
 /**
