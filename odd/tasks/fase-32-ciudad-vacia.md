@@ -24,9 +24,9 @@
 
 ## C3 — Verificar el conjunto y registrar evidencia
 
-**Estado:** en curso; `origin/dev` avanzó por F31 (#356) sin rutas coincidentes, así que falta verificar el árbol combinado antes de publicar.
+**Estado:** verificado y listo para abrir PR; `520b275` incorporó `origin/dev` (`4512576`, F31 #356) sin conflictos ni rutas F31 en el diff del PR.
 
-- [ ] Sobre base anterior `4ea928e`, verificador independiente: `pnpm test:unit` **3124/3124** (278 archivos), typecheck, lint (7 warnings y 2 infos no bloqueantes), lint:tokens (289 hojas), build (23 páginas) y bundle **112,43/130 KB gzip**, diff check verdes. 315 líneas commiteadas antes de este registro (282 de código revisable); falta sincronizar y repetir checks del árbol combinado. Integración/E2E completos no se ejecutaron localmente: ninguna base F30/F31 fue usada; se dejan a CI del nuevo PR.
-- [ ] Registrar resultados tras sincronización, límites y commit final; si un check falla, mantener tarea abierta y corregir antes de afirmar cierre. Commit: pendiente.
+- [x] Sobre base `dev` actualizada, verificador independiente: `pnpm test:unit` **3125/3125** (278 archivos), typecheck, lint (7 warnings y 2 infos no bloqueantes), lint:tokens (289 hojas), build (23 páginas) y bundle **112,43/130 KB gzip**, diff check verdes. Los controles previos a sincronizar también pasaron (3124/3124); no se confunden con la evidencia del árbol combinado.
+- [x] 282 líneas de código revisables (315 incluyendo este registro y OpenSpec) contra `origin/dev`, por debajo de 400; 9 rutas exclusivas de F32. Integración/E2E completos **no se ejecutaron localmente** y ninguna base F30/F31 fue usada; corresponden a CI del nuevo PR. El fundador dijo que su prueba local «va bien», sin atribuirle una corrida JS-off o medidas de navegador no reportadas. Commit de evidencia C3: registrar al cerrar.
 
-**Entrega:** el fundador indicó que la prueba manual local «va bien» y autorizó **commit, push y PR a `dev`**, no merge. El PR #354 ya fusionado pertenece a la landing del inicio, no a esta corrección nueva.
+**Entrega:** el fundador autorizó **commit, push y PR a `dev`**, no merge; PR y CI pendientes. El PR #354 ya fusionado pertenece a la landing del inicio, no a esta corrección nueva.
