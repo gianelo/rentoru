@@ -169,6 +169,18 @@ export default async function VisorPage({ params }: VisorProps) {
         ) : null}
       </div>
 
+      <ol className={styles.dots} aria-label="Posición de la foto">
+        {view.photos.map((item) => (
+          <li
+            className={item.current ? styles.dotCurrent : styles.dot}
+            key={item.number}
+            aria-current={item.current ? "true" : "false"}
+          >
+            <span className={styles.srOnly}>{`Foto ${item.number} de ${view.total}`}</span>
+          </li>
+        ))}
+      </ol>
+
       <div className={styles.caption}>
         <span className={styles.title}>{detail.title}</span>
         <span className={styles.place}>
