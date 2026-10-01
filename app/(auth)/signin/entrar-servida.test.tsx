@@ -36,6 +36,15 @@ function titulo(html: string): string {
 const FICHA = "/alquiler/distrito-capital/chacao/apartamento-2h";
 
 describe("la pantalla de entrar sale entera en el HTML (15.7)", () => {
+  it("sirve el aviso legal completo con sus dos enlaces nativos", async () => {
+    const html = await servida();
+    expect(html).toContain("Al entrar aceptás los ");
+    expect(html).toContain('href="/legal/terminos">términos</a>');
+    expect(html).toContain('href="/legal/privacidad">privacidad</a>');
+    expect(html).toContain(
+      ". Rentoru no participa en el trato: no cobramos comisión, no retenemos pagos y no redactamos contratos.",
+    );
+  });
   it("por la puerta de publicar dibuja el título, los tres pasos y un formulario de verdad", async () => {
     const html = await servida("/publicar");
 

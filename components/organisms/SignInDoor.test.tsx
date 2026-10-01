@@ -9,7 +9,6 @@ const source = readFileSync("components/organisms/SignInDoor.tsx", "utf-8");
 const COPY: ContactDoorCopy = {
   title: "Entrá para ver el WhatsApp del dueño",
   reason: "Pedimos la cuenta para frenar avisos falsos. Es gratis y es un toque.",
-  stayLabel: "Seguir mirando sin entrar",
   closeLabel: "Cerrar sin entrar",
   assurance: "Volvés a este mismo aviso al terminar.",
   email: {

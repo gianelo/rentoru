@@ -115,7 +115,7 @@ const RETURN_ASSURANCE = "Volvés a este mismo aviso al terminar.";
  * que la 15.7 shipeó la frase pelada —mandar a un 404 desde la pantalla que
  * pide una cuenta— se cayó solo.
  */
-const LEGAL: readonly LegalFragment[] = [
+export const SIGN_IN_LEGAL: readonly LegalFragment[] = [
   { kind: "text", value: "Al entrar aceptás los " },
   { kind: "link", label: "términos", href: "/legal/terminos" },
   { kind: "text", value: " y la " },
@@ -222,7 +222,7 @@ export function signInPageFor(
 
   return {
     ...(door === null ? ACCOUNT_DOOR : DOORS[door]),
-    legal: LEGAL,
+    legal: SIGN_IN_LEGAL,
     email: EMAIL_DOOR,
     // tasks.md 22.29 — el booleano ya viene juzgado por quien llama (la
     // ruta lee el parámetro de la dirección); acá sólo se elige la frase.

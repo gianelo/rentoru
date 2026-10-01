@@ -29,7 +29,7 @@ describe("la puerta del contacto se abre por la dirección (15.8)", () => {
     const puerta = contactDoorFor(CON_LLAVE, DUENO, DOOR_OPEN_TOKEN, false);
 
     expect(puerta?.title).toBe("Entrá para ver el WhatsApp de María F.");
-    expect(puerta?.stayLabel).toBe("Seguir mirando sin entrar");
+    expect(puerta).not.toHaveProperty("stayLabel");
     expect(puerta?.assurance).toBe("Volvés a este mismo aviso al terminar.");
   });
 

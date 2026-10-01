@@ -14,6 +14,55 @@ async function panel(page: import("@playwright/test").Page) {
 }
 
 test.describe("la puerta de entrar (15.8)", () => {
+  test("31.8: narrow door retains native legal links and a reachable no-JS close", async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      javaScriptEnabled: false,
+      viewport: { width: 390, height: 844 },
+    });
+    try {
+      const page = await context.newPage();
+      await page.goto("/measure?entrar=si");
+
+      const door = page.getByTestId("puerta-panel");
+      await expect(door).toContainText(
+        "Al entrar aceptás los términos y la privacidad. Rentoru no participa en el trato: no cobramos comisión, no retenemos pagos y no redactamos contratos.",
+      );
+      await expect(door.getByRole("link", { name: "términos" })).toHaveAttribute(
+        "href",
+        "/legal/terminos",
+      );
+      await expect(door.getByRole("link", { name: "privacidad" })).toHaveAttribute(
+        "href",
+        "/legal/privacidad",
+      );
+      await expect(door.getByText("Seguir mirando sin entrar")).toHaveCount(0);
+
+      const close = door.getByRole("link", { name: "Cerrar sin entrar" });
+      await expect(close).toHaveAttribute(
+        "href",
+        "/alquiler/distrito-capital/chacao/apartamento-medida",
+      );
+      await expect(close).toContainText("×");
+      const box = await close.boundingBox();
+      expect(box).not.toBeNull();
+      if (!box) throw new Error("no measurable close link");
+      expect(box.width).toBeGreaterThanOrEqual(44);
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual(390);
+      expect(box.y + box.height).toBeLessThanOrEqual(844);
+      const dimensions = await page.evaluate(() => ({
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      }));
+      expect(dimensions.scrollWidth).toBeLessThanOrEqual(dimensions.clientWidth);
+    } finally {
+      await context.close();
+    }
+  });
   test("15.8: a 1280 es un diálogo de 460 px centrado, no una hoja", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/measure?entrar=si");

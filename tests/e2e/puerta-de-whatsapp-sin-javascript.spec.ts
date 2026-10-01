@@ -99,11 +99,20 @@ test.describe("la puerta de WhatsApp funciona sin JavaScript (15.8, 22.23)", () 
       await expect(forms.nth(index)).toHaveAttribute("method", /post/i);
     }
 
-    // Y las dos salidas visibles (F20) siguen siendo anclas de verdad, no
-    // manejadores que dependen de un script para navegar.
-    await expect(page.getByRole("link", { name: "Seguir mirando sin entrar" })).toHaveAttribute(
+    // La × es la salida nativa; la salida textual redundante ya no se sirve.
+    await expect(puerta.getByRole("link", { name: "Cerrar sin entrar" })).toHaveAttribute(
       "href",
       fichaDe(ID.mcboTierraNegra1),
     );
+    await expect(puerta.getByRole("link", { name: "Cerrar sin entrar" })).toContainText("×");
+    await expect(puerta.getByRole("link", { name: "términos" })).toHaveAttribute(
+      "href",
+      "/legal/terminos",
+    );
+    await expect(puerta.getByRole("link", { name: "privacidad" })).toHaveAttribute(
+      "href",
+      "/legal/privacidad",
+    );
+    await expect(puerta.getByText("Seguir mirando sin entrar")).toHaveCount(0);
   });
 });

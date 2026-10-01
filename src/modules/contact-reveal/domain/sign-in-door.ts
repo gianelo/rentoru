@@ -37,8 +37,6 @@ export interface ContactEmailDoor {
 export interface ContactDoorCopy {
   readonly title: string;
   readonly reason: string;
-  /** La salida visible: mirar el aviso nunca costó una cuenta. */
-  readonly stayLabel: string;
   readonly closeLabel: string;
   readonly assurance: string;
   /** El campo de correo y su botón (tasks.md 22.28). Igual para las cuatro puertas. */
@@ -94,7 +92,6 @@ export function contactDoorFor(
   return {
     title: `Entrá para ver el ${noun} ${publisherPhrase(publisher)}`,
     reason: "Pedimos la cuenta para frenar avisos falsos. Es gratis y es un toque.",
-    stayLabel: "Seguir mirando sin entrar",
     closeLabel: "Cerrar sin entrar",
     assurance: "Volvés a este mismo aviso al terminar.",
     email: {

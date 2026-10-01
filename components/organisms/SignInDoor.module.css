@@ -121,15 +121,15 @@
   line-height: 1.6;
   color: var(--soft);
 }
-.stay {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--target-min);
-  margin-top: 12px;
-  font-size: var(--nav-action-fs);
+.legal {
+  margin: 12px 0 0;
+  font-family: var(--meta);
+  font-size: var(--meta-fs-sm);
+  line-height: 1.6;
   color: var(--soft);
-  text-decoration: none;
+}
+.legal a {
+  color: var(--ink);
 }
 .assurance {
   margin: 10px 0 0;
