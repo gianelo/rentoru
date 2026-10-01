@@ -22,6 +22,8 @@ const previewUrl = process.env.PLAYWRIGHT_BASE_URL || undefined;
 // reales, sin una línea distinta. Sin la variable, todo se comporta como antes.
 const testDatabaseUrl = process.env.TEST_DATABASE_URL || undefined;
 const proxyPort = Number(process.env.NEON_PROXY_PORT || 5544);
+const appPort = process.env.PLAYWRIGHT_PORT === "3001" ? 3001 : 3000;
+const reuseLocalServer = !process.env.CI && appPort === 3000;
 
 /**
  * La misma cadena de conexión con `-pooler.` metido en el nombre de host.
@@ -53,7 +55,7 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   reporter: "html",
   use: {
-    baseURL: previewUrl ?? "http://localhost:3000",
+    baseURL: previewUrl ?? `http://localhost:${appPort}`,
     trace: "on-first-retry",
     // Vercel deployment protection puts an SSO wall in front of every
     // preview: without this header the suite tests vercel.com/login and
@@ -85,7 +87,7 @@ export default defineConfig({
                 {
                   command: "node scripts/neon-http-proxy.mjs",
                   port: proxyPort,
-                  reuseExistingServer: !process.env.CI,
+                  reuseExistingServer: reuseLocalServer,
                   timeout: 30_000,
                   env: { TEST_DATABASE_URL: testDatabaseUrl, NEON_PROXY_PORT: String(proxyPort) },
                 },
@@ -109,8 +111,8 @@ export default defineConfig({
             // `port` waits for the socket to accept connections, which is the
             // actual question: is the server listening. Whether a given page
             // renders is a test's job, and a test says which page and why.
-            port: 3000,
-            reuseExistingServer: !process.env.CI,
+            port: appPort,
+            reuseExistingServer: reuseLocalServer,
             timeout: 180_000,
             // Vacío sin arnés: la aplicación conserva la `DATABASE_URL`
             // inalcanzable que el entorno ya le da, y nada cambia.
