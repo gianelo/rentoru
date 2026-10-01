@@ -400,6 +400,49 @@ describe("la búsqueda servida en la ficha", () => {
   });
 });
 
+describe("31.3: ubicación legible sin miga navegable", () => {
+  it.each([
+    { parent: null, text: "Apartamento · Tierra Negra · Maracaibo" },
+    {
+      parent: "Municipio Maracaibo",
+      text: "Apartamento · Tierra Negra · Municipio Maracaibo · Maracaibo",
+    },
+  ])(
+    "sirve el tipo, zona, padre opcional y ciudad como texto ($parent)",
+    async ({ parent, text }) => {
+      findForDetail.mockResolvedValue(detail({ zoneParentName: parent }));
+      const html = await servedBody();
+      const location = html.match(/<p\b[^>]*class="[^"]*location[^"]*"[^>]*>[\s\S]*?<\/p>/)?.[0];
+      expect(location).toBeDefined();
+      expect(location).toContain(`>${text}</p>`);
+      expect(location).not.toMatch(/<a\b|<nav\b/);
+      // Una miga envolviendo el párrafo también cambia su semántica.
+      expect(html).not.toMatch(/<nav\b[^>]*>(?:(?!<\/nav>)[\s\S])*?<p\b[^>]*class="[^"]*location/);
+    },
+  );
+
+  it.each([
+    {
+      origin: undefined,
+      label: "Ver avisos en Tierra Negra",
+      href: "/alquiler/maracaibo/tierra-negra",
+    },
+    {
+      origin: "/alquiler/maracaibo?min=200",
+      label: "← Resultados",
+      href: "/alquiler/maracaibo?min=200",
+    },
+  ])(
+    "conserva la vuelta contextual sin convertir la ubicación en enlace ($origin)",
+    async ({ origin, label, href }) => {
+      const html = await servedBody(VENCIDO_SLUG, origin ? { [RETURN_PARAM]: origin } : {});
+      const main = html.slice(html.indexOf("<main"));
+      expect(main).toContain(`href="${href.replaceAll("&", "&amp;")}">${label}</a>`);
+      expect(main.indexOf(`>${label}</a>`)).toBeLessThan(main.indexOf("<h1"));
+    },
+  );
+});
+
 describe("la vuelta vive dentro del contenido, no en la barra (14.54)", () => {
   /** El encabezado servido: todo lo que va antes de que cierre el `<header>`. */
   function encabezado(html: string): string {
