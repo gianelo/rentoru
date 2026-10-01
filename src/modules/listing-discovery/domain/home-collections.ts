@@ -356,6 +356,16 @@ export function homeAvailabilitySpecs(
     }));
 }
 
+export function resolveHomeCityChips(
+  home: HomeView,
+  cities: readonly HomeCity[],
+  selectedCityId: string | null,
+  collections: ReadonlyMap<string, HomeCollectionPage>,
+): readonly HomeCityChip[] {
+  // La landing no ofrece selección, aunque el catálogo tenga oferta en otra ciudad.
+  return home.invitesToPublish ? [] : homeCityChips(cities, selectedCityId, collections);
+}
+
 export function homeCityChips(
   cities: readonly HomeCity[],
   selectedCityId: string | null,
