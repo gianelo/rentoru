@@ -20,7 +20,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * Un doble que volviera normalmente dejaría seguir hasta el `throw error` del
  * final y este archivo reportaría un defecto que no existe.
  */
-const { RedirectSignal, redirect, revealContact } = vi.hoisted(() => {
+const { RedirectSignal, redirect, revealContact, revalidatePath } = vi.hoisted(() => {
   class RedirectSignal extends Error {
     readonly url: string;
     constructor(url: string) {
@@ -36,10 +36,12 @@ const { RedirectSignal, redirect, revealContact } = vi.hoisted(() => {
       throw new RedirectSignal(url);
     }),
     revealContact: vi.fn(),
+    revalidatePath: vi.fn(),
   };
 });
 
 vi.mock("next/navigation", () => ({ redirect }));
+vi.mock("next/cache", () => ({ revalidatePath }));
 
 // El cliente real tira al importarse si no hay `DATABASE_URL`, y acá no se
 // consulta ninguna base: los adaptadores se construyen pero nunca se usan,
@@ -101,6 +103,7 @@ function submit(overrides: Record<string, string> = {}) {
 beforeEach(() => {
   redirect.mockClear();
   revealContact.mockReset();
+  revalidatePath.mockClear();
 });
 
 describe("la acción de revelar — el cable", () => {
@@ -115,6 +118,7 @@ describe("la acción de revelar — el cable", () => {
       { listingId: "listing-1", message: "Hola, me interesa. ¿Sigue disponible?" },
       expect.anything(),
     );
+    expect(revalidatePath).toHaveBeenCalledExactlyOnceWith(FICHA);
   });
 });
 
@@ -167,7 +171,14 @@ describe("los tres rechazos que no son pantallas rotas", () => {
 
     await expect(submit()).resolves.toBeUndefined();
     expect(redirect).not.toHaveBeenCalled();
+    expect(revalidatePath).not.toHaveBeenCalled();
   });
+});
+
+it("does not refresh a path supplied by an untrusted destination", async () => {
+  revealContact.mockResolvedValueOnce({ state: "revealed" });
+  await submit({ doorHref: "https://evil.test/alquiler/anything" });
+  expect(revalidatePath).not.toHaveBeenCalled();
 });
 
 it("redirects missing message to a safe detail marker", async () => {
@@ -180,6 +191,7 @@ it("redirects missing message to a safe detail marker", async () => {
     RedirectSignal,
   );
   expect(redirect).toHaveBeenLastCalledWith("/");
+  expect(revalidatePath).not.toHaveBeenCalled();
 });
 
 describe("lo que no está previsto", () => {

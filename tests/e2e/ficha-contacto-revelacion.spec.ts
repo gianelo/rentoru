@@ -2,14 +2,14 @@ import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import { ID, LISTING_ROWS, MARACAIBO, PUBLISHER, ZONE_ROWS } from "../../scripts/seed-e2e";
 import { buildListingPath } from "../../src/modules/listing-discovery/domain/listing-url";
-import { ownedDatabase } from "./owned-test-database";
+import { selectedOwnedDatabase } from "./owned-test-database";
 
 test("30.5b2c: authenticated native reveal rejects whitespace and serves saved WhatsApp", async ({
   page,
   context,
 }, testInfo) => {
   test.skip(Boolean(process.env.PLAYWRIGHT_BASE_URL), "Owned local database only, never preview");
-  const database = ownedDatabase();
+  const database = selectedOwnedDatabase();
   const listing = LISTING_ROWS.find((row) => row.id === ID.mcboTierraNegra1);
   const zone = ZONE_ROWS.find((row) => row.id === listing?.zoneId);
   if (!listing || !zone || listing.status !== "active")
@@ -61,7 +61,7 @@ test("30.5b2c: authenticated native reveal rejects whitespace and serves saved W
       {
         name: "authjs.session-token",
         value: token,
-        url: "http://localhost:3000",
+        url: new URL(page.url()).origin,
         httpOnly: true,
         sameSite: "Lax",
       },
@@ -100,7 +100,19 @@ test("30.5b2c: authenticated native reveal rejects whitespace and serves saved W
         response.request().method() === "POST" && new URL(response.url()).pathname === canonical,
     );
     await page.getByRole("button", { name: /Ver WhatsApp/ }).click();
-    expect(new URL((await validPost).url()).origin).toBe(new URL(page.url()).origin);
+    const posted = await validPost;
+    expect(posted.status()).toBe(200);
+    expect(new URL(posted.url()).origin).toBe(new URL(page.url()).origin);
+    if (testInfo.project.name === "crawlability") {
+      const served = await posted.text();
+      expect(served).toContain("sin-contacto");
+      expect(served).toContain(`https://wa.me/58?text=${encodeURIComponent(message)}`);
+    }
+    await expect(page.getByTestId("contact-value")).toHaveText("sin-contacto");
+    await expect(page.locator('a[href^="https://wa.me/"]')).toHaveAttribute(
+      "href",
+      `https://wa.me/58?text=${encodeURIComponent(message)}`,
+    );
     await page.goto(canonical);
     const saved = await events();
     expect(saved.rowCount).toBe(1);
@@ -118,6 +130,14 @@ test("30.5b2c: authenticated native reveal rejects whitespace and serves saved W
     );
     expect(html).toContain("sin-contacto");
     await expect(page.getByTestId("contact-value")).toHaveText("sin-contacto");
+    await context.clearCookies();
+    const anonymousAgain = await page.goto(canonical);
+    expect(anonymousAgain?.status()).toBe(200);
+    const anonymousBody = await anonymousAgain?.text();
+    expect(anonymousBody).not.toContain("sin-contacto");
+    expect(anonymousBody).not.toContain("wa.me/");
+    await expect(page.getByTestId("contact-value")).toContainText("•••");
+    expect(await page.locator('a[href^="https://wa.me/"]').count()).toBe(0);
     console.log(
       JSON.stringify({
         project: testInfo.project.name,
