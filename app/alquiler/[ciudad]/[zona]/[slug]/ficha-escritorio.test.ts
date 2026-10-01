@@ -115,7 +115,12 @@ describe("la ficha de escritorio contra su lámina", () => {
       "gap",
     );
 
-    expect(declaration(desktopBlock(STRIP), "track", "gap")).toBe(`${drawn}px`);
+    expect(declaration(desktopBlock(STRIP, 1024), "track", "gap")).toBe(`${drawn}px`);
+
+    // La lámina iPad de 768 conserva la tira nativa; no hereda la rejilla desktop.
+    const tablet = STRIP.slice(0, STRIP.indexOf("@media (min-width: 1024px)"));
+    expect(declaration(tablet, "track", "overflow-x")).toBe("auto");
+    expect(declaration(tablet, "track", "scroll-snap-type")).toBe("x mandatory");
   });
 
   /**

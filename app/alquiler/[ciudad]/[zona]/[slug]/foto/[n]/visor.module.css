@@ -139,6 +139,28 @@
   font-size: var(--viewer-glyph-fs);
 }
 
+.dots {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0 16px 12px;
+  list-style: none;
+}
+
+.dot,
+.dotCurrent {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--rs);
+  background: var(--viewer-line);
+}
+
+.dotCurrent {
+  background: var(--viewer-ink);
+}
+
 /* ---------- El pie de foto ---------- */
 
 .caption {
@@ -263,6 +285,18 @@
 .exit:focus-visible {
   outline: 2px solid var(--viewer-ink);
   outline-offset: 2px;
+}
+
+@media (max-width: 1023px) {
+  /* Preserve native keyboard links while leaving the large image free for swipes. */
+  .previous,
+  .next {
+    pointer-events: none;
+  }
+
+  .arrow {
+    visibility: hidden;
+  }
 }
 
 @media (min-width: 768px) {

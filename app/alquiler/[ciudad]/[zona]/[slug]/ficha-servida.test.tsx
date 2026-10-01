@@ -308,6 +308,31 @@ async function servedBody(slug: string = VENCIDO_SLUG, query: Record<string, str
   );
 }
 
+it("serves native iPad gallery thumbnails without stale selection when scripts are off", async () => {
+  allFor.mockResolvedValue(
+    [0, 1, 2].map((position) => ({
+      position,
+      photoCount: 3,
+      keys: {
+        strip: `photos/${position}/strip.webp`,
+        detail: `photos/${position}/detail.webp`,
+        thumb: `photos/${position}/thumb.webp`,
+      },
+    })),
+  );
+  const html = await servedBody();
+  const gallery = html.match(/<figure[^>]*data-testid="photo-strip"[\s\S]*?<\/figure>/)?.[0];
+  expect(gallery).toBeDefined();
+  const thumbs = gallery?.match(
+    /<nav[^>]*aria-label="Miniaturas de fotos de la ficha"[\s\S]*?<\/nav>/,
+  )?.[0];
+  expect(thumbs).toBeDefined();
+  for (const n of [1, 2, 3]) expect(thumbs).toContain(`/foto/${n}"`);
+  expect(thumbs).not.toContain('aria-current="true"');
+  expect(gallery).toContain('aria-hidden="true"');
+  expect(gallery).toContain('aria-label="Foto 1 de 3"');
+});
+
 it("serves missing-message feedback in the locked authenticated contact form only for the exact marker", async () => {
   sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
   findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
