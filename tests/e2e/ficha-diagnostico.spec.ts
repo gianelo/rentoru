@@ -301,6 +301,7 @@ test("30.3b: arrows and keyboard change the hero and viewer destination without 
   await next.click();
   await expect(hero).toHaveAttribute("href", `${path}/foto/2`);
   await expect(hero.locator("img")).toHaveAttribute("src", /\/2\/strip\.webp/);
+  await expect(hero.locator("img")).toHaveAttribute("alt", /^Foto 2 de 3/);
   const links = page.locator('[data-testid="photo-strip"] ul a:has(img)');
   await expect
     .poll(() => links.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href"))))
@@ -311,6 +312,7 @@ test("30.3b: arrows and keyboard change the hero and viewer destination without 
   await next.focus();
   await page.keyboard.press("Enter");
   await expect(hero).toHaveAttribute("href", `${path}/foto/3`);
+  await expect(hero.locator("img")).toHaveAttribute("alt", /^Foto 3 de 3/);
   await expect(next).toBeDisabled();
   await previous.focus();
   await page.keyboard.press("Space");
@@ -325,15 +327,18 @@ test("30.3b: arrows and keyboard change the hero and viewer destination without 
 });
 
 for (const width of [390, 440, 768]) {
-  test(`31.2: native track scroll selects photo at ${width}`, async ({ page }, testInfo) => {
+  test(`30.3b: native horizontal scroll selects photo at ${width}, vertical scroll does not`, async ({
+    page,
+  }, testInfo) => {
     await page.setViewportSize({ width, height: width === 768 ? 1024 : 844 });
     await serveSeededListingImages(page, listing.id);
     await page.goto(path);
     const gallery = page.getByTestId("photo-strip");
     const track = gallery.locator("ul");
     const links = track.locator("a:has(img)");
-    const arrows = gallery.getByRole("button", { name: /Foto (anterior|siguiente)/ });
-    await expect(arrows.first()).toBeHidden();
+    await expect(
+      gallery.getByRole("button", { name: /Foto (anterior|siguiente)/ }).first(),
+    ).toBeHidden();
     await expect(links).toHaveCount(3);
     expect(await track.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
     if (width === 768) {
@@ -349,27 +354,22 @@ for (const width of [390, 440, 768]) {
         expect(box?.height).toBeGreaterThanOrEqual(44);
       }
     }
-    if (width === 768) {
-      const status = gallery.locator('[role="status"]');
-      if (testInfo.project.name === "crawlability") {
-        await expect(status).toBeHidden();
-        await expect(gallery.locator("nav a[aria-current]")).toHaveCount(0);
-        await links.nth(1).click();
-        await expect(page).toHaveURL(new RegExp(`${path}/foto/2$`));
-      } else {
-        await expect(status).toBeVisible();
-        await expect(gallery.locator('nav a[aria-current="true"]')).toHaveCount(1);
-      }
+    if (testInfo.project.name === "crawlability") {
+      await expect(gallery.locator('[role="status"]')).toBeHidden();
+      await expect(gallery.locator("nav a[aria-current]")).toHaveCount(0);
+      await links.nth(1).click();
+      await expect(page).toHaveURL(new RegExp(`${path}/foto/2$`));
+      return;
     }
-    if (testInfo.project.name === "crawlability") return;
     await track.hover();
     await page.mouse.wheel(2000, 0);
     await expect.poll(() => track.evaluate((node) => node.scrollLeft)).toBeGreaterThan(0);
     await expect(gallery.getByRole("status")).toHaveAttribute("aria-label", "Foto 3 de 3");
-    await expect(gallery.getByTestId("photo-hero")).toHaveAttribute("href", `${path}/foto/3`);
-    await expect(
-      gallery.locator('nav[aria-label="Miniaturas de fotos de la ficha"] a').nth(2),
-    ).toHaveAttribute("aria-current", "true");
+    const hero = gallery.getByTestId("photo-hero");
+    await expect(hero).toHaveAttribute("href", `${path}/foto/3`);
+    await expect(hero.locator("img")).toHaveAttribute("src", /\/3\/strip\.webp/);
+    await expect(hero.locator("img")).toHaveAttribute("alt", /^Foto 3 de 3/);
+    await expect(gallery.getByTestId("photo-dot").nth(2)).toHaveAttribute("data-selected", "true");
     await page.mouse.wheel(0, 120);
     await expect(gallery.getByRole("status")).toHaveAttribute("aria-label", "Foto 3 de 3");
     if (width === 768) {
@@ -378,6 +378,63 @@ for (const width of [390, 440, 768]) {
     }
   });
 }
+
+test("30.3b: touch swipe suppresses synthetic clicks but keyboard opens the selected link", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await serveSeededListingImages(page, listing.id);
+  await page.goto(path);
+  const gallery = page.getByTestId("photo-strip");
+  const track = gallery.locator("ul");
+  if (testInfo.project.name === "crawlability") {
+    await expect(track.locator("a:has(img)")).toHaveCount(3);
+    return;
+  }
+  await track.hover();
+  await page.mouse.wheel(2000, 0);
+  await expect(gallery.getByRole("status")).toHaveAttribute("aria-label", "Foto 3 de 3");
+  const hero = gallery.getByTestId("photo-hero");
+  await expect(hero).toHaveAttribute("href", `${path}/foto/3`);
+  const box = await hero.boundingBox();
+  if (!box) throw new Error("Missing selected photo");
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const swipe = async () => {
+    await track.dispatchEvent("touchstart", {
+      touches: [{ identifier: 1, clientX: x, clientY: y }],
+    });
+    await track.dispatchEvent("touchend", {
+      changedTouches: [{ identifier: 1, clientX: x - 100, clientY: y }],
+    });
+  };
+  await swipe();
+  const touchClick = await hero.evaluate((link) =>
+    link.dispatchEvent(
+      new PointerEvent("click", { pointerType: "touch", bubbles: true, cancelable: true }),
+    ),
+  );
+  expect(touchClick).toBe(false);
+  await expect(page).toHaveURL(new RegExp(`${path}$`));
+  await swipe();
+  const ambiguousClick = await hero.evaluate((link) => {
+    const pointerEvent = window.PointerEvent;
+    try {
+      Object.defineProperty(window, "PointerEvent", { configurable: true, value: undefined });
+      return link.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    } finally {
+      Object.defineProperty(window, "PointerEvent", { configurable: true, value: pointerEvent });
+    }
+  });
+  expect(ambiguousClick).toBe(false);
+  await expect(page).toHaveURL(new RegExp(`${path}$`));
+  await track.dispatchEvent("touchstart", {
+    touches: [{ identifier: 1, clientX: x, clientY: y }],
+  });
+  await hero.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(new RegExp(`${path}/foto/3$`));
+});
 
 test("31.2: CDP touch swipe on open large viewer navigates to photo 2", async ({
   page,
