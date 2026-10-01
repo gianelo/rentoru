@@ -436,6 +436,53 @@ test("30.3b: touch swipe suppresses synthetic clicks but keyboard opens the sele
   await expect(page).toHaveURL(new RegExp(`${path}/foto/3$`));
 });
 
+test("31.2: square third photo stays loaded and contained from gallery to native viewer", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await serveSeededListingImages(page, listing.id);
+  const square = await sharp({
+    create: { width: 600, height: 600, channels: 3, background: "#9980a5" },
+  })
+    .webp()
+    .toBuffer();
+  const intercepted: string[] = [];
+  // Playwright's newest matching route takes precedence over the seeded image fixture.
+  await page.route(
+    new RegExp(
+      `^https://fotos-de-prueba\\.rentas\\.invalid/e2e/${listing.id}/3/(strip|detail|thumb|full)\\.webp$`,
+    ),
+    async (route) => {
+      intercepted.push(new URL(route.request().url()).pathname);
+      await route.fulfill({ status: 200, contentType: "image/webp", body: square });
+    },
+  );
+  expect((await page.goto(path))?.status()).toBe(200);
+  const gallery = page.getByTestId("photo-strip");
+  const third = gallery.locator(`ul a[href="${path}/foto/3"]`);
+  await expect(third).toHaveCount(1);
+  const image = third.locator("img");
+  await expect.poll(() => image.evaluate((node: HTMLImageElement) => node.naturalWidth)).toBe(600);
+  expect(await image.evaluate((node: HTMLImageElement) => node.naturalHeight)).toBe(600);
+  expect(await image.evaluate((node: HTMLImageElement) => getComputedStyle(node).objectFit)).toBe(
+    "cover",
+  );
+  expect(intercepted.some((url) => /\/3\/(strip|detail|thumb)\.webp$/.test(url))).toBe(true);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
+  await third.click();
+  await expect(page).toHaveURL(new RegExp(`${path}/foto/3$`));
+  const large = page.locator("main img[data-viewer-large]");
+  await expect(large).toHaveAttribute("alt", /^Foto 3 de 3/);
+  await expect.poll(() => large.evaluate((node: HTMLImageElement) => node.naturalWidth)).toBe(600);
+  expect(await large.evaluate((node: HTMLImageElement) => node.naturalHeight)).toBe(600);
+  expect(await large.evaluate((node) => getComputedStyle(node).objectFit)).toBe("contain");
+  expect(intercepted.some((url) => url.endsWith("/3/full.webp"))).toBe(true);
+  await expect(
+    page.getByRole("navigation", { name: "Fotos del aviso" }).locator("a").nth(2),
+  ).toHaveAttribute("href", `${path}/foto/3`);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(768);
+});
+
 test("31.2: CDP touch swipe on open large viewer navigates to photo 2", async ({
   page,
 }, testInfo) => {
