@@ -266,7 +266,7 @@ export function ContactBlock({
               </ActionLink>
             </div>
 
-            <div className={styles.copy}>
+            <div className={styles.copy} data-method={contact.method}>
               <CopyContact
                 value={contact.value}
                 label={`Copiar el ${contactChannelNoun(contact.method)}`}
