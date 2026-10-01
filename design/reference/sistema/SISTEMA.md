@@ -93,7 +93,8 @@ En la estructura "Directorio compacto" el precio usa `--mono` (`--disp: var(--mo
 | Precio en tarjeta | **16px móvil / 17px escritorio** / 700 / 1.15 | `--mono`, `tabular-nums`. `--card-price-fs` y `--card-price-fs-desktop` |
 | Precio en fila | 15px / 700 / 1.15 | `--fp`. La fila ya no está en el camino de lectura (ver la corrección de abajo) |
 | Precio en ficha | 30px móvil / 34px escritorio / 700 / 1.1 | `--mono`. La lámina móvil dibuja 30 y la especificación escribe 28 dos veces: **manda la lámina** (16.23). Lo dibuja `--ficha-price-fs` / `--ficha-price-fs-desktop`; **`--fpb` (26) queda fuera del subconjunto que ship*a*** (16.37, ver abajo) |
-| Título de página | 20px / 700 / 1.25 | |
+| Título de página | 20px / 700 / 1.25 | No se modifica para la landing del inicio |
+| Hero de inicio sin avisos (concepto 03) | **27px móvil / 36px desde 768px / 46px desde 1100px** / 700 / 1.17 | `--home-hero-fs`, `--home-hero-fs-tablet`, `--home-hero-fs-desktop`; sólo la landing vacía, no los títulos de resultados |
 | Título de aviso (ficha) | 17px móvil / 19px escritorio / 600 / 1.35 | `text-wrap: pretty` |
 | Título de aviso (lista) | **12,5px móvil / 13px escritorio** / 400 / 1.35 | `--card-title-fs` / `--card-title-fs-desktop` / `--ftw`. **Bajado a los dos tamaños de la lámina** (22.9, fundador 2026-09-05: manda la lámina). **El recorte a dos líneas es del contenedor, no del tipo**. `--ft`/`--tclamp` nombran el mismo papel en `design/reference/sistema/tokens.css` y quedan **fuera del subconjunto que ship*a*** (22.13, ver abajo) |
 | Cuerpo | **15px / 1.6 móvil / 16px / 1.65 escritorio** / 400 | ancho de lectura máx. 520px. `--ficha-body-fs` / `--ficha-body-fs-desktop` y su par de interlineado. **RESUELTO por el fundador el 2026-08-29** (16.38): el par gana paso de escritorio y crecen con él **las ocho pantallas que lo comparten**, no sólo la ficha |
@@ -101,6 +102,8 @@ En la estructura "Directorio compacto" el precio usa `--mono` (`--disp: var(--mo
 | Metadato de tarjeta (lista) | **10,5px móvil / 11px escritorio** / 400 / 1.4 | `--card-meta-fs` / `--card-meta-fs-desktop` / `--card-meta-fw`, color `--soft`. **Papel propio y no el "Metadato" de arriba** (22.9): mismo tamaño que dibuja la lámina, pero la familia diverge a propósito — se queda en `--sans` en vez de pasar a `--meta` (mono). Ver el punto 6 de «Lo que queda abierto» |
 | Badge / etiqueta | 11px / 700 / 1.4 | `letter-spacing: .06em`, mayúsculas |
 | Texto secundario cómodo de leer | interlineado 1.6, con `--meta-fs` (12px) o `--control-fs` (15px) según la hoja | `--secondary-lh`. **No es el interlineado del cuerpo** (22.33): acompaña texto que no es el cuerpo pero pide el mismo aire de lectura — motivos, avisos, notas |
+
+La lámina 03 oculta la acción inline en móvil porque dibuja un dock estático. En producción se conserva el enlace `/publicar` junto al hero: el dock real se oculta al desplazarse y el enlace inline mantiene accesible la acción sin JavaScript. La sección vacía centra su contenido en la altura disponible bajo el Nav (60px móvil, 68px desde 768px), descontando sus dos márgenes exteriores de `--home-invite-margin` (32px); su altura es mínima, no fija, para permitir scroll cuando el contenido no entra.
 
 **Un papel tipográfico se declara en un solo sitio** (2026-08-28, tareas 22.3 y 22.4). El metadato y el título de lista estaban escritos tres veces cada uno, y las copias ya habían empezado a discrepar: `/mis-avisos` dibujaba el metadato en 400 donde la cuadrícula lo dibujaba en 600, y el título al revés. Hoy los dibujan `components/atoms/ListingMeta.tsx` y `components/atoms/ListingTitle.tsx`, y que las dos pantallas coincidan **se mide en un navegador**, no se afirma leyendo una hoja.
 
