@@ -375,6 +375,9 @@
   --home-hero-fs: 27px;
   --home-hero-fs-tablet: 36px;
   --home-hero-fs-desktop: 46px;
+  /* Aire exterior del panel vacío; independiente de su padding interior. */
+  --home-invite-outer-gap: 16px;
+  --home-invite-outer-gap-desktop: 24px;
 
   --title-fs: 20px;
   --title-fw: 700;

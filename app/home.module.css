@@ -50,6 +50,7 @@
 
 .invite {
   box-sizing: border-box;
+  margin-block: var(--home-invite-outer-gap);
   padding: 24px;
   background: var(--surface);
 }
@@ -156,6 +157,7 @@
   }
 
   .invite {
+    margin-block: var(--home-invite-outer-gap-desktop);
     padding: 48px;
   }
 
