@@ -52,7 +52,7 @@ describe("PhotoStrip", () => {
     const markup = render();
 
     expect(markup.match(/loading="eager"/g)).toHaveLength(1);
-    expect(markup.match(/loading="lazy"/g)).toHaveLength(5);
+    expect(markup.match(/loading="lazy"/g)).toHaveLength(11);
   });
 
   it("la que se pide con la página es la primera, no una cualquiera", () => {
@@ -121,7 +121,7 @@ describe("PhotoStrip", () => {
 
     expect(markup).toContain(`href="${HREF}/foto/1"`);
     expect(markup).toContain(`href="${HREF}/foto/6"`);
-    expect(markup.match(new RegExp(`href="${HREF}/foto/\\d+"`, "g"))).toHaveLength(6);
+    expect(markup.match(new RegExp(`href="${HREF}/foto/\\d+"`, "g"))).toHaveLength(12);
     // Ninguna se queda apuntando a la ficha, que era el destino provisional.
     expect(markup).not.toContain(`href="${HREF}"`);
   });
@@ -136,7 +136,7 @@ describe("PhotoStrip", () => {
     const links = [...markup.matchAll(/href="[^"]*\/foto\/(\d+)"/g)].map((m) => m[1]);
     const alts = [...markup.matchAll(/alt="Foto (\d+) de 6/g)].map((m) => m[1]);
 
-    expect(links).toEqual(alts);
+    expect(links.slice(0, 6)).toEqual(alts.slice(0, 6));
   });
 
   /**
@@ -162,7 +162,7 @@ describe("PhotoStrip", () => {
   it("no dibuja más fotos que las que un aviso puede tener", () => {
     const markup = render({ photos: [...SIX, photo(6), photo(7)] });
 
-    expect(markup.match(/<img /g)).toHaveLength(6);
+    expect(markup.match(/<img /g)).toHaveLength(12);
   });
 
   /**
@@ -175,7 +175,7 @@ describe("PhotoStrip", () => {
       photos: [photo(0), { position: 1, keys: {}, photoCount: 0 }, photo(2)],
     });
 
-    expect(markup.match(/<img /g)).toHaveLength(2);
+    expect(markup.match(/<img /g)).toHaveLength(4);
     expect(markup).toContain('alt="Foto 2 de 2 — Apartamento 2 habitaciones, Chacao"');
   });
 
@@ -189,6 +189,18 @@ describe("PhotoStrip", () => {
    */
   it("no dibuja nada cuando el bucket público no está configurado", () => {
     expect(render({ publicBaseUrl: "" })).toBe("");
+  });
+
+  it("serves native thumbnail destinations and initial selected position", () => {
+    const markup = render({ photos: SIX.slice(0, 3) });
+    const thumbnails = markup.match(
+      /<nav[^>]*aria-label="Miniaturas de fotos de la ficha"[\s\S]*?<\/nav>/,
+    )?.[0];
+    expect(thumbnails).toBeDefined();
+    for (const n of [1, 2, 3]) expect(thumbnails).toContain(`href="${HREF}/foto/${n}"`);
+    expect(thumbnails).not.toContain('aria-current="true"');
+    expect(markup).toContain('aria-hidden="true"');
+    expect(markup).toContain('aria-label="Foto 1 de 3"');
   });
 
   it("dibuja un punto por foto, y ninguno cuando hay una sola", () => {
@@ -217,6 +229,12 @@ describe("PhotoStrip", () => {
     const queries = [...css.matchAll(/@media([^{]+)\{/g)].map((match) => match[1]?.trim());
 
     expect(queries.length).toBeGreaterThan(0);
-    expect(new Set(queries)).toEqual(new Set(["(min-width: 768px)"]));
+    expect(new Set(queries)).toEqual(
+      new Set([
+        "(min-width: 1024px)",
+        "(max-width: 1023px)",
+        "(min-width: 768px) and (max-width: 1023px)",
+      ]),
+    );
   });
 });

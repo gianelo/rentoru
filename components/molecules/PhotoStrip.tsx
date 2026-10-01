@@ -66,18 +66,6 @@ export function PhotoStrip({ photos, publicBaseUrl, title, zone, href }: PhotoSt
         base={publicBaseUrl}
         href={href}
       />
-      {/* Los puntos dicen cuántas fotos hay, y ninguno se dibuja encendido.
-          Sin JavaScript nada puede seguir el scroll, así que un primer punto
-          iluminado sería cierto al cargar y mentira apenas se arrastra el
-          dedo. Quien lee con lector de pantalla ya recibe la posición en cada
-          alternativo ("Foto 3 de 6"), que es donde ese dato sí es verdad. */}
-      {frames.length > 1 ? (
-        <div className={styles.dots} aria-hidden="true">
-          {frames.map((frame) => (
-            <span className={styles.dot} data-testid="photo-dot" key={frame.strip} />
-          ))}
-        </div>
-      ) : null}
     </figure>
   );
 }
