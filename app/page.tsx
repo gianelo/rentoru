@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { AppLink } from "@/../components/atoms/AppLink";
 import { SelectionChip } from "@/../components/atoms/SelectionChip";
 import type { SearchPillProps } from "@/../components/molecules/SearchPill";
 import { Nav } from "@/../components/organisms/Nav";
@@ -34,6 +33,7 @@ import { readPhotoPublicBaseUrl } from "@/modules/listing-discovery/infrastructu
 import { db } from "@/shared/db/client";
 import { Container } from "../components/layout/Container";
 import { ListingStrip } from "../components/molecules/ListingStrip";
+import { LaunchLanding } from "./_components/LaunchLanding";
 import { readNavAccountFlags } from "./_lib/nav-account";
 import styles from "./home.module.css";
 
@@ -308,29 +308,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
 
       <Container>
         {landing ? (
-          <section className={styles.invite}>
-            <div className={styles.inviteLayout}>
-              <div>
-                <p className={styles.eyebrow}>{landing.eyebrow}</p>
-                <h1 className={styles.inviteTitle}>{landing.title}</h1>
-                <p className={styles.inviteText}>{landing.lead}</p>
-                {landing.action && (
-                  <AppLink className={styles.inviteAction} href={landing.action.href}>
-                    {landing.action.label}
-                  </AppLink>
-                )}
-              </div>
-              <dl className={styles.ledger}>
-                {landing.facts.map((fact) => (
-                  <div className={styles.fact} key={fact.label}>
-                    <dt>{fact.label}</dt>
-                    <dd>{fact.value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-            <p className={styles.disclaimer}>{landing.disclaimer}</p>
-          </section>
+          <LaunchLanding landing={landing} />
         ) : (
           <div className={styles.strips}>
             <h1 className={styles.srOnly}>Alquileres de larga estancia en Venezuela</h1>
