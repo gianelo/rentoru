@@ -93,10 +93,12 @@ describe("selector del inicio servido", () => {
     expect(html).not.toContain("Gratis para publicar. Sin comisión.");
   });
 
-  it("mantiene la ciudad seleccionada vacía como regreso y consulta la otra sin pedir sus fotos", async () => {
+  it("oculta todas las fichas en ciudad seleccionada vacía y conserva Nav y GET", async () => {
     const html = await served("distrito-capital");
-    expect(html).toMatch(/aria-current="true"[^>]*href="\/"[^>]*>Distrito Capital/);
-    expect(html).toContain('href="/?ciudad=maracaibo"');
+    expect(html).not.toContain('aria-label="Ciudades"');
+    expect(html).not.toContain('href="/?ciudad=maracaibo"');
+    expect(html).toContain('href="/"');
+    expect(html).toContain('method="get"');
     expect(html).toContain("Todavía no hay avisos disponibles en Distrito Capital");
     expect(coversFor).toHaveBeenCalledWith([]);
   });
@@ -154,8 +156,9 @@ describe("selector del inicio servido", () => {
     expect(html).toContain("Gratis para publicar. Sin comisión.");
     expect(html).toMatch(/Todavía no hay avisos disponibles en Distrito Capital/);
     expect(html).not.toContain("Todavía no hay avisos disponibles en Maracaibo");
-    expect(html).toMatch(/aria-current="true"[^>]*href="\/"[^>]*>Distrito Capital/);
-    expect(html).toContain('href="/?ciudad=maracaibo"');
+    expect(html).not.toContain('aria-label="Ciudades"');
+    expect(html).not.toContain('href="/?ciudad=maracaibo"');
+    expect(html).toContain('href="/"');
     expect(html).toContain('href="/publicar"');
   });
 
@@ -164,7 +167,8 @@ describe("selector del inicio servido", () => {
     const html = await served("maracaibo");
     expect(html).toContain("Todavía no hay avisos disponibles en Maracaibo");
     expect(html).not.toContain("Apartamento en Maracaibo");
-    expect(html).toMatch(/aria-current="true"[^>]*href="\/"[^>]*>Maracaibo/);
+    expect(html).not.toContain('aria-label="Ciudades"');
+    expect(html).toContain('href="/"');
   });
 
   it("un slug inválido no queda seleccionado", async () => {

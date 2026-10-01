@@ -103,7 +103,7 @@ En la estructura "Directorio compacto" el precio usa `--mono` (`--disp: var(--mo
 | Badge / etiqueta | 11px / 700 / 1.4 | `letter-spacing: .06em`, mayúsculas |
 | Texto secundario cómodo de leer | interlineado 1.6, con `--meta-fs` (12px) o `--control-fs` (15px) según la hoja | `--secondary-lh`. **No es el interlineado del cuerpo** (22.33): acompaña texto que no es el cuerpo pero pide el mismo aire de lectura — motivos, avisos, notas |
 
-La lámina 03 oculta la acción inline en móvil porque dibuja un dock estático. En producción se conserva el enlace `/publicar` junto al hero: el dock real se oculta al desplazarse y el enlace inline mantiene accesible la acción sin JavaScript. La sección vacía centra su contenido en la altura disponible bajo el Nav (60px móvil, 68px desde 768px), descontando sus dos márgenes exteriores de `--home-invite-margin` (32px); su altura es mínima, no fija, para permitir scroll cuando el contenido no entra.
+La lámina 03 oculta la acción inline en móvil porque dibuja un dock estático. En producción se conserva el enlace `/publicar` junto al hero: el dock real se oculta al desplazarse y el enlace inline mantiene accesible la acción sin JavaScript. **Corrección F32 C2 (fundador, 2026-09-30):** la decisión anterior de centrar la sección vacía en la altura disponible bajo el Nav queda reemplazada. El hero de la landing vacía tiene altura natural y se separa sólo con padding del sistema (24px móvil, 48px desde 768px), sin altura mínima de viewport ni centrado vertical; el footer puede aparecer cuando quepa. **Corrección F32 C3 (feedback posterior del fundador):** el panel blanco tocaba Nav y footer. Ahora lleva margen exterior simétrico `--home-invite-outer-gap` (16px móvil) / `--home-invite-outer-gap-desktop` (24px desde 768px), sin cambiar el padding interior de 24/48px ni la altura natural. En navegador real, la separación visible con Nav y footer midió 16px a 390×844 y 24px a 768×1024 y 1440×900; el margen colapsa a través del contenedor, pero mantiene ambos espacios sobre `--bg` sin desborde horizontal. Se conserva el enlace `/publicar` inline en móvil. El board sigue siendo referencia visual de la jerarquía, no de esa altura. El inicio con oferta y los resultados de ciudad no cambian.
 
 **Un papel tipográfico se declara en un solo sitio** (2026-08-28, tareas 22.3 y 22.4). El metadato y el título de lista estaban escritos tres veces cada uno, y las copias ya habían empezado a discrepar: `/mis-avisos` dibujaba el metadato en 400 donde la cuadrícula lo dibujaba en 600, y el título al revés. Hoy los dibujan `components/atoms/ListingMeta.tsx` y `components/atoms/ListingTitle.tsx`, y que las dos pantallas coincidan **se mide en un navegador**, no se afirma leyendo una hoja.
 
@@ -119,6 +119,7 @@ Escala: `4 · 8 · 12 · 16 · 24 · 32 · 48`. Nada fuera de esa escala.
 |---|---|---|
 | `--rowpad` | `7px 12px` | Padding vertical/horizontal de fila de resultado |
 | `--gap` | `8px` | Separación entre miniatura y contenido |
+| `--home-invite-outer-gap` / `--home-invite-outer-gap-desktop` | `16px` / `24px` | Margen exterior simétrico del panel blanco del inicio vacío, móvil / desde 768px; independiente del padding interior |
 
 ### Geometría de la tarjeta de resultado
 

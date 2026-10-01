@@ -12,6 +12,7 @@ import {
   homeLanding,
   homeSearchBar,
   resolveHomeCity,
+  resolveHomeCityChips,
 } from "./home-collections";
 import type { GridCover, GridListing } from "./listing-grid";
 import { slugify } from "./listing-url";
@@ -544,6 +545,35 @@ describe("resolveHomeCity — qué ciudad nombra el parámetro", () => {
  * JavaScript: cada una es un enlace a una dirección que ya existe.
  */
 describe("disponibilidad de ciudades", () => {
+  it("la landing elimina todas las fichas, incluso la seleccionada y las ciudades con oferta ajena", () => {
+    const selectedSpecs = homeCollections(CITIES, "dc");
+    const collections = new Map([["disponibilidad:mcbo", page(["m"], 1)]]);
+    const emptySelected = buildHome(selectedSpecs, collections, coversFor("m"), BASE_URL);
+    expect(emptySelected.invitesToPublish).toBe(true);
+    expect(resolveHomeCityChips(emptySelected, CITIES, "dc", collections)).toEqual([]);
+
+    const global = buildHome(homeCollections(CITIES), new Map(), new Map(), BASE_URL);
+    expect(resolveHomeCityChips(global, CITIES, null, new Map())).toEqual([]);
+
+    const withoutCover = buildHome(
+      homeCollections(CITIES, "mcbo"),
+      new Map([[MCBO, page(["m"], 1)]]),
+      new Map(),
+      BASE_URL,
+    );
+    expect(
+      resolveHomeCityChips(withoutCover, CITIES, "mcbo", new Map([[MCBO, page(["m"], 1)]])),
+    ).toEqual([]);
+  });
+
+  it("con tarjetas visibles conserva la elegibilidad previa", () => {
+    const collections = new Map([[MCBO, page(["m"], 1)]]);
+    const home = buildHome(homeCollections(CITIES), collections, coversFor("m"), BASE_URL);
+    expect(resolveHomeCityChips(home, CITIES, null, collections)).toEqual([
+      { cityId: "mcbo", label: "Maracaibo", href: "/?ciudad=maracaibo", selected: false },
+    ]);
+  });
+
   it("sin páginas elegibles no ofrece ciudades ajenas y sólo conserva la elegida válida", () => {
     expect(homeCityChips(CITIES, null, new Map())).toEqual([]);
     expect(homeCityChips(CITIES, "dc", new Map())).toEqual([

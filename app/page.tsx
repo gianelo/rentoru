@@ -22,10 +22,10 @@ import {
   HOME_CITY_PARAM,
   homeAvailabilitySpecs,
   homeCanPublish,
-  homeCityChips,
   homeCollections,
   homeLanding,
   resolveHomeCity,
+  resolveHomeCityChips,
 } from "@/modules/listing-discovery/domain/home-collections";
 import { DrizzleActiveZones } from "@/modules/listing-discovery/infrastructure/drizzle-active-zones";
 import { DrizzleHomeCollections } from "@/modules/listing-discovery/infrastructure/drizzle-home-collections";
@@ -185,7 +185,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // Qué pregunta la caja, cómo se llama su parámetro y a dónde vuelve, y cuál
   // ficha de ciudad está activa: son decisiones de producto y llegan resueltas.
   const searchForm = homeSearchForm(typed);
-  const cityChips = homeCityChips(cities, selectedCity?.id ?? null, collections);
+  const cityChips = resolveHomeCityChips(home, cities, selectedCity?.id ?? null, collections);
 
   // **La sesión, y lo que cuesta.** Auth.js está en estrategia `database`, así
   // que una lectura CON cookie es un viaje a Postgres. **Sin cookie no cuesta
@@ -252,7 +252,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
           navegar — y el estado queda en la URL, que se comparte y se marca.
 
           Acá no se decide nada: cuál está activa, a dónde lleva cada una y qué
-          pasa con lo que ya estaba elegido salen de `homeCityChips`. */}
+          pasa con lo que ya estaba elegido salen de `resolveHomeCityChips`. */}
       {cityChips.length === 0 ? null : (
         <nav className={styles.cities} aria-label="Ciudades">
           <ul className={styles.chips}>
