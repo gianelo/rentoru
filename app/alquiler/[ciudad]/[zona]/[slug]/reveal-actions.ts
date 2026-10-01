@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   ListingNotRevealableError,
@@ -57,6 +58,10 @@ export async function revealListingContact(formData: FormData): Promise<void> {
         rateLimit: contactRevealEvents,
       },
     );
+    // Refresh the current RSC tree after the event is durable. Never pass the
+    // form's destination (or its query) directly to Next's cache API.
+    const safeDoor = safeReturnPath(doorHref);
+    if (safeDoor) revalidatePath(new URL(safeDoor, "https://destino.invalid").pathname);
   } catch (error) {
     // El punto de fuga principal del producto. **Ya no lo saca del aviso**
     // (tasks.md 15.8): vuelve a ESTA ficha con la puerta abierta, que es un
