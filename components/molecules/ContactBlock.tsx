@@ -205,12 +205,13 @@ export function ContactBlock({
                   name="message"
                   label="Tu mensaje para quien publica"
                   error={error ?? undefined}
+                  help="Escribí con tus palabras qué querés consultar. El ejemplo no se envía."
                   required
                 >
                   {(attrs) => (
                     <textarea
                       {...attrs}
-                      rows={3}
+                      rows={4}
                       required
                       placeholder={defaultRevealMessage(listingTitle)}
                     />

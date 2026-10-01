@@ -50,4 +50,42 @@ for (const { width, height } of [
     expect(geometry?.distinctRegions).toBe(true);
     expect(geometry?.overflow).toBe(false);
   });
+
+  if (width === 1440) continue;
+
+  test(`contact placeholder and typed message at ${width}×${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto("/measure");
+    const textarea = page.getByTestId("contact-block").locator('textarea[name="message"]');
+    await expect(textarea).toHaveValue("");
+    const baseline = await textarea.evaluate((element: HTMLTextAreaElement) => ({
+      placeholder: element.placeholder,
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+    }));
+    console.log(`CONTACT ${width} baseline ${JSON.stringify(baseline)}`);
+
+    const typed =
+      "Hola, me interesa el aviso. Quisiera conocer las condiciones y coordinar una visita. ".repeat(
+        8,
+      );
+    await textarea.fill(typed);
+    const afterTyping = await textarea.evaluate((element: HTMLTextAreaElement) => ({
+      scrollHeight: element.scrollHeight,
+      clientHeight: element.clientHeight,
+      documentWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+      value: element.value,
+    }));
+    console.log(
+      `CONTACT ${width} typed ${JSON.stringify({ ...afterTyping, valueLength: afterTyping.value.length, value: undefined })}`,
+    );
+    expect(afterTyping.value).toBe(typed);
+    expect(afterTyping.scrollHeight).toBeGreaterThan(afterTyping.clientHeight);
+    expect(afterTyping.documentWidth).toBeLessThanOrEqual(afterTyping.viewportWidth);
+    expect(baseline.documentWidth).toBeLessThanOrEqual(baseline.viewportWidth);
+    expect(baseline.scrollHeight).toBeLessThanOrEqual(baseline.clientHeight + 1);
+  });
 }

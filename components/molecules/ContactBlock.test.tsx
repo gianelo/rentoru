@@ -80,7 +80,9 @@ describe("quién publica se dice con palabras, no sólo con un tono (14.54)", ()
 
 it("forwards server error to Field only on the locked form", () => {
   const html = render(LOCKED, { error: "Escribí un mensaje para revelar el contacto." });
-  expect(html).toMatch(/<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error"/);
+  expect(html).toMatch(
+    /<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error message-help"/,
+  );
   expect(html).toContain('id="message-error"');
   expect(html).toContain("Escribí un mensaje para revelar el contacto.");
   expect(render(LOCKED)).not.toContain('id="message-error"');
