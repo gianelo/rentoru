@@ -1,4 +1,5 @@
 import type { ContactDoorCopy } from "@/modules/contact-reveal/domain/sign-in-door";
+import { SIGN_IN_LEGAL } from "@/modules/identity/domain/sign-in-page";
 import { AppLink } from "../atoms/AppLink";
 import { ActionButton, NeutralButton } from "../atoms/buttons";
 import { GoogleMark } from "../atoms/icons";
@@ -84,9 +85,17 @@ export function SignInDoor({
         </div>
         <p className={styles.emailNote}>{copy.email.note}</p>
       </form>
-      <AppLink className={styles.stay} href={stayHref}>
-        {copy.stayLabel}
-      </AppLink>
+      <p className={styles.legal}>
+        {SIGN_IN_LEGAL.map((fragment) =>
+          fragment.kind === "link" ? (
+            <AppLink href={fragment.href} key={fragment.href}>
+              {fragment.label}
+            </AppLink>
+          ) : (
+            <span key={fragment.value}>{fragment.value}</span>
+          ),
+        )}
+      </p>
       <p className={styles.assurance}>{copy.assurance}</p>
     </SignInDoorDismiss>
   );

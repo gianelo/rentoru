@@ -980,7 +980,7 @@ describe("la puerta del WhatsApp no saca al inquilino de la ficha (15.8)", () =>
     expect(html).toContain("$480");
   });
 
-  /** Las dos salidas son anclas de verdad, y la vuelta de Google es a la ficha. */
+  /** El aviso legal completo viaja en el HTML; la × es la única salida visible. */
   it("sale por esta misma ficha y vuelve a ella después de Google", async () => {
     const html = await servedBody(VENCIDO_SLUG, { entrar: "si" });
 
@@ -989,7 +989,14 @@ describe("la puerta del WhatsApp no saca al inquilino de la ficha (15.8)", () =>
     expect(html).toMatch(
       new RegExp(`<a[^>]*data-contact-door-trigger=""[^>]*href="${RUTA}\\?entrar=si"`),
     );
-    expect(html).toContain(`href="${RUTA}">Seguir mirando sin entrar</a>`);
+    expect(html).not.toContain("Seguir mirando sin entrar");
+    expect(html).toMatch(new RegExp(`<a[^>]*aria-label="Cerrar sin entrar"[^>]*href="${RUTA}"`));
+    expect(html).toContain("Al entrar aceptás los ");
+    expect(html).toContain('href="/legal/terminos">términos</a>');
+    expect(html).toContain('href="/legal/privacidad">privacidad</a>');
+    expect(html).toContain(
+      ". Rentoru no participa en el trato: no cobramos comisión, no retenemos pagos y no redactamos contratos.",
+    );
     expect(html).toMatch(/<form\b[^>]*>[\s\S]*?Continuar con Google[\s\S]*?<\/form>/);
     expect(html).toMatch(
       /<form\b[^>]*>[\s\S]*?name="correo"[\s\S]*?Enviarme el enlace[\s\S]*?<\/form>/,
