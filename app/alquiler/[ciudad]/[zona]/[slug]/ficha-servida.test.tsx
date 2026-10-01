@@ -308,11 +308,54 @@ async function servedBody(slug: string = VENCIDO_SLUG, query: Record<string, str
   );
 }
 
+it("serves native iPad gallery thumbnails without stale selection when scripts are off", async () => {
+  allFor.mockResolvedValue(
+    [0, 1, 2].map((position) => ({
+      position,
+      photoCount: 3,
+      keys: {
+        strip: `photos/${position}/strip.webp`,
+        detail: `photos/${position}/detail.webp`,
+        thumb: `photos/${position}/thumb.webp`,
+      },
+    })),
+  );
+  const html = await servedBody();
+  const gallery = html.match(/<figure[^>]*data-testid="photo-strip"[\s\S]*?<\/figure>/)?.[0];
+  expect(gallery).toBeDefined();
+  const thumbs = gallery?.match(
+    /<nav[^>]*aria-label="Miniaturas de fotos de la ficha"[\s\S]*?<\/nav>/,
+  )?.[0];
+  expect(thumbs).toBeDefined();
+  for (const n of [1, 2, 3]) expect(thumbs).toContain(`/foto/${n}"`);
+  expect(thumbs).not.toContain('aria-current="true"');
+  expect(gallery).toContain('aria-hidden="true"');
+  expect(gallery).toContain('aria-label="Foto 1 de 3"');
+});
+
+it("31.4: serves an empty four-row message field with its external, announced help", async () => {
+  sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+  findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
+  const html = await servedBody();
+  const textarea = html.match(/<textarea[^>]*name="message"[^>]*>[\s\S]*?<\/textarea>/)?.[0];
+  expect(textarea).toBeDefined();
+  expect(textarea).toContain('rows="4"');
+  expect(textarea).toContain("required");
+  expect(textarea).toContain('placeholder="Hola, vi tu aviso');
+  expect(textarea).toContain('aria-describedby="message-help"');
+  expect(textarea).toMatch(/><\/textarea>$/);
+  expect(html).toContain(
+    'id="message-help">Escribí con tus palabras qué querés consultar. El ejemplo no se envía.</p>',
+  );
+});
+
 it("serves missing-message feedback in the locked authenticated contact form only for the exact marker", async () => {
   sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
   findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
   const html = await servedBody(VENCIDO_SLUG, { revelar: "mensaje-requerido" });
-  expect(html).toMatch(/<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error"/);
+  expect(html).toMatch(
+    /<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error message-help"/,
+  );
   expect(html).toMatch(/<p[^>]*id="message-error"[^>]*>[^<]*mensaje[^<]*<\/p>/i);
   expect(html).toContain('data-testid="contact-value">+58 ••• ••• ••••');
   expect(html).not.toContain(TELEFONO);
@@ -373,6 +416,49 @@ describe("la búsqueda servida en la ficha", () => {
     expect(html).not.toContain('name="zona"');
     expect(html).toContain("callbackUrl=");
   });
+});
+
+describe("31.3: ubicación legible sin miga navegable", () => {
+  it.each([
+    { parent: null, text: "Apartamento · Tierra Negra · Maracaibo" },
+    {
+      parent: "Municipio Maracaibo",
+      text: "Apartamento · Tierra Negra · Municipio Maracaibo · Maracaibo",
+    },
+  ])(
+    "sirve el tipo, zona, padre opcional y ciudad como texto ($parent)",
+    async ({ parent, text }) => {
+      findForDetail.mockResolvedValue(detail({ zoneParentName: parent }));
+      const html = await servedBody();
+      const location = html.match(/<p\b[^>]*class="[^"]*location[^"]*"[^>]*>[\s\S]*?<\/p>/)?.[0];
+      expect(location).toBeDefined();
+      expect(location).toContain(`>${text}</p>`);
+      expect(location).not.toMatch(/<a\b|<nav\b/);
+      // Una miga envolviendo el párrafo también cambia su semántica.
+      expect(html).not.toMatch(/<nav\b[^>]*>(?:(?!<\/nav>)[\s\S])*?<p\b[^>]*class="[^"]*location/);
+    },
+  );
+
+  it.each([
+    {
+      origin: undefined,
+      label: "Ver avisos en Tierra Negra",
+      href: "/alquiler/maracaibo/tierra-negra",
+    },
+    {
+      origin: "/alquiler/maracaibo?min=200",
+      label: "← Resultados",
+      href: "/alquiler/maracaibo?min=200",
+    },
+  ])(
+    "conserva la vuelta contextual sin convertir la ubicación en enlace ($origin)",
+    async ({ origin, label, href }) => {
+      const html = await servedBody(VENCIDO_SLUG, origin ? { [RETURN_PARAM]: origin } : {});
+      const main = html.slice(html.indexOf("<main"));
+      expect(main).toContain(`href="${href.replaceAll("&", "&amp;")}">${label}</a>`);
+      expect(main.indexOf(`>${label}</a>`)).toBeLessThan(main.indexOf("<h1"));
+    },
+  );
 });
 
 describe("la vuelta vive dentro del contenido, no en la barra (14.54)", () => {
