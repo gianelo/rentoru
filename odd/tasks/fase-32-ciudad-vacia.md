@@ -27,6 +27,6 @@
 **Estado:** verificado y listo para abrir PR; `520b275` incorporó `origin/dev` (`4512576`, F31 #356) sin conflictos ni rutas F31 en el diff del PR.
 
 - [x] Sobre base `dev` actualizada, verificador independiente: `pnpm test:unit` **3125/3125** (278 archivos), typecheck, lint (7 warnings y 2 infos no bloqueantes), lint:tokens (289 hojas), build (23 páginas) y bundle **112,43/130 KB gzip**, diff check verdes. Los controles previos a sincronizar también pasaron (3124/3124); no se confunden con la evidencia del árbol combinado.
-- [x] 282 líneas de código revisables (315 incluyendo este registro y OpenSpec) contra `origin/dev`, por debajo de 400; 9 rutas exclusivas de F32. Integración/E2E completos **no se ejecutaron localmente** y ninguna base F30/F31 fue usada; corresponden a CI del nuevo PR. El fundador dijo que su prueba local «va bien», sin atribuirle una corrida JS-off o medidas de navegador no reportadas. Commit de evidencia C3: registrar al cerrar.
+- [x] 282 líneas de código revisables (315 incluyendo este registro y OpenSpec) contra `origin/dev`, por debajo de 400; 9 rutas exclusivas de F32. Integración/E2E completos **no se ejecutaron localmente** y ninguna base F30/F31 fue usada; corresponden a CI del nuevo PR. El fundador dijo que su prueba local «va bien», sin atribuirle una corrida JS-off o medidas de navegador no reportadas. Commit de evidencia C3: `2c22156`.
 
 **Entrega:** el fundador autorizó **commit, push y PR a `dev`**, no merge; PR y CI pendientes. El PR #354 ya fusionado pertenece a la landing del inicio, no a esta corrección nueva.
