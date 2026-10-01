@@ -12,7 +12,7 @@ for (const width of [390, 440, 768]) {
           await context.grantPermissions(["clipboard-read", "clipboard-write"]);
         }
         const page = await context.newPage();
-        await page.goto("/measure");
+        await page.goto("/measure?revealed=1");
         for (const method of ["email", "whatsapp", "telefono"] as const) {
           const block = page.getByTestId(`revealed-${method}`);
           const action = block.getByRole("link", {
