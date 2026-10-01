@@ -333,11 +333,29 @@ it("serves native iPad gallery thumbnails without stale selection when scripts a
   expect(gallery).toContain('aria-label="Foto 1 de 3"');
 });
 
+it("31.4: serves an empty four-row message field with its external, announced help", async () => {
+  sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+  findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
+  const html = await servedBody();
+  const textarea = html.match(/<textarea[^>]*name="message"[^>]*>[\s\S]*?<\/textarea>/)?.[0];
+  expect(textarea).toBeDefined();
+  expect(textarea).toContain('rows="4"');
+  expect(textarea).toContain("required");
+  expect(textarea).toContain('placeholder="Hola, vi tu aviso');
+  expect(textarea).toContain('aria-describedby="message-help"');
+  expect(textarea).toMatch(/><\/textarea>$/);
+  expect(html).toContain(
+    'id="message-help">Escribí con tus palabras qué querés consultar. El ejemplo no se envía.</p>',
+  );
+});
+
 it("serves missing-message feedback in the locked authenticated contact form only for the exact marker", async () => {
   sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
   findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
   const html = await servedBody(VENCIDO_SLUG, { revelar: "mensaje-requerido" });
-  expect(html).toMatch(/<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error"/);
+  expect(html).toMatch(
+    /<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error message-help"/,
+  );
   expect(html).toMatch(/<p[^>]*id="message-error"[^>]*>[^<]*mensaje[^<]*<\/p>/i);
   expect(html).toContain('data-testid="contact-value">+58 ••• ••• ••••');
   expect(html).not.toContain(TELEFONO);
