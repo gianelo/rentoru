@@ -1,0 +1,14 @@
+# Fase 32 — vacío compacto del inicio
+
+**Estado:** autorizado por feedback visual del fundador el 2026-09-30; implementación pendiente. **Base:** `dev` en `bdc38f3`; rama `fix/fase-32-home-compacta`. **Alcance:** únicamente el inicio vacío. No alterar resultados `/alquiler/<ciudad>`, búsqueda ni datos; no usar las bases de F30/F31.
+
+## Decisión
+
+Las capturas reales del inicio vacío en desktop, tablet y móvil muestran demasiado espacio blanco porque el bloque tiene altura mínima del viewport y centra su contenido. El fundador pide altura natural, espaciado mediante padding y footer visible cuando quepa. También pide **ninguna pastilla de ciudad cuando aparece la landing vacía**, incluso con una ciudad seleccionada y otras ciudades con oferta; esto reemplaza la excepción de pastilla seleccionada vacía documentada en F32.1. Cuando el inicio muestra avisos, el selector de ciudades conserva la elegibilidad anterior. La navegación «Inicio», el buscador GET y la publicación siguen funcionales sin JavaScript.
+
+## Trabajo (ODD)
+
+- [ ] **C1 — Resolver pills del vacío en dominio y HTML servido.** En la decisión pura del módulo no entregar pastillas cuando se muestra la landing vacía, sin filtrar ciudades del catálogo ni alterar la elegibilidad con oferta. RED observado antes de GREEN en tests del dominio y del HTML real con Nav: vacío global, ciudad seleccionada vacía aunque otra tenga oferta, fila sin portada; con oferta se mantienen las pastillas. Mutar la decisión y confirmar que el test servido falla; restaurar. Archivos previstos: `src/modules/listing-discovery/domain/home-collections.ts`, su test, `app/page.tsx`, `app/inicio-servido.test.tsx`. Commit de unidad con pruebas.
+- [ ] **C2 — Altura natural y espaciado de sistema.** Eliminar `min-block-size` de viewport, margen compensatorio y centrado vertical de `.invite`; conservar padding responsive y la jerarquía visual, sin inventar valores locales. Actualizar el sistema visual y retirar el token de margen sólo si no queda uso, además de dejar constancia de la decisión visual que reemplaza el centrado del board. RED/GREEN para contrato CSS y prueba visual a tamaños móvil/tablet/desktop cuando el entorno aislado lo permita; mutación de la altura/centrado para confirmar que falla el control. Ejecutar tests enfocados, typecheck, lint, lint:tokens, diff-check y gates proporcionales. Archivos previstos: `app/home.module.css`, `app/inicio-contract.test.ts`, `src/styles/tokens.css`, `design/reference/sistema/SISTEMA.md`, registro en `openspec/changes/mvp-rental-listings/tasks.md`. Commit de unidad con evidencia.
+
+**Entrega:** no hacer push, PR ni merge sin nueva decisión. No trasladar el estilo del board como código: esta decisión del fundador corrige su altura anterior. Presupuesto de revisión: máximo 400 líneas revisables para el PR; comprobar diff antes de proponerlo.
