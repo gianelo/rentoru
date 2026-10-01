@@ -265,6 +265,23 @@ beforeEach(() => {
   findLatestMessage.mockResolvedValue(null);
 });
 
+it("31.6: serves revealed email with native mailto and scoped copy styling hook", async () => {
+  sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+  findForDetail.mockResolvedValue(
+    detail({ status: "active", expiresAt: VIGENTE(), contactMethod: "email" }),
+  );
+  findUniquePairs.mockResolvedValue([{ tenantUserId: "tenant-1", listingId: VENCIDO_ID }]);
+  findRevealable.mockResolvedValue({
+    publisherId: "publisher-1",
+    contactMethod: "email",
+    contactValue: "publisher@example.invalid",
+  });
+  const html = await servedBody();
+  expect(html).toContain('data-testid="contact-value">publisher@example.invalid');
+  expect(html).toMatch(/href="mailto:publisher@example\.invalid\?subject=[^"]*"/);
+  expect(html).toMatch(/<div[^>]*data-method="email"[^>]*><\/div>/);
+});
+
 it.each([
   { method: "whatsapp" as const, value: TELEFONO, href: "https://wa.me/584127654321?text=" },
   {

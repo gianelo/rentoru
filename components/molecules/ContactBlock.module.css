@@ -121,6 +121,12 @@
   min-height: var(--target-min);
 }
 
+/* Sólo el correo empareja el ancho de ambas acciones; los demás canales
+   conservan su botón secundario compacto. */
+.copy[data-method="email"] > button {
+  width: 100%;
+}
+
 /* Borde punteado, como el diseño dibuja el estado vencido: se distingue de un
    bloque normal sin depender del color. */
 .expired {
