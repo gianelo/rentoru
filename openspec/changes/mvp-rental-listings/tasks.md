@@ -2941,7 +2941,7 @@ Plan ejecutable, criterios por unidad, gates y trazabilidad de **21/21 comentari
 Todos los IDs son de producto y permanecen pendientes. P36.1–P36.3 siguen exclusivamente en el plan ODD; terminar planificación no termina funcionalidad. Cada cierre futuro citará archivo y prueba nombrada.
 
 - [ ] 36.1 Reproducir los nueve pasos y fijar baseline; coordinar medidas con F34. **Parcial:** registro observado 36.1a y matriz 21/21 en `odd/tasks/fase-36-cierre-publicacion.md#361a--baseline-observado-parcial` (HEAD `ee31148`, 177 pruebas pasan; Chromium local 4 medidas × JS on/off, fotos sólo fixture). 36.1b pendiente: fotos reales/final/loader, catálogo y conciliación F34; no cierra tarea ni #289.
-- [ ] 36.2 Logo como enlace nativo de inicio en los shells de publicación.
+- [x] 36.2 Logo como enlace nativo de inicio: `app/publicar/PublishStep.tsx`, `revisar/page.tsx`; `logo-inicio.test.tsx` (19 casos HTML), 44 pruebas focalizadas y 24/24 variantes Chromium con/sin JS, borradores intactos. Commit `ebd9a5e`; evidencia `odd/tasks/fase-36-logo-inicio.md`. 36.1 permanece parcial; su reproducción del logo permite este corte independiente.
 - [ ] 36.3 Investigar/corregir transición de entrada tras aprobar patrón contextual de carga.
 - [ ] 36.4 Reconciliar ancho de pastilla con política responsive del sistema.
 - [ ] 36.5 Sugerencias de zona como mejora progresiva, con búsqueda nativa intacta.
