@@ -22,6 +22,8 @@ Rama: `docs/fase-36-cierre-publicacion`, creada desde `origin/dev` sincronizado.
 
 ### 36.1a — Baseline observado (parcial)
 
+**Entrega:** commit `25810bb` (`docs: registra baseline parcial de publicación (36.1a)`), push confirmado y [PR #365](https://github.com/gianelo/rentoru/pull/365) a `dev`. Fetch previo: `origin/dev` seguía en `ee31148`, ancestro de la rama; sin conflictos nuevos. Evaluación nativa del diff: `medium`, `reviewDue=false` / `under_budget`, sin aprobación nativa declarada. CI remoto pendiente de consultar; sin merge. Este corte documental no cierra 36.1.
+
 **Procedencia:** resultados aportados por los dos verificadores, no reejecutados en esta subunidad documental. HEAD `ee31148231f356319b09be9eb616feb548279352`, rama `test/fase-36-baseline-publicacion`, worktree `/Users/gianelo/Documents/Dev/py/rentoru-fase36-publicacion`. Node 22.23.3, pnpm 10.34.5, Vitest 4.1.10, Playwright 1.62.1, Chromium revisión 1234. No RED/GREEN: caracterización de comportamiento existente y resumen pasivo, sin cambios de código.
 
 | Comando/pase del verificador | Resultado observado |
