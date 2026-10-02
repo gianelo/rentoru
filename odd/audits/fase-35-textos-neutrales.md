@@ -14,7 +14,7 @@ No se enumeran todos los literales ni se sustituye la auditoría de estados futu
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `src/modules/identity/domain/sign-in-page.ts:119–183` | HTML, visitante; entrada y regreso a publicar | `app/(auth)/signin/page.tsx:50–169` | `app/(auth)/signin/entrar-servida.test.tsx:48`: «por la puerta de publicar dibuja el título, los tres pasos y un formulario de verdad». Revisar tuteo en 35.2 |
+| `src/modules/identity/domain/sign-in-page.ts:119–183` | HTML, visitante; entrada y regreso a publicar | `app/(auth)/signin/page.tsx:50–169` | `app/(auth)/signin/entrar-servida.test.tsx:48`: 35.2a: tuteo implementado; matriz «35.2a: sirve tuteo y conserva destino y error por la puerta %s» (cinco puertas), SignInDoor real (tres variantes) y ficha servida. RED 9/99, GREEN 99/99, mutación de garantía detectada y restaurada. Comandos/resultados en canónico «Evidencia 35.2a»; suite amplia inicialmente 3134 pasan/1 falla por expectativa obsoleta; padre autorizó `signin-return.test.ts`, dos literales corregidos sin alterar integración: focal 101/101 y suite amplia 3135/3135 pasan. Revisión nativa/entrega pendientes del padre; 35.2 sigue abierta |
 | `src/modules/identity/domain/magic-link-request.ts:334–382` | HTML/cliente, solicitante; espera, error, otro dispositivo | `app/(auth)/signin/revisa-tu-correo/page.tsx:78–169` | `app/(auth)/signin/revisa-tu-correo/espera-servida.test.tsx:193`: «el aviso de que el enlace se abrió en otro dispositivo va servido y oculto». No prueba el sondeo cliente; pendiente |
 
 ### 35.3 — descubrimiento y búsqueda

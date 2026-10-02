@@ -36,9 +36,47 @@ function titulo(html: string): string {
 const FICHA = "/alquiler/distrito-capital/chacao/apartamento-2h";
 
 describe("la pantalla de entrar sale entera en el HTML (15.7)", () => {
+  it.each([
+    [undefined, "Entra a tu cuenta"],
+    ["/publicar", "Entra para publicar tu propiedad"],
+    [FICHA, "Entra y vuelves a este aviso"],
+    ["/mis-avisos", "Entra a tu cuenta"],
+    ["/importar", "Entra a tu cuenta"],
+  ])("35.2a: sirve tuteo y conserva destino y error por la puerta %s", async (destino, title) => {
+    const html = await servida(destino, "invalido");
+    expect(titulo(html)).toBe(title);
+    expect(html).toContain("Al entrar aceptas los ");
+    expect(html).toContain('href="/legal/terminos">términos</a>');
+    expect(html).toContain('href="/legal/privacidad">privacidad</a>');
+    expect(html).toContain("Te mandamos un enlace que te deja entrar. No manejamos contraseñas.");
+    expect(html).toContain("✱ Ese correo no es válido.");
+    expect(html).toContain('aria-invalid="true"');
+    expect(html).toContain('aria-describedby="correo-error"');
+    expect(html).toContain(`name="callbackUrl" value="${destino ?? ""}"`);
+    expect(html.match(/<form/g)).toHaveLength(2);
+    expect(html).toContain(`href="${destino === FICHA ? FICHA : "/"}"`);
+    if (destino === "/publicar") {
+      for (const step of [
+        "Llenas los datos de la propiedad: zona, precio, habitaciones.",
+        "Subes las fotos, que comprimimos en tu navegador antes de mandarlas.",
+        "Verificas tu teléfono por WhatsApp y el aviso queda activo 30 días.",
+        "Si ya tienes cuenta, el mismo botón te lleva a tus publicaciones.",
+      ])
+        expect(html).toContain(step);
+      expect(html).toContain("Publicar es gratis y no cobramos comisión.");
+    } else if (destino === FICHA) {
+      expect(html).toContain("Pedimos la cuenta para frenar avisos falsos. Es gratis y es rápido.");
+      expect(html).toContain("Vuelves a este mismo aviso al terminar.");
+    } else {
+      expect(html).toContain(
+        "Con tu cuenta editas tus avisos, los renuevas cuando vencen y los das de baja. Es gratis y no cobramos comisión.",
+      );
+      expect(html).not.toContain('data-testid="entrar-pasos"');
+    }
+  });
   it("sirve el aviso legal completo con sus dos enlaces nativos", async () => {
     const html = await servida();
-    expect(html).toContain("Al entrar aceptás los ");
+    expect(html).toContain("Al entrar aceptas los ");
     expect(html).toContain('href="/legal/terminos">términos</a>');
     expect(html).toContain('href="/legal/privacidad">privacidad</a>');
     expect(html).toContain(
@@ -48,9 +86,9 @@ describe("la pantalla de entrar sale entera en el HTML (15.7)", () => {
   it("por la puerta de publicar dibuja el título, los tres pasos y un formulario de verdad", async () => {
     const html = await servida("/publicar");
 
-    expect(titulo(html)).toBe("Entrá para publicar tu propiedad");
-    expect(html).toContain("Verificás tu teléfono por WhatsApp y el aviso queda activo 30 días.");
-    expect(html).toContain("Si ya tenés cuenta, el mismo botón te lleva a tus publicaciones.");
+    expect(titulo(html)).toBe("Entra para publicar tu propiedad");
+    expect(html).toContain("Verificas tu teléfono por WhatsApp y el aviso queda activo 30 días.");
+    expect(html).toContain("Si ya tienes cuenta, el mismo botón te lleva a tus publicaciones.");
     // Sin JavaScript un `<button>` suelto no envía nada, y ésta es justo la
     // pantalla que no puede fallar.
     expect(html).toMatch(/<form[^>]*>[\s\S]*<button[^>]*type="submit"/);
@@ -61,11 +99,11 @@ describe("la pantalla de entrar sale entera en el HTML (15.7)", () => {
   it("por la puerta de un aviso cambia la copia y la salida vuelve a ese aviso", async () => {
     const html = await servida(FICHA);
 
-    expect(titulo(html)).toBe("Entrá y volvés a este aviso");
-    expect(html).toContain("Volvés a este mismo aviso al terminar.");
+    expect(titulo(html)).toBe("Entra y vuelves a este aviso");
+    expect(html).toContain("Vuelves a este mismo aviso al terminar.");
     expect(html).toContain(`href="${FICHA}"`);
     // Y no promete el camino de publicar, que es de otra puerta.
-    expect(html).not.toContain("Verificás tu teléfono por WhatsApp");
+    expect(html).not.toContain("Verificas tu teléfono por WhatsApp");
   });
 
   /**
@@ -109,9 +147,9 @@ describe("la pantalla de entrar sale entera en el HTML (15.7)", () => {
     const html = await servida("https://evil.test/publicar");
 
     expect(html).not.toContain("evil.test");
-    expect(titulo(html)).toBe("Entrá a tu cuenta");
+    expect(titulo(html)).toBe("Entra a tu cuenta");
     // Y sin destino la pantalla existe igual: es una ruta que alguien escribe.
-    expect(titulo(await servida())).toBe("Entrá a tu cuenta");
+    expect(titulo(await servida())).toBe("Entra a tu cuenta");
   });
 });
 

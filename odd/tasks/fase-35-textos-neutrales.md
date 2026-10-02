@@ -1,6 +1,6 @@
 # Fase 35 — auditoría de textos en español neutro
 
-**Estado actual:** planificación publicada; ejecución autorizada por el fundador el 2026-10-02 en el mismo worktree. **35.1 cerrada como inventario y línea base**; 35.2 está en exploración y las diez tareas de corrección siguen pendientes. No se han corregido textos de producto. El PR #362 conserva exclusivamente la planificación; la implementación continúa en `feat/fase-35-textos-neutrales`.
+**Estado actual:** ejecución autorizada por el fundador el 2026-10-02 en el mismo worktree. **35.1 cerrada como inventario y línea base**; 35.2a (HTML de entrada y puerta compartida) implementada y verificada; revisión nativa y entrega pendientes del padre; 35.2b (espera/script/metadata) pendiente. Las diez tareas de corrección siguen abiertas. PR #362 MERGED por el fundador, `0341dcf51a19a7c50f1727273c5b2b82ade5864a`; rama `feat/fase-35-textos-neutrales` sincronizada con `origin/dev` mediante `baab672`. Entrega elegida: PR pequeños, independientes y secuenciales hacia `dev`; sin push ni merge automáticos.
 
 ## Objetivo y autoridad
 
@@ -113,7 +113,7 @@ Las pruebas de dominio/catálogo complementan, no reemplazan, las de consumidore
 | Ruta de escritura | Escritor delegado por unidad acotada de tres documentos; no promesa de escrituras futuras en paralelo |
 | Verificación de la planificación publicada | `git diff --check` y chequeos estructurales Python: pasan; verificación independiente aprobada tras corregir dos rutas. Revisión nativa `review-f27234322075d036`: aprobada y reconocimiento completado. Documentación pasiva, sin RED significativo, pruebas pnpm ni build |
 | Controlador padre | Revisión, registro de verificación, commit convencional en español sin atribución, push y PR sólo a `dev`; escritor no ejecuta acciones terminales git |
-| Entrega de esta unidad | Plan publicado en commit `c2341af82620242a8f7a32b9083d2a7d26924882`; [PR #362](https://github.com/gianelo/rentoru/pull/362) abierto hacia `dev`. CI remoto pendiente al registrar la entrega; sin merge |
+| Entrega de esta unidad | Plan publicado en commit `c2341af82620242a8f7a32b9083d2a7d26924882`; [PR #362](https://github.com/gianelo/rentoru/pull/362) MERGED por el fundador en `0341dcf51a19a7c50f1727273c5b2b82ade5864a` |
 | Implementación posterior | Decidir ruta por tarea acotada; dividir en PR de ≤400 líneas revisables, pruebas incluidas; estimar 1,5–2× el cambio de comportamiento |
 | Limpieza al cerrar la fase | Eliminar el worktree tras comprobar cambios y commits; eliminar también contenedores y recursos Docker de pruebas creados y registrados por F35. No ejecutar limpieza global ni tocar recursos ajenos; push/PR no significa fase terminada |
 
@@ -133,4 +133,20 @@ Documentación pasiva: no hay RED significativo ni mutación aplicable. Las prue
 
 No prometer que toda F35 cabe en un PR ni imponer una implementación monolítica. Este repositorio no exige issue previo, enlace de issue ni etiquetas `type:*`; esta unidad no crea issues.
 
-**Siguiente paso:** explorar 35.2, acotar cambios de identidad/acceso y sus pruebas RED/GREEN antes de escribir producto; estimar la rebanada de revisión y resolver entrega si supera 400 líneas. La autorización de ejecución no autoriza push/PR de implementación, fusiones ni promoción a `main`.
+### Evidencia 35.2a — cierre pendiente del padre
+
+Sólo copia en `identity/domain/sign-in-page.ts` y `contact-reveal/domain/sign-in-door.ts`; reglas, rutas, formularios, privacidad e interpolaciones intactas. RED observado antes de producto: 9/99 fallan, nombres «35.2a: sirve tuteo y conserva destino y error por la puerta %s» (cinco puertas), «35.2a: renderiza la puerta real neutra %s/%s/%s» (tres variantes) y «35.2a: sirve la puerta neutra y el aviso bloqueado sin revelar el contacto»: esperaban `Entra`, recibían `Entrá`. GREEN 99/99. Mutación propia: sólo `RETURN_ASSURANCE` volvió a `Volvés…`; el caso servido de `/alquiler/distrito-capital/chacao/apartamento-2h` falló por garantía (más dos protecciones existentes); restaurada inmediatamente.
+
+| Comando exacto | Resultado observado |
+|---|---|
+| `env -u DATABASE_URL -u TEST_DATABASE_URL -u RESEND_API_KEY -u AUTH_MAIL_FROM -u LIFECYCLE_MAIL_FROM TZ=UTC pnpm exec vitest run src/modules/identity/domain/sign-in-page.test.ts src/modules/contact-reveal/domain/sign-in-door.test.ts 'app/(auth)/signin/entrar-servida.test.tsx' components/organisms/SignInDoor.test.tsx 'app/alquiler/[ciudad]/[zona]/[slug]/ficha-servida.test.tsx'` | RED 9/99; GREEN 99/99; mutación 3/99 fallan; restauración 99/99 |
+| `env -u DATABASE_URL -u TEST_DATABASE_URL -u RESEND_API_KEY -u AUTH_MAIL_FROM -u LIFECYCLE_MAIL_FROM TZ=UTC pnpm test:unit` | Inicial: 3134 pasan, 1 falla: `signin-return.test.ts` — «la pantalla de entrar reconoce el destino y promete volver al mismo aviso» esperaba `Entrá y volvés…`, entonces fuera de alcance. Tras autorización del padre y corrección: 278 archivos, 3135/3135 pasan |
+| `env -u DATABASE_URL -u TEST_DATABASE_URL -u RESEND_API_KEY -u AUTH_MAIL_FROM -u LIFECYCLE_MAIL_FROM TZ=UTC pnpm typecheck` | Pasa |
+| `pnpm lint:tokens` | Pasa, 289 archivos |
+| `pnpm exec biome check src/modules/identity/domain/sign-in-page.ts src/modules/identity/domain/sign-in-page.test.ts src/modules/contact-reveal/domain/sign-in-door.ts src/modules/contact-reveal/domain/sign-in-door.test.ts 'app/(auth)/signin/entrar-servida.test.tsx' components/organisms/SignInDoor.test.tsx 'app/alquiler/[ciudad]/[zona]/[slug]/ficha-servida.test.tsx'` | Pasa tras corregir formato propio y quitar aserción no nula |
+
+Corrección acotada autorizada por el padre: `app/alquiler/[ciudad]/[zona]/[slug]/signin-return.test.ts`, sólo dos expectativas completas (`Entra y vuelves…`, `Vuelves…`), sin cambios de lógica, fixtures ni fuente de producto adicional. RED reconfirmado con `env -u DATABASE_URL -u TEST_DATABASE_URL -u RESEND_API_KEY -u AUTH_MAIL_FROM -u LIFECYCLE_MAIL_FROM TZ=UTC pnpm exec vitest run 'app/alquiler/[ciudad]/[zona]/[slug]/signin-return.test.ts'`: 1 falla/1 pasa. El comando focal de la tabla añadiendo este archivo pasa: 6 archivos, 101/101; Biome añadiéndolo pasa: 8 archivos. Typecheck y lint:tokens repetidos: pasan. Integración ficha → href servido → signin real y destino nativo intacta.
+
+Sin Docker, DB, servicios, proveedores, red ni acciones terminales git. SSR no acredita Chromium/crawlability: verificaciones de navegador y cierre de fase pendientes. 35.2 sigue abierta.
+
+**Siguiente paso:** revisión nativa de rebanada y decisión de entrega del padre; después 35.2b (espera/script/metadata), sin cerrar 35.2 antes de completar sus consumidores. La autorización de ejecución no autoriza push/PR de implementación, fusiones ni promoción a `main`.

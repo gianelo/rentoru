@@ -8,13 +8,13 @@ describe("la pantalla de entrar dice por qué puerta se entró (15.7)", () => {
   it("la puerta de publicar dice para qué es y trae los tres pasos de la lámina", () => {
     const pagina = signInPageFor("/publicar");
 
-    expect(pagina.title).toBe("Entrá para publicar tu propiedad");
+    expect(pagina.title).toBe("Entra para publicar tu propiedad");
     expect(pagina.steps).toEqual([
-      "Llenás los datos de la propiedad: zona, precio, habitaciones.",
-      "Subís las fotos, que comprimimos en tu navegador antes de mandarlas.",
-      "Verificás tu teléfono por WhatsApp y el aviso queda activo 30 días.",
+      "Llenas los datos de la propiedad: zona, precio, habitaciones.",
+      "Subes las fotos, que comprimimos en tu navegador antes de mandarlas.",
+      "Verificas tu teléfono por WhatsApp y el aviso queda activo 30 días.",
     ]);
-    expect(pagina.aside).toBe("Si ya tenés cuenta, el mismo botón te lleva a tus publicaciones.");
+    expect(pagina.aside).toBe("Si ya tienes cuenta, el mismo botón te lleva a tus publicaciones.");
     expect(pagina.returnTo).toBe("/publicar");
     // Un paso cuelga de la misma puerta, y la vuelta es al paso.
     expect(signInPageFor("/publicar/paso/fotos").returnTo).toBe("/publicar/paso/fotos");
@@ -37,7 +37,7 @@ describe("la pantalla de entrar dice por qué puerta se entró (15.7)", () => {
 
     expect(pagina.reason).toBe(hoja?.reason);
     expect(pagina.assurance).toBe(hoja?.assurance);
-    expect(pagina.title).toBe("Entrá y volvés a este aviso");
+    expect(pagina.title).toBe("Entra y vuelves a este aviso");
   });
 
   /** La salida visible: mirar un aviso nunca costó una cuenta (F20). */
@@ -57,7 +57,7 @@ describe("la pantalla de entrar dice por qué puerta se entró (15.7)", () => {
   ])("la puerta de %s entra a la cuenta y no promete los pasos de publicar", (_caso, destino) => {
     const pagina = signInPageFor(destino);
 
-    expect(pagina.title).toBe("Entrá a tu cuenta");
+    expect(pagina.title).toBe("Entra a tu cuenta");
     expect(pagina.steps).toEqual([]);
     expect(pagina.aside).toBeNull();
     expect(pagina.returnTo).toBe(destino);
@@ -81,7 +81,7 @@ describe("la pantalla de entrar dice por qué puerta se entró (15.7)", () => {
     const pagina = signInPageFor(candidato);
 
     expect(pagina.returnTo).toBeNull();
-    expect(pagina.title).toBe("Entrá a tu cuenta");
+    expect(pagina.title).toBe("Entra a tu cuenta");
   });
 
   /**
@@ -123,7 +123,7 @@ describe("la pantalla de entrar dice por qué puerta se entró (15.7)", () => {
     const primero = legales[0] ?? [];
     const texto = primero.map((f) => (f.kind === "link" ? f.label : f.value)).join("");
     expect(texto).toBe(
-      "Al entrar aceptás los términos y la privacidad. Rentoru no participa en el trato: no cobramos comisión, no retenemos pagos y no redactamos contratos.",
+      "Al entrar aceptas los términos y la privacidad. Rentoru no participa en el trato: no cobramos comisión, no retenemos pagos y no redactamos contratos.",
     );
   });
 
