@@ -114,12 +114,12 @@ Las pruebas de dominio/catálogo complementan, no reemplazan, las de consumidore
 | Rama y base de esta planificación | `docs/fase-35-textos-neutrales`, base `bf1d6b7` |
 | Worktree | Hermano `rentoru-fase35-textos-neutrales`; conservar durante la fase delegada activa |
 | Ruta de escritura | Escritor delegado por unidad acotada de tres documentos; no promesa de escrituras futuras en paralelo |
-| Verificación actual | Documentación pasiva: `git diff --check` y chequeo estructural Python; sin RED significativo, pruebas pnpm ni build |
+| Verificación actual | `git diff --check` y chequeos estructurales Python: pasan; verificación independiente aprobada tras corregir dos rutas. Revisión nativa `review-f27234322075d036`: aprobada y reconocimiento completado. Documentación pasiva, sin RED significativo, pruebas pnpm ni build |
 | Controlador padre | Revisión, registro de verificación, commit convencional en español sin atribución, push y PR sólo a `dev`; escritor no ejecuta acciones terminales git |
-| Entrega de esta unidad | PR de planificación únicamente; SHA de commit, número de PR y verificación quedan por registrar por el padre |
+| Entrega de esta unidad | Plan publicado en commit `c2341af82620242a8f7a32b9083d2a7d26924882`; [PR #362](https://github.com/gianelo/rentoru/pull/362) abierto hacia `dev`. CI remoto pendiente al registrar la entrega; sin merge |
 | Implementación posterior | Decidir ruta por tarea acotada; dividir en PR de ≤400 líneas revisables, pruebas incluidas; estimar 1,5–2× el cambio de comportamiento |
 | Cierre del worktree | Retirar sólo tras completar/integrar la fase y comprobar seguridad según el fundador; push/PR no significa fase terminada |
 
 No prometer que toda F35 cabe en un PR ni imponer una implementación monolítica. Este repositorio no exige issue previo, enlace de issue ni etiquetas `type:*`; esta unidad no crea issues.
 
-**Siguiente paso:** el padre revisa y registra la verificación de estos tres documentos, prepara el commit y el PR de planificación a `dev`. Otro agente comienza por 35.1; no marcar ninguna tarea de producto por la entrega de este plan.
+**Siguiente paso:** otro agente comienza por 35.1 desde la rama publicada, lee este plan y verifica las fuentes actuales. Las once tareas siguen pendientes; publicar el plan no autoriza marcar su implementación ni fusionar el PR. Este registro de entrega no cambia el alcance revisado.
