@@ -538,6 +538,14 @@ El reporte pide un motivo obligatorio entre «posible estafa», «datos incorrec
 
 Medidas canónicas compartidas: móvil 390×844, tablet 768×1024 y escritorio 1440×900; todo ancho inferior a 768 usa composición móvil, incluido 440×956. Las pruebas previas a 390×840 permanecen como evidencia histórica. **Esta fase sólo corrige y acepta la ficha**: una auditoría separada debe verificar las otras pantallas antes de afirmar cumplimiento transversal. Las capturas del issue son hipótesis a contrastar con dev, no resultados actuales. Plan, imágenes y trazabilidad: `odd/tasks/fase-30-cierre-ficha.md`; la Fase 29 ya está integrada en `dev` y `main`; #287 permanece abierto y #288 sigue abierto.
 
+## Fase 36 — Supersesiones y gates de publicación (#289)
+
+La decisión posterior del fundador en [comentario 13](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956647895) supera la petición multicanal del comentario 12 **para nueva publicación**: sólo WhatsApp y número, sin verificar existencia de cuenta hasta una fase futura de WhatsApp. No cambia autenticación por correo. Antes de implementar, 36.13 debe acordar contactos históricos, edición, importación, defaults y necesidad de migración; no se autoriza conversión silenciosa ni reescritura amplia de specs históricos.
+
+El [comentario 21](https://github.com/gianelo/rentoru/issues/289#issuecomment-5957005019) descarta tamaños de capturas como autoridad; rigen D30 y el sistema responsive vigente, coordinando la discrepancia de 390×840 con F34. Revisar requiere lámina aprobada antes de implementación. El warning actual de inmutabilidad absoluta contradice la regla existente de 18.38: dueño → inmobiliaria sí; la dirección inversa sigue cerrada hasta decisión explícita, no queda autorizada por el comentario 18.
+
+Copy/jerarquía, loader contextual, país/formato y botón vs checkbox quedan como gates al iniciar sus unidades. El digest `901444967` no prueba deduplicación ni fallo de sesión: cualquier consulta productiva requiere autorización read-only separada, sin mutación. Plan y criterios completos: `odd/tasks/fase-36-cierre-publicacion.md`; esta adenda confirma alcance, no implementación ni nuevas decisiones numeradas.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.
