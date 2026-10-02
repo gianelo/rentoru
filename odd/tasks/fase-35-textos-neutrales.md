@@ -1,6 +1,6 @@
 # Fase 35 — auditoría de textos en español neutro
 
-**Estado actual:** ejecución autorizada por el fundador el 2026-10-02 en el mismo worktree. **35.1 cerrada como inventario y línea base**; 35.2a (HTML de entrada y puerta compartida) implementada y verificada; revisión nativa y entrega pendientes del padre; 35.2b (espera/script/metadata) pendiente. Las diez tareas de corrección siguen abiertas. PR #362 MERGED por el fundador, `0341dcf51a19a7c50f1727273c5b2b82ade5864a`; rama `feat/fase-35-textos-neutrales` sincronizada con `origin/dev` mediante `baab672`. Entrega elegida: PR pequeños, independientes y secuenciales hacia `dev`; sin push ni merge automáticos.
+**Estado actual:** ejecución autorizada por el fundador el 2026-10-02 en el mismo worktree. **35.1 cerrada como inventario y línea base**; **35.2a cerrada como corte HTML de entrada y puerta compartida**, commit `87c2d23`, revisión nativa aprobada y reconocimiento completado; PR por publicar. 35.2b (espera/script/metadata) pendiente; las diez tareas de corrección completas siguen abiertas. PR #362 MERGED por el fundador, `0341dcf51a19a7c50f1727273c5b2b82ade5864a`; rama `feat/fase-35-textos-neutrales` sincronizada con `origin/dev`, conservando el plan F36 integrado en `ee31148`. El fundador autoriza commit, push y PR hacia `dev` para cada unidad terminada; PR pequeños, independientes y secuenciales, sin fusiones automáticas.
 
 ## Objetivo y autoridad
 
@@ -133,7 +133,9 @@ Documentación pasiva: no hay RED significativo ni mutación aplicable. Las prue
 
 No prometer que toda F35 cabe en un PR ni imponer una implementación monolítica. Este repositorio no exige issue previo, enlace de issue ni etiquetas `type:*`; esta unidad no crea issues.
 
-### Evidencia 35.2a — cierre pendiente del padre
+### Evidencia 35.2a — corte cerrado
+
+**Commit de trabajo:** `87c2d230a9d704a32c9d4826bb627c5bfcf98e6d`, árbol `95114588b0fb99b59ce12a28ae97a8840c0e5542`, idéntico al candidato revisado. Revisión nativa `review-491e016321f4f5e6` aprobada (`review-reliability`); reconocimiento completado y autoridad consumida. Después se integró `origin/dev` sin conflictos, conservando F36 del otro agente; esto no fusiona el producto en `dev`. El registro posterior es documentación pasiva, sin RED significativo; requiere comprobación estructural.
 
 Sólo copia en `identity/domain/sign-in-page.ts` y `contact-reveal/domain/sign-in-door.ts`; reglas, rutas, formularios, privacidad e interpolaciones intactas. RED observado antes de producto: 9/99 fallan, nombres «35.2a: sirve tuteo y conserva destino y error por la puerta %s» (cinco puertas), «35.2a: renderiza la puerta real neutra %s/%s/%s» (tres variantes) y «35.2a: sirve la puerta neutra y el aviso bloqueado sin revelar el contacto»: esperaban `Entra`, recibían `Entrá`. GREEN 99/99. Mutación propia: sólo `RETURN_ASSURANCE` volvió a `Volvés…`; el caso servido de `/alquiler/distrito-capital/chacao/apartamento-2h` falló por garantía (más dos protecciones existentes); restaurada inmediatamente.
 
@@ -149,4 +151,4 @@ Corrección acotada autorizada por el padre: `app/alquiler/[ciudad]/[zona]/[slug
 
 Sin Docker, DB, servicios, proveedores, red ni acciones terminales git. SSR no acredita Chromium/crawlability: verificaciones de navegador y cierre de fase pendientes. 35.2 sigue abierta.
 
-**Siguiente paso:** revisión nativa de rebanada y decisión de entrega del padre; después 35.2b (espera/script/metadata), sin cerrar 35.2 antes de completar sus consumidores. La autorización de ejecución no autoriza push/PR de implementación, fusiones ni promoción a `main`.
+**Siguiente paso:** publicar el corte 35.2a mediante PR a `dev`, según autorización permanente del fundador para cada unidad terminada; después 35.2b (espera/script/metadata) en otro corte. No cerrar 35.2 antes de completar sus consumidores ni acumular el siguiente corte sobre un PR abierto. Las fusiones de producto y la promoción a `main` siguen siendo decisiones del fundador; preservar los avances y recursos del otro agente.
