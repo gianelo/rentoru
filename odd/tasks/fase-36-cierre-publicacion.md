@@ -18,7 +18,8 @@ Rama: `docs/fase-36-cierre-publicacion`, creada desde `origin/dev` sincronizado.
 - Entorno propio: PostgreSQL 18.6 `rentoru-f36-pg`, loopback `55433`, DB `rentas_test`; migración y seed exitosos. Chromium real y build de producción observados en 36.1a abajo. Sin `.env` activo ni proveedores/producción; proxy local no acredita transporte transaccional final.
 - Límites: sesión Playwright ad hoc autenticada, no suite nueva; fotos sintéticas sólo prueban metadatos, no upload/miniaturas/publicación final. 36.1 continúa parcial.
 - Concurrencia: no tocar el worktree F35 ni compartir servicios mutables sin coordinación. Antes de cada push/PR: fetch de `dev`, comprobar cambios compartidos/conflictos y volver a verificar cualquier integración.
-- Próximo paso: 36.1b, con autorización separada para fotos reales/final/loader y conciliación de catálogo; no cerrar tareas ni #289 por este pase.
+- Continuación autorizada: PR #365 integrado en `dev` (`445f4bce3881770790b574dde94d80bd25c4bf6b`). 36.1b en curso en el mismo worktree aislado, rama nueva `test/fase-36-baseline-fotos` desde ese `origin/dev`; primero mapa read-only de storage y transacciones locales compatibles, sin cambiar reglas ni consultar producción.
+- Alcance inmediato: fotos reales, persistencia/publicación final y captura temporal del loader. Catálogo territorial y conciliación F34 conservan sus tareas; no ampliar 36.1b ni cerrar #289 por este pase. F35 reserva `3000`/`3100`/`55435`/`5545`; no utilizarlos.
 
 ### 36.1a — Baseline observado (parcial)
 
