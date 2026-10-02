@@ -1,6 +1,6 @@
 # Fase 35 — auditoría de textos en español neutro
 
-**Resultado de esta unidad:** planificación documental preparada el 2026-10-02; no es una auditoría realizada ni una implementación de textos. Las once tareas siguen pendientes. El fundador autorizó preparar este plan en un worktree aislado y entregarlo mediante push y PR a `dev` para que otro agente implemente después.
+**Estado actual:** planificación publicada; ejecución autorizada por el fundador el 2026-10-02 en el mismo worktree. **35.1 tiene inventario documental y línea base en verificación**; las once tareas siguen sin cerrar. No se han corregido textos de producto. El PR #362 conserva exclusivamente la planificación; la implementación continúa en `feat/fase-35-textos-neutrales`.
 
 ## Objetivo y autoridad
 
@@ -45,11 +45,7 @@ Los grupos de tareas son un **mapa inicial para explorar**, no una afirmación d
 
 ### Registro obligatorio por hallazgo
 
-En 35.1, abrir una matriz que luego crece con cada tarea. No rellenarla como si hubiera observaciones que todavía no existen.
-
-| Fuente exacta | Superficie / destinatario | Estado | Catálogo o helper | Consumidor real | Prueba de salida | Disposición y motivo |
-|---|---|---|---|---|---|---|
-| Pendiente de inventario | HTML / cliente / WhatsApp / correo / interno | Normal, vacío, error o sesión | Existente o agrupación mínima justificada | Ruta, componente o compositor | Archivo y nombre real al implementar | Corregir / conservar / excluir justificadamente / decisión pendiente |
+La [matriz de 35.1](../audits/fase-35-textos-neutrales.md) registra fuentes, superficies/destinatarios, estados, propietarios, consumidores, pruebas reales y disposiciones por 35.2–35.11. Es inventario estático con línea base determinista, no auditoría completa ni prueba de despliegue. Cada tarea posterior ampliará sus estados y cobertura pendiente.
 
 Cada cierre debe registrar archivos y **pruebas nombradas observadas**, no una casilla aislada. Si cambia el alcance o la intención, elevar la propuesta al padre/fundador; no sustituir este plan por un checklist parcial.
 
@@ -112,14 +108,27 @@ Las pruebas de dominio/catálogo complementan, no reemplazan, las de consumidore
 | Dato | Estado / responsabilidad |
 |---|---|
 | Rama y base de esta planificación | `docs/fase-35-textos-neutrales`, base `bf1d6b7` |
-| Worktree | Hermano `rentoru-fase35-textos-neutrales`; conservar durante la fase delegada activa |
+| Worktree y rama de ejecución | Hermano `rentoru-fase35-textos-neutrales`; rama `feat/fase-35-textos-neutrales` desde `e870f06`, con la planificación publicada de base |
+| Recursos de prueba | Ningún Docker creado por F35 todavía. Registrar nombre/ID, propietario y finalidad antes de crear contenedores; no reutilizar ni eliminar recursos de otros agentes |
 | Ruta de escritura | Escritor delegado por unidad acotada de tres documentos; no promesa de escrituras futuras en paralelo |
-| Verificación actual | `git diff --check` y chequeos estructurales Python: pasan; verificación independiente aprobada tras corregir dos rutas. Revisión nativa `review-f27234322075d036`: aprobada y reconocimiento completado. Documentación pasiva, sin RED significativo, pruebas pnpm ni build |
+| Verificación de la planificación publicada | `git diff --check` y chequeos estructurales Python: pasan; verificación independiente aprobada tras corregir dos rutas. Revisión nativa `review-f27234322075d036`: aprobada y reconocimiento completado. Documentación pasiva, sin RED significativo, pruebas pnpm ni build |
 | Controlador padre | Revisión, registro de verificación, commit convencional en español sin atribución, push y PR sólo a `dev`; escritor no ejecuta acciones terminales git |
 | Entrega de esta unidad | Plan publicado en commit `c2341af82620242a8f7a32b9083d2a7d26924882`; [PR #362](https://github.com/gianelo/rentoru/pull/362) abierto hacia `dev`. CI remoto pendiente al registrar la entrega; sin merge |
 | Implementación posterior | Decidir ruta por tarea acotada; dividir en PR de ≤400 líneas revisables, pruebas incluidas; estimar 1,5–2× el cambio de comportamiento |
-| Cierre del worktree | Retirar sólo tras completar/integrar la fase y comprobar seguridad según el fundador; push/PR no significa fase terminada |
+| Limpieza al cerrar la fase | Eliminar el worktree tras comprobar cambios y commits; eliminar también contenedores y recursos Docker de pruebas creados y registrados por F35. No ejecutar limpieza global ni tocar recursos ajenos; push/PR no significa fase terminada |
+
+### Verificación 35.1
+
+Escritor delegado, ruta multiarchivo limitada a inventario, canónico y línea 35.1 del espejo OpenSpec. Sin cambios de producto/copia/tests, servicios ni recursos Docker. El inventario distingue trazas estáticas de pruebas ejecutadas y registra cobertura pendiente; HTML servido, cliente happyDOM y correo dominio/adaptador no equivalen a despliegue ni a todas las salidas finales.
+Documentación pasiva: no hay RED significativo ni mutación aplicable. Las pruebas existentes caracterizan la base; futuros cambios requieren RED/GREEN, mutación restaurada y consumidor renderizado, no espías.
+
+| Comando exacto / comprobación | Resultado observado |
+|---|---|
+| `git diff --check` | Pasa, sin salida |
+| `env -u DATABASE_URL -u TEST_DATABASE_URL -u RESEND_API_KEY -u AUTH_MAIL_FROM -u LIFECYCLE_MAIL_FROM TZ=UTC pnpm exec vitest run src/shared/format/spanish-date.test.ts app/publicar/step-copy.test.ts app/publicar/violation-copy.test.ts app/importar/import-copy.test.ts 'app/(auth)/signin/entrar-servida.test.tsx' app/publicar/paso-servido.test.tsx app/importar/importar-contract.test.tsx components/client/SearchSuggestions.test.tsx components/molecules/ContactBlock.test.tsx` | 9 archivos, 102/102 tests pasan (704 ms) |
+| `env -u DATABASE_URL -u TEST_DATABASE_URL -u RESEND_API_KEY -u AUTH_MAIL_FROM -u LIFECYCLE_MAIL_FROM TZ=UTC pnpm exec vitest run src/modules/identity/domain/magic-link.test.ts src/modules/identity/infrastructure/email-provider.test.ts src/modules/identity/infrastructure/resend-mailer.test.ts src/modules/listing-lifecycle/domain/lifecycle-notice.test.ts src/modules/listing-lifecycle/infrastructure/resend-lifecycle-mailer.test.ts` | 5 archivos, 35/35 tests pasan (242 ms); sin entrega real de correo |
+| Python estructural de sólo lectura (UTF-8, once casillas canónicas abiertas una vez, espejo sólo 35.1, referencias existentes, grupos/trazas/límites/limpieza, conteos) | Pasa: 94 referencias concretas existentes, grupos 35.2–35.11 y trazas/límites/limpieza presentes. Diff contra HEAD: canónico +19/−10, espejo +1/−1; inventario nuevo 112 líneas aparte (143 líneas revisables con progreso previo). Padre conserva cierre/commit |
 
 No prometer que toda F35 cabe en un PR ni imponer una implementación monolítica. Este repositorio no exige issue previo, enlace de issue ni etiquetas `type:*`; esta unidad no crea issues.
 
-**Siguiente paso:** otro agente comienza por 35.1 desde la rama publicada, lee este plan y verifica las fuentes actuales. Las once tareas siguen pendientes; publicar el plan no autoriza marcar su implementación ni fusionar el PR. Este registro de entrega no cambia el alcance revisado.
+**Siguiente paso:** el padre observa la verificación de 35.1, revisa el inventario y registra commit antes de marcarla; no se fabrica SHA ni se cierran tareas futuras. Después corregir módulo por módulo con RED/GREEN y prueba de salida real. La autorización de ejecución no autoriza fusionar PR ni promover a `main`.
