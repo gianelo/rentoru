@@ -1,6 +1,6 @@
 # Fase 36 — Cierre de publicación (#289)
 
-Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **Esta entrega sólo documenta**: no implementa funcionalidades, modifica producción ni cierra el issue. Las 22 tareas de producto siguen pendientes; escribir el plan no acredita aceptación funcional.
+Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Las 22 tareas de producto siguen pendientes; escribir el plan no acredita aceptación funcional.
 
 ## Entrega de planificación
 
@@ -10,13 +10,95 @@ Rama: `docs/fase-36-cierre-publicacion`, creada desde `origin/dev` sincronizado.
 - [x] P36.2 — Verificar cobertura y coherencia. Evidencia: verificador independiente cotejó los 21 comentarios en GitHub, IDs 36.1–36.22 coincidentes, tres rutas documentales y 268 líneas añadidas; `git diff --check` sin diagnósticos y chequeo del archivo nuevo sin errores. El coordinador confirmó que la variación observada era su actualización de seguimiento, no cambio del plan. Sin RED/GREEN por documentación; evaluación nativa inicial no disponible por archivo untracked, sin afirmar aprobación nativa.
 - [x] P36.3 — Commit `8d7294da55fc84e12bdde4b0c951c2a07a8f2a52` (`docs: planifica fase 36 de cierre de publicación`), push confirmado y [PR #363](https://github.com/gianelo/rentoru/pull/363) abierto a `dev`. Ruta: coordinador, entrega autorizada. Sin merge. Evaluación nativa posterior: `medium`, `reviewDue=false` / `under_budget`; no equivale a aprobación nativa. CI remoto se consulta aparte.
 
+## Ejecución actual — 36.1
+
+- Autorización: el fundador inicia F36 en worktree separado; PR #363 integrado en `dev` (merge `ee31148231f356319b09be9eb616feb548279352`). Los estados anteriores de entrega son históricos.
+- Worktree: `rentoru-fase36-publicacion`; rama `test/fase-36-baseline-publicacion`, creada desde ese `origin/dev`.
+- Estado: 36.1 en curso, caracterización sin correcciones funcionales. Verificador: `env -i PATH="$PATH" HOME="$HOME" pnpm exec vitest run app/publicar` → 18 archivos, 177 pruebas pasan, cero fallos; warnings React form-action/act. Pase inicial, no RED/GREEN.
+- Entorno propio: PostgreSQL 18.6 `rentoru-f36-pg`, loopback `55433`, DB `rentas_test`; migración y seed exitosos. Chromium real y build de producción observados en 36.1a abajo. Sin `.env` activo ni proveedores/producción; proxy local no acredita transporte transaccional final.
+- Límites: sesión Playwright ad hoc autenticada, no suite nueva; fotos sintéticas sólo prueban metadatos, no upload/miniaturas/publicación final. 36.1 continúa parcial.
+- Concurrencia: no tocar el worktree F35 ni compartir servicios mutables sin coordinación. Antes de cada push/PR: fetch de `dev`, comprobar cambios compartidos/conflictos y volver a verificar cualquier integración.
+- Próximo paso: 36.1b, con autorización separada para fotos reales/final/loader y conciliación de catálogo; no cerrar tareas ni #289 por este pase.
+
+### 36.1a — Baseline observado (parcial)
+
+**Procedencia:** resultados aportados por los dos verificadores, no reejecutados en esta subunidad documental. HEAD `ee31148231f356319b09be9eb616feb548279352`, rama `test/fase-36-baseline-publicacion`, worktree `/Users/gianelo/Documents/Dev/py/rentoru-fase36-publicacion`. Node 22.23.3, pnpm 10.34.5, Vitest 4.1.10, Playwright 1.62.1, Chromium revisión 1234. No RED/GREEN: caracterización de comportamiento existente y resumen pasivo, sin cambios de código.
+
+| Comando/pase del verificador | Resultado observado |
+|---|---|
+| `pnpm install --frozen-lockfile --ignore-scripts` | 457 paquetes reutilizados; sin cambios de lock. |
+| `env -i PATH="$PATH" HOME="$HOME" pnpm exec vitest run app/publicar` | 18 archivos / 177 pruebas pasan; warnings React form-action/act. |
+| Migración y seed mediante scripts existentes contra DB propia | Éxito: 2 ciudades, 4 zonas, 1 usuario, 6 avisos, 8 fotos, 40 derivadas. No catálogo territorial completo. |
+| `env -i … node scripts/neon-http-proxy.mjs` (variables locales abajo) | Proxy local operativo en `55436`. |
+| `pnpm build` | Exit 0: compilación y tipos. Warning de tracing por lockfile ancestro; aislamiento no verificado ni workaround en fuente. |
+| `pnpm exec next start -p 3001 -H 127.0.0.1` + sesión Node/Playwright ad hoc | Chromium real contra producción local; 8 recorridos de nueve pasos/revisar pasan con las limitaciones de fotos abajo. |
+
+**Alcance de navegador:** 390×844, 440×956, 768×1024 y 1440×900 × JS encendido/apagado. 40 POST nativos sin JS; Server Actions con JS. 88 pantallas medidas sin overflow horizontal. Recarga/Atrás conservan borrador; GET de zona y referencia persisten; mapa móvil funciona y rail ancho observado. `Cambiar` precio $650 → $700 vuelve a revisar y anuncia cambio. Descartar: cero POST y borrador idéntico en las ocho variantes. Precio/contacto inválidos rechazados a 390 con/sin JS. Sin peticiones externas del navegador, bloqueo loopback aplicado.
+
+**Fotos:** dos referencias sintéticas sembradas por borrador; claves, orden y portada persisten, pero cero imágenes en DOM. Toda afirmación de navegación de fotos aquí se limita a fixture/metadatos. No selección real de archivo, upload, storage ni publicación final; los avisos permanecen en seis.
+
+C = confirmado en este entorno (no aceptación de solución); NR = no reproducido en alcance acotado; NP = no probado; S = supersesión histórica. Los números remiten a los enlaces de la tabla histórica y conservan sus destinos/gates.
+
+| Comentario | Estado | Observación actual y límite |
+|---|---|---|
+| 1 | C | Marca es `<p>` en tipo/revisar, no enlace. |
+| 2 | NP | No se capturó secuencia temporal de sólo pie/loader. |
+| 3 | NR acotado | Pastilla tipo: 358/408/440/520 px a 390/440/768/1440; no absolutamente menor en anchos grandes. Coherencia relativa/política G2 pendiente. |
+| 4 | C / NP | Teclear no da sugerencias; GET funciona. Faltantes territoriales NP con seed de cuatro zonas. |
+| 5 | C | `Avisanos` usa `mailto`. |
+| 6 | C | Al teclear sigue 0/90 y `Tu título`; tras guardar, 38/90. |
+| 7 | C | Al teclear sigue 0/120; tras guardar, 398/120 y «ya alcanza». |
+| 8 | C | Chooser dice teléfono también en desktop; abierto con JS, sin seleccionar archivo. |
+| 9 | C | Ayudas de no borrar del teléfono y portada presentes. |
+| 10 | C medición | Menú mide 44×44; juicio visual de tamaño pendiente. |
+| 11 | C | `Quién publica` repetido en h1/legend. |
+| 12 | S / C | Canales superados por #13; selector de país ausente observado. Formatos completos NP. |
+| 13 | C | Tres canales actuales frente a decisión WhatsApp único; compatibilidad G4 pendiente. |
+| 14 | NP | Atrás conserva metadatos de fixture, cero imágenes; no prueba miniaturas subidas. |
+| 15 | C | `Cambiar` centrado en dos filas en móvil. |
+| 16 | C medición | Texto tablet 147.28 px; descripción 633.38 px de alto, sin overflow horizontal; aceptación visual pendiente. |
+| 17 | C medición | Wrapper desktop 520 px, texto 227.28 px; lámina G2 pendiente. |
+| 18 | C | Warning afirma inmutabilidad absoluta; no se recorrió edición para ratificar la regla. |
+| 19 | NP | Digest/final no ejercitados; ninguna causa inferida. |
+| 20 | C | Ninguna 129.88×44 vs Seguir 358×56 móvil; 149.88×44 vs 200×52 desktop; `featuresDeclared=true` persiste. |
+| 21 | S | Medidas vigentes usadas; conciliación 390×840 de F34 pendiente. |
+
+**Portabilidad:** este resumen versionable es la evidencia durable prevista para Git (sin commit en esta subunidad). Los logs y 89 capturas ignorados del runner **no están disponibles en laptop** ni se incluyen en Git: `test-results/f36-browser.log` (261 pase principal; 32/99/258 descarte; 30/97/130 geometría), `f36-entry.log`, `f36-focused.log`, `f36-focused-followup.log`, `f36-photo-followup.log` y `test-results/f36-*.png`. Son artefactos no portables, no una suite permanente ni una prueba automatizada nombrada. Repetir la sesión exige recuperar el transcript del runner y reconstruir autenticación, fixtures, bloqueo de red y acciones; el setup siguiente no reproduce por sí solo los asserts.
+
+Anclas de fuente del verificador en ese HEAD: `app/publicar/PublishStep.tsx:167/505/638/717`, `app/publicar/fotos/PhotoUploader.tsx:146/402`, `app/publicar/revisar/page.tsx:175`, `app/publicar/publish-steps.module.css:719/755`. Fallos auxiliares de sesión, no regresiones: redirección inicial sin `test-results` (luego mkdir ignorado propio), label supuesto `Usar` vs real `Hacer portada`, anuncio inexistente y lectura de Escape prematura; tras esperar, menú abierto = 0 y follow-up midió persistencia real.
+
+#### Setup local reconstruible (no ejecutar desde este registro)
+
+Receta de continuación con scripts existentes, no transcripción exacta de todos los comandos originales. Sólo DB desechable propia: el seed elimina fixtures; no usar servicios de F35 ni credenciales reales. Si el contenedor ya existe, reutilizarlo tras comprobar propiedad; no repetir `docker run`. Comandos de proxy/start en terminales separadas, en primer plano:
+
+```bash
+pnpm install --frozen-lockfile --ignore-scripts
+# Contenedor nuevo propio; volumen anónimo, autoRemove al detener (datos no durables).
+docker run --name rentoru-f36-pg --rm -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=rentas_test -p 127.0.0.1:55433:5432 -d postgres:18.6
+# Esperar disponibilidad antes de migrar/sembrar.
+docker exec rentoru-f36-pg pg_isready -U postgres -d rentas_test
+env -i PATH="$PATH" HOME="$HOME" TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55433/rentas_test pnpm db:test:migrate
+env -i PATH="$PATH" HOME="$HOME" TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55433/rentas_test pnpm db:test:seed:e2e
+env -i PATH="$PATH" HOME="$HOME" TEST_DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:55433/rentas_test NEON_PROXY_PORT=55436 node scripts/neon-http-proxy.mjs
+# En otra terminal, exportar sólo valores sintéticos locales:
+export DATABASE_URL=postgresql://postgres:postgres@127.0.0.1-pooler.rentas.invalid:55433/rentas_test
+export NEON_FETCH_ENDPOINT=http://127.0.0.1:55436/sql AUTH_URL=http://localhost:3001 AUTH_TRUST_HOST=true
+export AUTH_SECRET=local-f36-test-only SITE_URL=http://localhost:3001 NEXT_TELEMETRY_DISABLED=1
+env -i PATH="$PATH" HOME="$HOME" DATABASE_URL="$DATABASE_URL" NEON_FETCH_ENDPOINT="$NEON_FETCH_ENDPOINT" AUTH_URL="$AUTH_URL" AUTH_TRUST_HOST="$AUTH_TRUST_HOST" AUTH_SECRET="$AUTH_SECRET" SITE_URL="$SITE_URL" NEXT_TELEMETRY_DISABLED=1 pnpm build
+env -i PATH="$PATH" HOME="$HOME" DATABASE_URL="$DATABASE_URL" NEON_FETCH_ENDPOINT="$NEON_FETCH_ENDPOINT" AUTH_URL="$AUTH_URL" AUTH_TRUST_HOST="$AUTH_TRUST_HOST" AUTH_SECRET="$AUTH_SECRET" SITE_URL="$SITE_URL" NEXT_TELEMETRY_DISABLED=1 pnpm exec next start -p 3001 -H 127.0.0.1
+```
+
+Al terminar el pase observado se detuvieron sólo app/proxy propios; PG quedó saludable en ejecución. No se corrieron unitarios adicionales, lint ni evaluación/aprobación nativa en el segundo pase.
+
+**36.1b pendiente:** seleccionar/subir fotos reales en storage de prueba autorizado y comprobar imágenes al volver/recargar; publicación final/persistencia/reintento con transporte apto, sin inferir digest; capturar transición rápida/lenta/error del loader; conciliar catálogo territorial completo con 36.6 (no inferir faltantes del seed mínimo) y discrepancia dimensional con F34. Requiere alcance/comandos posteriores; no habilita wiring ni cierres ahora.
+
 ## Cómo leer y ejecutar
 
 1. Empezar por 36.1: reproducir en la base vigente y registrar qué sigue ocurriendo.
 2. Resolver el gate de cada unidad **al comenzar esa tarea**, no inferir autorización desde una captura o este plan.
 3. Implementar sólo con alcance posterior autorizado; cerrar cada casilla con archivo, prueba nombrada y resultado observado.
 
-**Estado de evidencia.** Los comentarios son reportes históricos del fundador, no reproducciones actuales. Los checks ya marcados del cuerpo del issue son pruebas de baseline completadas, no tareas nuevas pendientes. El checklist transversal sin marcar significa **no probado**, no demuestra fallo. Aquí no se han ejecutado pruebas funcionales.
+**Estado de evidencia.** Los comentarios conservan los reportes históricos del fundador; la matriz 36.1a separa sus reproducciones actuales y límites. Los checks ya marcados del cuerpo del issue son pruebas de baseline completadas, no tareas nuevas pendientes. El checklist transversal sin marcar significa **no probado**, no demuestra fallo. Las pruebas funcionales posteriores fueron ejecutadas por verificadores; esta subunidad sólo documenta sus resultados.
 
 **Fronteras.** No rehacer fases 18, 34 o 35. F33 trata ratificación legal; F34 (`odd/tasks/fase-34-auditoria-transversal.md`) conserva la auditoría global; F35 está reservada por PR #362 y requiere coordinación de copy. F36 acepta sólo publicación y sus costuras explícitas, sin ampliar geografía ni reescribir ahora specs multicanal históricos.
 
@@ -81,7 +163,7 @@ Si un gate queda sin resolver, registrar opciones, responsable y dependencia blo
 
 ## Unidades de trabajo y criterios de cierre
 
-Cada ID coincide con el índice central. «Comprobar» exige evidencia futura; no se ejecuta en esta entrega documental. Si la reproducción muestra comportamiento correcto, cerrar por caracterización nombrada o supersesión justificada, no fabricar una corrección.
+Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre futura; el pase parcial 36.1a no completa esos criterios. Si la reproducción muestra comportamiento correcto, cerrar por caracterización nombrada o supersesión justificada, no fabricar una corrección.
 
 ### A — Baseline y shell
 
@@ -228,4 +310,4 @@ Para retomar desde laptop:
 4. Usar DB/storage/fixtures propios y aislados; producción sólo con permiso read-only separado. No copiar credenciales ni datos personales al plan o al PR.
 5. Guardar relevo por unidad: ID, HEAD/PR, archivos, decisión/fuente, RED/GREEN/mutación o excepción, comandos/resultados, bloqueos y siguiente ID. Un resultado local no se presenta como CI/preview remoto.
 
-**Cierre documental:** P36.1–P36.3 completos: inventario 21/21, 22 tareas verificadas y plan publicado en PR #363. Las 22 tareas de producto y la aceptación de #289 permanecen pendientes. Pruebas funcionales no ejecutadas por alcance documental; sin reproducción ni acceso productivo.
+**Cierre documental:** P36.1–P36.3 completos: inventario 21/21, 22 tareas verificadas y plan publicado en PR #363. Las 22 tareas de producto y la aceptación de #289 permanecen pendientes. La planificación histórica no ejecutó pruebas funcionales; el registro posterior 36.1a aporta reproducción parcial local por verificadores, sin acceso productivo ni cierre de 36.1.
