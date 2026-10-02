@@ -27,7 +27,7 @@ test.describe("la puerta de entrar (15.8)", () => {
 
       const door = page.getByTestId("puerta-panel");
       await expect(door).toContainText(
-        "Al entrar aceptás los términos y la privacidad. Rentoru no participa en el trato: no cobramos comisión, no retenemos pagos y no redactamos contratos.",
+        "Al entrar aceptas los términos y la privacidad. Rentoru no participa en el trato: no cobramos comisión, no retenemos pagos y no redactamos contratos.",
       );
       await expect(door.getByRole("link", { name: "términos" })).toHaveAttribute(
         "href",

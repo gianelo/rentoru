@@ -13,7 +13,7 @@ test("la puerta de entrar llega entera, con su envío real y su salida", async (
   await page.goto("/signin?callbackUrl=%2Fpublicar");
 
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Entrá para publicar tu propiedad",
+    "Entra para publicar tu propiedad",
   );
   // Los tres pasos de la lámina bajan la ansiedad antes del botón. Se cuentan
   // dentro del `<main>`: el pie del sitio dibuja su propia lista en todas las
