@@ -163,9 +163,10 @@ export function PublishStep(props: PublishStepProps) {
             <AppLink className={styles.back} href={backHref} aria-label="Volver al paso anterior">
               ←
             </AppLink>
-          ) : (
-            <p className={styles.brand}>Rentoru</p>
-          )}
+          ) : null}
+          <AppLink className={styles.brand} href="/" aria-label="Rentoru, ir al inicio">
+            Rentoru
+          </AppLink>
 
           {/* **El mapa, que es lo que en 360 reemplaza al riel** (18.17). El
               contador ya decia cuanto falta; abrirlo es lo que agrega poder
