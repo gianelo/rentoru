@@ -364,7 +364,7 @@ Los mockups no usan texto de relleno. Cualquier dato nuevo debe seguir este regi
 - **Títulos como los escribe la gente:** "Apartamento 2 habitaciones con puesto de estacionamiento" · "Apto amoblado cerca del metro, edificio con vigilancia" · "Estudio en Altamira, ideal para una persona" · "Apartamento amplio en La Castellana, 3 habitaciones"
 - **Detalles que importan en este mercado:** planta eléctrica, vigilancia 24 horas, agua regular, puesto de estacionamiento, línea blanca incluida, depósito de dos meses
 
-Idioma: español de Venezuela, neutro y directo, sin regionalismos marcados. Voseo en instrucciones ("Contanos", "Revisá", "Verificá"), consistente en toda la interfaz.
+Idioma: español neutro, profesional y directo, con tuteo consistente en los textos de producto, sin voseo ni regionalismos marcados. Decisión del fundador (2026-10-02, Fase 35): esta política reemplaza la instrucción anterior de voseo. Se conservan los términos propios del producto venezolano; no se reescriben textos de usuarios, URLs ni identificadores. Los textos de las láminas quedan como referencias históricas, no como autoridad para el voseo. Alcance y auditoría pendiente: `odd/tasks/fase-35-textos-neutrales.md`.
 
 ## Cambiar de estilo después, sin rehacer nada
 
