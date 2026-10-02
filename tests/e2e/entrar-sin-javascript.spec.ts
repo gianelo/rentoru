@@ -72,7 +72,8 @@ test("la espera del enlace se lee entera y sus dos salidas funcionan sin JavaScr
   await page.context().addCookies([comprobante(Date.now())]);
   await page.goto("/signin/revisa-tu-correo");
 
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Revisá tu correo");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Revisa tu correo");
+  await expect(page).toHaveTitle("Revisa tu correo — Rentoru");
   // La dirección tecleada, de vuelta: es como se caza el tipeo sin volver.
   await expect(page.getByText("maria.f@gmail.com", { exact: true })).toBeVisible();
   // Acotada al `<main>` por la misma razón que la de `/signin`: el pie tiene su
