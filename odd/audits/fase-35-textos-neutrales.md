@@ -2,7 +2,7 @@
 
 **Inventario documental, no auditoría completa de copia.** Política: español neutro profesional con tuteo, sin voseo; conservar sustantivos venezolanos del producto.
 La evidencia combina trazas estáticas del explorador, referencias contrastadas y pruebas deterministas existentes. No acredita despliegue, Chromium ni ausencia de voseo.
-35.1 permanece abierta: el padre debe observar resultados y registrar commit/cierre. 35.2–35.11 siguen pendientes.
+35.1 cerrada como inventario y línea base: 137/137 pruebas observadas y commit `506e101ad9a5e16f19d552e094452a922bf00327`, con evidencia en el registro canónico. 35.2–35.11 siguen pendientes; no se declara auditoría completa.
 
 ## Cómo leer la matriz
 

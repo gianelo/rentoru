@@ -1,6 +1,6 @@
 # Fase 35 — auditoría de textos en español neutro
 
-**Estado actual:** planificación publicada; ejecución autorizada por el fundador el 2026-10-02 en el mismo worktree. **35.1 tiene inventario documental y línea base en verificación**; las once tareas siguen sin cerrar. No se han corregido textos de producto. El PR #362 conserva exclusivamente la planificación; la implementación continúa en `feat/fase-35-textos-neutrales`.
+**Estado actual:** planificación publicada; ejecución autorizada por el fundador el 2026-10-02 en el mismo worktree. **35.1 cerrada como inventario y línea base**; 35.2 está en exploración y las diez tareas de corrección siguen pendientes. No se han corregido textos de producto. El PR #362 conserva exclusivamente la planificación; la implementación continúa en `feat/fase-35-textos-neutrales`.
 
 ## Objetivo y autoridad
 
@@ -49,11 +49,11 @@ La [matriz de 35.1](../audits/fase-35-textos-neutrales.md) registra fuentes, sup
 
 Cada cierre debe registrar archivos y **pruebas nombradas observadas**, no una casilla aislada. Si cambia el alcance o la intención, elevar la propuesta al padre/fundador; no sustituir este plan por un checklist parcial.
 
-## Tareas futuras — todas pendientes
+## Tareas de la fase — progreso
 
 Las referencias son puntos de entrada actuales; verificar estados y consumidores antes de escribir. La aceptación descrita es un contrato futuro, no evidencia de pruebas ejecutadas hoy.
 
-- [ ] **35.1 Política, inventario y localización actual.** Confirmar política e inventariar fuente/superficie/estado/catálogo/consumidor/prueba/disposición, incluidos mensajes internos y exclusiones. Documentar el contrato de mantenibilidad y resolver ambigüedades antes de corregir.
+- [x] **35.1 Política, inventario y localización actual.** Confirmar política e inventariar fuente/superficie/estado/catálogo/consumidor/prueba/disposición, incluidos mensajes internos y exclusiones. Documentar el contrato de mantenibilidad y resolver ambigüedades antes de corregir.
   Referencias: `app/layout.tsx`, `src/shared/format/spanish-date.ts`, `app/publicar/{step-copy.ts,violation-copy.ts}`.
   Aceptación: rastrear ejemplos desde catálogo hasta HTML real, cliente y correo final; proteger locale/UTC y separación texto/código. El inventario debe distinguir pruebas existentes de cobertura pendiente.
 
@@ -129,6 +129,8 @@ Documentación pasiva: no hay RED significativo ni mutación aplicable. Las prue
 | `env -u DATABASE_URL -u TEST_DATABASE_URL -u RESEND_API_KEY -u AUTH_MAIL_FROM -u LIFECYCLE_MAIL_FROM TZ=UTC pnpm exec vitest run src/modules/identity/domain/magic-link.test.ts src/modules/identity/infrastructure/email-provider.test.ts src/modules/identity/infrastructure/resend-mailer.test.ts src/modules/listing-lifecycle/domain/lifecycle-notice.test.ts src/modules/listing-lifecycle/infrastructure/resend-lifecycle-mailer.test.ts` | 5 archivos, 35/35 tests pasan (242 ms); sin entrega real de correo |
 | Python estructural de sólo lectura (UTF-8, once casillas canónicas abiertas una vez, espejo sólo 35.1, referencias existentes, grupos/trazas/límites/limpieza, conteos) | Pasa: 94 referencias concretas existentes, grupos 35.2–35.11 y trazas/límites/limpieza presentes. Diff contra HEAD: canónico +19/−10, espejo +1/−1; inventario nuevo 112 líneas aparte (143 líneas revisables con progreso previo). Padre conserva cierre/commit |
 
+**Cierre 35.1:** inventario `odd/audits/fase-35-textos-neutrales.md` y registro canónico, commit `506e101ad9a5e16f19d552e094452a922bf00327`. Se observaron 137/137 pruebas de línea base, incluido `entrar-servida.test.tsx` — «por la puerta de publicar dibuja el título, los tres pasos y un formulario de verdad». ASSESS: riesgo medio, `reviewDue=false` por `under_budget`; no exige verificador independiente con este perfil de escritor. Revisión nativa diferida al cierre de rebanada; no se declara consumida para este inventario. Sin push/PR de implementación ni Docker propios.
+
 No prometer que toda F35 cabe en un PR ni imponer una implementación monolítica. Este repositorio no exige issue previo, enlace de issue ni etiquetas `type:*`; esta unidad no crea issues.
 
-**Siguiente paso:** el padre observa la verificación de 35.1, revisa el inventario y registra commit antes de marcarla; no se fabrica SHA ni se cierran tareas futuras. Después corregir módulo por módulo con RED/GREEN y prueba de salida real. La autorización de ejecución no autoriza fusionar PR ni promover a `main`.
+**Siguiente paso:** explorar 35.2, acotar cambios de identidad/acceso y sus pruebas RED/GREEN antes de escribir producto; estimar la rebanada de revisión y resolver entrega si supera 400 líneas. La autorización de ejecución no autoriza push/PR de implementación, fusiones ni promoción a `main`.
