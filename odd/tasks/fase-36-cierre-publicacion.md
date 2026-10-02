@@ -4,11 +4,11 @@ Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/giane
 
 ## Entrega de planificación
 
-Rama: `docs/fase-36-cierre-publicacion`, creada desde `origin/dev` sincronizado. Destino futuro: PR a `dev`, referencia no cerrante `Refs #289`. Presupuesto: menos de 400 líneas totales de documentación; las futuras unidades también deben presupuestar implementación **y pruebas**.
+Rama: `docs/fase-36-cierre-publicacion`, creada desde `origin/dev` sincronizado. Entrega: [PR #363](https://github.com/gianelo/rentoru/pull/363) a `dev`, referencia no cerrante `Refs #289`. Presupuesto: menos de 400 líneas totales de documentación; las futuras unidades también deben presupuestar implementación **y pruebas**.
 
 - [x] P36.1 — Redactar inventario completo y tareas de fase, con dependencias, criterios de aceptación, decisiones pendientes y enlaces de evidencia. Evidencia documental: este archivo, tabla de 21 comentarios y tareas 36.1–36.22; índice central en `openspec/changes/mvp-rental-listings/tasks.md`. Ruta: delegado; sin prueba de comportamiento aplicable.
 - [x] P36.2 — Verificar cobertura y coherencia. Evidencia: verificador independiente cotejó los 21 comentarios en GitHub, IDs 36.1–36.22 coincidentes, tres rutas documentales y 268 líneas añadidas; `git diff --check` sin diagnósticos y chequeo del archivo nuevo sin errores. El coordinador confirmó que la variación observada era su actualización de seguimiento, no cambio del plan. Sin RED/GREEN por documentación; evaluación nativa inicial no disponible por archivo untracked, sin afirmar aprobación nativa.
-- [ ] P36.3 — Crear commit convencional en español, push de la rama y PR a `dev`. Estado: en curso. Ruta: coordinador; operaciones Git/GitHub autorizadas por el usuario. No merge.
+- [x] P36.3 — Commit `8d7294da55fc84e12bdde4b0c951c2a07a8f2a52` (`docs: planifica fase 36 de cierre de publicación`), push confirmado y [PR #363](https://github.com/gianelo/rentoru/pull/363) abierto a `dev`. Ruta: coordinador, entrega autorizada. Sin merge. Evaluación nativa posterior: `medium`, `reviewDue=false` / `under_budget`; no equivale a aprobación nativa. CI remoto se consulta aparte.
 
 ## Cómo leer y ejecutar
 
@@ -222,10 +222,10 @@ Cada fila es **orden**, no obligación de agrupar todos sus IDs en un PR. Planif
 
 Para retomar desde laptop:
 
-1. El coordinador completa P36.2/P36.3 y comparte URL de PR/commit del plan; no se asume que este archivo inicialmente untracked ya está publicado.
+1. Abrir [PR #363](https://github.com/gianelo/rentoru/pull/363) y recuperar `docs/fase-36-cierre-publicacion`; commit inicial del plan `8d7294d`. No es necesario esperar al merge para leerlo desde laptop.
 2. Recuperar la rama entregada; leer `AGENTS.md`, este plan, índice central, decisiones y estado de PR #362/F34 en ese checkout. Registrar HEAD y cambios locales antes de trabajar; no pisarlos.
 3. Elegir el siguiente ID por dependencias, leer implementación/pruebas existentes y resolver su gate con opciones concretas. Pedir autorización de superficies y comandos de esa unidad.
 4. Usar DB/storage/fixtures propios y aislados; producción sólo con permiso read-only separado. No copiar credenciales ni datos personales al plan o al PR.
 5. Guardar relevo por unidad: ID, HEAD/PR, archivos, decisión/fuente, RED/GREEN/mutación o excepción, comandos/resultados, bloqueos y siguiente ID. Un resultado local no se presenta como CI/preview remoto.
 
-**Cierre documental:** inventario 21/21 y 22 tareas verificados; P36.1/P36.2 completos. P36.3 en curso; las 22 tareas de producto y la aceptación de #289 permanecen pendientes.
+**Cierre documental:** P36.1–P36.3 completos: inventario 21/21, 22 tareas verificadas y plan publicado en PR #363. Las 22 tareas de producto y la aceptación de #289 permanecen pendientes. Pruebas funcionales no ejecutadas por alcance documental; sin reproducción ni acceso productivo.
