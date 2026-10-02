@@ -45,6 +45,13 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: var(--target-min);
+  min-block-size: var(--target-min);
+  flex-shrink: 0;
+  color: var(--ink);
+  text-decoration: none;
   font-family: var(--disp);
   font-size: var(--title-fs);
   font-weight: var(--title-fw);

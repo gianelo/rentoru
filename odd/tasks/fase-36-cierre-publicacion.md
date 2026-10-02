@@ -175,7 +175,7 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: matriz comentario → reproducción/resultado/entorno, separando confirmado, no reproducido y no probado; reconciliación dimensional con F34 asignada.
   - Comprobar: cuatro medidas vigentes, navegación nativa sin JS salvo fotos; no repetir baseline ya protegido sin hallazgo.
 
-- [ ] **36.2 — Logo como enlace de inicio.** Después de 36.1.
+- [x] **36.2 — Logo como enlace de inicio.** Commit `ebd9a5e`; `PublishStep.tsx` y `revisar/page.tsx`; `app/publicar/logo-inicio.test.tsx` (19 casos de HTML servido), 44 pruebas focalizadas y 24/24 variantes Chromium con/sin JS. Evidencia: `odd/tasks/fase-36-logo-inicio.md`. Corrección de dependencia: la reproducción parcial 36.1a del logo basta para esta unidad; 36.1 continúa parcial, sin bloquearla.
   - Trabajo: inventariar encabezados propios de pasos, fotos y revisar; conservar salida y estado de borrador.
   - Aceptar: marca enlaza a `/`, nombre accesible y foco visibles en cada shell afectado.
   - Comprobar: HTML servido con `href` real, teclado y navegación sin JS en las tres clases de dispositivo; regresar no borra el borrador.
