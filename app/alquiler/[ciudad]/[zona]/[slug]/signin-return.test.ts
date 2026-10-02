@@ -205,8 +205,8 @@ describe("la vuelta a la ficha después de entrar (F19)", () => {
     // parámetro, `searchParamsDe` no trae la clave que ésta lee y estas dos
     // afirmaciones caen: la pantalla no reconoce ningún destino y sirve la
     // puerta de cuenta genérica en vez de la de este aviso.
-    expect(entrarHtml).toContain("Entrá y volvés a este aviso");
-    expect(entrarHtml).toContain("Volvés a este mismo aviso al terminar.");
+    expect(entrarHtml).toContain("Entra y vuelves a este aviso");
+    expect(entrarHtml).toContain("Vuelves a este mismo aviso al terminar.");
     // Y la salida visible («×» / «← Volver al aviso») apunta a ESTA ficha, no
     // a la raíz del sitio.
     expect(entrarHtml).toContain(`href="${RUTA_FICHA}"`);
