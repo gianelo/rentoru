@@ -2933,3 +2933,32 @@ Esta entrega es sólo un PR de planificación a `dev`, sin implementar copia. Ca
 - [ ] 35.9 Estilo legal únicamente: HTML servido y cotejo de significado; ratificación y `DraftNotice` quedan fuera.
 - [ ] 35.10 Correo transaccional de identidad/ciclo de vida: asunto, texto plano y HTML finales; disposición explícita para correo operativo interno.
 - [ ] 35.11 Shells, navegación, errores, metadata y nombres accesibles: cerrar matriz con pruebas nombradas, Chromium/crawlability donde corresponda y aceptación del fundador.
+
+## Fase 36 — Cierre de publicación (#289; planificación documental)
+
+Plan ejecutable, criterios por unidad, gates y trazabilidad de **21/21 comentarios**: `odd/tasks/fase-36-cierre-publicacion.md`. Siguiente numeración disponible: F33/F34 viven en ODD y F35 está reservada por PR #362; no duplicarlas. Esta entrega no implementa ni cierra #289. Los checks completados del issue son baseline; el checklist transversal pendiente significa no probado, no fallo confirmado. Decisiones/supersesiones: sección «Fase 36» de `design.md`.
+
+Todos los IDs son de producto y permanecen pendientes. P36.1–P36.3 siguen exclusivamente en el plan ODD; terminar planificación no termina funcionalidad. Cada cierre futuro citará archivo y prueba nombrada.
+
+- [ ] 36.1 Reproducir los nueve pasos y fijar baseline; coordinar medidas con F34.
+- [ ] 36.2 Logo como enlace nativo de inicio en los shells de publicación.
+- [ ] 36.3 Investigar/corregir transición de entrada tras aprobar patrón contextual de carga.
+- [ ] 36.4 Reconciliar ancho de pastilla con política responsive del sistema.
+- [ ] 36.5 Sugerencias de zona como mejora progresiva, con búsqueda nativa intacta.
+- [ ] 36.6 Conciliar catálogo de todas las ciudades soportadas, sin expansión geográfica.
+- [ ] 36.7 Formulario interno para explicar zona faltante, evaluando reutilizar Escribinos.
+- [ ] 36.8 Contador y preview vivos del título con validación servidor.
+- [ ] 36.9 Guía viva de descripción y caracteres faltantes.
+- [ ] 36.10 Aprobar tres propuestas de chooser/portada y retirar ayuda innecesaria; coordinar F35.
+- [ ] 36.11 Reducir huella visual del menú de fotos sin bajar target de 44 px.
+- [ ] 36.12 Resolver conjuntamente jerarquía de Quién publica sin perder labels.
+- [ ] 36.13 Resolver compatibilidad de WhatsApp único: legado, editar, importación, defaults y migración.
+- [ ] 36.14 Publicar con WhatsApp y número validado tras gate país/formato; sin verificar cuenta.
+- [ ] 36.15 Diagnosticar/corregir miniaturas al volver sin presumir causa de storage/URL.
+- [ ] 36.16 Aprobar lámina de revisar móvil/tablet/escritorio antes de implementación.
+- [ ] 36.17 Implementar revisar aprobado, conservando regreso/guardado/descarte.
+- [ ] 36.18 Corregir warning según dueño → inmobiliaria; decidir aparte sentido inverso.
+- [ ] 36.19 Diagnosticar digest 901444967; producción sólo con permiso read-only separado.
+- [ ] 36.20 Corregir causa confirmada y proteger reintento; enlazar 18.39/18.40 si corresponde.
+- [ ] 36.21 Elegir botón vs checkbox de No tiene ninguna; conservar `featuresDeclared`.
+- [ ] 36.22 Aceptación integrada con pruebas observadas y fundador, sin cierre automático de #289.
