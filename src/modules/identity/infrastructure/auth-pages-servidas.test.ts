@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { authPagesFixture, ORIGIN, RETURN } from "../../../../tests/fixtures/auth-js-pages";
 
@@ -26,7 +27,7 @@ function copy(html: string, title: string, fragments: string[]) {
   }
 }
 
-function signin(html: string, original: string, explanation: boolean) {
+function signin(html: string, original: string, explanation: boolean | string) {
   preservation(html, original);
   expect(html).toContain(`action="${ORIGIN}/api/auth/signin/google" method="POST"`);
   expect(html).toContain(`action="${ORIGIN}/api/auth/signin/email" method="POST"`);
@@ -44,7 +45,11 @@ function signin(html: string, original: string, explanation: boolean) {
     ">Entrar con Google</span>",
     ">Correo</label>",
     ">Entrar con Correo</button>",
-    ...(explanation ? ["<p>Intenta entrar con otra cuenta.</p>"] : []),
+    ...(explanation
+      ? [
+          `<p>${typeof explanation === "string" ? explanation : "Intenta entrar con otra cuenta."}</p>`,
+        ]
+      : []),
   ]);
 }
 
@@ -100,6 +105,38 @@ describe("35.2 — HTML final del GET de producción con Auth.js real", () => {
     ).toBe(true);
     expect(fixture.errors).toEqual(["OAuthCallbackError"]);
     signin(html, original, true);
+  });
+
+  it("Google sin vínculo: OAuthAccountNotLinked conserva cuenta, formulario y copia neutral", async () => {
+    const fixture = await authPagesFixture();
+    fixture.verifyProfile();
+    const { html, original } = await fixture.final(
+      await fixture.oauth(),
+      "/api/auth/signin?error=OAuthAccountNotLinked",
+      200,
+    );
+    expect(fixture.errors).toEqual(["OAuthAccountNotLinked"]);
+    signin(
+      html,
+      original,
+      "Para confirmar tu identidad, entra con la misma cuenta que utilizaste originalmente.",
+    );
+  });
+
+  it("Verification loopback: firma nativa Next normalizada y destino configurado", async () => {
+    const fixture = await authPagesFixture();
+    vi.stubEnv("AUTH_URL", "http://127.0.0.1:55439");
+    const { GET } = await import("../../../../app/api/auth/[...nextauth]/route");
+    const response = await GET(
+      new NextRequest("http://127.0.0.1:55439/api/auth/error?error=Verification", {
+        headers: { host: "127.0.0.1:55439", "x-forwarded-proto": "http" },
+      }),
+    );
+    expect(response.status).toBe(403);
+    const html = await response.text();
+    expect(fixture.unexpected).toEqual([]);
+    expect(html.match(/<a[^>]+href="([^"]+)"/)?.[1]).toBe("http://127.0.0.1:55439/api/auth/signin");
+    expect(html).toContain("<p>El enlace para entrar ya no es válido.</p>");
   });
 
   it("perfil Google no verificado: signin sin código ni causa inventada", async () => {

@@ -10,6 +10,8 @@ const COPY: Readonly<Record<string, string>> = {
   "label:Email": "Correo",
   "button:Sign in with Correo": "Entrar con Correo",
   "p:Try signing in with a different account.": "Intenta entrar con otra cuenta.",
+  "p:To confirm your identity, sign in with the same account you used originally.":
+    "Para confirmar tu identidad, entra con la misma cuenta que utilizaste originalmente.",
   "h1:Server error": "Error del servidor",
   "p:There is a problem with the server configuration.":
     "Hay un problema con la configuración del servidor.",

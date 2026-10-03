@@ -1,3 +1,4 @@
+import { NextRequest } from "next/server";
 import { authPageText } from "../domain/auth-page-copy";
 
 /** Adapt only the native pages and two exact broken destinations; authentication stays in Auth.js. */
@@ -29,12 +30,13 @@ export async function authPageResponse(request: Request, response: Response): Pr
   const login =
     url.pathname === "/api/auth/signin" &&
     response.status === 200 &&
-    (error === null || error === "OAuthCallbackError");
+    (error === null || error === "OAuthCallbackError" || error === "OAuthAccountNotLinked");
   if (
     !(verification || configuration || login) ||
     !response.headers.get("content-type")?.startsWith("text/html")
   )
     return response;
+  const verificationHref = verification ? `${new NextRequest(url, request).url}/signin` : null;
   const stack: string[] = [];
   // Raw script/style blocks and quoted attributes are opaque, including markup-looking strings.
   const tokens =
@@ -53,7 +55,7 @@ export async function authPageResponse(request: Request, response: Response): Pr
         /(\s+)([\w:-]+)(?:=("[^"]*"|'[^']*'))?/g,
         (attribute, space, name, value) => {
           if (tag === "html" && name === "lang" && value === '"en"') return `${space}lang="es"`;
-          if (verification && tag === "a" && name === "href" && value === `"${url.href}/signin"`)
+          if (verification && tag === "a" && name === "href" && value === `"${verificationHref}"`)
             return `${space}href="${signin}"`;
           return attribute;
         },
