@@ -21,6 +21,17 @@ vi.mock("@/modules/listing-catalogue/infrastructure/drizzle-catalogue", () => ({
     listCities = listCities;
   },
 }));
+vi.mock("@/modules/listing-catalogue/infrastructure/drizzle-search-vocabulary", () => ({
+  DrizzleSearchVocabulary: class {
+    lookup = async (typed: string) => ({
+      cities: (await listCities()).filter((city) =>
+        city.name.toLowerCase().includes(typed.toLowerCase()),
+      ),
+      zones: [],
+      aliases: [],
+    });
+  },
+}));
 vi.mock("@/modules/listing-discovery/infrastructure/drizzle-active-zones", () => ({
   DrizzleActiveZones: class {
     listActiveZones = async () => [];
@@ -46,9 +57,9 @@ vi.mock("./_lib/nav-account", () => ({ readNavAccountFlags: async () => ({}) }))
 
 import InicioPage from "./page";
 
-async function served(city?: string): Promise<string> {
+async function served(city?: string, q?: string): Promise<string> {
   return renderToStaticMarkup(
-    await InicioPage({ searchParams: Promise.resolve(city ? { ciudad: city } : {}) }),
+    await InicioPage({ searchParams: Promise.resolve({ ciudad: city, q }) }),
   );
 }
 
@@ -84,6 +95,30 @@ beforeEach(() => {
 });
 
 describe("selector del inicio servido", () => {
+  it("F35.3: sirve la pregunta neutra en label y placeholder del inicio", async () => {
+    const html = await served();
+    expect(html).toMatch(
+      /<label[^>]*for="pastilla-de-busqueda"[^>]*>¿En qué zona buscas\?<\/label>/,
+    );
+    expect(html).toMatch(
+      /<input[^>]*id="pastilla-de-busqueda"[^>]*placeholder="¿En qué zona buscas\?"[^>]*name="q"[^>]*value=""/,
+    );
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
+    expect(html).toContain('href="/?ciudad=maracaibo"');
+  });
+
+  it("F35.3: sirve la ayuda desconocida completa con texto recortado y escapado", async () => {
+    const html = await served(undefined, '  <nave> & "espacial"  ');
+    expect(html).toMatch(
+      /<p[^>]*>No reconocimos «&lt;nave&gt; &amp; &quot;espacial&quot;». Prueba con una zona, una ciudad o un tipo de vivienda\.<\/p>/,
+    );
+    expect(html).toContain('value="&lt;nave&gt; &amp; &quot;espacial&quot;"');
+    expect(html).not.toContain("<nave>");
+    expect(html).not.toContain("No reconocimos «  ");
+    expect(html).not.toContain("sin resultados");
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
+  });
+
   it("omite ciudad vacía, muestra la disponible y conserva la copia actual", async () => {
     const html = await served();
     expect(html).toContain('href="/?ciudad=maracaibo"');

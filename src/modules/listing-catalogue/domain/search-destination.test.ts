@@ -194,7 +194,7 @@ describe("homeSearchForm", () => {
   it("compone la caja con la pregunta del producto, no con una etiqueta propia", () => {
     const form = homeSearchForm();
 
-    expect(form.label).toBe("¿En qué zona buscás?");
+    expect(form.label).toBe("¿En qué zona buscas?");
     expect(form.name).toBe(HOME_SEARCH_PARAM);
     // El formulario vuelve al inicio: no hay una `/buscar` que la 14.24 borró.
     expect(form.action).toBe("/");
@@ -216,7 +216,9 @@ describe("noMatchMessage", () => {
   it("no le echa la culpa al catálogo", () => {
     const message = noMatchMessage(" nave espacial ");
 
-    expect(message).toContain("nave espacial");
+    expect(message).toBe(
+      "No reconocimos «nave espacial». Prueba con una zona, una ciudad o un tipo de vivienda.",
+    );
     expect(message).not.toMatch(/sin resultados|no hay avisos/i);
   });
 });
