@@ -5,6 +5,7 @@ import {
   noMatchMessage,
   resolveSearchDestination,
   searchChoices,
+  searchSuggestionsStatus,
 } from "./search-destination";
 import type { SuggestionVocabulary } from "./suggest-filters";
 
@@ -32,6 +33,16 @@ const VOCABULARY: SuggestionVocabulary = {
   ],
   aliases: [{ zoneId: "z-tierra", alias: "Tierra Negra" }],
 };
+
+describe("searchSuggestionsStatus", () => {
+  it.each([
+    [0, ""],
+    [1, "1 sugerencia"],
+    [2, "2 sugerencias"],
+  ])("anuncia %i opciones como «%s»", (count, expected) => {
+    expect(searchSuggestionsStatus(count as number)).toBe(expected);
+  });
+});
 
 describe("resolveSearchDestination", () => {
   /**

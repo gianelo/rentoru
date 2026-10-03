@@ -89,6 +89,40 @@ describe("SearchSuggestions — al escribir en la pastilla del inicio (28.10a)",
     expect(panel?.textContent).toContain("Altamira");
   });
 
+  it("F35.3: anuncia 0/1/N sugerencias con opciones y destinos conservados", () => {
+    const vocabulary = {
+      ...VOCABULARY,
+      cities: [...VOCABULARY.cities, { id: "c-m", name: "Maracaibo" }],
+      zones: [
+        ...VOCABULARY.zones,
+        { id: "z-centro-dc", name: "Centro", cityId: "c-dc", parentName: null, count: 2 },
+        { id: "z-centro-m", name: "Centro", cityId: "c-m", parentName: null, count: 1 },
+      ],
+    };
+    act(() => root.render(<SearchPill {...BASE} suggestions={vocabulary} />));
+    const status = () => container.querySelector('[role="status"]')?.textContent;
+    const hrefs = () =>
+      Array.from(container.querySelectorAll('[aria-label="Sugerencias"] a')).map((link) =>
+        link.getAttribute("href"),
+      );
+
+    expect(status()).toBe("");
+    expect(hrefs()).toEqual([]);
+    escribir("alta");
+    expect(status()).toBe("1 sugerencia");
+    expect(hrefs()).toEqual(["/alquiler/distrito-capital/altamira"]);
+    escribir("centro");
+    expect(status()).toBe("2 sugerencias");
+    expect(hrefs()).toEqual(["/alquiler/distrito-capital/centro", "/alquiler/maracaibo/centro"]);
+    escribir("inexistente");
+    expect(status()).toBe("");
+    expect(hrefs()).toEqual([]);
+    expect(container.querySelector('[aria-label="Sugerencias"]')).toBeNull();
+    escribir("alta");
+    expect(status()).toBe("1 sugerencia");
+    expect(hrefs()).toHaveLength(1);
+  });
+
   it("Escape cierra la lista sin borrar lo escrito", () => {
     act(() => {
       root.render(<SearchPill {...BASE} suggestions={VOCABULARY} />);

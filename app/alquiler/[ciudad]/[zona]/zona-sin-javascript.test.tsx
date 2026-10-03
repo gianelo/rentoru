@@ -305,6 +305,7 @@ describe("la página de zona sin JavaScript", () => {
     expect(html).toContain(`href="/alquiler/maracaibo/tierra-negra/`);
     // Y la cuenta que la pantalla escribe es la de la búsqueda entera.
     expect(html).toContain("2 propiedades activas");
+    expect(html).toContain("Son los 2 avisos que coinciden");
   });
 
   /**
@@ -425,6 +426,12 @@ describe("«Limpiar todo» vuelve a la ciudad, no a la zona (14.22b)", () => {
       filtros: "precio",
     });
 
+    expect(html).toContain("¿Cuánto puedes pagar al mes?");
+    expect(html).toContain("1 propiedad activa");
+    expect(html).toContain("Esa página ya no existe: la búsqueda tiene 1.");
+    expect(html).toMatch(
+      /href="\/alquiler\/maracaibo\/tierra-negra\?max=500&amp;hab=2&amp;filtros=precio">Ver la última<\/a>/,
+    );
     expect(html).toContain('href="/alquiler/maracaibo?filtros=precio">Limpiar todo');
     expect(html).toContain("Aplicar filtros");
     expect(html).not.toContain("Usar este precio");
@@ -442,6 +449,23 @@ describe("«Limpiar todo» vuelve a la ciudad, no a la zona (14.22b)", () => {
  * el aviso perfecto y la página no dibujarlo, que es exactamente el modo de
  * fallo que la 16.9 dejó documentado — nada se ve roto.
  */
+describe("F35.3: parámetros obsoletos en la zona", () => {
+  it.each([
+    ["filtros", "zona", "grupo de filtros", "max=500"],
+    ["metros", "70", "filtro de metros cuadrados", "metros=70&amp;max=500"],
+  ])("explica %s y conserva zona y precio", async (param, value, label, query) => {
+    const html = await servedBody("maracaibo", "tierra-negra", { [param]: value, max: "500" });
+    expect(html).toContain(
+      `Esa dirección pedía un ${label} que ya no existe. El panel se abrió igual.`,
+    );
+    expect(html).toContain('data-testid="search-panel"');
+    expect(html).toMatch(/name="max"[^>]*value="500"/);
+    expect(html).toContain(
+      `data-search-filter-close="" href="/alquiler/maracaibo/tierra-negra?${query}"`,
+    );
+  });
+});
+
 describe("el «zona» que esta ruta no admite se dice en la pantalla (14.23b)", () => {
   it("sale el aviso, y el parámetro no se arrastra a ningún enlace", async () => {
     const html = await servedBody("maracaibo", "tierra-negra", {
@@ -449,7 +473,10 @@ describe("el «zona» que esta ruta no admite se dice en la pantalla (14.23b)", 
       max: "500",
     });
 
-    expect(html).toContain("Esta dirección ya nombra una zona");
+    expect(html).toContain(
+      "Esta dirección ya nombra una zona, así que se ignoró el «zona» que traía. Para buscar en varias a la vez, la dirección es la de la ciudad.",
+    );
+    expect(html).toContain('href="/alquiler/maracaibo/tierra-negra?max=500"');
     expect(html).not.toContain("zona=la-lago");
   });
 
@@ -457,5 +484,8 @@ describe("el «zona» que esta ruta no admite se dice en la pantalla (14.23b)", 
     const html = await servedBody("maracaibo", "tierra-negra", { max: "500" });
 
     expect(html).not.toContain("Esta dirección ya nombra una zona");
+    expect(html).not.toContain("El panel se abrió igual.");
+    expect(html).toContain("1 propiedad activa");
+    expect(html).toContain("Es el único aviso que coincide");
   });
 });

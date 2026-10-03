@@ -94,6 +94,13 @@ describe("SearchPanel — mejora modal con JavaScript (28.2)", () => {
     expect(dialog).not.toBeNull();
   }
 
+  it("F35.3: muestra la pregunta neutra de precio en el modal real", () => {
+    renderOpen();
+    expect(container.querySelector('[role="dialog"]')?.textContent).toContain(
+      "¿Cuánto puedes pagar al mes?",
+    );
+  });
+
   it("Escape cierra el modal sin navegar", () => {
     renderOpen();
 
