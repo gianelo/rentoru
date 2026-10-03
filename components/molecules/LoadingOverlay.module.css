@@ -1,0 +1,78 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--loading-layer);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  overflow: auto;
+  background: var(--scrim);
+}
+
+.card {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: var(--door-w);
+  padding: 32px 24px;
+  border-radius: var(--r);
+  background: var(--surface);
+  box-shadow: var(--door-shadow);
+  color: var(--ink);
+  text-align: center;
+}
+
+.mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: var(--wait-mark-size);
+  block-size: var(--wait-mark-size);
+  margin-inline: auto;
+  border-radius: var(--rs);
+  background: var(--tint);
+  color: var(--accent);
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border: var(--loading-ring-width) solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: var(--rs);
+  animation: rotate var(--loading-duration) linear infinite;
+}
+
+.letter {
+  font-family: var(--mono);
+  font-size: var(--wait-mark-fs);
+  font-weight: var(--title-fw);
+  line-height: 1;
+}
+
+.label {
+  margin: 0;
+  font-size: var(--ficha-body-fs);
+  line-height: var(--ficha-body-lh);
+}
+
+@keyframes rotate {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (min-width: 768px) {
+  .label {
+    font-size: var(--ficha-body-fs-desktop);
+    line-height: var(--ficha-body-lh-desktop);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring {
+    animation: none;
+  }
+}
