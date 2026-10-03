@@ -89,9 +89,9 @@ function summaryOf(band: PriceBand, input: PriceStepInput): string {
  * de dejar un hueco donde había un dato.
  */
 function shortfallNotice(total: number, zoneName: string): string {
-  if (total === 0) return `Todavía no hay avisos en ${zoneName}: el precio lo ponés vos.`;
+  if (total === 0) return `Todavía no hay avisos en ${zoneName}: el precio lo pones tú.`;
   const avisos = total === 1 ? "1 aviso" : `${total} avisos`;
-  return `Con ${avisos} en ${zoneName} no alcanza para decir cuánto se pide: el precio lo ponés vos.`;
+  return `Con ${avisos} en ${zoneName} no alcanza para decir cuánto se pide: el precio lo pones tú.`;
 }
 
 /**
