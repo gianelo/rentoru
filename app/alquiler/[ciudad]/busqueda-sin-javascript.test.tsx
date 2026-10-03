@@ -236,6 +236,12 @@ describe("la búsqueda sin JavaScript", () => {
     const html = await servedBody();
     expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
     expect(html).toContain('name="q"');
+    expect(html).toMatch(
+      /<label[^>]*for="pastilla-de-busqueda"[^>]*>¿En qué zona buscas\?<\/label>/,
+    );
+    expect(html).toMatch(
+      /<input[^>]*id="pastilla-de-busqueda"[^>]*placeholder="¿En qué zona buscas\?"[^>]*name="q"[^>]*value="Distrito Capital"/,
+    );
     // La sugerencia de zona aparece al escribir; el HTML inicial enlaza a la ficha.
     expect(html).toMatch(
       /href="\/alquiler\/distrito-capital\/altamira\/penthouse-en-altamira-dc-2(?:\?[^"]*)?"/,

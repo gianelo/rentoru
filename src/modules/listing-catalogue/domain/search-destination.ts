@@ -68,7 +68,7 @@ export const HOME_SEARCH_RESULTS_LABEL = "Resultados de la búsqueda";
  * cadena de maquetado.
  */
 export function noMatchMessage(typed: string): string {
-  return `No reconocimos «${typed.trim()}». Probá con una zona, una ciudad o un tipo de vivienda.`;
+  return `No reconocimos «${typed.trim()}». Prueba con una zona, una ciudad o un tipo de vivienda.`;
 }
 
 /** Lo que la caja necesita para dibujarse, ya resuelto. */

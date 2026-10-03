@@ -292,6 +292,13 @@ describe("la página de zona sin JavaScript", () => {
 
     // El título, el precio y el enlace a la ficha: los tres salen del servidor.
     // El enlace es lo que decide si un rastreador puede seguir desde acá.
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
+    expect(html).toMatch(
+      /<label[^>]*for="pastilla-de-busqueda"[^>]*>¿En qué zona buscas\?<\/label>/,
+    );
+    expect(html).toMatch(
+      /<input[^>]*id="pastilla-de-busqueda"[^>]*placeholder="¿En qué zona buscas\?"[^>]*name="q"[^>]*value="Tierra Negra"/,
+    );
     expect(html).toContain(MCBO_BARATO.title);
     expect(html).toContain(MCBO_CARO.title);
     expect(html).toContain("$300");
