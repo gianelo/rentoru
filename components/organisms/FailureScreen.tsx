@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { FailureScreen as FailureScreenModel } from "@/modules/operability/domain/failure-report";
 import { ActionLink } from "../atoms/buttons";
 import { Container } from "../layout/Container";
@@ -14,8 +15,8 @@ import styles from "./FailureScreen.module.css";
  * página» (20/700/1.25)**; el cuerpo es **«Cuerpo» (15/400)** dentro del
  * **ancho de lectura de 520px** que el mismo apartado fija; el contenedor es
  * el de **1100px** de «Layout de escritorio»; la salida es el **nivel 1,
- * Acción** de «Jerarquía de botones», y es la única — un fallo no ofrece tres
- * caminos; y el código va en `--mono`, que es el tipo que el sistema reserva
+ * Acción** de «Jerarquía de botones» por defecto; el caller puede aportar
+ * otras acciones ya decididas. El código va en `--mono`, que el sistema reserva
  * para cifras que se leen carácter por carácter.
  *
  * **No lleva `Nav`.** El nav lee la sesión, y una pantalla de fallo no puede
@@ -25,7 +26,13 @@ import styles from "./FailureScreen.module.css";
  * Ni una decisión acá: qué dice, si hay código y a dónde se sale lo resolvió
  * `failure-report.ts`, con el suelo de cobertura del 90 % encima.
  */
-export function FailureScreen({ model }: { readonly model: FailureScreenModel }) {
+export function FailureScreen({
+  model,
+  actions,
+}: {
+  readonly model: FailureScreenModel;
+  readonly actions?: ReactNode;
+}) {
   return (
     <main className={styles.page}>
       <Container>
@@ -42,9 +49,8 @@ export function FailureScreen({ model }: { readonly model: FailureScreenModel })
           </p>
         )}
 
-        {/* Un enlace y no un botón: sin JavaScript un `<button>` no navega, y
-            ésta es la única salida de la pantalla. */}
-        <ActionLink href={model.exit.href}>{model.exit.label}</ActionLink>
+        {/* Por defecto, un enlace: un `<button>` sin script no navega. */}
+        {actions ?? <ActionLink href={model.exit.href}>{model.exit.label}</ActionLink>}
       </Container>
     </main>
   );

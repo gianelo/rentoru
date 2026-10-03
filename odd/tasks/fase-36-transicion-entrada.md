@@ -6,7 +6,7 @@ El fundador aprueba la vista: tarjeta blanca centrada, fondo gris a pantalla com
 
 El fundador selecciona `delivery_strategy=single-pr` y acepta acotar el PR a **base visual y página de recuperación**, dentro de 400 líneas incluidas pruebas/documentación. No excepción de tamaño, cadena, compresión ni omisión de pruebas. **No activar aún** loading, plazo, controller, layout ni señales de navegación. 36.3 permanece parcial con esta entrega; 36.1 también sigue parcial.
 
-Para la integración posterior queda acordado un límite de navegación de **10 segundos**, aviso y reintento sin modificar borradores ni declarar fallida una publicación. No aplica a subir fotos ni guardar. El reloj local podrá comenzar con la primera carga visible/hidratada, no garantiza medir antes del clic. La recuperación debe impedir presentación tardía durante el reemplazo documental; `location.replace` no garantiza aborto instantáneo interno del router. Los 2,5/5 s de la demo no son política productiva.
+Para la integración posterior queda acordado un límite de navegación de **10 segundos**, aviso y reintento sin modificar borradores ni declarar fallida una publicación. No aplica a subir fotos ni guardar. El reloj local podrá comenzar con la primera carga visible/hidratada, no garantiza contar desde el clic. La recuperación debe impedir presentación tardía durante el reemplazo documental; `location.replace` no garantiza aborto instantáneo interno del router. Los 2,5/5 s de la demo no son política productiva.
 
 Worktree `rentoru-fase36-publicacion`, rama `fix/fase-36-transicion-entrada`, base `631b4ee1777d794e543a9b015c740e9b740bc4dc`. Fetch observado: HEAD/origin/dev 0/0; sólo este documento sin seguimiento antes del escritor. No modificar raíz, identidad, Nav, AppLink, footer, formularios, DB, acciones ni servicios ajenos.
 
@@ -16,11 +16,12 @@ Worktree `rentoru-fase36-publicacion`, rama `fix/fase-36-transicion-entrada`, ba
 - Nueve borradores y trece sesiones se conservaron. Diagnóstico local usó sólo entorno de proceso para `R2_BUCKET_PUBLIC_URL`; imágenes 404 no prueban storage. Evidencia ignorada: `test-results/f363-client-summary.log`, `f363-client-diagnostic.log` y capturas; padre inspeccionó el pie aislado.
 - Mapas read-only `murk90mz-q-byo6`, `murkpakb-r-koln` y único contraste `murkujch-s-uhj0`: integración completa supera 400; política serializable decidida en dominio simplifica, pero no elimina ciclo pendiente/resuelto, foco ni recuperación real. No introducir controller sin caller como aceptación productiva.
 - Recuperación de este PR: página síncrona, sin sesión/DB/query flags, referencia privada ni autorretry. Modelo puro «La navegación tardó demasiado», Reintentar `/publicar` e Inicio `/`; anclas documentales. No afirmar publicación fallida ni borrador guardado.
-- Compartidos previstos: tres roles de indicador en tokens/sistema y slot render-only opcional en FailureScreen, preservando comportamiento por defecto. Coordinación enviada a F35 (`8e8de5a9`, `b92648fb`); cotejar respuesta y solapamientos antes de cambios/entrega.
+- Compartidos: tres roles de indicador en tokens/sistema y slot render-only opcional en FailureScreen, preservando defaults. F35 confirmó explícitamente ausencia de ediciones presentes/futuras en estas superficies (`79535baeb47c5784c6ae76ea96815d50`, reconfirmación `1e6bf56825d7682ecef76e48b46ec8d4`). Fetch final: origin/dev sigue en la base; encuentro y conflictos se comprobarán antes del push.
 
 ## Superficies del corte
 
 - `components/molecules/LoadingOverlay.tsx`, `.module.css`, `.test.tsx`: presentación reutilizable, sin reloj ni política específica.
+- `tests/e2e/loading-overlay-visual.spec.ts`: prueba portable del componente/CSS reales en memoria, sin activación de rutas; protege fuente mono, círculo tintado, radio, separación y tipografía aprobados.
 - `src/modules/listing-publication/domain/navigation-recovery.ts`, `.test.ts`: modelo puro de recuperación.
 - `app/publicar/error-de-carga/page.tsx`, `page.test.tsx`: caller real y HTML, sin activar loader.
 - `components/organisms/FailureScreen.tsx`: sólo slot de acciones render-only si hace falta para enlaces documentales; defaults intactos.
@@ -29,9 +30,9 @@ Worktree `rentoru-fase36-publicacion`, rama `fix/fase-36-transicion-entrada`, ba
 
 ## Tareas y comprobaciones
 
-- [ ] T36.3a — En curso: reconciliar alcance, rutas, presupuesto y coordinación. Cerrar unidad documental con commit y registrar identidad antes de escritor.
-- [ ] T36.3b — RED/GREEN observados, mutación/restauración de modelo y caller real; implementar sólo base y recuperación. Verificar default FailureScreen y referencias saneadas. Presupuesto de escritor ≤330 líneas, dejando margen al plan, sin code golf. Cerrar con commit de código, pruebas y sistema.
-- [ ] T36.3c — Verificador independiente: pruebas focalizadas, typecheck/Biome/tokens/build/bundle; HTML HTTP de recovery con/sin JS y anclas nativas; base visual en tres medidas, R fija/movimiento reducido/sin desborde. Review nativo del corte si está habilitado; fetch/conflictos, PR único a `dev` ≤400; merge humano. Registrar pendientes, no cerrar 36.3 completa.
+- [x] T36.3a — Alcance parcial, rutas y presupuesto delimitados; coordinación solicitada a F35. `git diff --cached --check` pasó; sólo el plan entró al commit documental `adeaa0c5ba4af5461b2e796b85ee672edeb676b9`. Sin RED aplicable a planificación pasiva.
+- [ ] T36.3b — En curso: modelo/caller llegaron a 13/13 GREEN y mutaciones de heading/href detectadas/restauradas; defaults FailureScreen intactos. Compartidos coordinados y sin solapamiento observado en F35 d773095. Corrección visual con RED3/GREEN3 portable y mutación mono→sans detectada/restaurada: fuente mono, fondo tintado, radio 12, gap 16 y texto desktop 16. Writer `murmh1so-x-49bp` terminó 327 líneas; verificador `murmrl6i-y-p5by` confirmó tipos, build fresco, visual3 y unit13 (`--cache=false`) sin cambios de fuentes/índice. Salida nativa conservada, por eso altura no idéntica a demo. Presupuesto ≤330 líneas, sin code golf; cerrar con commit de código, pruebas y sistema.
+- [ ] T36.3c — Verificación final: unit13/visual3/typecheck/Biome/tokens295/build `HyhypfNmPYp2iKuVcja6A`/bundle24 pasaron; máximo 112,41 KB≤130. Recovery y overlay reales con/sin JS en tres medidas; enlaces nativos, foco44px, movimiento reducido y 19 tablas intactas (9 borradores/13 sesiones). Caché Vite inicial propia/ignorada conservada, HMR histórico desconocido; configuración final HMR off/caché acotada y puertos propios cerrados. Logs `test-results/f363-final-{unit,build,bundle,browser}.log`. ASSESS medium/large: sin reviewer adicional de código. Pendientes review nativo, commits y PR único `dev`≤400; merge humano; no cerrar 36.3 completa.
 
 ## Recursos y pendientes
 
