@@ -295,6 +295,7 @@ function routedPage() {
     method = "GET",
     overrides: {
       headers?: Record<string, string>;
+      incompleteHeaders?: boolean;
       navigation?: boolean;
       resourceType?: string;
       redirected?: boolean;
@@ -305,7 +306,14 @@ function routedPage() {
       request: () => ({
         url: () => new URL(path, origin).href,
         method: () => method,
-        headers: () => ({ "sec-fetch-dest": "empty", ...(overrides.headers ?? { rsc: "1" }) }),
+        headers: () => ({
+          ...(overrides.incompleteHeaders ? {} : { "sec-fetch-dest": "empty" }),
+          ...(overrides.headers ?? { rsc: "1" }),
+        }),
+        allHeaders: async () => ({
+          ...(overrides.incompleteHeaders ? {} : { "sec-fetch-dest": "empty" }),
+          ...(overrides.headers ?? { rsc: "1" }),
+        }),
         isNavigationRequest: () => overrides.navigation ?? false,
         resourceType: () => overrides.resourceType ?? "fetch",
         redirectedFrom: () => (overrides.redirected ? {} : null),
@@ -342,6 +350,24 @@ describe("separate real destination request gate", () => {
       await request.done;
     } finally {
       await gate.dispose();
+    }
+  });
+
+  it("holds verified RSC fetch when interception omits Fetch metadata", async () => {
+    const routed = routedPage();
+    const gate = await holdPublicationDestination(routed.page, origin);
+    let held = false;
+    void gate.held.then(() => {
+      held = true;
+    });
+    const destination = routed.request("/publicar/paso/tipo", "GET", { incompleteHeaders: true });
+    await Promise.resolve();
+    await Promise.resolve();
+    try {
+      expect(held).toBe(true);
+    } finally {
+      await gate.dispose();
+      await destination.done;
     }
   });
 

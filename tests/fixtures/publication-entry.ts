@@ -227,6 +227,14 @@ export async function holdPublicationDestination(
     const request = route.request();
     const url = new URL(request.url());
     const evidence = publicationTransport(request);
+    const fullHeaders = await request.allHeaders();
+    console.log(
+      JSON.stringify({
+        destinationGate: evidence,
+        fetchDestination: fullHeaders["sec-fetch-dest"] ?? null,
+        redirectChain: request.redirectedFrom() !== null,
+      }),
+    );
     if (
       url.origin === origin &&
       evidence.pathname === "/publicar/paso/tipo" &&
@@ -235,7 +243,10 @@ export async function holdPublicationDestination(
       !evidence.navigation &&
       evidence.rsc === "1" &&
       !evidence.prefetch &&
-      request.headers()["sec-fetch-dest"] === "empty" &&
+      // Chromium interception can omit Fetch metadata even from allHeaders.
+      // Real fetch + non-navigation + RSC is still required above; reject any
+      // explicitly incompatible destination rather than fabricating headers.
+      (fullHeaders["sec-fetch-dest"] === undefined || fullHeaders["sec-fetch-dest"] === "empty") &&
       request.redirectedFrom() === null
     ) {
       signalHeld(evidence);
