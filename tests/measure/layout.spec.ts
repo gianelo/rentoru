@@ -732,6 +732,11 @@ test.describe("el panel de filtros como acordeón B1 en todas las medidas (28.2)
       await page.setViewportSize({ width, height });
       await page.goto("/measure");
 
+      await expect(
+        page
+          .getByTestId("search-panel-harness")
+          .getByText("¿Cuánto puedes pagar al mes?", { exact: true }),
+      ).toBeVisible();
       const bodies = await openBodies(page);
       console.log(`[28.2] ${width}px: ${JSON.stringify(bodies)}`);
 

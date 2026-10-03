@@ -216,6 +216,7 @@ describe("landing de ciudad vacía servida", () => {
     search.mockResolvedValue([]);
     const missingPhoto = await servedBody();
     expect(missingPhoto).not.toContain("Gratis para publicar. Sin comisión.");
+    expect(missingPhoto).toContain("Los avisos de esta página todavía no tienen foto.");
   });
 
   it("no invita a publicar si la query está refinada aunque cityTotal sea cero", async () => {
@@ -283,6 +284,8 @@ describe("la búsqueda sin JavaScript", () => {
     expect(html).toContain(DC_ALTAMIRA.title);
     expect(html).toContain("$450");
     expect(html).toContain("2 propiedades activas");
+    expect(html).toContain("Son los 2 avisos que coinciden");
+    expect(html).toContain(">2 avisos</span>");
   });
 
   /**
@@ -298,6 +301,14 @@ describe("la búsqueda sin JavaScript", () => {
    */
   it("una dirección con filtros reabre con esos mismos filtros puestos", async () => {
     const html = await servedBody({ min: "300", max: "800", hab: "2", filtros: "precio" });
+
+    expect(html).toContain("¿Cuánto puedes pagar al mes?");
+    expect(html).toContain("1 propiedad activa");
+    expect(html).toContain(">1 aviso</span>");
+    expect(html).toContain("Es el único aviso que coincide");
+    expect(html).toMatch(
+      /href="\/alquiler\/distrito-capital\?hab=2&amp;filtros=precio">Quitar el precio y ver 2<\/a>/,
+    );
 
     // Las fichas de «filtro puesto» dicen cuáles están puestos y cómo sacarlos.
     // Se afirma sobre la etiqueta del «×» y no sobre el texto suelto: «2 hab»
@@ -411,6 +422,46 @@ describe("la búsqueda sin JavaScript", () => {
  * afirmaciones distintas**, y sólo la segunda la ve un render — que es cómo la
  * 16.9 estuvo abierta con todo su dominio escrito y probado.
  */
+describe("F35.3: estados neutros y direcciones conservadas", () => {
+  it("explica el vacío y ofrece quitar el precio sin perder la ciudad", async () => {
+    const html = await servedBody({ min: "5000" });
+    expect(html).toContain(
+      "Ningún aviso coincide: «Desde $5000» es el filtro que deja la búsqueda en cero.",
+    );
+    expect(html).toMatch(/href="\/alquiler\/distrito-capital">Quitar el precio y ver 2<\/a>/);
+    expect(html).not.toContain('data-testid="listing-card"');
+  });
+
+  it("explica la página inexistente y enlaza a la última con el filtro", async () => {
+    const html = await servedBody({ max: "500", pag: "2" });
+    expect(html).toContain("Esa página ya no existe: la búsqueda tiene 1.");
+    expect(html).toMatch(/href="\/alquiler\/distrito-capital\?max=500">Ver la última<\/a>/);
+    expect(html).not.toContain('data-testid="search-close"');
+  });
+
+  it.each([
+    ["filtros", "zona", "grupo de filtros", "max=500"],
+    ["metros", "70", "filtro de metros cuadrados", "metros=70&amp;max=500"],
+  ])(
+    "explica el parámetro obsoleto %s sin perder el precio",
+    async (param, value, label, query) => {
+      const html = await servedBody({ [param]: value, max: "500" });
+      expect(html).toContain(
+        `Esa dirección pedía un ${label} que ya no existe. El panel se abrió igual.`,
+      );
+      expect(html).toContain('data-testid="search-panel"');
+      expect(html).toMatch(/name="max"[^>]*value="500"/);
+      expect(html).toContain(
+        `data-search-filter-close="" href="/alquiler/distrito-capital?${query}"`,
+      );
+    },
+  );
+
+  it("no inventa avisos obsoletos sin esos parámetros", async () => {
+    expect(await servedBody({ max: "500" })).not.toContain("El panel se abrió igual.");
+  });
+});
+
 describe("lo que la búsqueda le corrigió al precio, dicho (14.13)", () => {
   it("dice que intercambió los dos extremos, con los números que se pidieron", async () => {
     const html = await servedBody({ min: "900", max: "300" });

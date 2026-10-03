@@ -131,12 +131,17 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
   test("14.51: escribir «alta» ofrece Altamira con su ámbito", async ({ page }) => {
     const pastilla = page.getByTestId(PASTILLA);
     // Nada dibujado antes de escribir: la mejora no ocupa la pantalla de nadie.
+    await expect(pastilla.getByRole("status")).toHaveText("");
     await expect(pastilla.getByRole("list", { name: "Sugerencias" })).toHaveCount(0);
 
     await pastilla.getByRole("searchbox").fill("alta");
 
     const opcion = pastilla.getByRole("link", { name: /Altamira/ });
     await expect(opcion).toHaveAttribute("href", "/alquiler/distrito-capital/altamira");
+    await expect(pastilla.getByRole("status")).toHaveText("1 sugerencia");
+    await expect(pastilla.getByRole("list", { name: "Sugerencias" }).getByRole("link")).toHaveCount(
+      1,
+    );
     // **El par (filtro, valor) con su ámbito** (14.18) y el conteo de la 14.51,
     // los dos leídos de lo dibujado y no del código.
     await expect(opcion).toContainText("Chacao · Distrito Capital");
@@ -163,6 +168,7 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
 
     const opciones = pastilla.getByRole("link", { name: /Centro/ });
     await expect(opciones).toHaveCount(2);
+    await expect(pastilla.getByRole("status")).toHaveText("2 sugerencias");
     expect(
       await opciones.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href"))),
     ).toEqual(["/alquiler/distrito-capital/centro", "/alquiler/maracaibo/centro"]);
@@ -181,10 +187,27 @@ test.describe("14.51 — las sugerencias mientras se escribe", () => {
 
     // Cero opciones que lleven a Chacao...
     await expect(pastilla.getByRole("link", { name: /^Chacao/ })).toHaveCount(0);
+    await expect(pastilla.getByRole("status")).toHaveText("");
+    await expect(pastilla.getByRole("list", { name: "Sugerencias" })).toHaveCount(0);
     // ...y la pareja de esa negativa: escribir algo que SÍ tiene avisos sigue
     // ofreciendo. Sin esto, un panel roto pasa esta prueba igual de verde.
     await pastilla.getByRole("searchbox").fill("altamira");
     await expect(pastilla.getByRole("link", { name: /Altamira/ })).toHaveCount(1);
+    await expect(pastilla.getByRole("status")).toHaveText("1 sugerencia");
+    await expect(pastilla.getByRole("link", { name: /Altamira/ })).toHaveAttribute(
+      "href",
+      "/alquiler/distrito-capital/altamira",
+    );
+    await pastilla.getByRole("searchbox").fill("centro");
+    await expect(pastilla.getByRole("status")).toHaveText("2 sugerencias");
+    const links = pastilla.getByRole("list", { name: "Sugerencias" }).getByRole("link");
+    await expect(links).toHaveCount(2);
+    expect(
+      await links.evaluateAll((nodes) => nodes.map((node) => node.getAttribute("href"))),
+    ).toEqual(["/alquiler/distrito-capital/centro", "/alquiler/maracaibo/centro"]);
+    await pastilla.getByRole("searchbox").fill("chacao");
+    await expect(pastilla.getByRole("status")).toHaveText("");
+    await expect(pastilla.getByRole("list", { name: "Sugerencias" })).toHaveCount(0);
     console.log("[14.51] Chacao (0 avisos) no se ofrece; Altamira (9) sí");
   });
 

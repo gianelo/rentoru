@@ -64,6 +64,7 @@ test("el filtro de la pastilla abre el panel sin una línea de JavaScript", asyn
 
   const panel = page.getByTestId("search-panel");
   await expect(panel).toBeVisible();
+  await expect(panel.getByText("¿Cuánto puedes pagar al mes?", { exact: true })).toBeVisible();
   // Los cuatro grupos que quedaron después de la 14.36. La ubicación no está:
   // eso lo resuelve el texto de la pastilla.
   //
