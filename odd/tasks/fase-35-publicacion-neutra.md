@@ -1,6 +1,6 @@
 # F35.4 — publicación en español neutro
 
-**Estado: inventario leído; coordinación y pruebas funcionales por resolver. Sin implementación.**
+**Estado: coordinación A0 resuelta; tarea 2 en RED/GREEN de mercado. Sin implementación aún; A1 congelado por F36.**
 
 ## Base y límites
 - Rama `fix/fase-35-publicacion-neutra`, base dev `3f8dc5a9bb0018fb180ff831df542f821822178b`: merge humano #373, árbol idéntico al HEAD verificado `9403e46`; cierre documental de 35.3 en `bdb4b3dbb018a28ffa91efe6af511b1760d4a170` (22 líneas).
@@ -24,8 +24,8 @@
 - RED textual en consumidores reales antes de cambiar copia; GREEN, mutante aislado por familia detectado por ese consumidor, restauración exacta y regresiones. Normalizar candidato antes de revisión nativa; consentimiento/previsión y ACK exactos, entrega independiente hacia dev, sin merge automático.
 
 ## Tareas
-**En curso: 1. Un escritor de fuente por vez; ninguno autorizado todavía.**
-1. [ ] **Inventario, coordinación y verificabilidad.** Confirmar reservas/modelos F36 y fixture funcional sin escrituras Auth/DB/subidas; resolver alcance de gramática y registrar disposiciones. Evidencia: scout anterior y respuesta actual del coordinador, sin suponer activación implementada.
+**En curso: 2, subcorte A0. Un escritor de fuente por vez; sólo los tres paths de mercado confirmados.**
+1. [x] **Inventario, coordinación y verificabilidad A0.** Scout `musrmgef-25-9ho6` y confirmación F36 `426eb34e81a75131495084f8d23bbb90`: los tres paths A0 no se solapan; significado/precios/0/1/N intactos. Prueba existente `precio-sin-javascript.test.tsx` ejecuta StepPage/PublishStep reales con puertos/contexto doblados: HTML SSR, no HTTP autenticado ni nueve pasos. Reservas A1 y disposición de gramática de pasos siguen diferidas, sin ampliación de alcance ni permiso de entrega por ese mensaje.
 2. [ ] **Corte A — consumidores RED/GREEN por subcorte.** A0 mercado: dos plantillas, expectativas completas 0/1/N en StepPage real y catálogo, mutantes independientes restaurados; sólo después de confirmar los tres paths. A1 pasos/mapa, copia directa y revisión/metadata/filas: diferidos por congelamiento F36. Preservar respuestas, enlaces y semántica; reevaluar cada presupuesto antes de GREEN. No marcar toda la tarea terminada al completar sólo A0.
 3. [ ] **Corte A — verificación y entrega por subcorte.** Checks funcionales aplicables con límites explícitos, build/bundle según superficie, evaluación/revisión de cada candidato completo A0/A1, commit/PR dev/CI del HEAD final y merge humano. Candidato es unidad/PR, no casilla acumulada; no afirmar HTTP autenticado ni nueve recorridos por SSR.
 4. [ ] **Corte B — negativas y consumidor compartido.** RED/GREEN del catálogo y rechazos reales, aviso de una sola dirección con significado intacto, regresión de editar; mutantes/checks/revisión/PR/CI/merge con presupuesto propio.
