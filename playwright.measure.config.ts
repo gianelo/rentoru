@@ -28,6 +28,7 @@ export default defineConfig({
       // Only this webServer sets it — see app/measure/page.tsx. A real
       // deploy never sets this, so the route 404s outside this harness.
       MEASURE_HARNESS_ENABLED: "true",
+      F365_ZONE_MEASURE: "true",
       // Un destino que no existe, a propósito.
       //
       // El arnés monta `PublishStep`, que arrastra la Server Action del paso,
