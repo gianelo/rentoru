@@ -1,5 +1,41 @@
 import { writeFileSync } from "node:fs";
-import { expect, test } from "@playwright/test";
+import { type ConsoleMessage, expect, test } from "@playwright/test";
+
+function measureDiagnosticPath(url: URL): string {
+  const allowed = [
+    "/",
+    "/measure/nav",
+    "/__nextjs_original-stack-frames",
+    "/__nextjs_error_feedback",
+  ];
+  if (allowed.includes(url.pathname)) return url.pathname;
+  return url.pathname.startsWith("/_next/") ? "/_next/*" : "other";
+}
+
+function measureDiagnosticError(message: string): string {
+  if (/hydration|hydrating|did not match/i.test(message)) return "hydration";
+  if (/chunkload|loading chunk/i.test(message)) return "chunk";
+  return /failed to fetch|network|net::/i.test(message) ? "network" : "other";
+}
+
+test("Nav diagnóstico: clasifica rutas y errores sin datos sensibles", () => {
+  expect(
+    [
+      "http://127.0.0.1:3100/measure/nav?token=private",
+      "http://user:private@127.0.0.1:3100/__nextjs_original-stack-frames?token=private",
+      "http://127.0.0.1:3100/_next/private.js?token=private",
+      "http://127.0.0.1:3100/private/token",
+    ].map((url) => measureDiagnosticPath(new URL(url))),
+  ).toEqual(["/measure/nav", "/__nextjs_original-stack-frames", "/_next/*", "other"]);
+  expect(
+    [
+      "Hydration failed: private cookie",
+      "ChunkLoadError: private URL",
+      "Failed to fetch https://user:private@example.invalid",
+      "Private body and cookie",
+    ].map(measureDiagnosticError),
+  ).toEqual(["hydration", "chunk", "network", "other"]);
+});
 
 const viewports = [
   { width: 390, height: 844 },
@@ -34,11 +70,20 @@ for (const viewport of viewports) {
         serviceWorkers: "block",
       });
       const refused: string[] = [];
+      const blocked: { method: string; origin: string; path: string }[] = [];
+      const errors = new Set<string>();
+      let detachDiagnostics = () => {};
       await context.route("**/*", (route) => {
         const request = route.request();
         const url = new URL(request.url());
         if (url.origin !== origin || request.method() !== "GET") {
           refused.push(`${request.method()} ${url.origin}`);
+          if (blocked.length < 8)
+            blocked.push({
+              method: request.method() === "POST" ? "POST" : "other",
+              origin: url.origin === origin ? "same-origin" : "external",
+              path: measureDiagnosticPath(url),
+            });
           return route.abort();
         }
         // AppLink puede precargar destinos reales: sólo la fixture y sus
@@ -49,6 +94,18 @@ for (const viewport of viewports) {
       });
       try {
         const page = await context.newPage();
+        const onPageError = (error: Error) =>
+          errors.add(`page:${measureDiagnosticError(error.message)}`);
+        const onConsole = (message: ConsoleMessage) => {
+          if (message.type() === "error")
+            errors.add(`console:${measureDiagnosticError(message.text())}`);
+        };
+        page.on("pageerror", onPageError);
+        page.on("console", onConsole);
+        detachDiagnostics = () => {
+          page.off("pageerror", onPageError);
+          page.off("console", onConsole);
+        };
         const response = await page.goto(fixtureURL);
         expect(response?.status()).toBe(200);
         await expect(page.getByTestId("nav-anonymous").locator("form")).toBeVisible();
@@ -176,7 +233,17 @@ for (const viewport of viewports) {
           ).toBeVisible();
         }
         expect(refused).toEqual([]);
+      } catch (error) {
+        try {
+          console.log(
+            JSON.stringify({ F365_NAV_MEASURE_DIAGNOSTIC: { blocked, errors: [...errors] } }),
+          );
+        } catch {
+          // Diagnostic output must never replace the original assertion error.
+        }
+        throw error;
       } finally {
+        detachDiagnostics();
         await context.close();
       }
     });
