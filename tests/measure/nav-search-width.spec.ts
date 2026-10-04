@@ -37,6 +37,139 @@ test("Nav diagnóstico: clasifica rutas y errores sin datos sensibles", () => {
   ).toEqual(["hydration", "chunk", "network", "other"]);
 });
 
+function measureHydrationSummary(message: string): {
+  kind: "attribute" | "tree" | "text" | "nesting" | "unknown";
+  diffPresent: boolean;
+  ancestry: string[];
+  differingHost: string;
+  differingAttribute: string;
+} {
+  const result: ReturnType<typeof measureHydrationSummary> = {
+    kind: "unknown",
+    diffPresent: false,
+    ancestry: [],
+    differingHost: "unknown",
+    differingAttribute: "unknown",
+  };
+  const bounded = message.slice(0, 16000);
+  const link = "https://react.dev/link/hydration-mismatch";
+  const linkIndex = bounded.indexOf(link);
+  const nesting = linkIndex < 0 && /In HTML,[\s\S]*This will cause a hydration error/.test(bounded);
+  const separator = nesting ? bounded.indexOf("\n\n") : -1;
+  const suffix =
+    linkIndex >= 0
+      ? bounded.slice(linkIndex + link.length)
+      : separator >= 0
+        ? bounded.slice(separator + 2)
+        : "";
+  const components =
+    "Nav SearchPill AppLink AccountMenu NavDockScrollBehavior NavigationEntryBoundary SearchSuggestions SearchFilterModal".split(
+      " ",
+    );
+  const hosts =
+    "html body header nav div search form input button a span p label ul li dialog svg path main section".split(
+      " ",
+    );
+  const attributes =
+    "className id inert aria-expanded href aria-controls aria-describedby role style aria-hidden aria-label tabIndex type name value hidden disabled method action".split(
+      " ",
+    );
+  let host = "unknown";
+  for (const line of suffix.split("\n", 160)) {
+    const tag = line.match(/^\s*(?:[+\->]\s*)?<([\w-]+)(?=[\s/>]|$)/)?.[1];
+    if (tag && /^[a-z]/.test(tag)) host = hosts.includes(tag) ? tag : "unknown";
+    if (tag && !/^\s*[+-]/.test(line) && components.includes(tag) && result.ancestry.length < 12)
+      result.ancestry.push(tag);
+    const change = line.match(/^\s*([+-])\s*(\S.*)$/);
+    const nestingHost = nesting && /^\s*>\s*</.test(line);
+    if ((!change && !nestingHost) || result.diffPresent) continue;
+    result.diffPresent = true;
+    result.differingHost = host;
+    const attribute = change?.[2]?.match(/^([\w-]+)\s*=/)?.[1];
+    result.kind = nesting ? "nesting" : attribute ? "attribute" : tag ? "tree" : "text";
+    if (attribute) result.differingAttribute = attributes.includes(attribute) ? attribute : "other";
+  }
+  if (!result.diffPresent) result.ancestry = [];
+  return result;
+}
+
+test("Nav diagnóstico: reconoce diff React sin exportar valores privados", () => {
+  const prefix =
+    "A tree hydrated but some attributes didn't match. window Date.now Math.random invalid HTML nesting Nav className https://react.dev/link/hydration-mismatch";
+  const summary = (diff: string) => measureHydrationSummary(`${prefix}\n\n${diff}`);
+  expect(
+    summary(
+      ' %s %s\n <Nav>\n <SearchPill>\n <form\n+ className="private-token"\n- className="private-cookie"',
+    ),
+  ).toEqual({
+    kind: "attribute",
+    diffPresent: true,
+    ancestry: ["Nav", "SearchPill"],
+    differingHost: "form",
+    differingAttribute: "className",
+  });
+  expect(summary(' <Nav>\n <div>\n+ <span secret="private">\n- <p>')).toEqual({
+    kind: "tree",
+    diffPresent: true,
+    ancestry: ["Nav"],
+    differingHost: "span",
+    differingAttribute: "unknown",
+  });
+  expect(summary(" <SearchPill>\n <button>\n+ private-user\n- private-cookie")).toEqual({
+    kind: "text",
+    diffPresent: true,
+    ancestry: ["SearchPill"],
+    differingHost: "button",
+    differingAttribute: "unknown",
+  });
+  expect(
+    measureHydrationSummary(
+      "In HTML, %s cannot be a descendant of <%s>.\nThis will cause a hydration error.%s p div\n\n <Nav>\n <p>\n> <div>",
+    ),
+  ).toEqual({
+    kind: "nesting",
+    diffPresent: true,
+    ancestry: ["Nav"],
+    differingHost: "div",
+    differingAttribute: "unknown",
+  });
+});
+
+test("Nav diagnóstico: ignora boilerplate y acota nombres y entrada", () => {
+  const empty = {
+    kind: "unknown",
+    diffPresent: false,
+    ancestry: [],
+    differingHost: "unknown",
+    differingAttribute: "unknown",
+  };
+  const link = "https://react.dev/link/hydration-mismatch";
+  expect(
+    measureHydrationSummary(
+      `Nav className window Date.now Math.random invalid HTML nesting ${link}`,
+    ),
+  ).toEqual(empty);
+  expect(measureHydrationSummary("hydration private stack <Nav> + id=private")).toEqual(empty);
+  expect(measureHydrationSummary(`${link}\n <Nav>`)).toEqual(empty);
+  expect(
+    measureHydrationSummary(
+      `${link}\n <PrivateUser>\n <private-tag>\n+ private-attribute="secret"\n${" <PrivateUser>\n".repeat(300)}`,
+    ),
+  ).toEqual({ ...empty, kind: "attribute", diffPresent: true, differingAttribute: "other" });
+  expect(
+    measureHydrationSummary(`${link}\n${" <Nav>\n".repeat(20)} <input>\n+ id="secret"`),
+  ).toEqual({
+    ...empty,
+    kind: "attribute",
+    diffPresent: true,
+    ancestry: Array(12).fill("Nav"),
+    differingHost: "input",
+    differingAttribute: "id",
+  });
+  expect(measureHydrationSummary(`${link}\n${" ".repeat(16000)}\n+ id="secret"`)).toEqual(empty);
+  expect(measureHydrationSummary(`${link}\n${"\n".repeat(160)}+ id="secret"`)).toEqual(empty);
+});
+
 const viewports = [
   { width: 390, height: 844 },
   { width: 768, height: 1024 },
@@ -72,6 +205,13 @@ for (const viewport of viewports) {
       const refused: string[] = [];
       const blocked: { method: string; origin: string; path: string }[] = [];
       const errors = new Set<string>();
+      const hydration: ReturnType<typeof measureHydrationSummary>[] = [];
+      const recordError = (source: "page" | "console", message: string) => {
+        const category = measureDiagnosticError(message);
+        errors.add(`${source}:${category}`);
+        if (category === "hydration" && hydration.length < 4)
+          hydration.push(measureHydrationSummary(message));
+      };
       let detachDiagnostics = () => {};
       await context.route("**/*", (route) => {
         const request = route.request();
@@ -94,11 +234,9 @@ for (const viewport of viewports) {
       });
       try {
         const page = await context.newPage();
-        const onPageError = (error: Error) =>
-          errors.add(`page:${measureDiagnosticError(error.message)}`);
+        const onPageError = (error: Error) => recordError("page", error.message);
         const onConsole = (message: ConsoleMessage) => {
-          if (message.type() === "error")
-            errors.add(`console:${measureDiagnosticError(message.text())}`);
+          if (message.type() === "error") recordError("console", message.text());
         };
         page.on("pageerror", onPageError);
         page.on("console", onConsole);
@@ -236,7 +374,9 @@ for (const viewport of viewports) {
       } catch (error) {
         try {
           console.log(
-            JSON.stringify({ F365_NAV_MEASURE_DIAGNOSTIC: { blocked, errors: [...errors] } }),
+            JSON.stringify({
+              F365_NAV_MEASURE_DIAGNOSTIC: { blocked, errors: [...errors], hydration },
+            }),
           );
         } catch {
           // Diagnostic output must never replace the original assertion error.
