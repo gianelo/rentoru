@@ -6,7 +6,6 @@ import type {
 } from "../../src/modules/listing-publication/domain/publication-steps";
 import {
   characterCount,
-  MAX_REFERENCE_CHARACTERS,
   MAX_TITLE_CHARACTERS,
   MIN_DESCRIPTION_CHARACTERS,
   type PublishViolation,
@@ -20,6 +19,12 @@ import type { PriceStepHistogramView } from "../../src/modules/listing-search/do
 import { submitStep } from "./actions";
 import { FieldError } from "./FieldError";
 import { PhotoUploader } from "./fotos/PhotoUploader";
+import { PublicationZoneReference } from "./PublicationZoneControls";
+import {
+  PublicationZoneEnhancement,
+  PublicationZoneResults,
+  PublicationZoneSearch,
+} from "./PublicationZoneEnhancement";
 import styles from "./publish-steps.module.css";
 import {
   DISCARD_CHANGE_LABEL,
@@ -37,12 +42,9 @@ import {
 /**
  * Una pantalla del formulario de nueve pasos.
  *
- * **Sin una linea de JavaScript de cliente, salvo el paso 8.** Cada pantalla
- * es un `<form method="post">` nativo hacia una Server Action: se llena de
- * pie, en un telefono barato, antes de que llegue ningun bundle. El unico
- * lugar donde el diseno lo permite es comprimir las fotos en el dispositivo,
- * porque es la diferencia entre subir 30 MB y subir 1 — y ese componente ya
- * estaba construido.
+ * Cada pantalla conserva su POST nativo hacia una Server Action. La zona
+ * mejora el GET/Buscar con sugerencias al teclear, sin depender del script.
+ * Sólo comprimir fotos en el paso 8 exige JavaScript.
  *
  * **Aca no vive ninguna regla.** Cual es el paso siguiente, cual esta hecho,
  * cual es navegable, que dice el boton y que cambio lo contesta
@@ -238,35 +240,45 @@ export function PublishStep(props: PublishStepProps) {
 
           {/* El buscador del paso 2 es un GET aparte: un formulario dentro de
               otro no es HTML valido, y buscar no debe guardar nada. */}
-          {stepId === "zona" ? <ZoneSearch query={props.zoneQuery} /> : null}
+          <PublicationZoneEnhancement
+            enabled={stepId === "zona"}
+            results={props.zoneResults ?? []}
+            selected={
+              draft.listing.zoneId
+                ? { zoneId: draft.listing.zoneId, label: props.zoneName ?? draft.listing.zoneId }
+                : null
+            }
+          >
+            {stepId === "zona" ? <PublicationZoneSearch query={props.zoneQuery} /> : null}
 
-          <form action={submitStep} method="post" className={styles.form}>
-            <input type="hidden" name="step" value={stepId} />
-            {/* Lo que hace que el boton diga "Guardar y volver a revisar" y que
+            <form action={submitStep} method="post" className={styles.form}>
+              <input type="hidden" name="step" value={stepId} />
+              {/* Lo que hace que el boton diga "Guardar y volver a revisar" y que
                 el destino sea revisar y no el paso siguiente. */}
-            {returningToReview ? <input type="hidden" name="volver" value="revisar" /> : null}
+              {returningToReview ? <input type="hidden" name="volver" value="revisar" /> : null}
 
-            <StepFields {...props} errors={errors} />
+              <StepFields {...props} errors={errors} />
 
-            <div className={styles.actions}>
-              <button type="submit" className={styles.primary}>
-                {primaryLabel}
-              </button>
-              {backHref ? (
-                <AppLink className={styles.secondary} href={backHref}>
-                  Atrás
-                </AppLink>
-              ) : null}
-              {/* Nivel neutro de la jerarquia de botones, la misma fila que
+              <div className={styles.actions}>
+                <button type="submit" className={styles.primary}>
+                  {primaryLabel}
+                </button>
+                {backHref ? (
+                  <AppLink className={styles.secondary} href={backHref}>
+                    Atrás
+                  </AppLink>
+                ) : null}
+                {/* Nivel neutro de la jerarquia de botones, la misma fila que
                   "Atrás" — y un ENLACE, no un boton: no postea nada, porque
                   descartar es irse antes de escribir. */}
-              {props.discardHref ? (
-                <AppLink className={styles.secondary} href={props.discardHref}>
-                  {DISCARD_CHANGE_LABEL}
-                </AppLink>
-              ) : null}
-            </div>
-          </form>
+                {props.discardHref ? (
+                  <AppLink className={styles.secondary} href={props.discardHref}>
+                    {DISCARD_CHANGE_LABEL}
+                  </AppLink>
+                ) : null}
+              </div>
+            </form>
+          </PublicationZoneEnhancement>
 
           {/* La otra mitad del paso 5. Un formulario propio porque sin
               JavaScript nada puede destildar las casillas al enviar: este
@@ -340,32 +352,6 @@ function Rail({
         </AppLink>
       ) : null}
     </nav>
-  );
-}
-
-function ZoneSearch({ query }: { query: string | undefined }) {
-  return (
-    <form method="get" className={styles.search}>
-      {/* El control ya dice que hacer, asi que no lleva subtitulo (regla
-          transversal 3). */}
-      {/* La etiqueta existe igual, invisible: un `placeholder` desaparece en
-          cuanto se escribe, y un lector de pantalla no lo anuncia como nombre
-          del campo. */}
-      <label className={styles.srOnly} htmlFor="q">
-        Buscá tu zona
-      </label>
-      <input
-        id="q"
-        name="q"
-        type="search"
-        className={styles.control}
-        defaultValue={query ?? ""}
-        placeholder="Buscá tu zona"
-      />
-      <button type="submit" className={styles.searchButton}>
-        Buscar
-      </button>
-    </form>
   );
 }
 
@@ -456,46 +442,14 @@ function StepFields(props: FieldsProps) {
         <>
           <FieldError id="zoneId-error" message={errors.get("zoneId") ?? errors.get("cityId")} />
 
-          {props.zoneResults && props.zoneResults.length > 0 ? (
-            <ul className={styles.results}>
-              {props.zoneResults.map((option) => (
-                <li key={option.zoneId}>
-                  <label className={styles.choice}>
-                    <input
-                      className={styles.choiceInput}
-                      type="radio"
-                      name="zoneId"
-                      value={option.zoneId}
-                      defaultChecked={listing.zoneId === option.zoneId}
-                    />
-                    <span>
-                      {option.label}
-                      {/* Municipio y ciudad: es lo unico que desambigua dos
-                          nombres iguales en ciudades distintas. */}
-                      <span className={styles.resultScope}>{option.scope}</span>
-                    </span>
-                  </label>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {/* La zona ya elegida sigue enviandose aunque la busqueda no la
-              muestre: sin esto, volver al paso 2 y no buscar nada borraria la
-              zona guardada. */}
-          {listing.zoneId &&
-          !props.zoneResults?.some((option) => option.zoneId === listing.zoneId) ? (
-            <label className={styles.choice}>
-              <input
-                className={styles.choiceInput}
-                type="radio"
-                name="zoneId"
-                value={listing.zoneId}
-                defaultChecked
-              />
-              <span>{props.zoneName ?? listing.zoneId}</span>
-            </label>
-          ) : null}
+          <PublicationZoneResults
+            results={props.zoneResults ?? []}
+            selected={
+              listing.zoneId
+                ? { zoneId: listing.zoneId, label: props.zoneName ?? listing.zoneId }
+                : null
+            }
+          />
 
           {/* No es decorativa. Con lista cerrada, una zona faltante deja al
               dueño trabado, y de paso indica dónde hay demanda. */}
@@ -509,31 +463,7 @@ function StepFields(props: FieldsProps) {
             </AppLink>
           </p>
 
-          <div>
-            {/* La seña tiene su propia negativa desde la 18.7, y por eso su
-                propio `FieldError`: el de arriba pertenece a la zona, y un
-                mensaje de zona colgado de este campo diría que la seña está
-                mal. Dos controles en un paso son dos anuncios. */}
-            <FieldError id="reference-error" message={errors.get("reference")} />
-            <label className={styles.label} htmlFor="reference">
-              Referencia
-            </label>
-            <input
-              id="reference"
-              name="reference"
-              type="text"
-              className={`${styles.control} ${errors.get("reference") ? styles.controlInvalid : ""}`}
-              defaultValue={listing.reference ?? ""}
-              placeholder="Frente a la plaza"
-              // El doble del tope, igual que el título: el navegador frena el
-              // pegado accidental y la regla la sigue diciendo el servidor,
-              // que es el único lado que la importación también atraviesa.
-              maxLength={MAX_REFERENCE_CHARACTERS * 2}
-              aria-invalid={errors.get("reference") ? "true" : undefined}
-              aria-describedby={errors.get("reference") ? "reference-error" : undefined}
-            />
-            <p className={styles.help}>Opcional. No se publica la dirección.</p>
-          </div>
+          <PublicationZoneReference reference={listing.reference} error={errors.get("reference")} />
         </>
       );
 
