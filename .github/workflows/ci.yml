@@ -384,6 +384,26 @@ jobs:
       - name: Seed the deterministic e2e catalogue
         run: pnpm db:test:seed:e2e
 
+      # This preservation fixture needs the seed publisher still draft-free.
+      # Keep it before all general suites, local only, with no ambient worker DB.
+      # Only the build gets a fake pooled URL; webServer supplies its own DB/proxy.
+      - name: '36.3: publication entry (local production build)'
+        env:
+          PLAYWRIGHT_BASE_URL: ''
+          VERCEL_AUTOMATION_BYPASS_SECRET: ''
+          AUTH_URL: http://localhost:3001
+          AUTH_TRUST_HOST: 'true'
+          AUTH_SECRET: build-time-placeholder-not-a-real-secret
+          SITE_URL: http://localhost:3001
+          R2_BUCKET_PUBLIC_URL: http://localhost:3001
+          PLAYWRIGHT_PORT: '3001'
+          NEON_PROXY_PORT: '55436'
+          PLAYWRIGHT_WEB_COMMAND: pnpm start --port 3001
+        run: |
+          DATABASE_URL=postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require pnpm build
+          env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts --project=chromium --workers=1 --retries=0
+          env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts --project=crawlability --workers=1 --retries=0
+
       # The preview URL is used ONLY when a bypass secret exists to get past
       # Vercel's deployment-protection SSO wall. Without it every request
       # lands on vercel.com/login and the suite reports the app as broken --
@@ -447,7 +467,7 @@ jobs:
           # runs, so both the loop and the "no tests yet" tolerance below would
           # be dead code and one real failure would skip the remaining project.
           for project in chromium crawlability; do
-            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:|30\.7:' 2>&1); then
+            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:|30\.7:|36\.3:' 2>&1); then
               echo "$output"
             else
               echo "$output"

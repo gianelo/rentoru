@@ -59,6 +59,8 @@ export default defineConfig({
       "tests/integration/support/**/*.{test,spec}.{ts,tsx}",
       // Only this pure helper test belongs to Vitest; keep it outside Playwright's e2e testDir.
       "tests/support/owned-test-database.test.ts",
+      "tests/support/publication-entry-ci.test.ts",
+      "tests/fixtures/publication-entry.test.ts",
     ],
     coverage: {
       provider: "v8",
