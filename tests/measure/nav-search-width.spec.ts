@@ -282,6 +282,8 @@ for (const viewport of viewports) {
         await testInfo.attach("geometría", { path: artifact, contentType: "application/json" });
         if (javaScriptEnabled)
           await page.screenshot({
+            // No hay foco aún: ocultar el caret mutaría style antes de hidratar.
+            caret: "initial",
             path: `test-results/${artifactPrefix}-nav-after-${viewport.width}.png`,
           });
 
