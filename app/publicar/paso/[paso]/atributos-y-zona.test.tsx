@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { SuggestionVocabulary } from "@/modules/listing-catalogue/domain/suggest-filters";
 import {
   currentStepId,
   draftListingOf,
@@ -50,14 +51,16 @@ const { redirect, notFound, lookup } = vi.hoisted(() => ({
    * está cubierto. Por eso el doble no filtra: devolver acá lo ya filtrado
    * escondería el reparto de trabajo que este paso realmente hace.
    */
-  lookup: vi.fn(async () => ({
-    cities: [{ id: "dc", name: "Distrito Capital" }],
-    zones: [
-      { id: "altamira", name: "Altamira", cityId: "dc", parentName: "Municipio Chacao" },
-      { id: "chacao", name: "Chacao", cityId: "dc", parentName: "Municipio Chacao" },
-    ],
-    aliases: [],
-  })),
+  lookup: vi.fn(
+    async (): Promise<SuggestionVocabulary> => ({
+      cities: [{ id: "dc", name: "Distrito Capital" }],
+      zones: [
+        { id: "altamira", name: "Altamira", cityId: "dc", parentName: "Municipio Chacao" },
+        { id: "chacao", name: "Chacao", cityId: "dc", parentName: "Municipio Chacao" },
+      ],
+      aliases: [],
+    }),
+  ),
 }));
 
 vi.mock("next/navigation", () => ({ redirect, notFound }));
@@ -259,6 +262,38 @@ describe("los cinco atributos del paso 5 (18.24)", () => {
 });
 
 describe("el buscador de zona del paso 2 (18.24)", () => {
+  it("el GET sirve alias y homónimos del catálogo con radios etiquetados y alcance", async () => {
+    lookup.mockResolvedValueOnce({
+      cities: [
+        { id: "dc", name: "Distrito Capital" },
+        { id: "mc", name: "Maracaibo" },
+      ],
+      zones: [
+        { id: "bella-dc", name: "Bella Vista", cityId: "dc", parentName: "Libertador" },
+        { id: "bella-mc", name: "Bella Vista", cityId: "mc", parentName: "Coquivacoa" },
+        { id: "centro", name: "Centro", cityId: "dc", parentName: "Libertador" },
+      ],
+      aliases: [
+        { zoneId: "centro", alias: "Bella Vista" },
+        { zoneId: "centro", alias: "Bella" },
+      ],
+    });
+    const html = await servido("zona", "Bella");
+    const formulario = html.slice(html.indexOf('name="step" value="zona"'));
+
+    expect(control(buscador(html), "q")).toContain('value="Bella"');
+    expect(formulario).toMatch(/<label[^>]*><input[^>]*name="zoneId"[^>]*value="centro"\/>/);
+    expect(formulario).toContain("<span>Centro<span");
+    expect(formulario).toContain("Libertador · Distrito Capital");
+    expect(formulario).toContain("Coquivacoa · Maracaibo");
+    expect(formulario.match(/value="centro"/g)).toHaveLength(1);
+    expect(formulario.indexOf('value="centro"')).toBeLessThan(
+      formulario.indexOf('value="bella-dc"'),
+    );
+    expect(formulario).toMatch(/name="zoneId" checked="" value="altamira"/);
+    // Sin conteos de avisos en el puerto: las zonas sin avisos siguen elegibles.
+    expect(formulario).toContain('value="bella-mc"');
+  });
   /**
    * **Buscar es un GET hermano, no un formulario anidado.** Se comprueba que
    * CIERRA antes de que empiece el que guarda —comparando posiciones y no la
