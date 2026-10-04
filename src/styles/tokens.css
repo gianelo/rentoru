@@ -465,6 +465,8 @@
      (36 → 44, tasks.md 16.24). */
   --nav-h: 60px;
   --nav-h-desktop: 68px;
+  /* Búsqueda pública F36.4: máximo de las láminas desktop 14i/Lista. */
+  --nav-search-max: 420px;
   /* Dock A móvil (28.6): geometría propia y rótulo visible. */
   --nav-dock-h: 64px;
   --nav-dock-inset: 16px;

@@ -20,6 +20,8 @@
   --loading-ring-width: 3px;
   --loading-duration: 1.2s;
   --loading-layer: 1000;
+  /* Ancho máximo de la búsqueda pública (F36.4, láminas desktop 14i/Lista). */
+  --nav-search-max: 420px;
 }
 
 /* ---------- Eje 1 · estructura ---------- */
