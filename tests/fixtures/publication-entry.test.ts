@@ -1,3 +1,4 @@
+import { EventEmitter } from "node:events";
 import type { Page, Route } from "@playwright/test";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
@@ -6,6 +7,145 @@ import {
   preventPublicationIntersectionPrefetch,
   withPublicationEntry,
 } from "./publication-entry";
+import { publicationEntryDiagnostics } from "./publication-entry-diagnostics";
+
+describe("hot entry diagnostics", () => {
+  function fixture() {
+    const page = new EventEmitter();
+    const evaluate = vi.fn(async () => {
+      throw new Error("private snapshot failure");
+    });
+    const emit = vi.fn();
+    let time = 10;
+    const collector = publicationEntryDiagnostics(
+      Object.assign(page, { evaluate }) as unknown as Pick<Page, "on" | "off" | "evaluate">,
+      "http://localhost:3001",
+      () => time++,
+      emit,
+    );
+    const request = (url: string) => ({
+      url: () => url,
+      method: () => "GET",
+      resourceType: () => "fetch",
+      failure: () => ({ errorText: "net::ERR_ABORTED secret" }),
+    });
+    return { page, collector, request, emit, evaluate };
+  }
+
+  it("captures early headers separately from completion and redacts private paths and queries", () => {
+    const { page, collector, request } = fixture();
+    const req = request("http://user:secret@localhost:3001/publicar?_rsc=secret#secret");
+    page.emit("request", req);
+    page.emit("response", { request: () => req, status: () => 200 });
+    expect(collector.report().rows.map((row) => row.kind)).toEqual([
+      "requeststart",
+      "responseheaders",
+    ]);
+    page.emit("requestfinished", req);
+    for (const url of [
+      "http://localhost:3001/private/secret?token=secret",
+      "https://secret.invalid/publicar",
+    ])
+      page.emit("request", request(url));
+    page.emit("requestfailed", req);
+    page.emit("pageerror", new Error("ChunkLoadError secret"));
+    page.emit("console", { type: () => "error", text: () => "private secret" });
+    const report = collector.report();
+    expect(report.rows.map((row) => row.pathname).filter(Boolean)).toEqual([
+      "/publicar",
+      "/publicar",
+      "/publicar",
+      "[other]",
+      "[external]",
+      "/publicar",
+    ]);
+    expect(report.rows.slice(0, 3).map((row) => row.request)).toEqual([1, 1, 1]);
+    expect(report.rows[5]?.category).toBe("aborted");
+    expect(report.rows[6]?.category).toBe("chunk-load");
+    expect(report.rows[0]?.elapsedMs).toBe(1);
+    expect(JSON.stringify(report)).not.toContain("secret");
+    collector.dispose();
+  });
+
+  it("filters child frames, unknown enums, and unsafe static asset names", () => {
+    const { page, collector, request } = fixture();
+    page.emit("framenavigated", { parentFrame: () => ({}), url: () => "https://secret.invalid" });
+    page.emit("framenavigated", {
+      parentFrame: () => null,
+      url: () => "http://localhost:3001/publicar?secret",
+    });
+    page.emit("request", {
+      ...request("http://localhost:3001/_next/static/chunks/123-abcd1234.js?secret"),
+      method: () => "secret",
+      resourceType: () => "secret",
+    });
+    page.emit("request", request("http://localhost:3001/_next/static/chunks/secret.js"));
+    expect(collector.report().rows).toMatchObject([
+      { kind: "mainframepath", pathname: "/publicar" },
+      { pathname: "/_next/static/chunks/123-abcd1234.js", method: "other", resourceType: "other" },
+      { pathname: "[other]" },
+    ]);
+    expect(JSON.stringify(collector.report())).not.toContain("secret");
+    collector.dispose();
+  });
+
+  it("bounds a hanging snapshot and preserves the error even when emission throws", async () => {
+    vi.useFakeTimers();
+    try {
+      const { collector, evaluate, emit } = fixture();
+      evaluate.mockImplementation(() => new Promise(() => {}));
+      emit.mockImplementation(() => {
+        throw new Error("log failure");
+      });
+      const original = new Error("assertion");
+      const result = expect(collector.failure(original)).rejects.toBe(original);
+      await vi.advanceTimersByTimeAsync(200);
+      await result;
+      expect(emit).toHaveBeenCalledOnce();
+      expect(vi.getTimerCount()).toBe(0);
+      collector.dispose();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("bounds rows while retaining fixed milestones and dropped count", () => {
+    const { page, collector, request } = fixture();
+    for (let i = 0; i < 140; i++) page.emit("request", request("http://localhost:3001/"));
+    collector.milestone("assertionfailed");
+    expect(collector.report().rows).toHaveLength(128);
+    expect(collector.report().dropped).toBe(12);
+    expect(collector.report().milestones).toHaveProperty("assertionfailed");
+    collector.dispose();
+  });
+
+  it("preserves error identity after snapshot failure and removes only its listeners", async () => {
+    const { page, collector, request, emit } = fixture();
+    const unrelated = vi.fn();
+    page.on("request", unrelated);
+    const original = new Error("original secret");
+    await expect(collector.failure(original)).rejects.toBe(original);
+    expect(emit).toHaveBeenCalledOnce();
+    expect(emit.mock.calls[0]?.[0]).toContain("F365_HOT_ENTRY_DIAGNOSTIC");
+    expect(emit.mock.calls[0]?.[0]).not.toContain("secret");
+    collector.dispose();
+    collector.dispose();
+    const before = collector.report().rows.length;
+    page.emit("request", request("http://localhost:3001/"));
+    expect(collector.report().rows).toHaveLength(before);
+    expect(page.listeners("request")).toEqual([unrelated]);
+    for (const event of [
+      "response",
+      "requestfinished",
+      "requestfailed",
+      "framenavigated",
+      "console",
+      "pageerror",
+    ])
+      expect(page.listenerCount(event)).toBe(0);
+    expect(unrelated).toHaveBeenCalledOnce();
+  });
+});
 
 const origin = "http://localhost:3001";
 const dsn = "postgresql://postgres:postgres@127.0.0.1:55433/rentas_test";

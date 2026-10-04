@@ -5,12 +5,14 @@ import {
   publicationTransport,
   withPublicationEntry,
 } from "../fixtures/publication-entry";
+import { publicationEntryDiagnostics } from "../fixtures/publication-entry-diagnostics";
 
 async function verifyHotEntry(coldPage: Page, origin: string) {
   // A separate page has the native IntersectionObserver, not the cold-entry
   // selective suppression. Register before loading so genuine viewport
   // prefetch cannot race the evidence collector.
   const page = await coldPage.context().newPage();
+  const diagnostic = publicationEntryDiagnostics(page, origin);
   const posts: string[] = [];
   page.on("request", (request) => {
     if (request.method() === "POST") posts.push(new URL(request.url()).pathname);
@@ -20,8 +22,10 @@ async function verifyHotEntry(coldPage: Page, origin: string) {
       const evidence = publicationTransport(response.request());
       return evidence.pathname === "/publicar" && evidence.prefetch && evidence.rsc === "1";
     });
+    diagnostic.milestone("beforehome");
     await page.goto(origin);
     const cached = await prefetch;
+    diagnostic.milestone("prefetchheaders");
     expect(cached.status()).toBe(200);
     // Dynamic Flight prefetch can remain streaming at its Suspense shell;
     // the real response already proves prefetch, not a completed body cache.
@@ -29,6 +33,7 @@ async function verifyHotEntry(coldPage: Page, origin: string) {
     expect(evidence).toMatchObject({ resourceType: "fetch", navigation: false, prefetch: true });
     const publish = page.locator('a[href="/publicar"]:visible');
     await publish.focus();
+    diagnostic.milestone("activation");
     await publish.press("Enter");
     await expect(page).toHaveURL(`${origin}/publicar/paso/tipo`);
     await expect(
@@ -36,7 +41,11 @@ async function verifyHotEntry(coldPage: Page, origin: string) {
     ).toBeVisible();
     expect(posts).toEqual([]);
     console.log(JSON.stringify({ genuineHotPrefetch: evidence, destinationReady: true }));
+    diagnostic.milestone("destinationready");
+  } catch (error) {
+    await diagnostic.failure(error);
   } finally {
+    diagnostic.dispose();
     await page.close();
   }
 }
