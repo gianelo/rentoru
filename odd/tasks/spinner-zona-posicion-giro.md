@@ -10,7 +10,7 @@ Inicialmente el fundador exigió aviso y prueba manual antes de commit. Se avis�
 
 ## Tareas
 
-1. [ ] **En curso de cierre/publicación**: corrección y verificación local completadas; cerrar unidad con commit, revisión nativa aplicable y PR contra dev. Registrar identidades en evidencia posterior.
+1. [x] **Unidad verificada y cerrada**: commit `b882c778cf13e808393cb96c754ed75cb5ba869e`,5 archivos/193 líneas. Revisión exacta `review-af14609f9da303c5` aprobada y ACK consumido (target05f75d34c7973da35862fd8885e2db0e00bb0833cfdd0f9c4b5e5b935abd7036, revision8196a8bd21b9380e96bc759c205d87f4e16af022a2cd0a6e8fd9024b621e8265). Advisory no bloqueante `R3-temporal-test-scheduling`, sin corrección ofrecida. Publicación contra dev autorizada; CI y aceptación quedan en tarea2.
 2. [ ] **Pendiente**: después de CI y merge humano, probar posición, restauración y giro en dev. El reporte de aro estático sigue sin causa reproducida; no cerrar por la mera declaración CSS.
 
 ## Evidencia observada
