@@ -27,7 +27,7 @@ export function PublicationZoneSearchControl({
           id="q"
           name="q"
           type="search"
-          className={`${styles.control} ${styles.searchInput} ${loading ? styles.searchBusy : ""}`}
+          className={`${styles.control} ${loading ? styles.searchBusy : ""}`}
           defaultValue={query ?? ""}
           placeholder="Buscá tu zona"
           onChange={onChange}
