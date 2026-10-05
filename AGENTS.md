@@ -92,6 +92,18 @@ Coverage floor: 90% statements/branches/functions over `src/modules/**`. `app/` 
 
 CI note: heavy jobs are gated on `github.event_name == 'push'`, so the `pull_request` run shows many `skipping` lines on purpose — it is not a failure.
 
+### Debugging without remote trial-and-error
+
+These rules complement Gentle Shell; they do not replace its workflow or disable required tests, reviews, consent, or safety controls. Improve the diagnosis, not bypass the harness.
+
+- Separate failures before fixing them. Different failing tests do not establish a shared cause.
+- Capture discriminating evidence first: the exact assertion, relevant sanitized diff, and failing execution stage. Generic error categories are not a diagnosis. Never expose credentials or user data.
+- Reproduce the failure through the smallest real caller using existing tools and a safe environment. If reproduction is only possible in CI, make the diagnostic distinguish concrete competing hypotheses. This never authorizes prohibited services or credential access.
+- Every diagnostic push or rerun must name its hypothesis, expected evidence, and next decision. After two consecutive CI cycles without new discriminating evidence, stop speculative patches and re-examine the caller, framework, and test harness.
+- Keep related diagnostics and checks in one coherent work unit where possible. Preserve required tests and reviews; do not multiply units merely to publish incremental logging.
+- After 20 minutes without narrowing the failure, report what is known, what remains unknown, and the next discriminating check. Do not claim elapsed time unless measured.
+- Never obtain green by weakening assertions, increasing timeouts, ignoring errors, or removing guards without a demonstrated reason. A later passing run does not prove the original cause was fixed.
+
 ---
 
 ## 5. The plan, and why a checkbox can lie
