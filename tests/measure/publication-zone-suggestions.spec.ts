@@ -173,6 +173,8 @@ test.describe("client", () => {
     await ready(page);
     await page.clock.install();
     await search(page).fill("A");
+    await expect(page.getByRole("status")).toHaveText("Buscando zonas…");
+    await expect(search(page)).toHaveAttribute("aria-busy", "true");
     await page.clock.runFor(250);
     await expect.poll(() => held.has("A")).toBe(true);
     await search(page).fill("B");
@@ -183,10 +185,13 @@ test.describe("client", () => {
     await aReceived;
     await page.clock.runFor(20);
     await expect(post(page)).not.toContainText("Respuesta A");
+    await expect(page.getByRole("status")).toHaveText("Buscando zonas…");
     await page.clock.runFor(250);
     await expect.poll(() => held.has("B")).toBe(true);
     await json(required(held.get("B")), [{ ...homonym, label: "Respuesta B" }]);
     await expect(post(page)).toContainText("Respuesta B");
+    await expect(page.getByRole("status")).toBeEmpty();
+    await expect(search(page)).not.toHaveAttribute("aria-busy", "true");
     await search(page).fill("C");
     await page.clock.runFor(250);
     await expect.poll(() => held.has("C")).toBe(true);
@@ -206,6 +211,8 @@ test.describe("client", () => {
     await page.clock.runFor(250);
     await expect.poll(() => held.has("E")).toBe(true);
     await search(page).fill("");
+    await expect(page.getByRole("status")).toBeEmpty();
+    await expect(search(page)).not.toHaveAttribute("aria-busy", "true");
     const eReceived = page.waitForResponse(
       (response) => new URL(response.url()).searchParams.get("q") === "E",
     );

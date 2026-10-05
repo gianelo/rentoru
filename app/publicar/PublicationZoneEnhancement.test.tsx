@@ -39,6 +39,20 @@ function required<T>(value: T | null | undefined): T {
 function query() {
   return required(container.querySelector<HTMLInputElement>("#q"));
 }
+function busy() {
+  const status = container.querySelector('[role="status"]');
+  expect(status?.getAttribute("aria-live")).toBe("polite");
+  expect(query().getAttribute("aria-busy")).toBe("true");
+  expect(status?.textContent).toBe("Buscando zonas…");
+  expect(query().className).toContain("searchBusy");
+  expect(query().parentElement?.querySelector('[aria-hidden="true"]')).not.toBeNull();
+}
+function idle() {
+  expect(container.querySelector('[role="status"]')?.textContent).toBe("");
+  expect(query().getAttribute("aria-busy")).toBeNull();
+  expect(query().className).not.toContain("searchBusy");
+  expect(query().parentElement?.querySelector('[aria-hidden="true"]')).toBeNull();
+}
 function form() {
   return required(container.querySelector<HTMLFormElement>('form[method="post"]'));
 }
@@ -105,7 +119,10 @@ describe("sugerencias progresivas en el POST existente", () => {
     mount();
     query().focus();
     type("alta");
+    busy();
+    expect(fetchMock).not.toHaveBeenCalled();
     await debounce();
+    idle();
     expect(form().textContent).toContain("Alta Florida");
     expect(form().textContent).toContain("Libertador · Distrito Capital");
     expect(form().textContent).toContain("Maracaibo");
@@ -123,6 +140,7 @@ describe("sugerencias progresivas en el POST existente", () => {
       fetchMock.mockResolvedValueOnce(result);
       type(`saved${fetchMock.mock.calls.length}`);
       await debounce();
+      idle();
       expect(values()).toEqual(["saved"]);
       expect(new FormData(form()).get("reference")).toBe("Original");
     }
@@ -132,6 +150,7 @@ describe("sugerencias progresivas en el POST existente", () => {
     mount([fresh]);
     await debounce();
     expect(fetchMock).not.toHaveBeenCalled();
+    idle();
     expect(query().value).toBe("initial");
     expect(values()).toEqual(["saved"]);
   });
@@ -168,15 +187,19 @@ describe("sugerencias progresivas en el POST existente", () => {
     type("B");
     expect((required(fetchMock.mock.calls[0])[1].signal as AbortSignal).aborted).toBe(true);
     await answer(a, [{ ...fresh, label: "Respuesta A" }]);
+    busy();
     expect(form().textContent).not.toContain("Respuesta A");
     await debounce();
+    busy();
     await answer(b, [other]);
+    idle();
     type("C");
     await debounce();
     type("D");
     await debounce();
     await answer(d, [{ ...other, label: "Respuesta D" }]);
     await answer(c, [{ ...fresh, label: "Respuesta C" }]);
+    idle();
     expect(form().textContent).toContain("Respuesta D");
     expect(form().textContent).not.toContain("Respuesta C");
   });
@@ -187,7 +210,9 @@ describe("sugerencias progresivas en el POST existente", () => {
     type("alta");
     await debounce();
     type("");
+    idle();
     await answer(pending, [fresh]);
+    idle();
     await debounce();
     expect(form().textContent).not.toContain("Alta Florida");
     expect(values()).toEqual(["saved"]);
@@ -208,6 +233,7 @@ describe("sugerencias progresivas en el POST existente", () => {
     fetchMock.mockResolvedValueOnce({ ok: false, json });
     type("fallo");
     await debounce();
+    idle();
     expect(json).not.toHaveBeenCalled();
     expect(form().textContent).not.toContain("Alta Florida");
     expect(values()).toEqual(["saved"]);
@@ -221,6 +247,7 @@ describe("sugerencias progresivas en el POST existente", () => {
       fetchMock.mockImplementationOnce(result);
       type(`q${fetchMock.mock.calls.length}`);
       await debounce();
+      idle();
       expect(values()).toEqual(["saved"]);
       expect(new FormData(form()).get("reference")).toBe("Original");
     }
