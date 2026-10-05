@@ -371,6 +371,7 @@
   --wait-mark-fs: 22px;
   /* Indicador de carga aprobado (F36.3): sólo gira el aro. */
   --loading-ring-width: 3px;
+  --loading-inline-size: 1em;
   --loading-duration: 1.2s;
   --loading-layer: 1000;
 

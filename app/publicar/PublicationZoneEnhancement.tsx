@@ -18,6 +18,7 @@ interface ZoneProps {
   readonly selected: PublicationZoneSelection | null;
 }
 interface ZoneInteraction {
+  readonly loading: boolean;
   readonly results: readonly PublicationZoneOption[];
   readonly selected: PublicationZoneSelection | null;
   readonly search: (query: string) => void;
@@ -32,6 +33,7 @@ export function PublicationZoneEnhancement(props: ZoneProps) {
 
 function ZoneInteractionProvider(props: ZoneProps) {
   const [results, setResults] = useState(props.results);
+  const [loading, setLoading] = useState(false);
   const [selected, select] = useState(props.selected);
   const version = useRef(0);
   const pending = useRef<AbortController | null>(null);
@@ -57,6 +59,7 @@ function ZoneInteractionProvider(props: ZoneProps) {
     // No esperar al debounce de B para invalidar A.
     invalidate();
     const requestVersion = version.current;
+    setLoading(query !== "");
     if (query === "") {
       setResults([]);
       return;
@@ -74,11 +77,13 @@ function ZoneInteractionProvider(props: ZoneProps) {
         if (version.current === requestVersion) setResults(options);
       } catch {
         if (version.current === requestVersion) setResults([]);
+      } finally {
+        if (version.current === requestVersion) setLoading(false);
       }
     }, 250);
   }
   return (
-    <ZoneContext.Provider value={{ results, selected, search, select }}>
+    <ZoneContext.Provider value={{ results, selected, search, select, loading }}>
       {props.children}
     </ZoneContext.Provider>
   );
@@ -96,6 +101,7 @@ export function PublicationZoneSearch({
     <PublicationZoneSearchControl
       query={query}
       action={action}
+      loading={interaction?.loading}
       onChange={interaction ? (event) => interaction.search(event.currentTarget.value) : undefined}
     />
   );

@@ -404,6 +404,48 @@
   margin-block-end: 12px;
 }
 
+.searchField {
+  position: relative;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.searchInput {
+  padding-inline-end: calc(var(--loading-inline-size) + 28px);
+}
+
+/* Sólo durante la búsqueda: al volver a reposo se recupera la × nativa. */
+.searchBusy::-webkit-search-cancel-button {
+  visibility: hidden;
+}
+
+.searchSpinner {
+  position: absolute;
+  inset-inline-end: 14px;
+  inset-block-start: 50%;
+  margin-block-start: calc(var(--loading-inline-size) / -2);
+  inline-size: var(--loading-inline-size);
+  block-size: var(--loading-inline-size);
+  box-sizing: border-box;
+  border: var(--loading-ring-width) solid var(--line);
+  border-block-start-color: var(--accent);
+  border-radius: var(--rs);
+  pointer-events: none;
+  animation: zoneSpin var(--loading-duration) linear infinite;
+}
+
+@keyframes zoneSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .searchSpinner {
+    animation: none;
+  }
+}
+
 .searchButton {
   min-block-size: 56px;
   padding: 0 16px;

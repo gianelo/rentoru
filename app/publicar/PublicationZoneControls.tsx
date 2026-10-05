@@ -10,9 +10,11 @@ export function PublicationZoneSearchControl({
   query,
   onChange,
   action,
+  loading = false,
 }: {
   readonly query?: string;
   readonly onChange?: ChangeEventHandler<HTMLInputElement>;
+  readonly loading?: boolean;
   readonly action?: string;
 }) {
   return (
@@ -20,15 +22,22 @@ export function PublicationZoneSearchControl({
       <label className={styles.srOnly} htmlFor="q">
         Buscá tu zona
       </label>
-      <input
-        id="q"
-        name="q"
-        type="search"
-        className={styles.control}
-        defaultValue={query ?? ""}
-        placeholder="Buscá tu zona"
-        onChange={onChange}
-      />
+      <div className={styles.searchField}>
+        <input
+          id="q"
+          name="q"
+          type="search"
+          className={`${styles.control} ${styles.searchInput} ${loading ? styles.searchBusy : ""}`}
+          defaultValue={query ?? ""}
+          placeholder="Buscá tu zona"
+          onChange={onChange}
+          aria-busy={loading || undefined}
+        />
+        {loading ? <span className={styles.searchSpinner} aria-hidden="true" /> : null}
+        <span className={styles.srOnly} role="status" aria-live="polite">
+          {loading ? "Buscando zonas…" : ""}
+        </span>
+      </div>
       <button type="submit" className={styles.searchButton}>
         Buscar
       </button>

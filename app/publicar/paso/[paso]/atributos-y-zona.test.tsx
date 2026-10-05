@@ -87,7 +87,12 @@ import StepPage from "./page";
 it("caller real conecta tecleo con radios dentro del POST sin remonte de referencia", async () => {
   vi.useFakeTimers();
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-  const fetchZones = vi.fn().mockResolvedValue({
+  let finish!: (response: unknown) => void;
+  const pending = new Promise((resolve) => {
+    finish = resolve;
+  });
+  const fetchZones = vi.fn().mockReturnValue(pending);
+  const response = {
     ok: true,
     json: async () => [
       {
@@ -97,7 +102,7 @@ it("caller real conecta tecleo con radios dentro del POST sin remonte de referen
         scope: "Maracaibo",
       },
     ],
-  });
+  };
   vi.stubGlobal("fetch", fetchZones);
   const container = document.createElement("div");
   document.body.append(container);
@@ -123,9 +128,15 @@ it("caller real conecta tecleo con radios dentro del POST sin remonte de referen
       );
       search.dispatchEvent(new Event("input", { bubbles: true }));
     });
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("Buscando zonas…");
+    expect(search.getAttribute("aria-busy")).toBe("true");
     await act(async () => {
       await vi.advanceTimersByTimeAsync(250);
     });
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("Buscando zonas…");
+    await act(async () => finish(response));
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("");
+    expect(search.getAttribute("aria-busy")).toBeNull();
     const post = required(container.querySelector<HTMLFormElement>('form[method="post"]'));
     expect(post.textContent).toContain("Zona sin avisos de nombre largo");
     expect(post.textContent).toContain("Maracaibo");
@@ -399,6 +410,8 @@ describe("el buscador de zona del paso 2 (18.24)", () => {
     const html = await servido("zona", "alta");
     const formulario = html.slice(html.indexOf('name="step" value="zona"'));
 
+    expect(html).not.toContain('aria-busy="true"');
+    expect(html).not.toContain("Buscando zonas…");
     expect(formulario).toMatch(/<input[^>]*type="radio"[^>]*name="zoneId"[^>]*value="altamira"/);
     expect(formulario).toContain("Municipio Chacao · Distrito Capital");
     expect(lookup).toHaveBeenCalledWith("alta");

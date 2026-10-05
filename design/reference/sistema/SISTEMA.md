@@ -159,6 +159,8 @@ Tarjeta `--surface` centrada a pantalla completa sobre velo gris `--scrim`, con 
 
 Roles nuevos: `--loading-ring-width: 3px` para el trazo, `--loading-duration: 1.2s` para rotación lineal continua y `--loading-layer: 1000` para la capa. Sólo gira el aro; movimiento reducido lo detiene. Sin animación de entrada. Etiqueta significativa en estado polite y salida visible mediante enlace nativo, suministradas por el caller.
 
+En el buscador de zona de Publicar, el aro inline usa `--loading-inline-size: 1em`, el mismo trazo, duración, colores y radio `--rs`, sin R ni tarjeta. Ocupa el extremo del input con espacio reservado y sin capturar eventos; sólo durante la búsqueda oculta la × nativa. Estado polite «Buscando zonas…», sin giro con movimiento reducido y sin indicador inicial en el HTML de servidor.
+
 Esta base reutilizable no es un diálogo ni activa carga de publicación: activación, plazo y gestión de foco quedan pendientes de integración. La salida nativa útil se conserva: añade altura respecto de la demo aprobada, sin prometer una altura de tarjeta idéntica.
 
 ## Jerarquía de botones
