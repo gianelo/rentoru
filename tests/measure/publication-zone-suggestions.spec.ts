@@ -93,6 +93,153 @@ test.describe("native", () => {
   });
 });
 
+test.describe("spinner native slot", () => {
+  test.use({ javaScriptEnabled: true });
+
+  for (const width of [390, 1440]) {
+    test(`native clear stays in its historical slot at ${width}px`, async ({ page }, info) => {
+      await page.setViewportSize({ width, height: 900 });
+      const errors: string[] = [];
+      const pageErrors: string[] = [];
+      page.on("pageerror", (error) => pageErrors.push(error.message));
+      page.on("console", (message) => {
+        if (message.type() === "error") errors.push(message.text());
+      });
+      const held = new Map<string, Route>();
+      zoneHandlers.set(page.context(), (route) => {
+        held.set(required(new URL(route.request().url()).searchParams.get("q")), route);
+      });
+      await ready(page, "?q=alta");
+      // 3d2b55a: native type=search, .control padding 0 14px, no spinner class.
+      // Probe its actual clickable UA slot rather than guessing a pixel offset.
+      await search(page).evaluate((input) => {
+        const baseline = input.cloneNode() as HTMLInputElement;
+        baseline.id = "native-baseline";
+        baseline.removeAttribute("name");
+        baseline.className = baseline.className
+          .split(" ")
+          .filter((name) => !name.includes("searchInput"))
+          .join(" ");
+        baseline.style.cssText = "position:absolute;inset:0;padding:0 14px";
+        input.parentElement?.append(baseline);
+      });
+      const baseline = page.locator("#native-baseline");
+      const box = required(await baseline.boundingBox());
+      const y = box.y + box.height / 2;
+      const hits: number[] = [];
+      for (let offset = 10; offset <= 40; offset++) {
+        await baseline.fill("alta");
+        const x = box.x + box.width - offset;
+        await page.mouse.click(x, y);
+        if ((await baseline.inputValue()) === "") hits.push(x);
+      }
+      expect(hits.length).toBeGreaterThan(4);
+      const x = (Math.min(...hits) + Math.max(...hits)) / 2;
+      await baseline.evaluate((input) => input.remove());
+      await search(page).focus();
+      await page.screenshot({ path: info.outputPath("idle.png"), caret: "initial" });
+      await page.mouse.click(x, y);
+      await expect(search(page)).toHaveValue("");
+      for (const status of [200, 500]) {
+        await page.emulateMedia({ reducedMotion: status === 200 ? "no-preference" : "reduce" });
+        const query = `held-${status}`;
+        await search(page).fill(query);
+        await expect.poll(() => held.has(query)).toBe(true);
+        const spinner = search(page).locator("..").locator('[aria-hidden="true"]');
+        const center = await spinner.evaluate((node) => {
+          const rect = node.getBoundingClientRect();
+          return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+        });
+        console.log("native-slot", { width, hits, x, y, center });
+        expect(Math.abs(center.x - x)).toBeLessThanOrEqual(1);
+        expect(Math.abs(center.y - y)).toBeLessThanOrEqual(1);
+        await page.mouse.click(x, y);
+        await expect(search(page)).toHaveValue(query);
+        await page.screenshot({ path: info.outputPath(`busy-${status}.png`), caret: "initial" });
+        await json(
+          required(held.get(query)),
+          status === 200 ? [fresh] : { error: "synthetic" },
+          status,
+        );
+        await expect(search(page)).not.toHaveAttribute("aria-busy", "true");
+        await page.mouse.click(x, y);
+        await expect(search(page)).toHaveValue("");
+      }
+      expect(pageErrors).toEqual([]);
+      // The deliberately fulfilled HTTP 500 must be the ONLY console error.
+      expect(errors).toEqual([
+        "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      ]);
+    });
+
+    for (const reducedMotion of ["no-preference", "reduce"] as const) {
+      test(`real temporal rotation ${reducedMotion} at ${width}px`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 });
+        let held: Route | undefined;
+        zoneHandlers.set(page.context(), (route) => {
+          held = route;
+        });
+        await ready(page);
+        const initialReduced = await page.evaluate(
+          () => matchMedia("(prefers-reduced-motion: reduce)").matches,
+        );
+        await page.emulateMedia({ reducedMotion });
+        await search(page).fill("motion");
+        await expect.poll(() => !!held).toBe(true);
+        const spinner = required(
+          await search(page).locator("..").locator('[aria-hidden="true"]').elementHandle(),
+        );
+        // Keep the SAME node and real browser timeline. 250ms is a measurement
+        // interval, not a readiness sleep or a multiple of the 1.2s rotation.
+        const samples = await spinner.evaluate(async (node) => {
+          const sample = () => {
+            const matrix = new DOMMatrix(getComputedStyle(node).transform);
+            const animation = node.getAnimations()[0];
+            const rect = node.getBoundingClientRect();
+            return {
+              timestamp: performance.now(),
+              angle: (Math.atan2(matrix.b, matrix.a) * 180) / Math.PI,
+              time: Number(animation?.currentTime ?? 0),
+              state: animation?.playState,
+              duration: animation?.effect?.getTiming().duration,
+              centerX: rect.x + rect.width / 2,
+              connected: node.isConnected,
+            };
+          };
+          const first = sample();
+          await new Promise<void>((resolve) => {
+            const tick = () =>
+              performance.now() - first.timestamp >= 250 ? resolve() : requestAnimationFrame(tick);
+            requestAnimationFrame(tick);
+          });
+          return [first, sample()] as const;
+        });
+        console.log("temporal-motion", { width, reducedMotion, initialReduced, samples });
+        const [first, second] = samples;
+        expect(second.timestamp - first.timestamp).toBeGreaterThanOrEqual(200);
+        expect(second.timestamp - first.timestamp).toBeLessThan(300);
+        expect(second.connected).toBe(true);
+        expect(second.centerX).toBeCloseTo(first.centerX, 1);
+        const angleAdvance = (second.angle - first.angle + 360) % 360;
+        if (reducedMotion === "no-preference") {
+          expect(first.state).toBe("running");
+          expect(first.duration).toBe(1200);
+          expect(second.time - first.time).toBeGreaterThan(150);
+          expect(angleAdvance).toBeGreaterThan(45);
+          expect(angleAdvance).toBeLessThan(100);
+        } else {
+          expect(first.state).toBeUndefined();
+          expect(second.time).toBe(0);
+          expect(angleAdvance).toBe(0);
+        }
+        await expect(search(page)).toHaveAttribute("aria-busy", "true");
+        await json(required(held), [fresh]);
+        await expect(search(page)).not.toHaveAttribute("aria-busy", "true");
+      });
+    }
+  }
+});
+
 test.describe("client", () => {
   test.use({ javaScriptEnabled: true });
 

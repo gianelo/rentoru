@@ -410,10 +410,6 @@
   min-inline-size: 0;
 }
 
-.searchInput {
-  padding-inline-end: calc(var(--loading-inline-size) + 28px);
-}
-
 /* Sólo durante la búsqueda: al volver a reposo se recupera la × nativa. */
 .searchBusy::-webkit-search-cancel-button {
   visibility: hidden;
@@ -421,7 +417,8 @@
 
 .searchSpinner {
   position: absolute;
-  inset-inline-end: 14px;
+  /* Centro de la × UA medido con padding nativo de 14px, no padding extra. */
+  inset-inline-end: 16px;
   inset-block-start: 50%;
   margin-block-start: calc(var(--loading-inline-size) / -2);
   inline-size: var(--loading-inline-size);
