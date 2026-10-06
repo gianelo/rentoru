@@ -1,5 +1,9 @@
 # F36.2 — Logo como enlace al inicio
 
+## Estado vigente
+
+36.2 completada; commit `ebd9a5e` presente en dev, `app/publicar/PublishStep.tsx` y `revisar/page.tsx`; prueba `app/publicar/logo-inicio.test.tsx` — «revisar conserva marca Inicio y Cambiar al paso». El estado PR #367 abierto/CI pendiente de abajo es histórico y no invalida este cierre; aquí no se acredita número de merge ni CI actual.36.1 permanece parcial. Sin nuevas pruebas funcionales.
+
 ## Alcance y autorización
 
 El fundador autoriza continuar 36.2 tras fusionar #364 y #366. Worktree propio `rentoru-fase36-publicacion`; rama `fix/fase-36-logo-inicio` desde `origin/dev` `e5ea87cd8ec11688d33aa5a8011d7d638546c44d`.
