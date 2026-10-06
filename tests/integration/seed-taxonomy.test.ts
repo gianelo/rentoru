@@ -1,6 +1,13 @@
+import { randomUUID } from "node:crypto";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { areaForMunicipality } from "../../src/modules/listing-catalogue/infrastructure/territorio-areas";
+import { readTerritoryDocuments } from "../../src/modules/listing-catalogue/infrastructure/territorio-files";
+import { parseToponymIndex } from "../../src/modules/listing-catalogue/infrastructure/toponym-index";
+import { buildAliasRows } from "../../src/modules/listing-catalogue/infrastructure/toponym-resolve";
 import { searchPublicationZones } from "../../src/modules/listing-publication/application/search-publication-zones";
 import type { PublicationDatabase } from "../../src/modules/listing-publication/infrastructure/drizzle-listing-repository";
 import { DrizzleZoneVocabulary } from "../../src/modules/listing-publication/infrastructure/drizzle-zone-vocabulary";
@@ -183,4 +190,116 @@ describe("36.6 catálogo real contra publicación", () => {
       expect((await vocabulary.lookup(query)).zones).toEqual([]);
     expect(await vocabulary.lookup("")).toEqual({ cities: [], zones: [], aliases: [] });
   });
+});
+
+function territorySourceFiles(directory: string): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((file) => {
+    const path = join(directory, file.name);
+    return file.isDirectory()
+      ? territorySourceFiles(path)
+      : file.name.endsWith(".md") && file.name !== "README.md"
+        ? [path]
+        : [];
+  });
+}
+
+it("36.6 actualización aditiva conserva zonas, alias anteriores y referencias tras dos seeds", async () => {
+  const connection = new Client({ connectionString: getTestDatabaseUrl() });
+  const handle = drizzle(connection) as unknown as SeedDatabase;
+  const referenceTables = ["user", "listing", "listing_photo", "listing_photo_derivative"] as const;
+  type Row = Record<string, unknown>;
+  async function snapshot(
+    table: "zone" | "zone_alias" | (typeof referenceTables)[number],
+  ): Promise<Row[]> {
+    const result = await connection.query(
+      `SELECT to_jsonb(t) AS row FROM "${table}" t ORDER BY to_jsonb(t)::text`,
+    );
+    return result.rows.map(({ row }) => row as Row);
+  }
+  const pair = (row: Row) => `${row.zone_id}|${row.alias}`;
+  let transactionStarted = false;
+  try {
+    await connection.connect();
+    await connection.query("BEGIN");
+    transactionStarted = true;
+    // Setup sólo para DB vacía. Si ya hay zonas, la primera llamada de
+    // actualización también debe demostrar que no reescribe sus atributos.
+    if ((await snapshot("zone")).length === 0) await seedTaxonomy(handle);
+    const beforeZones = await snapshot("zone");
+    const beforeAliases = await snapshot("zone_alias");
+    expect(beforeZones).toHaveLength(5796);
+    expect(beforeAliases).toHaveLength(4203);
+    // Misma gramática baseline que toponym-index.test.ts: primera entrada
+    // de cada <br>, derivada de los documentos, no de IDs transcritos.
+    const previous = territorySourceFiles("docs/territorio").flatMap((file) =>
+      parseToponymIndex(readFileSync(file, "utf8").replace(/ · \*[^*]+\*/gu, "")),
+    );
+    const oldResult = buildAliasRows(readTerritoryDocuments(), previous, areaForMunicipality);
+    expect(oldResult.unresolved).toEqual([]);
+    expect(oldResult.aliases).toHaveLength(3547);
+    const oldKeys = new Set(oldResult.aliases.map(({ zoneId, alias }) => `${zoneId}|${alias}`));
+    const oldRows = beforeAliases.filter((row) => oldKeys.has(pair(row)));
+    const added = beforeAliases.filter((row) => !oldKeys.has(pair(row)));
+    expect(new Set(oldRows.map(pair))).toEqual(oldKeys);
+    expect(oldRows).toHaveLength(3547);
+    expect(added).toHaveLength(656);
+
+    // Referencias propias y no vacuas, además de todas las filas que ya
+    // existían. Se revierten con la transacción; ninguna llamada a storage.
+    const publisherId = randomUUID();
+    const listingId = randomUUID();
+    const photoId = randomUUID();
+    const zone = beforeZones.find((row) => row.id === oldResult.aliases[0]?.zoneId);
+    if (!zone) throw new Error("Missing existing zone for reference fixture");
+    await connection.query('INSERT INTO "user" (id, email) VALUES ($1, $2)', [
+      publisherId,
+      `${publisherId}@rentas.invalid`,
+    ]);
+    await connection.query(
+      `INSERT INTO "listing"
+      (id, publisher_id, publisher_type, city_id, zone_id, title, description,
+       price_usd, rooms, area_m2, bathrooms, property_type, status,
+       contact_method, contact_value, published_at, expires_at)
+      VALUES ($1,$2,'owner',$3,$4,'Aviso sintético de conservación','Referencia sintética',
+       500,2,60,1,'apartamento','draft','email',$5,'2026-01-01T00:00:00Z','2026-02-01T00:00:00Z')`,
+      [listingId, publisherId, zone.city_id, zone.id, `${publisherId}@rentas.invalid`],
+    );
+    await connection.query(
+      `INSERT INTO listing_photo (id, listing_id, position, created_at)
+      VALUES ($1,$2,0,'2026-01-01T00:00:00Z')`,
+      [photoId, listingId],
+    );
+    await connection.query(
+      `INSERT INTO listing_photo_derivative (photo_id, name, key, bytes)
+      VALUES ($1,'full',$2,123)`,
+      [photoId, `36.6/upgrade/${photoId}/full`],
+    );
+    const beforeReferences = await Promise.all(referenceTables.map(snapshot));
+    for (const rows of beforeReferences) expect(rows.length).toBeGreaterThan(0);
+
+    // Única eliminación del upgrade: exactamente los pares secundarios.
+    const removed = await connection.query(
+      `DELETE FROM zone_alias WHERE (zone_id, alias) IN
+      (SELECT * FROM unnest($1::text[], $2::text[]))`,
+      [added.map((row) => row.zone_id), added.map((row) => row.alias)],
+    );
+    expect(removed.rowCount).toBe(656);
+    const previousAliases = await snapshot("zone_alias");
+    expect(previousAliases).toHaveLength(3547);
+    expect(previousAliases).toEqual(oldRows);
+    for (let run = 0; run < 2; run += 1) {
+      await seedTaxonomy(handle);
+      const aliases = await snapshot("zone_alias");
+      expect(aliases).toHaveLength(4203);
+      expect(new Set(aliases.map(pair)).size).toBe(4203);
+      expect(aliases.filter((row) => oldKeys.has(pair(row)))).toEqual(oldRows);
+      expect(aliases).toEqual(beforeAliases);
+      expect(await snapshot("zone")).toEqual(beforeZones);
+      expect(await Promise.all(referenceTables.map(snapshot))).toEqual(beforeReferences);
+    }
+  } finally {
+    await withPoolCleanup(connection, async () => {
+      if (transactionStarted) await connection.query("ROLLBACK");
+    });
+  }
 });
