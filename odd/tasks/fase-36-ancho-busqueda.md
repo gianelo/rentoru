@@ -1,5 +1,9 @@
 # 36.4 — Ancho coherente del buscador del encabezado
 
+## Estado vigente — cierre de36.4
+
+36.4 completada: commit final `1bf348af`, presente en dev; `components/organisms/Nav.module.css` y `tests/measure/nav-search-width.spec.ts` — «Nav ${viewport.width} ${javaScriptEnabled ? "JS" : "sin JS"}: ancho, centro y contratos». Medidas observadas358/232/420: SearchPill del Nav general, no ZoneSearch de publicación. Los pendientes de amend/review/PR siguientes pertenecen al corte histórico, superado por esta entrega. Sin nueva ejecución funcional ni consulta remota/CI.36.1 continúa parcial.
+
 ## Política aprobada
 
 SearchPill del **Nav general**, no ZoneSearch de publicación. Móvil fluido; desktop 420 px conforme a los boards; tablet fluida con columnas simétricas. El fundador eligió conservar el centro exacto de pantalla en tablet y aceptar 232 px a 768, con zona abreviada y contador en dos líneas cuando hay filtros. No son 232 fijos en todos los anchos tablet ni 358 fijos globales.
@@ -16,13 +20,13 @@ Causas: wrapper `search` de ancho intrínseco pese al formulario 100%/max420 (`N
 
 Worktree `rentoru-fase36-publicacion`; rama `fix/fase-36-ancho-busqueda` desde `origin/dev` `2ceade1185d73817a65dc222d48a32cde47501b0`. Una unidad coherente de CSS, tests y sistema, PR a `dev`, merge humano. Límite 400 líneas revisables; sin excepción heredada de 36.3. Inventario independiente: 312 líneas de implementación; recalcular junto con este documento y cambios restantes.
 
-No modificar copy, reglas de negocio, iconos/JS, wizard, sugerencias/catalogación, dock ni headers fuera del alcance. GET nativo, teclado/foco, marca/acciones y contenedor desktop 1100 intactos. Preservar las dos líneas preexistentes de `odd/tasks/fase-36-transicion-entrada.md`, fuera del commit. 36.1/36.3 cerradas; 36.23/36.24 al final.
+No modificar copy, reglas de negocio, iconos/JS, wizard, sugerencias/catalogación, dock ni headers fuera del alcance. GET nativo, teclado/foco, marca/acciones y contenedor desktop 1100 intactos. Preservar las dos líneas preexistentes de `odd/tasks/fase-36-transicion-entrada.md`, fuera del commit. Corrección del estado anterior:36.1 parcial y36.3 completada; este plan mantiene36.6–36.22 pendientes, sin añadir36.23/36.24.
 
 Entorno limpio sin DATABASE_URL para browser/unitarios, DB/POST/proveedores/credenciales/seed/migraciones prohibidos. DSN ficticia inválida permitida sólo para build separado. Loopback 3001 sólo si libre, procesos propios, F35 y demo 55441/tunnel protegidos; no limpiezas amplias. Artefactos propios `test-results/f364-*`; conservar evidencia anterior, no sobrescribirla.
 
 ## Unidad de trabajo
 
-- [ ] **36.4 — Aplicar y verificar la política responsive aprobada.** En curso; un commit funcional con pruebas/documentación. Ruta delegada: exploradores `mut80ys1-1s-4825`/`mut87n6p-1t-0hxr`, escritor continuado hasta `mut9efgu-1w-fjfy`, verificador `mut9wygc-1x-9ntd`. Padre conserva staging, review y delivery.
+- [x] **36.4 — Aplicar y verificar la política responsive aprobada.** Cerrada en `1bf348af`, archivo/prueba nombrados en «Estado vigente». **Registro histórico:** en curso; un commit funcional con pruebas/documentación. Ruta delegada: exploradores `mut80ys1-1s-4825`/`mut87n6p-1t-0hxr`, escritor continuado hasta `mut9efgu-1w-fjfy`, verificador `mut9wygc-1x-9ntd`. Padre conserva staging, review y delivery.
 
 ## Resultados observados
 
