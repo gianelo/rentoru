@@ -195,6 +195,11 @@ indexa también el topónimo enterrado en los nombres compuestos `X del Sector Y
 **El índice no crea zonas.** Cada topónimo sale de un nombre que la fuente ya publica, y
 la fila muestra en qué parroquia y bajo qué entrada aparece.
 
+El importador del alcance vigente produce **4.203 alias** para las cinco áreas del
+producto, sin cambiar las **5.796 zonas**. Cada entrada separada por `·` hereda la
+parroquia de su segmento; `<br>` inicia otra aparición. Leer sólo la primera entrada
+por segmento omitía 656 alias (36.6), incluidos los de urbanizaciones homónimas.
+
 ### Advertencia: la misma zona puede estar en otra parroquia de la que suponés
 
 Es el error más fácil de cometer con estos archivos.

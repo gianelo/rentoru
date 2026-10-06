@@ -49,7 +49,7 @@ const { redirect, notFound, lookup } = vi.hoisted(() => ({
     throw new Error("NEXT_NOT_FOUND");
   }),
   /**
-   * El puerto devuelve el vocabulario ANCHO —`ILIKE` a 60 filas— y quién de
+   * El puerto devuelve el vocabulario ANCHO —candidatos por `ILIKE`— y quién de
    * esas filas se ofrece lo decide `searchPublicationZones`, que es puro y ya
    * está cubierto. Por eso el doble no filtra: devolver acá lo ya filtrado
    * escondería el reparto de trabajo que este paso realmente hace.
