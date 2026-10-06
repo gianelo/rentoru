@@ -1,4 +1,10 @@
-# F36.3 — Base de carga y recuperación, corte parcial
+# F36.3 — Carga inicial y recuperación
+
+## Estado vigente — supersesión del corte parcial
+
+36.3 completada: commit de activación `c93d8fa1`, presente en la historia de dev. `app/publicar/layout.tsx` conecta `components/client/NavigationEntryBoundary.tsx` y `src/modules/listing-publication/domain/navigation-entry-policy.ts`. Prueba servida existente: `tests/e2e/publicar-entrada.spec.ts` — «36.3: real home → publication → initial destination at ${viewport.width}×${viewport.height}»; GET nativo — «36.3: direct documentary GET retains the native authenticated redirect without writes».
+
+Los cortes parciales, RED/GREEN y bloqueos siguientes se conservan como historia; sus pendientes de activación/entrega no describen el estado vigente. 36.1 sigue parcial. Navegaciones posteriores excluidas y advisories separados; no nueva ejecución funcional ni comprobación CI/remota en esta reconciliación.
 
 ## Autorización y alcance del PR
 
@@ -69,6 +75,6 @@ Review exacto de unidad integrada34af5901 permanece PENDIENTE, no reutilizar rec
 
 Consentimiento fresco resuelto con fundador disponible: scope correcto10paths/914líneas del commit34af5901, revisión consolidada `review-f31dc6bece09a6eb` APROBADA, sin correcciones. ACK exacto consumiótarget `sha256:27641ea568621d15d55cc40c7219a3f30fb368ea9b5a3e5a59177de813942131`/revision `sha256:fa2e171e2bbd438c761d0114fe4e0228210b9b895f4ed84f19181d2e0be74cc0`, authority burned; no STATUS posterior. Advisory R3-cleanup-ownership/Boundary116–118 informativo/no bloqueante, seguimiento separado sin reabrir. Revisión nativa del snapshot de fuente34 cerrada; sólo registro documental posterior, sin nuevos cambios funcionales. Este registro se incorpora a la segunda unidad local sin tercer commit documental; checkpoint exacto de fuente/review34 se conserva por evidencia. PR/CI remoto/merge humano siguen pendientes hasta observarlos, no cerrar36.3 por anticipado.
 
-- [ ] T36.3f — Verificar navegación real/destino retenido a 10 s, GET/JSoff y tres medidas; movimiento, caché fría/caliente, datos intactos, tipos/build/bundle. Review nativo del corte y PR único a dev con dos commits y conteo honesto; excepción de tamaño exclusiva documentada, merge humano.
+- [x] T36.3f — Cerrada por activación `c93d8fa1` y evidencia de navegación nombrada en «Estado vigente»; verificaciones históricas detalladas arriba, no reejecutadas aquí. **Criterio histórico:** verificar navegación real/destino retenido a 10 s, GET/JSoff y tres medidas; movimiento, caché fría/caliente, datos intactos, tipos/build/bundle. Review nativo del corte y PR único a dev con dos commits y conteo honesto; excepción de tamaño exclusiva documentada, merge humano.
 
-Las navegaciones posteriores quedan excluidas por decisión explícita, no se anuncian cubiertas. 36.3 sigue abierta hasta observar la aceptación de entrada; conservar demo y recursos propios/ajenos.
+Las navegaciones posteriores quedan excluidas por decisión explícita, no se anuncian cubiertas. El estado abierto de36.3 correspondía a ese corte histórico y queda superado por «Estado vigente»; conservar límites y evidencia de recursos propios/ajenos, sin afirmar que siguen activos.

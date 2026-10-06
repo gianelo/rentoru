@@ -1,6 +1,13 @@
 # Fase 36 — Cierre de publicación (#289)
 
-Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Las 22 tareas de producto siguen pendientes; escribir el plan no acredita aceptación funcional.
+Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Estado vigente:36.1 parcial;36.2–36.5 completadas;36.6–36.22 pendientes. Escribir el plan no acreditó aceptación funcional: los cierres proceden de las unidades posteriores citadas abajo, sin cerrar #289.
+
+## Reconciliación documental — progreso
+
+- [x] Alcance confirmado: sólo los ocho documentos autorizados; recuperación selectiva de `46c86d9`, sin cherry-pick ni cambios funcionales.
+- [x] Conciliar índice central, este plan y registros de entrada, ancho, logo, sugerencias y spinner:36.1 parcial,36.2–36.5 completadas,36.6–36.22 pendientes. Ruta delegada: escritura documental multifichero, un único escritor.
+- [x] Comprobar nombres de pruebas existentes por búsqueda en los specs de entrada, ancho y zona y en `logo-inicio.test.tsx`; `git diff --check` sin diagnósticos. Sin ejecutar nuevas pruebas funcionales ni atribuir CI actual. Historial local confirma commits de entrada/ancho/logo en dev y contenido de #380; consulta remota de #380 aportada por el padre.
+- No se autoriza commit, staging, push ni PR. Preservar el archivo ajeno `odd/tasks/limpieza-docker-pruebas-antiguas.md`.
 
 ## Entrega de planificación
 
@@ -10,7 +17,11 @@ Rama: `docs/fase-36-cierre-publicacion`, creada desde `origin/dev` sincronizado.
 - [x] P36.2 — Verificar cobertura y coherencia. Evidencia: verificador independiente cotejó los 21 comentarios en GitHub, IDs 36.1–36.22 coincidentes, tres rutas documentales y 268 líneas añadidas; `git diff --check` sin diagnósticos y chequeo del archivo nuevo sin errores. El coordinador confirmó que la variación observada era su actualización de seguimiento, no cambio del plan. Sin RED/GREEN por documentación; evaluación nativa inicial no disponible por archivo untracked, sin afirmar aprobación nativa.
 - [x] P36.3 — Commit `8d7294da55fc84e12bdde4b0c951c2a07a8f2a52` (`docs: planifica fase 36 de cierre de publicación`), push confirmado y [PR #363](https://github.com/gianelo/rentoru/pull/363) abierto a `dev`. Ruta: coordinador, entrega autorizada. Sin merge. Evaluación nativa posterior: `medium`, `reviewDue=false` / `under_budget`; no equivale a aprobación nativa. CI remoto se consulta aparte.
 
-## Ejecución actual — 36.1
+## Estado reconciliado y procedencia
+
+PR #380 sí integró en dev `555be527` la corrección `b882c77`, registro premerge `7fcefbb`, controles/CSS, dos documentos de spinner y pruebas; confirmado por historia local y consulta del padre. Sólo faltaba el cierre documental posterior de aceptación del fundador `46c86d9` (cuatro documentos, +24/−11), recuperado selectivamente, no las correcciones ni toda su documentación. Sin cherry-pick. El fundador reitera completado hasta36.5;36.1 conserva sus límites explícitos. RED/GREEN, gates y pendientes históricos siguientes se preservan; las notas de estado vigente los superseden sin inventar nuevas verificaciones.
+
+## Ejecución histórica — 36.1 (sigue parcial)
 
 - Autorización: el fundador inicia F36 en worktree separado; PR #363 integrado en `dev` (merge `ee31148231f356319b09be9eb616feb548279352`). Los estados anteriores de entrega son históricos.
 - Worktree: `rentoru-fase36-publicacion`; rama `test/fase-36-baseline-publicacion`, creada desde ese `origin/dev`.
@@ -180,19 +191,19 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: marca enlaza a `/`, nombre accesible y foco visibles en cada shell afectado.
   - Comprobar: HTML servido con `href` real, teclado y navegación sin JS en las tres clases de dispositivo; regresar no borra el borrador.
 
-- [ ] **36.3 — Investigar y corregir transición de entrada.** Después de 36.1; gate G1.
+- [x] **36.3 — Investigar y corregir transición de entrada.** Activación `c93d8fa1`: `app/publicar/layout.tsx`, `NavigationEntryBoundary` y dominio `navigation-entry-policy.ts`; `tests/e2e/publicar-entrada.spec.ts` — «36.3: real home → publication → initial destination at ${viewport.width}×${viewport.height}». Registro: `odd/tasks/fase-36-transicion-entrada.md`. La reproducción parcial habilitó este corte;36.1 no queda cerrada. Criterios históricos G1:
   - Trabajo: distinguir navegación cliente, GET directo, sesión/datos y boundaries de carga; capturar secuencia que muestra sólo pie y alcance actual del loader.
   - Aceptar: diagnóstico con causa/alcance y patrón aprobado; feedback contextual que no deje una pantalla engañosa ni invada rutas ajenas.
   - Comprobar: transición rápida/lenta y error controlado en prueba; GET directo y navegación sin JS conservan contenido útil. Si no se reproduce, registrar límite.
 
-- [ ] **36.4 — Reconciliar ancho de pastilla con el sistema.** Después de 36.1; gate G2.
+- [x] **36.4 — Reconciliar ancho de pastilla con el sistema.** Commit final `1bf348af`; `components/organisms/Nav.module.css`, SearchPill del Nav general, no ZoneSearch. `tests/measure/nav-search-width.spec.ts` — «Nav ${viewport.width} ${javaScriptEnabled ? "JS" : "sin JS"}: ancho, centro y contratos»;358/232/420 observados. Registro: `odd/tasks/fase-36-ancho-busqueda.md`. Criterios históricos G2:
   - Trabajo: medir contenedor y pastilla por breakpoint; acordar qué significa coherencia sin imponer ancho fijo móvil en desktop.
   - Aceptar: regla aprobada en sistema, aplicada sólo a superficies autorizadas, sin desbordes ni campos estirados de oficio.
   - Comprobar: geometría a 390/440/768/1440, márgenes y contenedor ≥1100; búsqueda nativa y targets intactos.
 
 ### B — Zona y escape
 
-- [ ] **36.5 — Sugerencias de zona como mejora progresiva.** Después de 36.1.
+- [x] **36.5 — Sugerencias de zona como mejora progresiva.** Commits `d0eeeb3a`/`a263e1fe`; `app/publicar/PublicationZoneEnhancement.tsx`, `PublicationZoneControls.tsx`, `publish-steps.module.css`. Pruebas servidas `tests/measure/publication-zone-suggestions.spec.ts` — «teclear sin Buscar conserva presentación, foco, elección y referencia» y «GET/Buscar nativo sirve los mismos radios y referencia sin JavaScript». PR #377/#379/#380 fusionados; aceptación manual tras `555be527`, cierre recuperado de `46c86d9`. Registros: sugerencias y spinner. Advisories separados no reabren aceptación; causa histórica del aro estático desconocida, animación sin cambios. Catálogo36.6 sigue pendiente, no prerequisite retroactivo. Criterios históricos:
   - Trabajo: reutilizar vocabulario/puertos de zona, no resultados de avisos activos como catálogo; mantener selección válida y ciudad aislada.
   - Aceptar: sugerencias al teclear, teclado/selección accesibles, estados vacío/error y zona guardada preservada; servidor valida ID y ciudad.
   - Comprobar: selección real y persistencia en HTML servido, consulta con/sin JS, nombres largos, acentos y respuesta tardía que no reemplace búsqueda nueva.
@@ -296,7 +307,7 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 |---|---|---|
 | 1 | 36.1 | Baseline y discrepancia de viewport coordinada con F34. |
 | 2 | 36.2–36.4, cada una independiente | Gates de loader y ancho; no un PR de «shell completo». |
-| 3 | 36.6; luego 36.5; 36.7 aparte | Catálogo curado alimenta sugerencias; escape no bloquea catalogación. |
+| 3 | 36.5 completada;36.6 y36.7 pendientes | Catálogo curado pendiente sin reabrir sugerencias aceptadas; escape aparte. |
 | 4 | 36.8 → 36.9; 36.10/36.11/36.12 aparte | Patrón vivo compartido; copy coordinado con F35. |
 | 5 | 36.13 → 36.14 | Compatibilidad aprobada antes de retirar canales. |
 | 6 | 36.15; 36.16 → 36.17; 36.18 aparte | Diagnóstico de fotos y aprobación de revisar, no arreglo a ciegas. |
@@ -305,7 +316,9 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 
 Cada fila es **orden**, no obligación de agrupar todos sus IDs en un PR. Planificar cada unidad bajo 400 líneas revisables incluyendo pruebas/docs; dividir 36.14 o 36.20 por costura probada si supera el presupuesto, conservando IDs con subunidades enlazadas. Nunca generar migraciones en paralelo.
 
-Para retomar desde laptop:
+Las instrucciones de recuperación de rama siguientes son históricas: para continuar, partir de dev vigente y del estado reconciliado, no recrear worktrees eliminados ni depender del PR inicial.
+
+Para retomar desde laptop (registro histórico):
 
 1. Abrir [PR #363](https://github.com/gianelo/rentoru/pull/363) y recuperar `docs/fase-36-cierre-publicacion`; commit inicial del plan `8d7294d`. No es necesario esperar al merge para leerlo desde laptop.
 2. Recuperar la rama entregada; leer `AGENTS.md`, este plan, índice central, decisiones y estado de PR #362/F34 en ese checkout. Registrar HEAD y cambios locales antes de trabajar; no pisarlos.
@@ -313,4 +326,4 @@ Para retomar desde laptop:
 4. Usar DB/storage/fixtures propios y aislados; producción sólo con permiso read-only separado. No copiar credenciales ni datos personales al plan o al PR.
 5. Guardar relevo por unidad: ID, HEAD/PR, archivos, decisión/fuente, RED/GREEN/mutación o excepción, comandos/resultados, bloqueos y siguiente ID. Un resultado local no se presenta como CI/preview remoto.
 
-**Cierre documental:** P36.1–P36.3 completos: inventario 21/21, 22 tareas verificadas y plan publicado en PR #363. Las 22 tareas de producto y la aceptación de #289 permanecen pendientes. La planificación histórica no ejecutó pruebas funcionales; el registro posterior 36.1a aporta reproducción parcial local por verificadores, sin acceso productivo ni cierre de 36.1.
+**Cierre documental:** P36.1–P36.3 completos: inventario 21/21, 22 tareas verificadas y plan publicado en PR #363. Estado posterior reconciliado:36.1 parcial;36.2–36.5 completadas;36.6–36.22 y aceptación integrada de #289 pendientes. La planificación histórica no ejecutó pruebas funcionales; el registro posterior 36.1a aporta reproducción parcial local por verificadores, sin acceso productivo ni cierre de 36.1.
