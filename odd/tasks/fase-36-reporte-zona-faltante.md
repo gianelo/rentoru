@@ -30,6 +30,8 @@ Estimación inicial: 550–750 líneas autoradas, incluidas pruebas y documentac
 
 Cada unidad debe conservar comportamiento, pruebas y documentación en su commit Conventional Commit en español. Registrar SHA y evaluación nativa de riesgo al cerrar cada unidad; la revisión no se dispara por marcar una tarea.
 
+Tracker local: `5f5925ae356dfec17957ed8d3ddfd1911b3268b8` (documentación). Corte 1: `feat/fase-36-reporte-zona-faltante-01` sobre ese tracker; entrada contextual y sus pruebas, sin POST. ASSESS del rango documental también fue unassessable por declaración untracked requerida; no se convierte ese resultado en riesgo bajo ni aprobación.
+
 ## Evidencia y siguiente paso
 
 Exploración: mailto sigue en PublishStep; Escribinos tiene formulario, validación y transporte pero no contexto/retorno ni feedback contextual de fallo de entrega. No existe implementación de 36.7. Destinatario fijo por configuración, no seleccionable en POST.

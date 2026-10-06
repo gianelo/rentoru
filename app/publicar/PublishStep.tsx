@@ -16,6 +16,7 @@ import {
 } from "../../src/modules/listing-publication/domain/violation-field";
 import type { PublicationZoneOption } from "../../src/modules/listing-publication/domain/zone-search";
 import type { PriceStepHistogramView } from "../../src/modules/listing-search/domain/price-histogram-step";
+import { missingZoneContactHref } from "../../src/modules/site-contact/domain/contact-screen";
 import { submitStep } from "./actions";
 import { FieldError } from "./FieldError";
 import { PhotoUploader } from "./fotos/PhotoUploader";
@@ -457,7 +458,7 @@ function StepFields(props: FieldsProps) {
             ¿No está la tuya?{" "}
             <AppLink
               className={styles.escapeLink}
-              href="mailto:hola@rentoru.com?subject=Falta%20mi%20zona"
+              href={missingZoneContactHref(props.returningToReview)}
             >
               Avisanos
             </AppLink>
