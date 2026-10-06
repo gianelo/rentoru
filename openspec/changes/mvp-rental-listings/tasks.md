@@ -2945,7 +2945,7 @@ Todos los IDs son de producto y permanecen pendientes. P36.1–P36.3 siguen excl
 - [ ] 36.3 Investigar/corregir transición de entrada tras aprobar patrón contextual de carga.
 - [ ] 36.4 Reconciliar ancho de pastilla con política responsive del sistema.
 - [ ] 36.5 Sugerencias de zona como mejora progresiva, con búsqueda nativa intacta.
-- [ ] 36.6 Conciliar catálogo de todas las ciudades soportadas, sin expansión geográfica.
+- [x] 36.6 Conciliar catálogo de todas las ciudades soportadas, sin expansión geográfica. Implementación: `81057b2` (#383); conservación en `tests/integration/seed-taxonomy.test.ts` — `36.6 actualización aditiva conserva zonas, alias anteriores y referencias tras dos seeds` (12 PG PASS; tres mutaciones RED/restauración GREEN previas). Callers en `tests/integration/publication-zone-catalogue.test.ts` — `sirve el radio de Urbanización %s` (HTML) y `entrega Urbanización %s por JSON`, San Miguel/San Rafael. Cierre: `odd/tasks/fase-36-catalogo-zonas.md`; segundo commit, CI y merge pendientes del padre; seed productivo separado, sin inventario de producción ni integración global GREEN.
 - [ ] 36.7 Formulario interno para explicar zona faltante, evaluando reutilizar Escribinos.
 - [ ] 36.8 Contador y preview vivos del título con validación servidor.
 - [ ] 36.9 Guía viva de descripción y caracteres faltantes.

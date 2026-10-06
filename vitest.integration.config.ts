@@ -35,6 +35,9 @@ import { defineConfig } from "vitest/config";
 }
 
 export default defineConfig({
+  // Los callers React importados por integración deben renderizar JSX,
+  // aunque tsconfig preserve JSX para que Next lo transforme en producción.
+  oxc: { jsx: { runtime: "automatic" } },
   // Mirrors tsconfig.json's "@/*" -> "./src/*" alias, the same way
   // vitest.config.ts already does. It did not exist here until a spec needed
   // to exercise a **server action** against the real database (tasks.md 8.7):
