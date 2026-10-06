@@ -110,6 +110,8 @@ These rules complement Gentle Shell; they do not replace its workflow or disable
 
 Planning artifacts live in `openspec/changes/mvp-rental-listings/`: `proposal.md`, `design.md`, `tasks.md`, and per-capability specs under `specs/`.
 
+**Keep visible TODO lists short and bounded.** Each item has one short action title and, only when necessary, one brief current-status note. Show the current work unit, not every diagnostic attempt or historical step. Keep commands, evidence, resource IDs, explanations and history in the task document, not in the visible TODO. Group related work without hiding unfinished work; refresh the list as the scope changes.
+
 **`design.md` is where decisions and their reasons live.** Read the relevant section before changing anything it covers — especially "Open Questions", which holds real founder decisions that block real work.
 
 **Before building a task, check whether it already exists.** This has bitten the project more than once: a whole phase sat unmarked in `tasks.md` while its code was merged and tested. An agent that trusts the checkbox writes a second migration for a table that is already there.

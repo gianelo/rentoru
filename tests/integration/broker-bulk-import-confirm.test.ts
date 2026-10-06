@@ -165,42 +165,70 @@ describe("confirmImport — against real Postgres", () => {
   // refused by the unique index Postgres actually enforces, and
   // `confirmImport` catches the 23505 rather than crashing.
   it("creates no additional draft when the SAME external reference is confirmed again", async () => {
+    const traceEnabled = process.env.CI === "true";
+    const startedAt = performance.now();
+    async function trace<T>(phase: string, action: () => Promise<T>): Promise<T> {
+      if (!traceEnabled) return action();
+      const log = (event: "start" | "end") =>
+        console.info(
+          `[import-duplicate] ${phase} ${event} elapsed_ms=${(performance.now() - startedAt).toFixed(3)}`,
+        );
+      log("start");
+      try {
+        return await action();
+      } finally {
+        log("end");
+      }
+    }
+    function tracedPort<T extends object>(port: T, label: string): T {
+      if (!traceEnabled) return port;
+      return new Proxy(port, {
+        get(target, key) {
+          const original = Reflect.get(target, key, target);
+          if (typeof original !== "function") return original;
+          return (...args: unknown[]) =>
+            trace(`${label}.${String(key)}`, () => original.apply(target, args));
+        },
+      });
+    }
     const userId = randomUUID();
     USER_IDS.push(userId);
-    await insertUser(userId, {
-      bulkImportEnabled: true,
-      contactMethod: "whatsapp",
-      contactValue: "04121234567",
+    const tracedDependencies = (confirmation: "first" | "second") => ({
+      sessionPort: tracedPort(sessionFor(userId), `${confirmation}.session`),
+      accounts: tracedPort(accounts, `${confirmation}.accounts`),
+      contact: tracedPort(contact, `${confirmation}.contact`),
+      zones: tracedPort(zones, `${confirmation}.zones`),
+      catalogue: tracedPort(catalogue, `${confirmation}.catalogue`),
+      listings: tracedPort(listings, `${confirmation}.listings`),
     });
+    await trace("fixture.insertUser", () =>
+      insertUser(userId, {
+        bulkImportEnabled: true,
+        contactMethod: "whatsapp",
+        contactValue: "04121234567",
+      }),
+    );
 
     const source = () => sourceFromText(`${REQUIRED_HEADER}\n${rowLine("PG-DUP-1")}`);
 
-    const first = await confirmImport(source(), {
-      sessionPort: sessionFor(userId),
-      accounts,
-      contact,
-      zones,
-      catalogue,
-      listings,
-    });
+    const first = await trace("first.confirm", () =>
+      confirmImport(source(), tracedDependencies("first")),
+    );
     expect(first.createdCount).toBe(1);
     expect(first.skippedDuplicates).toEqual([]);
 
-    const second = await confirmImport(source(), {
-      sessionPort: sessionFor(userId),
-      accounts,
-      contact,
-      zones,
-      catalogue,
-      listings,
-    });
+    const second = await trace("second.confirm", () =>
+      confirmImport(source(), tracedDependencies("second")),
+    );
 
     expect(second.createdCount).toBe(0);
     expect(second.skippedDuplicates).toEqual([{ rowNumber: 2, externalReference: "PG-DUP-1" }]);
 
-    const count = await pool.query(
-      `SELECT count(*)::int AS n FROM "listing" WHERE publisher_id = $1 AND external_reference = $2`,
-      [userId, "PG-DUP-1"],
+    const count = await trace("final.count", () =>
+      pool.query(
+        `SELECT count(*)::int AS n FROM "listing" WHERE publisher_id = $1 AND external_reference = $2`,
+        [userId, "PG-DUP-1"],
+      ),
     );
     expect(count.rows[0]?.n).toBe(1);
   });
