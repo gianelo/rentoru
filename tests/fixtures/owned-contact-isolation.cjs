@@ -114,6 +114,21 @@ function installFiles(fs) {
     const base = name.replace(/Sync$/, "");
     const opening = base === "open";
     target[name] = function (...args) {
+      // Watchpack expects permission failures through fs.lstat's asynchronous callback.
+      // Only credential-policy denial is translated; no filesystem primitive runs.
+      if (target === fs && name === "lstat" && typeof args[0] !== "number") {
+        const callback = args.at(-1);
+        if (typeof callback === "function") {
+          try {
+            checkRead(args[0]);
+          } catch (error) {
+            if (error.message !== "DENIED owned contact isolation") throw error;
+            error.code = "EACCES";
+            queueMicrotask(() => callback(error));
+            return;
+          }
+        }
+      }
       // No link creation or recursive traversal that could introduce unvalidated descendants.
       if (/^(link|symlink|cp)$/.test(base)) denied();
       if (/^(write|writev|ftruncate|fchmod|fchown|futimes)$/.test(base))
@@ -221,6 +236,26 @@ function install(p, env) {
         target[name] = denied;
     }
   }
+  // Node listen's lookupAndListen asks for all addresses even for a literal IP.
+  // Synthesize only this exact loopback; never retain or invoke native DNS.
+  p.dns.lookup = (hostname, options, callback) => {
+    if (typeof options === "function") {
+      callback = options;
+      options = undefined;
+    }
+    if (hostname !== "127.0.0.1" || typeof callback !== "function") denied();
+    if (typeof options === "number") options = { family: options };
+    if (options !== undefined) {
+      if (!options || typeof options !== "object" || Array.isArray(options)) denied();
+      if (Object.keys(options).some((key) => key !== "family" && key !== "all")) denied();
+      if (options.family !== undefined && options.family !== 0 && options.family !== 4) denied();
+      if (options.all !== undefined && typeof options.all !== "boolean") denied();
+    }
+    queueMicrotask(() => {
+      if (options?.all) callback(null, [{ address: "127.0.0.1", family: 4 }]);
+      else callback(null, "127.0.0.1", 4);
+    });
+  };
   p.dgram.createSocket = denied;
   const nativeFetch = p.global.fetch;
   p.global.fetch = async function (input, options = {}) {

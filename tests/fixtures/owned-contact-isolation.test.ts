@@ -47,7 +47,21 @@ function setup(env = synthetic, activate = true) {
     net: { Socket: { prototype: { connect: call } }, Server: { prototype: { listen: call } } },
     http: { request: call, get: call },
     https: { request: call, get: call },
-    dns: { lookup: call, resolve: call, promises: { lookup: call } },
+    dns: {
+      lookup: call,
+      lookupPromise: call,
+      lookupService: call,
+      resolve: call,
+      resolve4: call,
+      reverse: call,
+      Resolver: { prototype: { resolve4: call } },
+      promises: {
+        lookup: call,
+        reverse: call,
+        resolve4: call,
+        Resolver: { prototype: { resolve4: call } },
+      },
+    },
     dgram: { createSocket: call },
     global: { fetch: fetchCall },
   };
@@ -56,6 +70,74 @@ function setup(env = synthetic, activate = true) {
 }
 
 describe("owned filesystem confinement", () => {
+  it("delivers credential lstat callback EACCES asynchronously once without filesystem calls", async () => {
+    const p = setup();
+    const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
+    for (const file of [
+      "/Users/gianelo/.aws",
+      `${root}/.aws`,
+      `${owned}/.aws`,
+      new URL("file:///mock/.aws/credentials"),
+      Buffer.from("/mock/.aws"),
+    ]) {
+      const callback = vi.fn();
+      expect(() => io.lstat?.(file, { bigint: true }, callback)).not.toThrow();
+      expect(callback).not.toHaveBeenCalled();
+      await Promise.resolve();
+      expect(callback).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({ message: "DENIED owned contact isolation", code: "EACCES" }),
+      );
+      await Promise.resolve();
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(p.call).not.toHaveBeenCalled();
+      expect(p.inspect).not.toHaveBeenCalled();
+      expect(p.canonical).not.toHaveBeenCalled();
+    }
+  });
+  it("lets the installed Watchpack scan callback handle denied mock metadata without throwing", async () => {
+    // Extract only the actual compiled callback; never instantiate a native watcher.
+    const source = nativeRead(require.resolve("next/dist/compiled/watchpack/watchpack.js"), "utf8");
+    const marker = "r.lstat(t,((i,s)=>{if(this.closed)return;if(i)";
+    const position = source.indexOf(marker);
+    expect(position).toBeGreaterThan(-1);
+    const end = source.indexOf("c()}))", position);
+    expect(end).toBeGreaterThan(position);
+    const completed = vi.fn();
+    const watcher = { closed: false, setMissing: vi.fn(), onScanError: vi.fn() };
+    const file = `${root}/.aws`;
+    const callback = runInNewContext(
+      source.slice(position + "r.lstat(t,(".length, end + "c()}".length),
+      Object.assign(watcher, { t: file, e: true, c: completed }),
+    );
+    const p = setup();
+    const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
+    expect(() => io.lstat?.(file, callback)).not.toThrow();
+    expect(completed).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(watcher.setMissing).toHaveBeenCalledExactlyOnceWith(file, true, "scan (EACCES)");
+    expect(watcher.onScanError).not.toHaveBeenCalled();
+    expect(completed).toHaveBeenCalledOnce();
+    expect(p.call).not.toHaveBeenCalled();
+    expect(p.inspect).not.toHaveBeenCalled();
+    expect(p.canonical).not.toHaveBeenCalled();
+  });
+  it("keeps other credential APIs synchronous and ordinary lstat callback passthrough", () => {
+    const p = setup();
+    const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
+    const asyncIo = p.fs.promises as unknown as typeof io;
+    const callback = vi.fn();
+    for (const name of ["lstatSync", "readFile", "readFileSync", "stat"])
+      expect(() => io[name]?.("/mock/.aws", callback)).toThrow("DENIED owned contact isolation");
+    expect(() => io.lstat?.("/mock/.aws")).toThrow(/DENIED/);
+    expect(() => io.lstat?.(7, callback)).toThrow(/DENIED/);
+    expect(() => asyncIo.lstat?.("/mock/.aws")).toThrow(/DENIED/);
+    expect(callback).not.toHaveBeenCalled();
+    expect(p.call).not.toHaveBeenCalled();
+    expect(p.inspect).not.toHaveBeenCalled();
+    expect(p.canonical).not.toHaveBeenCalled();
+    expect(io.lstat?.(`${root}/app`, callback)).toBe("native");
+    expect(p.call).toHaveBeenCalledExactlyOnceWith(`${root}/app`, callback);
+  });
   it("aliases only the exact declaration, retaining virtual identity and missing-cache semantics", async () => {
     const p = setup();
     const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
@@ -207,6 +289,110 @@ describe("owned filesystem confinement", () => {
     expect(() => io.createWriteStream?.(`${owned}/stdout`, { fd: 9 })).toThrow(/DENIED/);
     expect(p.call).not.toHaveBeenCalled();
     io.writeSync?.(1, "synthetic");
+  });
+});
+
+describe("owned loopback lookup", () => {
+  it.each(["options", "all", "callback"])(
+    "synthesizes loopback lookup asynchronously once without native DNS: %s",
+    async (shape) => {
+      const p = setup();
+      const callback = vi.fn();
+      const args =
+        shape === "callback"
+          ? ["127.0.0.1", callback]
+          : ["127.0.0.1", shape === "all" ? { all: true } : { family: undefined }, callback];
+      p.dns.lookup(...args);
+      expect(callback).not.toHaveBeenCalled();
+      await Promise.resolve();
+      expect(callback.mock.calls).toEqual([
+        shape === "all" ? [null, [{ address: "127.0.0.1", family: 4 }]] : [null, "127.0.0.1", 4],
+      ]);
+      await Promise.resolve();
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(p.call).not.toHaveBeenCalled();
+    },
+  );
+  it("executes Node lookupAndListen with mocked cluster listening only", async () => {
+    const source = (process as unknown as { binding(name: string): { net: string } }).binding(
+      "natives",
+    ).net;
+    const start = source.indexOf("function lookupAndListen(");
+    expect(start).toBeGreaterThan(-1);
+    const end = source.indexOf("\n}", start) + 2;
+    const p = setup();
+    const listenInCluster = vi.fn();
+    const caller = runInNewContext(`(${source.slice(start, end)})`, {
+      dns: p.dns,
+      filterOnlyValidAddress: (addresses: { family: number }[]) =>
+        addresses.find((address) => address.family === 4),
+      listenInCluster,
+    });
+    const server = { _listeningId: 1, emit: vi.fn() };
+    p.call.mockImplementationOnce(() => {
+      caller(server, 31468, "127.0.0.1", 511, false, 0);
+      return "native";
+    });
+    p.net.Server.prototype.listen({ host: "127.0.0.1", port: 31468 });
+    expect(listenInCluster).not.toHaveBeenCalled();
+    await Promise.resolve();
+    expect(listenInCluster).toHaveBeenCalledExactlyOnceWith(
+      server,
+      "127.0.0.1",
+      31468,
+      4,
+      511,
+      undefined,
+      false,
+      0,
+    );
+    expect(server.emit).not.toHaveBeenCalled();
+    // Only the mock listener ran, never the mock standing in for native DNS.
+    expect(p.call).toHaveBeenCalledExactlyOnceWith({ host: "127.0.0.1", port: 31468 });
+  });
+  it("supports only IPv4 family signatures and rejects every other DNS path", async () => {
+    const p = setup();
+    const callback = vi.fn();
+    for (const options of [undefined, 0, 4, { family: 0 }, { family: 4, all: false }])
+      p.dns.lookup("127.0.0.1", options, callback);
+    await Promise.resolve();
+    expect(callback.mock.calls).toEqual(Array(5).fill([null, "127.0.0.1", 4]));
+    callback.mockClear();
+    for (const host of ["localhost", "example.invalid", "127.0.0.2", "::1", "127.0.0.1."])
+      expect(() => p.dns.lookup(host, callback)).toThrow(/DENIED/);
+    for (const options of [
+      6,
+      null,
+      "4",
+      [],
+      { family: 6 },
+      { family: "4" },
+      { all: 1 },
+      { hints: 0 },
+    ])
+      expect(() => p.dns.lookup("127.0.0.1", options, callback)).toThrow(/DENIED/);
+    expect(() => p.dns.lookup("127.0.0.1")).toThrow(/DENIED/);
+    for (const method of [
+      p.dns.lookupPromise,
+      p.dns.lookupService,
+      p.dns.resolve,
+      p.dns.resolve4,
+      p.dns.reverse,
+      p.dns.Resolver.prototype.resolve4,
+      p.dns.promises.lookup,
+      p.dns.promises.reverse,
+      p.dns.promises.resolve4,
+      p.dns.promises.Resolver.prototype.resolve4,
+    ])
+      expect(() => method("127.0.0.1", callback)).toThrow(/DENIED/);
+    for (const options of [
+      { host: "127.0.0.1", port: 31468, fd: 7 },
+      { host: "127.0.0.1", port: 31468, path: "/mock/socket" },
+    ])
+      expect(() => p.net.Server.prototype.listen(options)).toThrow(/DENIED/);
+    await Promise.resolve();
+    expect(callback).not.toHaveBeenCalled();
+    expect(p.call).not.toHaveBeenCalled();
   });
 });
 
