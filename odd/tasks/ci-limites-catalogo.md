@@ -12,8 +12,8 @@ Hipótesis de la próxima ejecución CI: espera de adquisición/driver frente a 
 
 ## Tareas
 
-- [ ] Probar transparencia y restauración del observador con RED/GREEN y mutación.
-- [ ] Integrar observación en el caller real y verificar el caso sobre PostgreSQL exclusivo 55439; no usar el baseline F36.7.
+- [x] Probar transparencia y restauración: siete casos RED/GREEN; mutante de receptor falló/restaurado SHA afd865c831bdb6da1a135b88a1d51b00da11015cfd5531ad8a9dd86216240a8e. Independiente 7/7 PASS. Commit `6de52645808ce0f085919accd6c8a102a88e7879`.
+- [x] Caller real sobre 55439: 4/4 PASS, cero skips; Biome/tipos/diff PASS. Conteos antes/después: 6 ciudades/5797 zonas/4203 alias/0 usuarios/0 avisos; hashes físicos raíz OK. Commit `6de52645808ce0f085919accd6c8a102a88e7879`. Primer ensayo dirigido 1 PASS/3 skips por filtro intencional, luego archivo completo verificado.
 - [ ] Publicar una unidad ≤400 líneas con PR a `dev`; registrar CI y la siguiente decisión, sin llamar GREEN causal a un pase.
 
 ## Límites y evidencia pendiente
