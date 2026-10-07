@@ -7,7 +7,8 @@ const synthetic = Object.freeze({
   AUTH_MAIL_FROM: "Rentoru Test <sender@owned.invalid>",
   CONTACT_MAIL_TO: "recipient@owned.invalid",
 });
-const ports = new Set([55437, 55438, 31467]);
+const ports = new Set([55437, 55438, 31467, 31468]);
+let preloaded = false;
 function denied() {
   throw new Error("DENIED owned contact isolation");
 }
@@ -58,16 +59,145 @@ function wrap(target, name, check) {
     return original.apply(this, args);
   };
 }
+// Next's declaration keeps its root identity; only its bytes live in owned output.
+const root = path.resolve(__dirname, "../..");
+const owned = path.join(root, ".tmp/rentoru-f367-browser");
+const declaration = path.join(root, "next-env.d.ts");
+const cached = path.join(owned, "generated/next-env.d.ts");
+function installFiles(fs) {
+  const inspect = fs.lstatSync.bind(fs);
+  const canonical = fs.realpathSync.bind(fs);
+  const descriptors = new Set();
+  const constants = require("node:fs").constants;
+  const writeMask =
+    constants.O_WRONLY |
+    constants.O_RDWR |
+    constants.O_CREAT |
+    constants.O_TRUNC |
+    constants.O_APPEND;
+  const writable = (flags) =>
+    typeof flags === "number" ? Boolean(flags & writeMask) : /[wa+]/.test(flags ?? "r");
+  const fd = (value, stdout = false) => {
+    if (!descriptors.has(value) && !(stdout && (value === 1 || value === 2))) denied();
+  };
+  function validate(file) {
+    if (file !== owned && !file.startsWith(`${owned}${path.sep}`)) denied();
+    for (let ancestor = file; ; ancestor = path.dirname(ancestor)) {
+      try {
+        if (inspect(ancestor).isSymbolicLink() || canonical(ancestor) !== ancestor) denied();
+      } catch (error) {
+        if (error.code !== "ENOENT") throw error;
+      }
+      if (ancestor === root) break;
+    }
+  }
+  function map(file, mutation = false) {
+    if (typeof file === "number") {
+      if (!mutation) denied();
+      fd(file);
+      return file;
+    }
+    checkRead(file);
+    const absolute = path.resolve(file instanceof URL ? fileURLToPath(file) : String(file));
+    const physical = absolute === declaration ? cached : absolute;
+    if (mutation || physical === cached || physical.startsWith(`${owned}${path.sep}`))
+      validate(physical);
+    return mutation || absolute === declaration || physical.startsWith(`${owned}${path.sep}`)
+      ? physical
+      : file;
+  }
+  function identity(result) {
+    return Buffer.isBuffer(result) ? Buffer.from(declaration) : declaration;
+  }
+  function wrapFile(target, name, original) {
+    if (typeof original !== "function") return;
+    const base = name.replace(/Sync$/, "");
+    const opening = base === "open";
+    target[name] = function (...args) {
+      // No link creation or recursive traversal that could introduce unvalidated descendants.
+      if (/^(link|symlink|cp)$/.test(base)) denied();
+      if (/^(write|writev|ftruncate|fchmod|fchown|futimes)$/.test(base))
+        fd(args[0], /^write/.test(base));
+      else if (base === "close") descriptors.delete(args[0]);
+      else if (base === "rename") {
+        args[0] = map(args[0], true);
+        args[1] = map(args[1], true);
+      } else if (base === "copyFile") {
+        args[0] = map(args[0]);
+        args[1] = map(args[1], true);
+      } else {
+        if (base === "createReadStream" && args[1]?.fd !== undefined) denied();
+        const stream = base === "createWriteStream";
+        if (stream && args[1]?.fd !== undefined) {
+          fd(args[1].fd, true);
+          return original.apply(this, args);
+        }
+        const mutation =
+          stream ||
+          (opening && writable(args[1])) ||
+          /^(writeFile|appendFile|truncate|mkdir|mkdtemp|rmdir|rm|unlink|chmod|chown|utimes|lutimes|lchmod|lchown)$/.test(
+            base,
+          );
+        const virtual =
+          base === "realpath" &&
+          path.resolve(args[0] instanceof URL ? fileURLToPath(args[0]) : String(args[0])) ===
+            declaration;
+        args[0] = map(args[0], mutation);
+        const transform = (result) => {
+          if (opening && writable(args[1])) {
+            descriptors.add(typeof result === "number" ? result : result.fd);
+          }
+          if (opening && result && typeof result === "object") {
+            for (const method of [
+              "write",
+              "writev",
+              "writeFile",
+              "appendFile",
+              "truncate",
+              "chmod",
+              "chown",
+              "utimes",
+            ]) {
+              wrap(result, method, () => fd(result.fd));
+            }
+            wrap(result, "close", () => descriptors.delete(result.fd));
+          }
+          return virtual ? identity(result) : result;
+        };
+        const callback = args.at(-1);
+        if ((opening || virtual) && typeof callback === "function") {
+          args[args.length - 1] = (error, result) =>
+            callback(error, error ? result : transform(result));
+        }
+        const result = original.apply(this, args);
+        if ((opening || virtual) && typeof callback !== "function") {
+          return target === fs.promises || result?.then
+            ? Promise.resolve(result).then(transform)
+            : transform(result);
+        }
+        return result;
+      }
+      return original.apply(this, args);
+    };
+    if (original.native) {
+      const native = {};
+      wrapFile(native, name, original.native);
+      target[name].native = native[name];
+    }
+  }
+  const operations =
+    /^(readFile|open|createReadStream|createWriteStream|stat|lstat|access|exists|realpath|readdir|opendir|readlink|writeFile|appendFile|truncate|mkdir|mkdtemp|rmdir|rm|unlink|chmod|chown|utimes|lutimes|lchmod|lchown|rename|copyFile|link|symlink|cp|write|writev|ftruncate|fchmod|fchown|futimes|close)(Sync)?$/;
+  for (const target of [fs, fs.promises]) {
+    for (const name of Object.keys(target)) {
+      if (operations.test(name)) wrapFile(target, name, target[name]);
+    }
+  }
+}
 function install(p, env) {
   for (const [key, value] of Object.entries(synthetic)) {
     if (env[key] !== value) denied();
   }
-  for (const name of ["readFileSync", "readFile", "openSync", "open", "createReadStream"]) {
-    wrap(p.fs, name, ([file]) => checkRead(file));
-  }
-  for (const name of ["readFile", "open"]) {
-    wrap(p.fs.promises, name, ([file]) => checkRead(file));
-  }
+  installFiles(p.fs);
   wrap(p.net.Socket.prototype, "connect", checkSocket);
   wrap(p.net.Server.prototype, "listen", checkSocket);
   for (const [transport, protocol] of [
@@ -144,7 +274,8 @@ function preload(env) {
     env,
   );
   require("node:module").syncBuiltinESMExports();
+  preloaded = true;
 }
-module.exports = { install, synthetic };
+module.exports = { install, synthetic, isPreloaded: () => preloaded };
 // Node's --require loader identifies itself before Next can load dotenv.
 if (module.parent?.id === "internal/preload") preload(process.env);

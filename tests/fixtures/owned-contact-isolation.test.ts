@@ -10,6 +10,11 @@ import {
 const require = createRequire(import.meta.url);
 const nativeRead = require("node:fs").readFileSync;
 const { install, synthetic } = require("./owned-contact-isolation.cjs");
+const path = require("node:path");
+const root = path.resolve(import.meta.dirname, "../..");
+const owned = path.join(root, ".tmp/rentoru-f367-browser");
+const declaration = path.join(root, "next-env.d.ts");
+const cached = path.join(owned, "generated/next-env.d.ts");
 function setup(env = synthetic, activate = true) {
   const call = vi.fn((..._args: unknown[]) => "native");
   const fetchCall = vi.fn(async (..._args: unknown[]) => new Response("native"));
@@ -21,6 +26,22 @@ function setup(env = synthetic, activate = true) {
     createReadStream: call,
     promises: { readFile: call, open: call },
   };
+  const inspect = vi.fn((file: string) => ({ isSymbolicLink: () => file.endsWith("escape") }));
+  const canonical = vi.fn((file: string) => file);
+  for (const [target, source] of [
+    [fs, require("node:fs")],
+    [fs.promises, require("node:fs").promises],
+  ]) {
+    for (const [name, value] of Object.entries(source)) {
+      if (typeof value === "function") Object.assign(target, { [name]: call });
+    }
+  }
+  Object.assign(fs, {
+    constants: require("node:fs").constants,
+    lstatSync: inspect,
+    realpathSync: canonical,
+  });
+  Object.assign(fs.promises, { realpath: canonical });
   const primitives = {
     fs,
     net: { Socket: { prototype: { connect: call } }, Server: { prototype: { listen: call } } },
@@ -31,8 +52,163 @@ function setup(env = synthetic, activate = true) {
     global: { fetch: fetchCall },
   };
   if (activate) install(primitives, env);
-  return { ...primitives, call, fetchCall };
+  return { ...primitives, call, fetchCall, inspect, canonical };
 }
+
+describe("owned filesystem confinement", () => {
+  it("aliases only the exact declaration, retaining virtual identity and missing-cache semantics", async () => {
+    const p = setup();
+    const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
+    for (const name of [
+      "readFileSync",
+      "readFile",
+      "statSync",
+      "stat",
+      "accessSync",
+      "access",
+      "existsSync",
+      "writeFileSync",
+      "writeFile",
+    ]) {
+      io[name]?.(declaration, "synthetic");
+      expect(p.call.mock.calls.at(-1)?.[0]).toBe(cached);
+    }
+    expect(io.realpathSync?.(declaration)).toBe(declaration);
+    const asyncIo = p.fs.promises as unknown as Record<string, (...args: unknown[]) => unknown>;
+    await expect(asyncIo.realpath?.(declaration)).resolves.toBe(declaration);
+    p.call.mockImplementation(() => {
+      throw Object.assign(new Error("missing cache"), { code: "ENOENT" });
+    });
+    p.inspect.mockImplementationOnce(() => {
+      throw Object.assign(new Error("missing ancestor"), { code: "ENOENT" });
+    });
+    expect(() => io.statSync?.(declaration)).toThrow("missing cache");
+    expect(p.call.mock.calls.at(-1)?.[0]).toBe(cached);
+    p.call.mockImplementation(() => false as unknown as string);
+    expect(io.existsSync?.(declaration)).toBe(false);
+    expect(p.call.mock.calls.at(-1)?.[0]).toBe(cached);
+  });
+  it("pairs callback/promise aliases and confines opened handles throughout their lifetime", async () => {
+    const p = setup();
+    const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
+    const asyncIo = p.fs.promises as unknown as Record<string, (...args: unknown[]) => unknown>;
+    const callback = vi.fn();
+    p.call.mockImplementationOnce((...args) => {
+      (args.at(-1) as (error: null, result: string) => void)(null, cached);
+      return "native";
+    });
+    io.realpath?.(declaration, callback);
+    expect(callback).toHaveBeenCalledWith(null, declaration);
+    await expect(asyncIo.realpath?.(new URL(`file://${declaration}`))).resolves.toBe(declaration);
+    p.call.mockImplementationOnce(() => 17 as unknown as string);
+    p.fs.openSync(`${owned}/output`, "w");
+    expect(io.writeSync?.(17, "synthetic")).toBe("native");
+    io.closeSync?.(17);
+    expect(() => io.writeSync?.(17, "synthetic")).toThrow(/DENIED/);
+    const handle = {
+      fd: 18,
+      write: vi.fn(),
+      writev: vi.fn(),
+      writeFile: vi.fn(),
+      appendFile: vi.fn(),
+      truncate: vi.fn(),
+      chmod: vi.fn(),
+      chown: vi.fn(),
+      utimes: vi.fn(),
+      close: vi.fn(),
+    };
+    p.call.mockImplementationOnce(() => handle as unknown as string);
+    await p.fs.promises.open(`${root}/source.ts`, "r");
+    expect(() => handle.chmod()).toThrow(/DENIED/);
+    expect(() => handle.write()).toThrow(/DENIED/);
+  });
+  it("denies all nonowned path mutations before native calls, including declaration lookalikes", () => {
+    const p = setup();
+    const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
+    const asyncIo = p.fs.promises as unknown as typeof io;
+    for (const name of [
+      "writeFile",
+      "appendFile",
+      "truncate",
+      "unlink",
+      "rm",
+      "mkdir",
+      "rmdir",
+      "mkdtemp",
+      "chmod",
+      "chown",
+      "utimes",
+      "createWriteStream",
+    ]) {
+      for (const file of [
+        path.join(root, "tsconfig.json"),
+        `${declaration}.bak`,
+        path.join(owned, "../other/x"),
+        "/outside/file",
+      ]) {
+        expect(() => io[name]?.(file, "synthetic")).toThrow(/DENIED/);
+        if (asyncIo[name]) expect(() => asyncIo[name]?.(file, "synthetic")).toThrow(/DENIED/);
+        if (io[`${name}Sync`])
+          expect(() => io[`${name}Sync`]?.(file, "synthetic")).toThrow(/DENIED/);
+      }
+    }
+    expect(p.call).not.toHaveBeenCalled();
+    expect(() => p.fs.promises.open(declaration, "r+")).not.toThrow();
+    expect(p.call).toHaveBeenCalledWith(cached, "r+");
+  });
+  it("checks both move operands and copy destination; refuses links and recursive copies", () => {
+    const p = setup();
+    const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
+    const asyncIo = p.fs.promises as unknown as typeof io;
+    for (const name of [
+      "rename",
+      "renameSync",
+      "link",
+      "linkSync",
+      "symlink",
+      "symlinkSync",
+      "cp",
+      "cpSync",
+    ]) {
+      expect(() => io[name]?.(`${owned}/x`, `${root}/x`)).toThrow(/DENIED/);
+      expect(() => io[name]?.(`${root}/x`, `${owned}/x`)).toThrow(/DENIED/);
+      if (asyncIo[name]) expect(() => asyncIo[name]?.(`${root}/x`, `${owned}/x`)).toThrow(/DENIED/);
+    }
+    expect(() => io.copyFileSync?.(`${root}/app/page.tsx`, `${root}/x`)).toThrow(/DENIED/);
+    expect(p.call).not.toHaveBeenCalled();
+    io.copyFileSync?.(`${root}/app/page.tsx`, `${owned}/x`);
+    expect(p.call).toHaveBeenCalledWith(`${root}/app/page.tsx`, `${owned}/x`);
+  });
+  it("validates ancestors for namespace and alias reads/writes, never following escape links", () => {
+    const p = setup();
+    expect(() => p.fs.openSync(`${owned}/escape/file`, "w")).toThrow(/DENIED/);
+    p.canonical.mockImplementation((file) => (file === owned ? "/outside" : file));
+    expect(() => p.fs.readFileSync(declaration)).toThrow(/DENIED/);
+    expect(() => p.fs.openSync(declaration, "w")).toThrow(/DENIED/);
+    expect(p.call).not.toHaveBeenCalled();
+  });
+  it("guards write-capable opens and descriptors while allowing owned output and stdout", () => {
+    const p = setup();
+    const io = p.fs as unknown as Record<string, (...args: unknown[]) => unknown>;
+    const constants = require("node:fs").constants;
+    for (const flags of ["w", "a", "r+", constants.O_RDWR, constants.O_CREAT]) {
+      expect(() => p.fs.openSync(`${root}/source.ts`, flags)).toThrow(/DENIED/);
+    }
+    for (const name of [
+      "write",
+      "writeSync",
+      "ftruncate",
+      "ftruncateSync",
+      "fchmod",
+      "fchown",
+      "futimes",
+    ])
+      expect(() => io[name]?.(9, "synthetic")).toThrow(/DENIED/);
+    expect(() => io.createWriteStream?.(`${owned}/stdout`, { fd: 9 })).toThrow(/DENIED/);
+    expect(p.call).not.toHaveBeenCalled();
+    io.writeSync?.(1, "synthetic");
+  });
+});
 
 describe("owned contact isolation", () => {
   it("imports inertly and refuses missing or nonsynthetic preload configuration", () => {
@@ -48,6 +224,7 @@ describe("owned contact isolation", () => {
     const source = nativeRead(require.resolve("./owned-contact-isolation.cjs"), "utf8");
     const load = (env: Record<string, string>) =>
       runInNewContext(source, {
+        __dirname: path.join(root, "tests/fixtures"),
         module: { exports: {}, parent: { id: "internal/preload" } },
         process: { env },
         globalThis: p.global,
@@ -113,7 +290,8 @@ describe("owned contact isolation", () => {
         expect(() => method(...args)).toThrow(/DENIED/);
       }
       expect(p.call).not.toHaveBeenCalled();
-      for (const port of [55437, 55438, 31467]) expect(method(port, "127.0.0.1")).toBe("native");
+      for (const port of [55437, 55438, 31467, 31468])
+        expect(method(port, "127.0.0.1")).toBe("native");
       p.call.mockClear();
     }
     expect(p.net.Socket.prototype.connect([{ port: 55437, host: "127.0.0.1" }])).toBe("native");
