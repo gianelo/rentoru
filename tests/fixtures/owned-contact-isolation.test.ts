@@ -520,37 +520,71 @@ describe("owned contact isolation", () => {
       expect(p.fetchCall).not.toHaveBeenCalled();
     },
   );
-  it("real application and Resend SDK propagate the marked provider error, never success", async () => {
+  it.each(["\n\n", "\r\n\r\n"])(
+    "real application and Resend SDK propagate the marked provider error, never success (%j)",
+    async (separator) => {
+      const p = setup();
+      const responses: unknown[] = [];
+      const texts: string[] = [];
+      vi.stubGlobal("fetch", async (input: string, options: RequestInit) => {
+        texts.push(JSON.parse(String(options.body)).text);
+        const response = await p.global.fetch(input, options);
+        responses.push(await response.clone().json());
+        return response;
+      });
+      try {
+        const mailer = new ResendContactMailer(
+          synthetic.RESEND_API_KEY,
+          synthetic.AUTH_MAIL_FROM,
+          synthetic.CONTACT_MAIL_TO,
+        );
+        const result = await sendContactMessage(
+          {
+            name: "Owned Test",
+            email: "visitor@owned.invalid",
+            honeypot: "",
+            message: `Falta una zona en la ciudad.${separator}[owned-provider-error]`,
+          },
+          { mailer },
+        ).catch((error: unknown) => error);
+        expect(texts).toEqual([
+          `Owned Test <visitor@owned.invalid> escribió desde "Escribinos":\n\nFalta una zona en la ciudad.${separator}[owned-provider-error]`,
+        ]);
+        expect(responses).toEqual([{ name: "validation_error", message: "owned provider error" }]);
+        expect(result).toBeInstanceOf(ContactMailerSendError);
+        expect((result as Error).message).toContain("owned provider error");
+        expect(p.call).not.toHaveBeenCalled();
+        expect(p.fetchCall).not.toHaveBeenCalled();
+      } finally {
+        vi.unstubAllGlobals();
+      }
+    },
+  );
+  it.each([
+    "ordinary synthetic message",
+    "synthetic\n\n[owned-provider-error] continued",
+    "synthetic\r\n\r\n[owned-provider-error]\n",
+    "synthetic\n[owned-provider-error]",
+    "synthetic\n\n\n[owned-provider-error]",
+    "synthetic\r\n\r\n\r\n[owned-provider-error]",
+    "synthetic\n\r\n[owned-provider-error]",
+    "synthetic\r\r[owned-provider-error]",
+  ])("keeps ordinary and near-miss SDK messages successful: %j", async (text) => {
     const p = setup();
-    const responses: unknown[] = [];
-    vi.stubGlobal("fetch", async (input: string, options: RequestInit) => {
-      const response = await p.global.fetch(input, options);
-      responses.push(await response.clone().json());
-      return response;
+    const response = await p.global.fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${synthetic.RESEND_API_KEY}` },
+      body: JSON.stringify({
+        from: synthetic.AUTH_MAIL_FROM,
+        to: synthetic.CONTACT_MAIL_TO,
+        subject: "Zona",
+        text,
+      }),
     });
-    try {
-      const mailer = new ResendContactMailer(
-        synthetic.RESEND_API_KEY,
-        synthetic.AUTH_MAIL_FROM,
-        synthetic.CONTACT_MAIL_TO,
-      );
-      const result = await sendContactMessage(
-        {
-          name: "Owned Test",
-          email: "visitor@owned.invalid",
-          honeypot: "",
-          message: "Falta una zona en la ciudad.\n\n[owned-provider-error]",
-        },
-        { mailer },
-      ).catch((error: unknown) => error);
-      expect(responses).toEqual([{ name: "validation_error", message: "owned provider error" }]);
-      expect(result).toBeInstanceOf(ContactMailerSendError);
-      expect((result as Error).message).toContain("owned provider error");
-      expect(p.call).not.toHaveBeenCalled();
-      expect(p.fetchCall).not.toHaveBeenCalled();
-    } finally {
-      vi.unstubAllGlobals();
-    }
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ id: "owned-contact-message" });
+    expect(p.call).not.toHaveBeenCalled();
+    expect(p.fetchCall).not.toHaveBeenCalled();
   });
   it("refuses unknown SDK paths, recipients, methods and keys", async () => {
     const p = setup();
