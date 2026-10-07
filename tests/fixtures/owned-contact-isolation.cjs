@@ -276,8 +276,10 @@ function install(p, env) {
         typeof body.subject !== "string"
       )
         denied();
+      // Exactly two LF or CRLF lines and a terminal test marker; no payload normalization.
       const failed =
-        typeof body.text === "string" && body.text.endsWith("\n\n[owned-provider-error]");
+        typeof body.text === "string" &&
+        /(?:^|[^\r\n])(?:\n\n|\r\n\r\n)\[owned-provider-error\](?![\s\S])/.test(body.text);
       return new Response(
         JSON.stringify(
           failed
