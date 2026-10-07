@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AppLink } from "@/../components/atoms/AppLink";
 import { ActionButton } from "@/../components/atoms/buttons";
 import { Field } from "@/../components/molecules/Field";
 import {
@@ -7,8 +8,11 @@ import {
   CONTACT_NAME_MAX_LENGTH,
 } from "@/modules/site-contact/domain/contact-message";
 import {
+  CONTACT_CONTEXT_PARAM,
   CONTACT_ERROR_PARAM,
+  CONTACT_RETURN_MODE_PARAM,
   CONTACT_SENT_PARAM,
+  resolveContactContext,
   resolveContactScreen,
 } from "@/modules/site-contact/domain/contact-screen";
 import ayudaStyles from "../ayuda.module.css";
@@ -44,6 +48,10 @@ interface EscribinosProps {
 export default async function EscribinosPage({ searchParams }: EscribinosProps) {
   const query = await searchParams;
   const screen = resolveContactScreen(query[CONTACT_SENT_PARAM], query[CONTACT_ERROR_PARAM]);
+  const context = resolveContactContext(
+    query[CONTACT_CONTEXT_PARAM],
+    query[CONTACT_RETURN_MODE_PARAM],
+  );
 
   return (
     <article>
@@ -61,6 +69,14 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
             nosotros a la tuya.
           </p>
 
+          {context ? (
+            <>
+              <p className={ayudaStyles.text}>{context.guidance}</p>
+              <p className={ayudaStyles.text}>{context.scopeNotice}</p>
+              <p className={ayudaStyles.text}>{context.draftNotice}</p>
+            </>
+          ) : null}
+
           {screen.errorNotice ? (
             <p className={styles.errorBanner} role="alert">
               {screen.errorNotice}
@@ -68,6 +84,18 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
           ) : null}
 
           <form action={sendContactMessageAction} className={styles.form}>
+            {context ? (
+              <>
+                <input type="hidden" name={CONTACT_CONTEXT_PARAM} value={context.value} />
+                {context.returnMode ? (
+                  <input
+                    type="hidden"
+                    name={CONTACT_RETURN_MODE_PARAM}
+                    value={context.returnMode}
+                  />
+                ) : null}
+              </>
+            ) : null}
             <Field name="name" label="Tu nombre" required>
               {(attrs) => (
                 <input {...attrs} type="text" required maxLength={CONTACT_NAME_MAX_LENGTH} />
@@ -104,6 +132,11 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
           </form>
         </>
       )}
+      {context ? (
+        <p className={ayudaStyles.text}>
+          <AppLink href={context.returnHref}>{context.returnLabel}</AppLink>
+        </p>
+      ) : null}
     </article>
   );
 }

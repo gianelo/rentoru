@@ -13,6 +13,47 @@
 
 export const CONTACT_SENT_PARAM = "enviado";
 export const CONTACT_ERROR_PARAM = "error";
+export const CONTACT_CONTEXT_PARAM = "motivo";
+export const CONTACT_RETURN_MODE_PARAM = "volver";
+
+const MISSING_ZONE_CONTEXT = "zona-faltante";
+const ZONE_DRAFT_PATH = "/publicar/paso/zona";
+
+export interface ContactContext {
+  readonly value: "zona-faltante";
+  readonly guidance: string;
+  readonly scopeNotice: string;
+  readonly draftNotice: string;
+  readonly returnMode: "revisar" | null;
+  readonly returnHref: string;
+  readonly returnLabel: string;
+}
+
+/** Only known context and mode travel; never a visitor-selected destination. */
+export function resolveContactContext(
+  context: string | readonly string[] | undefined,
+  returnMode: string | readonly string[] | undefined,
+): ContactContext | null {
+  if (context !== MISSING_ZONE_CONTEXT) return null;
+  const review = returnMode === "revisar";
+  return {
+    value: MISSING_ZONE_CONTEXT,
+    guidance:
+      "Contanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.",
+    scopeNotice: "Avisarnos no crea ni habilita una zona.",
+    draftNotice:
+      "Los cambios que no hayas enviado en publicación no se guardan al abrir este formulario.",
+    returnMode: review ? "revisar" : null,
+    returnHref: review ? `${ZONE_DRAFT_PATH}?volver=revisar` : ZONE_DRAFT_PATH,
+    returnLabel: "Volver al borrador guardado",
+  };
+}
+
+/** The publication caller already knows whether it came from review. */
+export function missingZoneContactHref(returningToReview: boolean): string {
+  const entry = `/ayuda/escribinos?${CONTACT_CONTEXT_PARAM}=${MISSING_ZONE_CONTEXT}`;
+  return returningToReview ? `${entry}&${CONTACT_RETURN_MODE_PARAM}=revisar` : entry;
+}
 
 export interface ContactFormScreen {
   readonly state: "form";
