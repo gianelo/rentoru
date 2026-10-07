@@ -21,6 +21,7 @@ import {
   type PublicationDatabase,
 } from "../../src/modules/listing-publication/infrastructure/drizzle-listing-repository";
 import * as schema from "../../src/shared/db/schema";
+import { observeCatalogueQueries } from "./support/catalogue-query-observer";
 
 /**
  * broker-bulk-import spec, "Idempotent Import by External Reference" +
@@ -201,36 +202,41 @@ describe("confirmImport — against real Postgres", () => {
       catalogue: tracedPort(catalogue, `${confirmation}.catalogue`),
       listings: tracedPort(listings, `${confirmation}.listings`),
     });
-    await trace("fixture.insertUser", () =>
-      insertUser(userId, {
-        bulkImportEnabled: true,
-        contactMethod: "whatsapp",
-        contactValue: "04121234567",
-      }),
-    );
+    const restoreQueries = observeCatalogueQueries(pool, traceEnabled);
+    try {
+      await trace("fixture.insertUser", () =>
+        insertUser(userId, {
+          bulkImportEnabled: true,
+          contactMethod: "whatsapp",
+          contactValue: "04121234567",
+        }),
+      );
 
-    const source = () => sourceFromText(`${REQUIRED_HEADER}\n${rowLine("PG-DUP-1")}`);
+      const source = () => sourceFromText(`${REQUIRED_HEADER}\n${rowLine("PG-DUP-1")}`);
 
-    const first = await trace("first.confirm", () =>
-      confirmImport(source(), tracedDependencies("first")),
-    );
-    expect(first.createdCount).toBe(1);
-    expect(first.skippedDuplicates).toEqual([]);
+      const first = await trace("first.confirm", () =>
+        confirmImport(source(), tracedDependencies("first")),
+      );
+      expect(first.createdCount).toBe(1);
+      expect(first.skippedDuplicates).toEqual([]);
 
-    const second = await trace("second.confirm", () =>
-      confirmImport(source(), tracedDependencies("second")),
-    );
+      const second = await trace("second.confirm", () =>
+        confirmImport(source(), tracedDependencies("second")),
+      );
 
-    expect(second.createdCount).toBe(0);
-    expect(second.skippedDuplicates).toEqual([{ rowNumber: 2, externalReference: "PG-DUP-1" }]);
+      expect(second.createdCount).toBe(0);
+      expect(second.skippedDuplicates).toEqual([{ rowNumber: 2, externalReference: "PG-DUP-1" }]);
 
-    const count = await trace("final.count", () =>
-      pool.query(
-        `SELECT count(*)::int AS n FROM "listing" WHERE publisher_id = $1 AND external_reference = $2`,
-        [userId, "PG-DUP-1"],
-      ),
-    );
-    expect(count.rows[0]?.n).toBe(1);
+      const count = await trace("final.count", () =>
+        pool.query(
+          `SELECT count(*)::int AS n FROM "listing" WHERE publisher_id = $1 AND external_reference = $2`,
+          [userId, "PG-DUP-1"],
+        ),
+      );
+      expect(count.rows[0]?.n).toBe(1);
+    } finally {
+      restoreQueries();
+    }
   });
 
   // tasks.md 9.16: within-file duplicate is rejected without ever reaching
