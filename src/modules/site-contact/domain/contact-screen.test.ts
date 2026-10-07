@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildContactOutcomeHref,
   missingZoneContactHref,
   resolveContactContext,
   resolveContactScreen,
@@ -42,6 +43,40 @@ describe("missing-zone contact context", () => {
     for (const context of [undefined, "", "other", ["zona-faltante"], ["zona-faltante", "other"]]) {
       expect(resolveContactContext(context, "revisar")).toBeNull();
     }
+  });
+});
+
+describe("contact POST outcome", () => {
+  it.each([
+    ["valid", "enviado"],
+    ["spam", "enviado"],
+    ["invalid", "error"],
+    ["delivery-failed", "fallo-envio"],
+  ] as const)("routes %s with only whitelisted context", (outcome, flag) => {
+    expect(buildContactOutcomeHref(outcome, [], [])).toBe(`/ayuda/escribinos?${flag}`);
+    expect(buildContactOutcomeHref(outcome, ["zona-faltante"], ["revisar"])).toBe(
+      `/ayuda/escribinos?${flag}&motivo=zona-faltante&volver=revisar`,
+    );
+    for (const context of [["other"], ["zona-faltante", "zona-faltante"], [{}]]) {
+      expect(buildContactOutcomeHref(outcome, context, ["revisar"])).toBe(
+        `/ayuda/escribinos?${flag}`,
+      );
+    }
+    for (const mode of [["https://outside.invalid"], ["revisar", "revisar"], [{}]]) {
+      expect(buildContactOutcomeHref(outcome, ["zona-faltante"], mode)).toBe(
+        `/ayuda/escribinos?${flag}&motivo=zona-faltante`,
+      );
+    }
+  });
+
+  it("delivery failure has a distinct safe notice and cannot be masked by a sent flag", () => {
+    expect(resolveContactScreen(undefined, undefined, "")).toEqual({
+      state: "form",
+      errorNotice: "No pudimos enviar tu mensaje. Intentá de nuevo.",
+    });
+    expect(resolveContactScreen("", "", [""])).toEqual(
+      resolveContactScreen(undefined, undefined, ""),
+    );
   });
 });
 

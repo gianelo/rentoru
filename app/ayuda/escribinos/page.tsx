@@ -9,6 +9,7 @@ import {
 } from "@/modules/site-contact/domain/contact-message";
 import {
   CONTACT_CONTEXT_PARAM,
+  CONTACT_DELIVERY_ERROR_PARAM,
   CONTACT_ERROR_PARAM,
   CONTACT_RETURN_MODE_PARAM,
   CONTACT_SENT_PARAM,
@@ -47,7 +48,11 @@ interface EscribinosProps {
 
 export default async function EscribinosPage({ searchParams }: EscribinosProps) {
   const query = await searchParams;
-  const screen = resolveContactScreen(query[CONTACT_SENT_PARAM], query[CONTACT_ERROR_PARAM]);
+  const screen = resolveContactScreen(
+    query[CONTACT_SENT_PARAM],
+    query[CONTACT_ERROR_PARAM],
+    query[CONTACT_DELIVERY_ERROR_PARAM],
+  );
   const context = resolveContactContext(
     query[CONTACT_CONTEXT_PARAM],
     query[CONTACT_RETURN_MODE_PARAM],
@@ -57,6 +62,7 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
     <article>
       <p className={ayudaStyles.category}>Ayuda / Escribinos</p>
       <h1 className={ayudaStyles.title}>Escribinos</h1>
+      {context ? <p className={ayudaStyles.text}>{context.scopeNotice}</p> : null}
 
       {screen.state === "sent" ? (
         <p className={ayudaStyles.text}>
@@ -72,7 +78,6 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
           {context ? (
             <>
               <p className={ayudaStyles.text}>{context.guidance}</p>
-              <p className={ayudaStyles.text}>{context.scopeNotice}</p>
               <p className={ayudaStyles.text}>{context.draftNotice}</p>
             </>
           ) : null}
