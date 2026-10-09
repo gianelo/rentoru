@@ -15,7 +15,7 @@ The founder authorizes the next similar publication task after closing 36.8. Reu
 
 - [x] T1 — Pure guidance and its 17 tests verified; four assertion-discriminating mutations killed and restored. Local commit `9ddf645bf33a53bd73d18af896421d267a1e332c` preserves approved tree `d3f784e7ccced2d0a56b57ed806cdaa8e4ab9c72` (three files/123 A+D). Native `review-98ec83532a0e84fd` approved and acknowledged/burned for this unit only; no caller integration or publication is asserted.
 - [x] T2 — Description island and real caller/served-HTML coverage verified by 4/4 GREEN, two caller mutation kills and types/Biome/tokens/whitespace PASS. Local commit `440486171fa438fda2088182a5046d70a5b8b242` preserves approved tree `fdee14aeaf340762da71a9bcea0f90a3ee17e8f4`: 382 A+D, or 398 charging the full plan. Native `review-cb6b82e8d84dc53a` approved and acknowledged/burned for this unit only.
-- [ ] T3 — Functional browser checks completed: prior JavaScript-on PASS retained; corrected JavaScript-off rerun 1/1 PASS (13.2 s, zero retries). Native T3 review, freeze and exact work-unit commit remain parent-owned and pending; leave this box unchecked until that commit. Existing title cases were not rerun; candidate-local authorization and retained resources are unchanged.
+- [x] T3 — Functional browser checks completed in distinct runs: prior JavaScript-on PASS and corrected JavaScript-off 1/1 PASS (13.2 s, zero retries). Local commit `5aaa6f6c18cd8d6ad637f144065e880a9f9ffd90` preserves approved tree `f8ad28d2d672fc3e5890127b009493db96671aa5`: 299 A+D, or 315 with the full plan. Native `review-477c7e790e631047` approved and acknowledged/burned; title cases were not rerun and retained resources are unchanged.
 
 ## Current evidence
 
@@ -33,7 +33,7 @@ Read-only exploration confirmed static guidance in `PublishStep.tsx:568–601`, 
 - Production remains unchanged. The test now requires exact independently computed CRLF transport bytes and saved value, omits previous `raw` on success with an explicit absence guard, and distinguishes LF textarea value from persisted server code-point count; these corrected assertions await execution.
 - Own app stopped by SIGTERM with exit 0; ports 31467/31468 were released and only its matching new PID file removed. Logs/results, fresh case drafts, retained baseline, PG/proxy and previous operational workspace remain; this is not schema-wide or historical-data invariance proof.
 
-## T3 functional completion — review and commit pending
+## T3 functional completion
 
 This record supersedes only the pending rerun above, not its historical failure or isolation evidence. Evidence is supplied by the parent; this documentation update runs no checks and grants no new native authority.
 
@@ -49,4 +49,4 @@ This record supersedes only the pending rerun above, not its historical failure 
 - Current C standalone source/PID 40205/argv/cwd/preload/root were independently attested (prior PID 37445 retained in historical evidence). Own app received SIGTERM, exited 0; only its matching PID file was removed and ports 31467/31468 were free. PG/proxy and old workspace were untouched.
 - A preflight stopped the rerun because Playwright clears its configured output directory. The bounded operational `--output` override selected a verified nonexistent candidate-owned directory instead; no previous artifact was moved/deleted and no configuration or guard file changed.
 - Unique output `results-description-off-f5c90490a6e3` preserves previous results digest `7671443b208f9942cc2aaf543f75de04b9ab48828a5c2c75d3a2c7f9038518bd`; append-log prefix of 5001 bytes retained, now 9854 bytes. Fresh `6f8e34b6ac34-off`, prior `52e4f49a3263-on` / `e026b2aab6ee-off` and baseline full-snapshot hashes retained.
-- Production source, configuration, `next-env` and `tsconfig` hashes stayed unchanged. Comparisons do not prove schema-wide or historical seven-draft invariance. Native T3 review/freeze/commit and any delivery remain pending; no new receipt, push or merge is asserted.
+- Production source, configuration, `next-env` and `tsconfig` hashes stayed unchanged. Comparisons do not prove schema-wide or historical seven-draft invariance. Native T3 review was approved and acknowledged/burned for exact tree `f8ad28d2d672fc3e5890127b009493db96671aa5`, committed locally as `5aaa6f6`. This later passive ledger update grants no new review authority; delivery remains separate. No push, PR or merge occurred.
