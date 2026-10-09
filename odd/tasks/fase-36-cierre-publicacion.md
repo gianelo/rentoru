@@ -1,6 +1,6 @@
 # Fase 36 — Cierre de publicación (#289)
 
-Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Estado vigente:36.1 parcial;36.2–36.5 completadas;36.6–36.22 pendientes. Escribir el plan no acreditó aceptación funcional: los cierres proceden de las unidades posteriores citadas abajo, sin cerrar #289.
+Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Estado vigente de este cierre:36.1 parcial;36.7 aceptada funcionalmente y entrega humana cerrada;36.8/36.9 con merges humanos registrados;36.10–36.22 pendientes. Para36.2–36.6 se conserva el índice central vigente. El checkpoint documental separado de36.7 está preparado, no publicado todavía. Escribir el plan no acreditó aceptación funcional: los cierres proceden de las unidades posteriores citadas abajo, sin cerrar #289.
 
 ## Reconciliación documental — progreso
 
@@ -213,7 +213,7 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: lista de faltantes comprobados y fuente, propuesta curada aprobada; sin ciudades nuevas ni geografía ampliada por este issue.
   - Comprobar: IDs/slugs sin colisiones, aislamiento ciudad-zona y búsqueda por nombre; migración/seed sólo si diagnóstico lo exige y con autorización posterior.
 
-- [ ] **36.7 — Aviso interno de zona faltante.** Después de 36.1.
+- [x] **36.7 — Aviso interno de zona faltante.** Fundador aceptó el formulario real tras corregir personalmente `RESEND_API_KEY`; #385–#393 fusionados por humano, final #388 → `dev` `43c6958863f855f4d8be81c6a50ca4af0bcde20e` (2026-10-08T01:55:30Z). Evidencia: `app/publicar/zona-faltante.test.tsx` — `opens internal contextual Escribinos without copying the zone query`; `app/ayuda/escribinos/page.test.tsx` guía y retorno normal/revisar; `actions.test.ts` negativa sin falso acuse; `tests/e2e/escribinos-zona-sin-javascript.spec.ts` 3/3 (17.5s) y 143 unitarias históricas, no reejecutadas. Detalle: `odd/tasks/fase-36-reporte-zona-faltante.md`. Buzón independiente no exigido y no verificado; CI/nativa posterior separados. Criterios históricos:
   - Trabajo: evaluar reutilizar `/ayuda/escribinos`; acordar campos/contexto ciudad-zona, destino y feedback; no crear una segunda plataforma de reportes.
   - Aceptar: `Avisanos` abre formulario interno con explicación, envío validado en aplicación, acuse y negativa seguros; no depende de cliente de correo.
   - Comprobar: enlace/formulario nativos, entrada válida/vacía, error de entrega y regreso al borrador; confirmar transporte real en entorno autorizado, no sólo spy.
@@ -225,7 +225,7 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: contador y preview reflejan texto actual al escribir/pegar/borrar, sin alterar precio/zona ni aceptar un título inválido.
   - Comprobar: límites y Unicode conforme a medición compartida; con JS reacción inmediata, sin JS guardar/revisar muestra lo guardado y errores del servidor.
 
-- [ ] **36.9 — Guía viva de descripción.** Después de 36.1; reutiliza patrón de 36.8.
+- [x] **36.9 — Guía viva de descripción.** Entrega humana #399–#402, final `dev` `f71d1733515cffa482b9928364a84b0c999b7265` (2026-10-09T09:28:14Z). Evidencia histórica: `src/modules/listing-publication/domain/description-guidance.ts`, 17 pruebas/cuatro mutantes; `app/publicar/PublicationDescriptionField.test.tsx` — «teclear, pegar y borrar actualiza guía y progreso sin perder foco ni el POST»; HTML en `app/publicar/paso/[paso]/descripcion-servido.test.tsx`, cuatro casos/dos mutantes del caller; `tests/e2e/publicar-titulo.spec.ts` — «owned description: JavaScript on» PASS previo y «owned description: JavaScript off» 1/1 PASS (13.2s), no nueva corrida 2/2. SHAs/checks/límites: `odd/tasks/fase-36-descripcion-base-comun.md`. Criterios históricos:
   - Trabajo: sincronizar faltantes, contador y progreso con texto actual; evitar regla duplicada en UI.
   - Aceptar: debajo del mínimo indica faltantes exactos; al alcanzar/superar cambia a suficiencia sin número negativo.
   - Comprobar: vacío, borde mínimo, pegado/borrado y recarga; HTML servido y rechazo servidor sin JS siguen funcionando.
@@ -307,7 +307,7 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 |---|---|---|
 | 1 | 36.1 | Baseline y discrepancia de viewport coordinada con F34. |
 | 2 | 36.2–36.4, cada una independiente | Gates de loader y ancho; no un PR de «shell completo». |
-| 3 | 36.5 completada;36.6 y36.7 pendientes | Catálogo curado pendiente sin reabrir sugerencias aceptadas; escape aparte. |
+| 3 | 36.7 aceptada y entrega humana cerrada;36.5/36.6 según índice central | Escape cerrado; seguimientos técnicos separados. |
 | 4 | 36.8 → 36.9; 36.10/36.11/36.12 aparte | Patrón vivo compartido; copy coordinado con F35. |
 | 5 | 36.13 → 36.14 | Compatibilidad aprobada antes de retirar canales. |
 | 6 | 36.15; 36.16 → 36.17; 36.18 aparte | Diagnóstico de fotos y aprobación de revisar, no arreglo a ciegas. |
@@ -326,4 +326,4 @@ Para retomar desde laptop (registro histórico):
 4. Usar DB/storage/fixtures propios y aislados; producción sólo con permiso read-only separado. No copiar credenciales ni datos personales al plan o al PR.
 5. Guardar relevo por unidad: ID, HEAD/PR, archivos, decisión/fuente, RED/GREEN/mutación o excepción, comandos/resultados, bloqueos y siguiente ID. Un resultado local no se presenta como CI/preview remoto.
 
-**Cierre documental:** P36.1–P36.3 completos: inventario 21/21, 22 tareas verificadas y plan publicado en PR #363. Estado posterior reconciliado:36.1 parcial;36.2–36.5 completadas;36.6–36.22 y aceptación integrada de #289 pendientes. La planificación histórica no ejecutó pruebas funcionales; el registro posterior 36.1a aporta reproducción parcial local por verificadores, sin acceso productivo ni cierre de 36.1.
+**Cierre documental:** P36.1–P36.3 completos: inventario 21/21, 22 tareas verificadas y plan publicado en PR #363. Estado posterior de este cierre:36.1 parcial;36.7 aceptada y36.9 integrada por humano;36.8 conserva su cierre vigente en `odd/tasks/fase-36-titulo-vivo.md`, sin cambiar aquí su checkbox histórico.36.10–36.22 y aceptación integrada de #289 pendientes;36.2–36.6 según índice central. Checkpoint documental36.7 preparado, commit/publicación del padre pendientes. La planificación histórica no ejecutó pruebas funcionales; el registro posterior 36.1a aporta reproducción parcial local por verificadores, sin acceso productivo ni cierre de 36.1.
