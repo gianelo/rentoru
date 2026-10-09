@@ -15,7 +15,12 @@ All units have exact candidate-specific approved/acknowledged native reviews; la
 ## Tasks
 
 - [x] Prepare bounded refs and verified documentary closure: source refs at `9ddf645` / `4404861` / `5b1fdf8`; common-base preparation commit `c8d9123`. Independent structural/whitespace checks PASS; source ancestry/resources preserved.
-- [ ] Push the common base and first source ref without force; open only PR1. Wait for its human merge before publishing PR2, then PR3; open common-base→`dev` only after all three are integrated.
-- [ ] Verify remote refs, PR bases, draft states, budgets and checks; record links and human merge order.
+- [x] Push only common base and domain ref atomically, without force; open PR1 [#399](https://github.com/gianelo/rentoru/pull/399), ready, 147 A+D.
+- [x] Independent remote audit verified exact refs, common base, ready state, 136 additions/11 deletions and no later PR/ref publication. Observed CI: 6 SUCCESS, 4 pending, 10 skipped, no failures; not fully green.
+- [ ] Wait for human merge of #399 with ancestry preserved; then publish/recheck PR2, afterward PR3, and open common-base→`dev` last.
 
 Only PR1 is published initially. PR2/PR3 and the final integration PR must not be opened prematurely, even as drafts. Each later PR requires its human predecessor merge, preserved ancestry and a freshly measured actual diff <=400 A+D. The final common-base→`dev` PR follows all three merges. Publishing is not merging; required CI remains unverified until observed, and skipped checks are not passes.
+
+## Published boundary
+
+Remote source is `9ddf645`; common base was independently verified at `fbfe453` before this passive record checkpoint. `dev` remains `e8cfced`. Caller/browser refs remain local at `4404861` / `5b1fdf8`. CI snapshot is historical to publication, not a later all-green claim; no agent merge or deployment occurred.
