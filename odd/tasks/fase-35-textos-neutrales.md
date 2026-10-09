@@ -66,6 +66,7 @@ Las referencias son puntos de entrada actuales; verificar estados y consumidores
   Aceptación: textos de resultados y enlaces GET en HTML servido, pluralización e interpolaciones; sugerencias/paneles con JS en Chromium y lectura sin JS en crawlability. No cambiar slugs ni parámetros.
 
 - [ ] **35.4 Publicación en nueve pasos.** Exploración de sólo lectura, no implementada. Auditar instrucciones, campos, fotos, revisión, navegación, validaciones y errores de envío.
+  Coordinación acotada G3/F36.10: el fundador aprobó «Elegir fotos» y «Es la foto principal de tu aviso» para publicación y edición, sin ayuda de borrar del teléfono. Esta selección supersede sólo esos literales históricos; la auditoría general 35.4 sigue pendiente, incluida la restante copia técnica/de compresión. Ver `odd/tasks/fase-36-fotos-textos.md`.
   Referencias: `app/publicar/{step-copy.ts,violation-copy.ts}`, `src/modules/listing-publication/domain/publication-steps.ts`.
   Aceptación: extender `app/publicar/paso-servido.test.tsx` con una matriz de los nueve pasos y estados afectados, además de fotos/contadores cliente. Las pruebas actuales de pasos no prueban por sí solas los nueve; preservar conteos Unicode y límites.
 

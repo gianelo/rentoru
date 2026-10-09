@@ -17,6 +17,7 @@ import {
   coverChangedNotice,
   discardPhotoLabel,
   PHOTO_ACTION_COPY,
+  PHOTO_COVER_EXPLANATION,
   PHOTO_REMOVAL_REFUSAL_COPY,
   photoActionLabel,
 } from "../photo-action-copy";
@@ -357,7 +358,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       {photos.length === 0 ? (
         <div className={styles.empty}>
           <span className={styles.emptyLabel}>Todavía no hay fotos</span>
-          {picker("Elegir del teléfono", styles.pickButton)}
+          {picker("Elegir fotos", styles.pickButton)}
           <span className={styles.hint}>Hasta {MAX_PHOTOS_PER_LISTING} fotos · JPG o PNG</span>
         </div>
       ) : (
@@ -439,9 +440,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
                 )}
               </div>
 
-              {/* Un renglón por acción, con nombre y con la aclaración A LA
-                  VISTA: los dos textos largos no son decorativos, y un
-                  `title` no aparece nunca en un teléfono. Es un `<details>`
+              {/* Un renglón por acción, con nombre. Es un `<details>`
                   y no un panel propio, así que las cuatro acciones siguen ahí
                   para el teclado y el lector en los dos anchos — el arrastre
                   de escritorio se suma a esto, no lo reemplaza. */}
@@ -475,7 +474,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       ) : null}
 
       <p className={styles.hint}>
-        Las comprimimos acá antes de subirlas, así gastás menos datos. La primera es la portada.
+        Las comprimimos acá antes de subirlas, así gastás menos datos. {PHOTO_COVER_EXPLANATION}.
       </p>
 
       <div className={styles.trust}>
