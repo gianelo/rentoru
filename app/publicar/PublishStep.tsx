@@ -4,11 +4,7 @@ import type {
   PublicationDraft,
   PublishStepId,
 } from "../../src/modules/listing-publication/domain/publication-steps";
-import {
-  characterCount,
-  MIN_DESCRIPTION_CHARACTERS,
-  type PublishViolation,
-} from "../../src/modules/listing-publication/domain/publishable-listing";
+import type { PublishViolation } from "../../src/modules/listing-publication/domain/publishable-listing";
 import {
   LISTING_VIOLATION_FIELD,
   type ListingField,
@@ -19,6 +15,7 @@ import { missingZoneContactHref } from "../../src/modules/site-contact/domain/co
 import { submitStep } from "./actions";
 import { FieldError } from "./FieldError";
 import { PhotoUploader } from "./fotos/PhotoUploader";
+import { PublicationDescriptionField } from "./PublicationDescriptionField";
 import { PublicationTitleField } from "./PublicationTitleField";
 import { PublicationZoneReference } from "./PublicationZoneControls";
 import {
@@ -135,12 +132,6 @@ function errorsByField(violations: readonly PublishViolation[], draft: Publicati
     );
   }
   return errors;
-}
-
-function characters(value: string | undefined): number {
-  // Puntos de codigo, igual que el validador: con `String.length` el contador
-  // de la pantalla le daria a un emoji el doble de lo que la regla le da.
-  return characterCount(value ?? "");
 }
 
 export function PublishStep(props: PublishStepProps) {
@@ -564,44 +555,14 @@ function StepFields(props: FieldsProps) {
         />
       );
 
-    case "descripcion": {
-      const written = characters(listing.description);
-      const missing = Math.max(0, MIN_DESCRIPTION_CHARACTERS - written);
+    case "descripcion":
       return (
-        <div>
-          <FieldError id="description-error" message={errors.get("description")} />
-          <label className={styles.srOnly} htmlFor="description">
-            Descripción
-          </label>
-          <textarea
-            id="description"
-            name="description"
-            rows={8}
-            className={`${styles.control} ${styles.textarea} ${errors.get("description") ? styles.controlInvalid : ""}`}
-            defaultValue={listing.description ?? ""}
-            aria-invalid={errors.get("description") ? "true" : undefined}
-            aria-describedby={errors.get("description") ? "description-error" : undefined}
-          />
-          {/* Un minimo se muestra como progreso, no como castigo. */}
-          <div className={styles.meter}>
-            <div
-              className={styles.meterFill}
-              style={{
-                inlineSize: `${Math.min(100, Math.round((written / MIN_DESCRIPTION_CHARACTERS) * 100))}%`,
-              }}
-            />
-          </div>
-          <p className={styles.counterLine}>
-            <span className={missing > 0 ? styles.counterShort : undefined}>
-              {missing > 0 ? `te faltan ${missing} caracteres` : "ya alcanza"}
-            </span>
-            <span>
-              {written} / {MIN_DESCRIPTION_CHARACTERS}
-            </span>
-          </p>
-        </div>
+        <PublicationDescriptionField
+          key={listing.description}
+          listing={listing}
+          error={errors.get("description")}
+        />
       );
-    }
 
     case "fotos":
       return (
