@@ -8,4 +8,4 @@ The founder then corrected missing `RESEND_API_KEY`, confirmed the real form wor
 
 Historical CI run [37715324207](https://github.com/gianelo/rentoru/actions/runs/37715324207) on the same `43c6958`: integration 435/436 at the original 5000 ms timeout, then 436/436 PASS (38.06s). Budget/preview/e2e were SKIPPED, not passes. Cause remains unknown; diagnosis is paused separately, not repaired by the green run.
 
-The separate documentary checkpoint was not uploaded. This addendum is prepared for parent-owned commit/publication to `dev`, not evidence of a new PR or merge. Source-specific consumed approvals are not reused; no functional reruns, resource changes or `main` changes occurred here.
+The earlier separate documentary checkpoint was not uploaded. This selective addendum is now published in commit `9f011e03bf617577bac20857571c1a70a68cd9f2`, [#403](https://github.com/gianelo/rentoru/pull/403) to `dev`; that documentary PR's merge remains a human decision. Source-specific consumed approvals are not reused; no functional reruns, resource changes or `main` changes occurred here.
