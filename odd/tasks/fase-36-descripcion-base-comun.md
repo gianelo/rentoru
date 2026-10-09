@@ -2,28 +2,32 @@
 
 ## Contract
 
-The human now requests opening ALL remaining PRs together for `gianelo/rentoru`, then merging ONE BY ONE: #399 (domain) → caller → browser → common base to `dev`, never `main`. All constituent PRs share `feat/fase-36-descripcion-integracion`. #399 stays ready; caller and browser may open ready with conspicuous dependency/no-merge-until-prior notices. Open the final tracker now as DRAFT and keep it DRAFT until all three constituents are human-merged. It currently contains DELIVERY DOCUMENTATION ONLY, not feature code. Only the final accumulated scope has the previously accepted >400-line exception; initial dependent cumulative diffs do not. No agent merges, deployment, history rewrite or functional reruns.
+The human requests ALL PRs open now, then human merges ONE BY ONE: #399 → #400 → #401 → #402. All constituents target `feat/fase-36-descripcion-integracion`; final #402 targets `dev`, never `main`. #402 remains DRAFT until the three constituents merge. No agent merges, deployment, history rewrite or functional reruns. Only the final aggregate has the previously accepted >400-line exception.
 
-## Work units and order
+## Source work units
 
-1. Domain: `9ddf645`, 147 A+D from `dev`, including the inherited 24-line passive title closure; 17 passing tests/four killed mutations.
-2. Caller: `4404861`, 382 A+D from unit 1; four passing DOM/served-HTML tests/two killed mutations.
-3. Browser/closure: `5b1fdf8` includes `b495ad6` and the passive central-ledger correction; final measured range from unit 2 remains 299 A+D. Prior JS-on PASS and focused JS-off 1/1 PASS (13.2 s), not a new 2/2 run.
+1. Domain `9ddf645`: 147 A+D including inherited 24-line passive title closure; historical 17 tests/four killed mutations.
+2. Caller `4404861`: isolated 382 A+D; historical four DOM/served-HTML tests/two killed mutations.
+3. Browser/closure `5b1fdf8`: isolated 299 A+D; prior JS-on PASS plus focused JS-off 1/1 PASS (13.2 s), NOT a new 2/2 run.
 
-All units have exact candidate-specific approved/acknowledged native reviews; the three original ACK/burned receipts cover only their exact source units. Later passive records create no new authority. Types/Biome/tokens and applicable structural checks passed historically, not rerun in this preparation. General suites/CI were not rerun; historical CI diagnosis remains paused with cause unknown.
+Original exact candidate-specific native approvals were acknowledged/burned; later passive records create no new authority. Historical types/Biome/tokens passed. No general suites/CI were rerun; historical CI diagnosis remains paused, cause unknown.
 
-## Tasks
+## Tasks and evidence
 
-- [x] Prepare bounded refs and verified documentary closure: source refs at `9ddf645` / `4404861` / `5b1fdf8`; common-base preparation commit `c8d9123`. Independent structural/whitespace checks PASS; source ancestry/resources preserved.
-- [x] Push only common base and domain ref atomically, without force; open PR1 [#399](https://github.com/gianelo/rentoru/pull/399), ready, 147 A+D.
-- [x] Independent remote audit verified exact refs, common base, ready state, 136 additions/11 deletions and no later PR/ref publication. Observed CI: 6 SUCCESS, 4 pending, 10 skipped, no failures; not fully green.
-- [ ] Open all remaining PRs together: caller/browser may be ready with dependency notices; final common-base→`dev` tracker DRAFT. Parent owns publication and recording real URLs; #399 stays ready.
-- [ ] Audit published refs, bases, states, dependencies, diffs and required checks; then record each human merge in order and verify the next review boundary. Do not mark successful before observation.
+- [x] Prepare bounded source refs and documentary closure; common preparation commit `c8d9123`; verified isolated ranges 147/382/299.
+- [x] Publish first PR [#399](https://github.com/gianelo/rentoru/pull/399), ready, 147 A+D; initial passive publication checkpoint `729b9c9`.
+- [x] Honor updated instruction: publish caller/browser refs atomically without force and open [#400](https://github.com/gianelo/rentoru/pull/400), [#401](https://github.com/gianelo/rentoru/pull/401), and DRAFT [#402](https://github.com/gianelo/rentoru/pull/402) together. Opening-contract work-unit commit `5b5c357ad11b9824fb0779dc8b95a853e4cb6395`.
+- [x] Independently audit all four remote PRs: OPEN; #399/#400/#401 ready, #402 DRAFT; exact source refs/common/dev match. Correct the stale #399 creation-order paragraph and read back its published body.
+- [ ] Human merge #399 → #400 → #401 → #402, with fresh next-unit diff and required CI verification at each boundary.
 
-The first-publication audit above is historical, not a constraint on opening the remaining PRs now. Before prior merges, caller/browser cumulative source diffs are 523/816 A+D, NOT <=400. Human MERGE COMMITS must preserve ancestry: no squash/rebase and no branch deletion until descendants are done. After #399 merges, caller is expected to shrink to 382; after caller merges, browser to 299. Review each next unit only after the prior human merge, fresh actual diff <=400 and required checks verification. The final actual aggregate grows after children merge and must be measured; its accepted exception does not cover dependent cumulative review. Publishing is not merging; pending/skipped checks are not passes.
+Multi-file PR-body preparation used one delegated writer and independent structural verifier. Passive documentation has no meaningful RED. Scoped whitespace/readback checks PASS. Native ASSESS was unassessable due to intended-untracked scope, so independent verification ran; no new approval inferred.
 
-This multi-file passive-documentation preparation uses the delegated writer route, limited to the three PR bodies and this task record. No meaningful RED exists for passive delivery documentation; structural readback and scoped whitespace validation are the verification contract. The parent retains tracking, review disposition, commit and delivery ownership; this preparation performs no functional tests, Git publication or new review-authority action.
+## Remote boundary and checks
 
-## Published boundary
+At independent audit, common was `5b5c357ad11b9824fb0779dc8b95a853e4cb6395`; domain `9ddf645bf33a53bd73d18af896421d267a1e332c`, caller `440486171fa438fda2088182a5046d70a5b8b242`, browser `5b1fdf8d6825369b32ea36bc4ba73ec310ead7c7`. `dev` unchanged at `e8cfced85435884f2812275c8f1ca256d216b942`. This final passive ledger checkpoint advances only common documentation.
 
-The first-publication audit verified domain `9ddf645` and common base `fbfe453` before later passive checkpoints. Parent-provided current evidence verifies remote common base `729b9c942a5ca330226dbbb3b1b81ab994dba493`, `dev` `e8cfced85435884f2812275c8f1ca256d216b942`, and #399 OPEN ready from domain `9ddf645bf33a53bd73d18af896421d267a1e332c` to the common base (147 A+D). Caller/browser remain local at `440486171fa438fda2088182a5046d70a5b8b242` / `5b1fdf8d6825369b32ea36bc4ba73ec310ead7c7`. Remaining PR numbers/URLs are unknown until publication; refer to roles, not invented numbers. CI snapshot is historical to first publication, not a later all-green claim; no agent merge or deployment occurred.
+Actual audit A+D: #399 147, #400 523, #401 816, #402 29 (delivery documentation ONLY; no feature code in common yet). Next-unit expected diffs after preserved-ancestry prior merges: caller 382, browser 299; measure actual <=400 before reviewing/merging each. Final aggregate grows after child merges and must be remeasured.
+
+Observed check snapshot (success/skipped/running/pending): #399 12/10/0/0; #400 4/10/5/1; #401 5/10/4/1; #402 4/10/5/1. No failures observed, but running/pending/skipped are NOT passes; future CI completion is unverified. No checks rerun.
+
+Use human normal MERGE COMMITS, not squash/rebase; preserve source branches until descendants finish. Do not merge final documentation-only tracker before its three constituents. Publishing is not merging; resources and source behavior remain untouched.
