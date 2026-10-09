@@ -8,9 +8,11 @@ The human authorizes one documentary commit/PR to `dev` in `gianelo/rentoru`. Br
 
 ## Tasks
 
-- [ ] Reconcile only documentary closure surfaces from current `dev`, preserve newer 36.8/36.9 records and unrelated historical entries; parent commit after structural verification. Route: one delegated writer, multi-file trigger.
-- [ ] Publish one non-force branch/PR to `dev`; independently verify exact scope, head/base and publication, then retain merge as a human decision. Route: parent Git/GitHub, delegated read-only verifier.
+- [x] Reconcile only documentary closure surfaces from current `dev`, preserving newer 36.8/36.9 records and unrelated historical entries. Commit `9f011e03bf617577bac20857571c1a70a68cd9f2`: seven documents, 93 A+D. Delegated writer and independent structural verifier PASS; scoped whitespace and named evidence references verified.
+- [x] Publish one non-force branch/PR to `dev`: [#403](https://github.com/gianelo/rentoru/pull/403), head `9f011e03bf617577bac20857571c1a70a68cd9f2` at independent audit, exact seven-document scope and unchanged `dev` `f71d173` verified. Publication/T0 bookkeeping is completed in this same PR before human merge; no further closing PR is required.
 
 ## Verification
 
-Passive documentation has no meaningful RED. Scoped whitespace, named evidence references, checkbox boundaries, current merge identities and honest skipped/unverified checks are the checks; no behavior tests rerun. Source approvals remain exact historical evidence, not authority for this passive checkpoint. Original root/infrastructure/data remains untouched.
+Passive documentation has no meaningful RED. Scoped whitespace, named evidence references, checkbox boundaries, current merge identities and honest skipped/unverified checks are the checks; no behavior tests rerun. Source approvals remain exact historical evidence, not authority for this passive checkpoint. Original root/infrastructure/data remains untouched. The untracked `.tmp/documentary-closure/pr-body.md` is the authorized writer's publication scratch artifact, not an accidental source write. At publication audit, four checks succeeded, ten were skipped and six were pending/running; no failures observed, but this is not a fully green claim.
+
+For future tasks, code/tests/documentation and truthful task closure belong in their existing PRs. After human merge, verify integration and update memory/visible tracking without creating another repository PR solely for closure bookkeeping.
