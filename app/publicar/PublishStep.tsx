@@ -6,7 +6,6 @@ import type {
 } from "../../src/modules/listing-publication/domain/publication-steps";
 import {
   characterCount,
-  MAX_TITLE_CHARACTERS,
   MIN_DESCRIPTION_CHARACTERS,
   type PublishViolation,
 } from "../../src/modules/listing-publication/domain/publishable-listing";
@@ -20,6 +19,7 @@ import { missingZoneContactHref } from "../../src/modules/site-contact/domain/co
 import { submitStep } from "./actions";
 import { FieldError } from "./FieldError";
 import { PhotoUploader } from "./fotos/PhotoUploader";
+import { PublicationTitleField } from "./PublicationTitleField";
 import { PublicationZoneReference } from "./PublicationZoneControls";
 import {
   PublicationZoneEnhancement,
@@ -554,46 +554,15 @@ function StepFields(props: FieldsProps) {
         </fieldset>
       );
 
-    case "titulo": {
-      const written = characters(listing.title);
+    case "titulo":
       return (
-        <div>
-          <FieldError id="title-error" message={errors.get("title")} />
-          <label className={styles.srOnly} htmlFor="title">
-            Título
-          </label>
-          <input
-            id="title"
-            name="title"
-            type="text"
-            className={`${styles.control} ${errors.get("title") ? styles.controlInvalid : ""}`}
-            defaultValue={listing.title ?? ""}
-            maxLength={MAX_TITLE_CHARACTERS * 2}
-            aria-invalid={errors.get("title") ? "true" : undefined}
-            aria-describedby={errors.get("title") ? "title-error" : undefined}
-          />
-          <p className={styles.counterLine}>
-            <span>Sin mayúsculas sostenidas.</span>
-            <span>
-              {written} / {MAX_TITLE_CHARACTERS}
-            </span>
-          </p>
-
-          {/* "Así se va a ver". Se dibuja con lo GUARDADO, no con lo que se
-              está tecleando: una vista en vivo necesitaría JavaScript, y esta
-              pantalla no lo tiene. */}
-          <div className={styles.preview}>
-            <p className={styles.previewLabel}>Así se va a ver</p>
-            <p className={styles.previewPrice}>${listing.priceUsd ?? "—"}</p>
-            <p className={styles.previewTitle}>{listing.title ?? "Tu título"}</p>
-            <p className={styles.previewMeta}>
-              {props.zoneName ?? "Tu zona"} · {listing.rooms ?? "—"} hab · {listing.areaM2 ?? "—"}{" "}
-              m²
-            </p>
-          </div>
-        </div>
+        <PublicationTitleField
+          key={listing.title}
+          listing={listing}
+          error={errors.get("title")}
+          zoneName={props.zoneName}
+        />
       );
-    }
 
     case "descripcion": {
       const written = characters(listing.description);
