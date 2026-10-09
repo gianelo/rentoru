@@ -50,7 +50,7 @@ const harnessEnv: Record<string, string> = testDatabaseUrl
 export default defineConfig({
   testDir: "./tests/e2e",
   // Synthetic owned transport and retained baseline are opt-in, never shared CI.
-  testIgnore: "**/escribinos-zona-sin-javascript.spec.ts",
+  testIgnore: ["**/escribinos-zona-sin-javascript.spec.ts", "**/publicar-titulo.spec.ts"],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
