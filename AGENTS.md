@@ -78,8 +78,8 @@ A domain function should take what a port already found and answer one question.
 
 ```
 pnpm test:unit          vitest run
-pnpm test:integration   needs: pnpm db:test:up && pnpm db:test:migrate  (Dockerised Postgres)
-                        after:  pnpm db:test:down
+pnpm test:integration   needs: separately owned Postgres + intended local migrations (§6)
+                        teardown: only confirmed task-owned disposable resources (§6)
 pnpm test:e2e           playwright — runs against a preview, or a local production build
 pnpm typecheck          tsc --noEmit
 pnpm lint               biome check .        (your own formatting errors WILL fail the build;
@@ -110,25 +110,57 @@ These rules complement Gentle Shell; they do not replace its workflow or disable
 
 Planning artifacts live in `openspec/changes/mvp-rental-listings/`: `proposal.md`, `design.md`, `tasks.md`, and per-capability specs under `specs/`.
 
+### Proportionate scope and verification
+
+**Do not turn a small product change into a testing-infrastructure project.** Overengineering is a scope defect, not evidence of rigor. These rules complement the harness; they do not waive required checks.
+
+- Before writing, name the acceptance criteria, changed behavior, concrete risks and smallest real caller that can prove them. Separate necessary checks from unrelated behavior already protected by existing tests.
+- Reuse existing tests, fixtures and tools first. Every new fixture, abstraction, invariant or infrastructure change must address a named acceptance criterion or demonstrated risk—not hypothetical future coverage. Explain why existing support cannot exercise the required check before replacing or extending it.
+- For presentation-only changes, verify the applicable rendered output, accessibility and browser interactions. Do not automatically add destructive CRUD, upload/storage, authentication redesign or full persistence coverage when those behaviors are unchanged.
+- Validate new fixture facts against the real schema, caller and relevant runtime policies before treating fake-port GREEN as readiness. A passing fake does not establish valid SQL, session lifetime or served behavior.
+- Estimate normally formatted code, tests, fixtures and complete documentation together before implementation. If verification support outweighs the accepted change or requires additional review units, reassess the minimum necessary scope before writing more. Splitting into more PRs does not cure unnecessary scope; split only the coherent work that remains necessary.
+- After two inaccurate estimates or repeated stops on the same blocker without new discriminating evidence, stop implementation and revise the approach. Report what is verified, what remains blocked and one bounded next check. Ask for authorization when the revised approach expands the approved scope; do not make the human manage internal paths or repeated budget guesses.
+- Never solve scope or schedule pressure by weakening assertions, dropping required coverage, skipping TDD/mutation/review/safety gates or claiming pending checks passed. Keep unrelated improvements as follow-ups, not additions to the current task.
+
 **Keep visible TODO lists short and bounded.** Each item has one short action title and, only when necessary, one brief current-status note. Show the current work unit, not every diagnostic attempt or historical step. Keep commands, evidence, resource IDs, explanations and history in the task document, not in the visible TODO. Group related work without hiding unfinished work; refresh the list as the scope changes.
 
 **`design.md` is where decisions and their reasons live.** Read the relevant section before changing anything it covers — especially "Open Questions", which holds real founder decisions that block real work.
 
 **Before building a task, check whether it already exists.** This has bitten the project more than once: a whole phase sat unmarked in `tasks.md` while its code was merged and tested. An agent that trusts the checkbox writes a second migration for a table that is already there.
 
-When you finish a task, mark it with **the file and the named test that proves it** — not a bare `[x]`. And when the implementation deviates from the task text for a good reason, record it as a correction with the reason. Two examples already in the file: `listing_reminder`'s unique key is `(listing_id, kind, expires_at)` and not the two columns the task named, because one cycle sends two notices; and the auto-hide state is `hidden`, not the `hidden_by_reports` the task text invented.
+Before final integration, record each completed task with **the file and the named test that proves it** — not a bare `[x]`; for passive documentation, name the structural check instead. Apply §6 to distinguish verified work from delivered/merged facts. And when the implementation deviates from the task text for a good reason, record it as a correction with the reason. Two examples already in the file: `listing_reminder`'s unique key is `(listing_id, kind, expires_at)` and not the two columns the task named, because one cycle sends two notices; and the auto-hide state is `hidden`, not the `hidden_by_reports` the task text invented.
 
 ---
 
 ## 6. Delivery
 
-**Branch from `dev`. Open PRs against `dev`, never against `main`.** Work accumulates in `dev` and reaches production through a single `dev → main` PR, because Vercel deploys are rate-limited.
+### Mandatory task lifecycle — single source of authority
 
-Branch names: `type/description` — `feat/`, `fix/`, `docs/`, `test/`, `chore/`, `refactor/`, `perf/`, `ci/`.
+Agents MUST load `.agents/skills/task-start/SKILL.md` before task work and `.agents/skills/task-close/SKILL.md` when preparing closure. No user slash command is required. These skills guide agents; they are not runtime hooks. Pi discovers project `.agents/skills/` through cwd ancestors up to the repository root; no install or settings change is needed.
 
-Review budget: **400 changed lines per PR**, counted over reviewable code. Past that, split into stacked PRs. Budget roughly 1.5–2× your implementation estimate once RED tests, GREEN tests and integration coverage are counted — this has been underestimated three times.
+**Start and isolation.** Before task edits, the parent updates `origin/dev` in `rentas.com.ve` and creates a sibling worktree under `/Users/gianelo/Documents/Dev/py` from that fresh base. Use names such as `rentoru-phase36-task-36-11`; documentation/nonphase tasks may use descriptive names such as `rentoru-workflow-task-lifecycle`. Branch names: `type/description` — `feat/`, `fix/`, `docs/`, `test/`, `chore/`, `refactor/`, `perf/`, `ci/`.
 
-PR bodies here are written in Spanish and explain **why**, with the verification evidence at the end. There is no template, no issue-first requirement, and no `type:*` labels.
+- The parent owns setup, delegation, tracking, Git and resource lifecycle; do not make the human maintain internal paths or orchestration. All writers and checks target the task sibling. Do not write task code/artifacts in the main checkout.
+- Report actual cwd, branch, base SHA, scope, checks and resource ownership. Report the actual served URL, or explicitly state no app is served. `localhost:3000` does not identify a checkout; confirm the serving cwd rather than assuming a port switches worktrees.
+
+**Manual environment and data.** Preserve stable manual `rentas-pg` data so the human can run `pnpm dev` in the task worktree before push and while correcting it. Reuse existing Docker, proxy and tools; do not build a new fixture platform. Current Compose uses fixed name `rentas-pg`, host port `5433`, PostgreSQL 18 and no persistent volume: retention is NOT a durability guarantee. A second `docker compose -p` does not bypass the fixed name.
+
+- Never automatically delete the manual container, run `db:test:down`/`down -v` against it or run `db:test:seed:e2e` on its DB. Potentially destructive automated tests require separately owned DBs/resources, not the manual baseline. Identify each target before running a command; do not infer isolation from cwd.
+- Apply migrations only to the intended local DB after checking the target. Serialize migration generation as required below. Never read or publish real credential/env values.
+- Local DB wiring: configure the existing `scripts/neon-http-proxy.mjs` with a direct local `TEST_DATABASE_URL`; reuse a verified proxy or run `pnpm e2e:proxy` in the task worktree (default port `5544`, override `NEON_PROXY_PORT` for an owned free port). Configure app `DATABASE_URL` with the same local DB and a fake `-pooler.` host, plus loopback `NEON_FETCH_ENDPOINT=http://127.0.0.1:<proxy-port>/sql`. Then run `pnpm dev` in that worktree and report its actual URL. This DB recipe does not configure login, uploads or mail; preserve their separately authorized setup without exposing secrets.
+
+**Verification and human browser gate.** Preserve functional, TDD, mutation and served-HTML obligations; browser acceptance supplements them. Every screen-changing task requires explicit human browser acceptance of the task-served version BEFORE PUSH. Keep manual services/data available for inspection and corrections. Corrections touching accepted UI require renewed acceptance. Passive documentation needs proportionate structural checks, not invented functional RED or browser acceptance.
+
+**Review and integration.** A focused PR of **at most 400 additions + deletions** goes directly to `dev`, never `main`. Count normally formatted reviewable code, all tests and complete documentation, including untracked files and closing evidence. Reserve closure space before implementation; do not golf or discard evidence to fit. Past that, plan coherent review slices; unnecessary scope remains a defect even when split.
+
+- For a feature/integrator chain, merge in reverse: newest child → immediate parent → integrator → `dev`. Every child PR targets its immediate parent, not `dev`; only the final integrator targets `dev`. Work reaches production through the separate `dev → main` PR because Vercel deploys are rate-limited.
+- The human performs normal merges only: no squash, rebase or agent merges. After each actual merge, run applicable checks on the integrated parent before proceeding. Child approval does not waive the final accumulated 400-line budget (code + tests + complete docs); obtain an explicit final-aggregate exception if needed.
+- Include closure, decisions, named tests/checks, observed results, browser acceptance when applicable and remaining limits in the final integrator BEFORE its merge. Do not plan a postmerge closure-only PR. Keep unrelated improvements out of scope.
+- Ready-for-review means the candidate and required evidence are prepared, not published or merged. Record publication only after actual commit/push/PR evidence, and delivery/merge only after actual human integration; a local GREEN is neither CI nor human acceptance.
+
+PR bodies are written in Spanish and explain **why**, with verification evidence at the end. There is no template, no issue-first requirement, and no `type:*` labels. Preserve Spanish conventional commits and the no-attribution rule in §1.
+
+**After final human merge.** Verify the actual resulting `dev` and applicable integrated checks. Stop ONLY task-owned app/proxy/test services after confirming their identity. Preserve shared manual data/services and historical resources. Before destructive removal of containers, data, worktrees or branches, freshly identify ownership and exact consequences, verify no uncommitted/unpublished work would be lost, and obtain explicit confirmation. Completion does not authorize cleanup by itself.
 
 **Two migrations cannot be generated in parallel.** Drizzle's `_journal.json` collides visibly, but the `000N_snapshot.json` files collide *silently* — each is generated from the schema its author saw, so the second one describes a database without the first one's tables and merges clean. Never run two agents that both touch the schema.
 

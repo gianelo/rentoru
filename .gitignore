@@ -1,11 +1,9 @@
 # Local AI runtime state
 .atl/
 .codegraph/
-# Agent worktrees live here. Each is a full checkout carrying its own
-# biome.json, and Biome follows nested configs -- so without excluding this
-# path (here and in biome.json's files.includes) a repo-wide `pnpm lint`
-# fails with a configuration error the moment a parallel agent is running,
-# for reasons that have nothing to do with the code being linted.
+# Legacy nested-agent/runtime residue stays ignored. New task worktrees are
+# siblings outside this checkout (AGENTS.md §6), not nested here. Preserve
+# this protection: nested biome.json files can still break repo-wide lint.
 .claude/
 
 # Secrets — never commit these. The repository is private, which means
@@ -41,7 +39,8 @@
 # Lighthouse CI's local report output (lighthouserc.json upload.outputDir)
 /.lighthouseci
 
-# Local Postgres container data is disposable by design (docker-compose.yml)
+# Compose has no persistent volume; preserve manual rentas-pg data/services.
+# Destructive test DBs must be separately owned; cleanup follows AGENTS.md §6.
 
 # Local MCP server wiring: it points at this machine, not at the product
 /.mcp.json
