@@ -8,8 +8,9 @@ The founder approved two project skills and mandatory AGENTS reconciliation.
 
 ## Work unit
 
-- [ ] W1 — Implement the mandatory policy and skills, reconcile stale records,
-  verify the complete documentation candidate and publish one PR toward dev.
+- [x] W1 — Implement the mandatory policy and skills, reconcile stale records
+  and verify the documentation candidate. Evidence: both SKILL.md files, AGENTS
+  policy gates and the structural/skill-use checks below; commit `764844b`.
 
 Route: one delegated writer; multi-file documentation and skill-authoring trigger.
 Parent owns Git, task tracking, memory, publication and resource lifecycle.
@@ -58,5 +59,22 @@ OpenSpec exists in dev (1,266,549 bytes); previous read failure did not prove ab
 Simple YAML scalars checked; no general YAML parser or missing shared resolver
 validation claimed. Registry refresh not run; concrete project skill paths are used.
 
-Next: exercise both skills in one read-only agent, then close evidence and publish.
-Commits, candidate review and PR remain pending; no app is served by this worktree.
+Skill-use exercise PASS: both complete skills read in a fresh read-only agent;
+frontmatter, six literal links and whitespace checked. Screen push without human
+acceptance blocked; removal of shared manual DB or uncommitted work blocked.
+These were hypothetical contract cases, not real push/deletion operations.
+Verified preclosure candidate: 222 additions + 23 deletions = 245, ten files.
+Implementation commit: `764844bd62b151428070dc0191b865378f3becdd`.
+
+## Closure and delivery handoff
+
+Implementation and applicable structural evidence are complete. No application,
+Docker, DB, auth, photo, manual service or old-root changes were made.
+Functional tests, browser, DB and CI were not run for this passive documentation.
+No general YAML parsing, automatic runtime enforcement or registry refresh claimed;
+missing shared resolver reference remains unavailable. Skills use concrete paths.
+Native review and publication are separate pending gates at this candidate freeze;
+record their actual outcomes in the original PR, never fabricate future approval.
+One PR targets dev; human merge, resulting-dev checks and any cleanup stay pending.
+No app is served by this worktree. Existing manual data/services remain available.
+No follow-up closure-only PR is planned; this closure ships with the original unit.
