@@ -546,6 +546,10 @@ El [comentario 21](https://github.com/gianelo/rentoru/issues/289#issuecomment-59
 
 Copy/jerarquía, loader contextual, país/formato y botón vs checkbox quedan como gates al iniciar sus unidades. El digest `901444967` no prueba deduplicación ni fallo de sesión: cualquier consulta productiva requiere autorización read-only separada, sin mutación. Plan y criterios completos: `odd/tasks/fase-36-cierre-publicacion.md`; esta adenda confirma alcance, no implementación ni nuevas decisiones numeradas.
 
+### Photo copy — bounded G3/F35 coordination (F36.10)
+
+Founder approved «Elegir fotos» and «Es la foto principal de tu aviso» for publication and editing. The cover explanation appears once per surface; the historical phone-deletion help is removed, while «Quitar del aviso», «Hacer portada», photo identities and native POST remain intact. Editing supplies presentation copy to the shared uploader; imported drafts retain its «Subir fotos» default. This supersedes only those historical 18.15 literals, not compression copy, photo rules, menu sizing (36.11) or the remaining F35.4 audit. Browser acceptance remains T2 in `odd/tasks/fase-36-fotos-textos.md`.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.

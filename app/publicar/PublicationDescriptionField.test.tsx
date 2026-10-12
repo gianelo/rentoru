@@ -119,7 +119,8 @@ describe("la descripción viva en el PublishStep existente", () => {
       const label = container.querySelector('label[for="description"]');
       expect(label?.textContent).toBe("Descripción");
       const form = required(control.form);
-      expect(form.getAttribute("method")).toBe("post");
+      expect(form).toBe(required(container.querySelector(`form.${styles.form}`)));
+      expect(form.querySelector<HTMLButtonElement>('button[type="submit"]')?.form).toBe(form);
       expect(new FormData(form).get("description")).toBe(value);
       expect(new FormData(form).get("step")).toBe("descripcion");
       expect(form.querySelector('button[type="submit"]')?.textContent).toBe("Seguir");

@@ -230,10 +230,10 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: debajo del mínimo indica faltantes exactos; al alcanzar/superar cambia a suficiencia sin número negativo.
   - Comprobar: vacío, borde mínimo, pegado/borrado y recarga; HTML servido y rechazo servidor sin JS siguen funcionando.
 
-- [ ] **36.10 — Elegir copy neutral de fotos y portada.** Después de 36.1; gate G3/F35.
-  - Trabajo: al comenzar presentar tres propuestas de chooser: «Elegir fotos», «Seleccionar fotos», «Agregar fotos»; tres de portada: «Es la primera foto de tu aviso», «Aparece en los resultados y al abrir tu aviso», «Es la foto principal de tu aviso». Son candidatas, no copy aprobado.
-  - Aceptar: registrar selección del fundador, retirar ayuda innecesaria de no borrar del teléfono y explicar portada sin ambigüedad; supersesión acotada de literal histórico de 18.15.
-  - Comprobar: texto elegido servido en móvil/tablet/desktop; quitar del aviso mantiene su semántica y no promete borrar archivos del dispositivo.
+- [ ] **36.10 — Copy neutral de fotos y portada.** G3 aprobado por el fundador: «Elegir fotos» y «Es la foto principal de tu aviso», en publicación y edición.
+  - Implementación funcional T1: `PhotoUploader.tsx`, `photo-action-copy.ts` y edición sirven la selección; `SubirFoto` recibe copia de presentación sólo en edición y conserva «Subir fotos» por defecto para importación.
+  - Protección: `fotos-servido.test.tsx` («conserva copia y formulario») y `editar-servido.test.tsx` («sirve la copia aprobada de fotos») ejercitan los componentes reales. Ayuda de teléfono retirada; acciones y nombres accesibles conservados; explicación de portada una vez por superficie. Supersesión acotada de 18.15, coordinada con F35 sin cerrar 35.4.
+  - Pendiente T2: texto y acciones en móvil/tablet/desktop; no se declara 36.10 completa ni publicación/commit por este pase.
 
 - [ ] **36.11 — Reducir huella visual del menú de fotos.** Después de 36.1.
   - Trabajo: distinguir glyph/superficie visible de área interactiva; ajustar con tokens, no nuevos iconos.
