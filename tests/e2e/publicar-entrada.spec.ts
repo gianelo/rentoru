@@ -456,6 +456,10 @@ for (const viewport of [
       await page.addInitScript(preventPublicationIntersectionPrefetch);
       await page.emulateMedia({ reducedMotion: "reduce" });
     }
+    const diagnostic =
+      viewport.width === 768 && viewport.height === 1024 && javaScriptEnabled
+        ? publicationEntryDiagnostics(page, publicationEntry.origin)
+        : undefined;
     try {
       await page.goto("/");
       if (javaScriptEnabled) {
@@ -593,7 +597,11 @@ for (const viewport of [
         await verifyEntryDeadline(page, publicationEntry.origin, testInfo);
         await publicationEntry.verify();
       }
+    } catch (error) {
+      if (diagnostic) await diagnostic.failure(error);
+      throw error;
     } finally {
+      diagnostic?.dispose();
       await testInfo.attach("actual-entry-transport", {
         body: JSON.stringify({ transport, responses, javaScriptEnabled, posts }),
         contentType: "application/json",

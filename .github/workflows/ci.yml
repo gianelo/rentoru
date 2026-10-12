@@ -651,10 +651,40 @@ jobs:
       # because "the home page does not exist yet" is a schedule fact, not a
       # performance regression.
       - name: Lighthouse budget
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          status=$(curl -s -o /dev/null -w '%{http_code}' "$PREVIEW_BASE_URL/")
-          if [ "$status" != "200" ]; then
-            echo "::warning title=Lighthouse budget not measured::${PREVIEW_BASE_URL}/ returned HTTP ${status}. No page weight or LCP was checked. A 404 passes every byte budget trivially, so this step refuses to report a pass it did not earn. It starts measuring for real once a read-path page exists."
+          if [ -z "$PREVIEW_BASE_URL" ] || [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            echo "::warning title=Lighthouse budget not measured::Preview URL or automation bypass credential unavailable. No page weight or LCP was checked."
             exit 0
           fi
-          pnpm run budget:lighthouse
+          # No redirect follows, response body, header dump or credential in argv.
+          # curl errors are failures, not a successful empty-page measurement.
+          if ! status=$(printf 'x-vercel-protection-bypass: %s\n' "$VERCEL_AUTOMATION_BYPASS_SECRET" | curl --silent --show-error --max-time 30 --output /dev/null --write-out '%{http_code}' --header @- "$PREVIEW_BASE_URL/"); then
+            echo "::error title=Lighthouse probe failed::Preview transport failed; no measurement was made."
+            exit 1
+          fi
+          if [ "$status" != "200" ]; then
+            echo "::warning title=Lighthouse budget not measured::Preview root returned HTTP ${status}. No page weight or LCP was checked."
+            exit 0
+          fi
+          # LHCI's puppeteerScript uses puppeteer-core, which cannot infer a
+          # browser binary. Resolve one only after the preview is measurable;
+          # a reachable preview must fail rather than silently skip Lighthouse.
+          if [ -n "${CHROME_PATH:-}" ] && [ -x "$CHROME_PATH" ]; then
+            chrome="$CHROME_PATH"
+          else
+            chrome=""
+            for candidate in google-chrome google-chrome-stable chromium; do
+              if path=$(command -v "$candidate") && [ -x "$path" ]; then
+                chrome="$path"
+                break
+              fi
+            done
+          fi
+          if [ -z "$chrome" ]; then
+            echo "::error title=Lighthouse Chrome unavailable::No executable Chrome found in CHROME_PATH or runner PATH. Preview root returned 200; budget was not measured."
+            exit 1
+          fi
+          export CHROME_PATH="$chrome"
+          pnpm run budget:lighthouse --collect.puppeteerScript=scripts/lighthouse-preview-auth.cjs
