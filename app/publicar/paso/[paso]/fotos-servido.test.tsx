@@ -52,6 +52,7 @@ let draft: StoredDraft;
 const photos = [
   { key: "publisher-1/sala.webp", name: "Sala", bytes: 40_000 },
   { key: "publisher-1/cocina.webp", name: "Cocina", bytes: 41_000 },
+  { key: "publisher-1/balcon.webp", name: "Balcón", bytes: 42_000 },
 ];
 
 // Render the real uploader through the route; double only backend boundaries.
@@ -116,7 +117,20 @@ describe("fotos servidas por la ruta real", () => {
       expect(html).toContain(">Portada<");
       expect(html).toContain('aria-label="Quitar del aviso: Cocina"');
       expect(html).toContain('aria-label="Hacer portada: Cocina"');
-      expect(html).toContain("<details");
+      const menus = [...html.matchAll(/<details\b[^>]*>[\s\S]*?<\/details>/g)]
+        .map(([menu]) => menu)
+        .filter((menu) => menu.includes('aria-label="Acciones de '));
+      expect(menus).toHaveLength(3);
+      for (const [index, photo] of photos.entries()) {
+        const menu = menus[index];
+        expect(menu).not.toMatch(/^<details\b[^>]*\bopen(?:\s|=|>)/);
+        expect(menu).toContain(`aria-label="Acciones de ${photo.name}"`);
+        expect(menu).toContain(`aria-label="Quitar del aviso: ${photo.name}"`);
+        expect(menu).toMatch(/>Quitar del aviso<\/span>/);
+      }
+      expect(menus[1]).toContain('aria-label="Mover arriba: Cocina"');
+      expect(menus[1]).toContain('aria-label="Mover abajo: Cocina"');
+      expect(menus[1]).toContain('aria-label="Hacer portada: Cocina"');
     }
   });
 });

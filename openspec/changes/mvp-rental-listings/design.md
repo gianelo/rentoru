@@ -550,6 +550,28 @@ Copy/jerarquía, loader contextual, país/formato y botón vs checkbox quedan co
 
 Founder approved «Elegir fotos» and «Es la foto principal de tu aviso» for publication and editing. The cover explanation appears once per surface; the historical phone-deletion help is removed, while «Quitar del aviso», «Hacer portada», photo identities and native POST remain intact. Editing supplies presentation copy to the shared uploader; imported drafts retain its «Subir fotos» default. This supersedes only those historical 18.15 literals, not compression copy, photo rules, menu sizing (36.11) or the remaining F35.4 audit. Browser acceptance remains T2 in `odd/tasks/fase-36-fotos-textos.md`.
 
+### Menú de fotos compacto — decisión acotada (F36.11, P1)
+
+El fundador aprobó dos porciones: registrar el diseño y después implementarlo.
+Desde el breakpoint existente de **768px**, el disparador tendrá un círculo visible
+de **30px** dentro del mismo `<summary>` pulsable de **44×44px**; por debajo,
+móvil sin cambios. Se conservan el glifo `⋯`, el foco visible, las acciones y
+la geometría/comportamiento del menú abierto, incluido Escape y cierre exterior.
+La razón es reducir el peso visual sobre la foto sin exigir más precisión al pulsar.
+Referencia: [Publicar Desktop](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Desktop.dc.html)
+(líneas 335–336); la decisión posterior conserva el target accesible del sistema.
+
+Baseline inspeccionado en `f8bf20a07826b26afa8dacaf9674c2af6fe22d38`, no en el WIP anterior:
+`app/publicar/fotos/photo-uploader.module.css:229–260,357–437` define el summary
+44×44 con radio `--r` y pinta fondo/borde en toda esa caja desde 768px;
+`src/styles/tokens.css:43,66` fija ambos targets en 44px. El caller real es
+`app/publicar/PublishStep.tsx:567–572`, con `draft.photos`; el summary nativo y
+el glifo están en `app/publicar/fotos/PhotoUploader.tsx:550–559`.
+El rol visible requiere un token semántico propio, no reducir ni reutilizar el target:
+ver [autoridad visual](../../../design/reference/sistema/SISTEMA.md#menú-de-fotos--superficie-visible-f3611).
+P1 sólo documenta: sin app servida ni aceptación manual actual; implementación,
+RED/GREEN, mutación y evidencia servida quedan para P2. No cierra 36.1 ni 36.11.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.

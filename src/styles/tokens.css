@@ -64,6 +64,7 @@
      verdad con `toBe(44)` — antes afirmaba `>= 36`, que aceptaba las tres
      respuestas y por lo tanto no preguntaba nada. */
   --target-min-desktop: 44px;
+  --photo-menu-visible-size: 30px;
 
   /* ---------- La barra de búsqueda del inicio: NO se declara, y la ausencia
      es deliberada ----------
