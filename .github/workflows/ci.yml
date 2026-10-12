@@ -652,6 +652,10 @@ jobs:
       # performance regression.
       - name: Lighthouse budget
         run: |
+          if [ -z "$PREVIEW_BASE_URL" ]; then
+            echo "::warning title=Lighthouse budget not measured::Preview URL is unavailable. No page weight or LCP was checked."
+            exit 0
+          fi
           status=$(curl -s -o /dev/null -w '%{http_code}' "$PREVIEW_BASE_URL/")
           if [ "$status" != "200" ]; then
             echo "::warning title=Lighthouse budget not measured::${PREVIEW_BASE_URL}/ returned HTTP ${status}. No page weight or LCP was checked. A 404 passes every byte budget trivially, so this step refuses to report a pass it did not earn. It starts measuring for real once a read-path page exists."
