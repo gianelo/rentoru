@@ -61,6 +61,7 @@ export default defineConfig({
       "tests/support/owned-test-database.test.ts",
       "tests/support/publication-entry-ci.test.ts",
       "tests/fixtures/publication-entry.test.ts",
+      "tests/fixtures/preview-bypass-state.test.ts",
     ],
     coverage: {
       provider: "v8",
