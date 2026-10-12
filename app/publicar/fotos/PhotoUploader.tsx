@@ -512,11 +512,13 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
  * `<details>` de verdad — el mismo mecanismo que el comentario de arriba
  * documenta, sin una pantalla propia — y **sigue sin una línea de
  * JavaScript para abrir**: el navegador abre y cierra el disclosure con su
- * propio evento `toggle`, que es lo único que este componente escucha.
+ * propio evento `toggle`, que sincroniza el estado de este componente.
  *
  * Lo único que cambia es que ahora TAMBIÉN escucha `useDismissLayer`, así
  * que un clic afuera o Escape lo cierran — antes ninguno de los dos hacía
- * nada, y había que volver a tocar el mismo botón. **Sin JavaScript el
+ * nada, y había que volver a tocar el mismo botón. Escape también cierra el
+ * DOM local sin esperar al toggle ni a los efectos, y devuelve el foco a
+ * su propio summary. **Sin JavaScript el
  * `open` controlado nunca se adjunta** (React no serializa `onToggle` a
  * HTML), así que el `<details>` sigue siendo exactamente el de antes: la
  * mejora se monta encima, nunca reemplaza el mecanismo.
@@ -540,6 +542,13 @@ function PhotoActionsMenu({
       className={styles.menu}
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !event.currentTarget.open) return;
+        event.preventDefault();
+        event.currentTarget.open = false;
+        setOpen(false);
+        triggerRef.current?.focus();
+      }}
     >
       <summary
         ref={triggerRef}

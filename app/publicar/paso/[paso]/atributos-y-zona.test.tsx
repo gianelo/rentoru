@@ -137,7 +137,14 @@ it("caller real conecta tecleo con radios dentro del POST sin remonte de referen
     await act(async () => finish(response));
     expect(container.querySelector('[role="status"]')?.textContent).toBe("");
     expect(search.getAttribute("aria-busy")).toBeNull();
-    const post = required(container.querySelector<HTMLFormElement>('form[method="post"]'));
+    const post = required(reference.form);
+    const step = required(
+      container.querySelector<HTMLInputElement>('input[name="step"][value="zona"]'),
+    );
+    expect(step.form).toBe(post);
+    expect(post.querySelector<HTMLButtonElement>('button[type="submit"]')?.form).toBe(post);
+    expect(new FormData(post).get("step")).toBe("zona");
+    expect(search.form).not.toBe(post);
     expect(post.textContent).toContain("Zona sin avisos de nombre largo");
     expect(post.textContent).toContain("Maracaibo");
     const radio = required(post.querySelector<HTMLInputElement>('input[value="nueva"]'));

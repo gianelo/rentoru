@@ -72,6 +72,15 @@ describe("PhotoUploader — las acciones nombradas, antes de cualquier mejora", 
     expect(html).toContain('aria-label="Acciones de Balcón"');
   });
 
+  it("sirve cada disclosure cerrado con su summary nativo", () => {
+    const html = renderToStaticMarkup(<PhotoUploader initial={TRES} />);
+    const disclosures = html.match(/<details\b[^>]*>/g) ?? [];
+
+    expect(disclosures).toHaveLength(TRES.length);
+    expect(disclosures.every((tag) => !/\bopen(?:\s|=|>)/.test(tag))).toBe(true);
+    expect(html.match(/<summary\b/g)).toHaveLength(TRES.length);
+  });
+
   it("lo que el paso 8 envía sigue siendo clave, nombre y tamaño en el mismo orden", () => {
     const html = renderToStaticMarkup(<PhotoUploader initial={TRES} />);
 

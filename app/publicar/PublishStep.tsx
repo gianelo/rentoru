@@ -243,7 +243,7 @@ export function PublishStep(props: PublishStepProps) {
           >
             {stepId === "zona" ? <PublicationZoneSearch query={props.zoneQuery} /> : null}
 
-            <form action={submitStep} method="post" className={styles.form}>
+            <form action={submitStep} className={styles.form}>
               <input type="hidden" name="step" value={stepId} />
               {/* Lo que hace que el boton diga "Guardar y volver a revisar" y que
                 el destino sea revisar y no el paso siguiente. */}

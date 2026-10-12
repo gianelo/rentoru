@@ -124,7 +124,8 @@ describe("el título vivo en PublishStep, no en un componente aislado", () => {
       expect(text(styles.previewPrice)).toBe("$450");
       expect(text(styles.previewMeta)).toBe("Altamira · 3 hab · 90 m²");
       const form = required(control.form);
-      expect(form.getAttribute("method")).toBe("post");
+      expect(form).toBe(required(container.querySelector(`form.${styles.form}`)));
+      expect(form.querySelector<HTMLButtonElement>('button[type="submit"]')?.form).toBe(form);
       expect(new FormData(form).get("title")).toBe(value);
       expect(new FormData(form).get("step")).toBe("titulo");
     }
