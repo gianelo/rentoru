@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { privateStatePath } from "./tests/fixtures/preview-bypass-state";
 
 // E2E and crawlability layer (design.md, "Testing Strategy"). Runs against
 // a Next.js preview deployment, not a local dev server — the crawlability
@@ -9,6 +10,11 @@ import { defineConfig, devices } from "@playwright/test";
 // `baseURL: ""` and three "Cannot navigate to invalid URL" failures. Absent
 // and empty must mean the same thing here.
 const previewUrl = process.env.PLAYWRIGHT_BASE_URL || undefined;
+const protectedPreview = Boolean(previewUrl && process.env.VERCEL_AUTOMATION_BYPASS_SECRET);
+const bypassStatePath = protectedPreview
+  ? process.env.PREVIEW_BYPASS_STATE_PATH || privateStatePath()
+  : undefined;
+if (bypassStatePath) process.env.PREVIEW_BYPASS_STATE_PATH = bypassStatePath;
 
 // **El arnés que le devuelve los dientes al proyecto `crawlability`**
 // (tasks.md 11.22). Hasta acá el respaldo local compilaba contra una
@@ -56,21 +62,11 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,
   reporter: "html",
+  ...(protectedPreview ? { globalSetup: "./tests/fixtures/preview-bypass-state.ts" } : {}),
   use: {
     baseURL: previewUrl ?? `http://localhost:${appPort}`,
-    trace: "on-first-retry",
-    // Vercel deployment protection puts an SSO wall in front of every
-    // preview: without this header the suite tests vercel.com/login and
-    // reports the app as broken. The bypass secret is enabled per project
-    // under Deployment Protection → Protection Bypass for Automation.
-    ...(process.env.VERCEL_AUTOMATION_BYPASS_SECRET
-      ? {
-          extraHTTPHeaders: {
-            "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET,
-            "x-vercel-set-bypass-cookie": "true",
-          },
-        }
-      : {}),
+    trace: protectedPreview ? "off" : "on-first-retry",
+    ...(bypassStatePath ? { storageState: bypassStatePath } : {}),
   },
 
   // With no base URL — no preview, or no bypass secret to get past its SSO
