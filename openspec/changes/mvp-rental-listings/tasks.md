@@ -2959,6 +2959,7 @@ Estado reconciliado: 36.1 parcial; 36.2–36.6 completadas en implementación; 3
   - Evidencia y límites: `odd/tasks/fase-36-descripcion-viva.md`; T3 `5aaa6f6` y cierre pasivo `b495ad6`, autoridad `review-477c7e790e631047` aprobada/consumida sólo para el árbol revisado. El estado local sin merge era histórico; cierre de entrega y SHAs verificados en `odd/tasks/fase-36-descripcion-base-comun.md`. Cada PR fusionado: 12 SUCCESS/10 SKIP, cero fallos/en curso/pendientes; skips no son pases. Sin pruebas nuevas, reparación causal de CI ni cierre de 36.1/#289.
 - [ ] 36.10 Aprobar tres propuestas de chooser/portada y retirar ayuda innecesaria; coordinar F35.
 - [ ] 36.11 Reducir huella visual del menú de fotos sin bajar target de 44 px.
+  - Implementado y aceptado localmente en `d03be49`; integración en `dev` pendiente. `photo-uploader.module.css` y token `--photo-menu-visible-size`; `tests/measure/photo-menu.spec.ts` prueba «photo menu geometry» y las interacciones servidas. RED/GREEN/mutación, 8/8 browser y 3.373 unitarias; autoridad aprobada/consumida y aceptación humana en `odd/tasks/fase-36-menu-fotos-compacto.md`. Push/PR autorizados, sin merge.
 - [ ] 36.12 Resolver conjuntamente jerarquía de Quién publica sin perder labels.
 - [ ] 36.13 Resolver compatibilidad de WhatsApp único: legado, editar, importación, defaults y migración.
 - [ ] 36.14 Publicar con WhatsApp y número validado tras gate país/formato; sin verificar cuenta.

@@ -12,7 +12,7 @@ hacia dev usando sesión GitHub actual; merge excluido por elección explícita.
 ## Porciones
 
 - [x] P1 — Diseño/baseline:35adiciones design.md/SISTEMA.md; verificación independientePASS.
-  Documentación pasiva, RED no aplicable. Commit pendiente de autorización.
+  Documentación pasiva, RED no aplicable. Incluida en commit d03be4949d284689bb51fefa5a7ec88c30737173.
 - [x] P2 — Implementar, verificar y aceptar menú compacto localmente.
   CSSdesktop pseudo-element/tokensemántico/fixturePublishStep/spec/adaptador/HTMLcaller;
   lógica/markup del uploader intactos. Writer mv5un7sj-25-kw91.
@@ -26,7 +26,8 @@ hacia dev usando sesión GitHub actual; merge excluido por elección explícita.
   revisiónsha256:da1e601df51b077430fdec4a7953bcab44d27a46a5e245784b5b709103abcb95.
   Autoridad burned; no STATUS posterior. Actualizaciones documentales posteriores.
   Fundador aceptó diseño en preview: «Si lo vi esta bien. el diseño.»
-  Porción funcional local aceptada; commit/entrega pendientes, no integración en dev.
+  Porción funcional local aceptada; commit d03be4949d284689bb51fefa5a7ec88c30737173.
+  PR/entrega pendientes, no integración en dev.
 
 ## Continuidad
 
