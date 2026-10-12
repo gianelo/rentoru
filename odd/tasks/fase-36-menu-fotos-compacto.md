@@ -27,7 +27,9 @@ hacia dev usando sesión GitHub actual; merge excluido por elección explícita.
   Autoridad burned; no STATUS posterior. Actualizaciones documentales posteriores.
   Fundador aceptó diseño en preview: «Si lo vi esta bien. el diseño.»
   Porción funcional local aceptada; commit d03be4949d284689bb51fefa5a7ec88c30737173.
-  PR/entrega pendientes, no integración en dev.
+  Documentación de cierre:818ca82be976ef0970895dd22962785dd5502f8a.
+  Push observado; PR abierto https://github.com/gianelo/rentoru/pull/409 hacia dev.
+  CI pendiente al publicar; sin merge ni integración en dev.
 
 ## Continuidad
 
@@ -42,4 +44,5 @@ Conteo verificado316líneas/10paths antes de actualizar evidencia; PR≤400.
 Build/persistencia/uploads/DB/integración no probados, fuera cambio visual;36.1parcial.
 Preflight independiente mv5vm6f6-28-ogz1: nueve archivos no-tracker idénticos byte/SHA256
 al árbol revisado7d21084e1c5e3fef9f4accbd3693168db7ecd35e;318líneas/10paths antes de esta nota.
-origin/dev continúa f8bf20a. Próximo paso autorizado: commit, push y PR hacia dev, sin merge.
+origin/dev continúa f8bf20a. Commit y publicación realizados; próximo paso: observar CI.
+Preservar PR abierto para decisión humana, sin merge. Once paths/323líneas antes de esta nota.
