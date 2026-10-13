@@ -4,7 +4,7 @@ Entrega: cortes revisables, ask-on-risk, ≤400 líneas por candidato y gate agr
 
 ## Specs
 - S1: «Iniciemos 36.14. Recupera el cierre de 36.13 desde Engram y OpenSpec. Reutiliza
-/Users/gianelo/Documents/Dev/py/rentoru-phase36-task-36-13 por la excepción acordada. Divide la implementación en cortes pequeños, con TDD, mutación y pruebas sobre HTML servido. Sin push hasta la aceptación humana cuando corresponda.»
+/Users/gianelo/Documents/Dev/py/rentoru-phase36-task-36-13 por la excepción acordada. Divide la implementación en cortes pequeños, con TDD, mutación y pruebas sobre HTML servido. Sin push hasta la aceptación humana cuando corresponda.» Antes de T3, pausa para compactar: «porque vas opr t3 osea recuarda que querianmos hacer el compac?»
 - S2: «el whatsapp no es obligatorio es una opcion mas»; «debe haber 1 contacto cualquier de los 3».
 - S3: «si los formatos de entrada los apruebo. el wa.me tiene que ser internacional logicamente.» Formatos aprobados en 36.13: `0412 123 4567`, `4121234567`, `+58 412 1234567`, `0058 412 1234567`, `584121234567` → `+584121234567`; espacios, guiones y paréntesis alrededor del prefijo. Rechazar extensiones, letras, países distintos, longitud incorrecta y `+58 0412…`, sin reparación silenciosa.
 - S4: «ahora mismo el app no tiene clientes asi que hay que exigirlo siempre»; WhatsApp: «Sólo móviles». Teléfono admite móviles y fijos venezolanos, sin verificar asignación, titularidad o cuenta.
@@ -12,8 +12,8 @@ Entrega: cortes revisables, ask-on-risk, ≤400 líneas por candidato y gate agr
 
 ## Tasks
 - T1 [done] — S1–S5 (alcance validación); inline: política pura + validador compartido + negativas HTML. RED/GREEN/mutación, verificación independiente y revisión nativa aprobada/consumida; commit `accb7ae`.
-- T2 [in_progress] — S1–S5; inline: canonización en escrituras válidas de alta/edición/import, valores rechazados intactos y destinos servidos; commit pendiente.
-- T3 [pending] — S1; inline + verifier: POST HTTP con arnés existente, checks finales, revisión según switch y aceptación humana; sin publicación.
+- T2 [done] — S1–S5 (alcance escrituras/SSR); inline: canonización en alta/edición/import, rechazo intacto y destinos; 202+20 independientes PASS, revisión aprobada/consumida; commit `a7b03aa`.
+- T3 [blocked] — S1; pausa humana para compactar antes de POST HTTP/aceptación; arnés aislado autorizado aún sin preparar, sin publicación.
 
 ## Log
 - L1: Iniciemos 36.14. Recupera el cierre de 36.13 desde Engram y OpenSpec. Reutiliza
@@ -34,3 +34,6 @@ Entrega: cortes revisables, ask-on-risk, ≤400 líneas por candidato y gate agr
 - L15: lsof PID99731: app31467/proxy31468 cwd `rentoru-phase36-task-36-12`, no este worktree.55437/55438 sin listeners; docker ps por55437 vacío. No app propia servida/URL validada. No usar ni detener servicio histórico, leer datos/credenciales, seed ni restaurar baseline automáticamente. T3 necesita resolución de recursos; primero completar T2. Acumulado376 líneas antes de este cierre; seguir contando docs/checks, no recortar evidencia.
 - L16: Suite T2 job-9 PASS3428/3428 en307 archivos, exit0 (75,78s), warnings React act conservados. Tipos job-8 PASS antes de suite; Biome11 archivos y diff-check PASS. ASSESS T2 unassessable por artefactos untracked sin declarar; tratado high, independiente requerido. T2 sin cerrar/commit hasta veredicto/revisión; no HTTP/browser ni app propia. Artefactos `.tmp/f3614-tests` y scratch quedan fuera de scope de entrega, conservados.
 - L17: Verificador T2 mv700u4i-3-tc3e settled PASS202 enfocadas+20 probes, exit0 sin stderr/blocker; scratch retenido `.verification-36-14-eTvgd5`1061 archivos byte-identical+4 probes. SQL/HTTP/auth no ejercidos, T3 pendiente. Founder selected `authorize_f3614_owned_harness`: permiso para comprobar/reapuntar sólo app antigua31467/31468, DB/proxy sintéticos separados, navegador instalado en `/Users/gianelo/Library/Caches/ms-playwright`, perfil dentro del worktree. Sin borrado de archivos/contenedores/datos manuales/históricos ni instalación.
+- L18: Fundador: «porque vas opr t3 osea recuarda que querianmos hacer el compac?» Se acuerda cerrar T2 y guardar checkpoint, pausar para compactar antes de T3; no iniciar recursos ni HTTP aún.
+- L19: Padre spot-check202/202+diff-check PASS. Revisión T2 risk/reliability medium aprobada, `review-6acf38bbe02490fd`, acknowledgement consumido/authority burned. Commit local `a7b03aa23089d9a5fa6bc391a8db67122d5316d4`,14 archivos140+14=154 líneas. T1/T2 cerrados como cortes locales; 36.14 incompleta, T3 bloqueada por pausa para compactar. No app propia/URL, SQL/HTTP/auth/browser/CI/push/PR/integración acreditados. Conservar ambos scratch y `.tmp`, servicio histórico y datos manuales. Riesgo item1: formato en escrituras; independiente202+20 cubre código, no transporte real.
+- L20: Reanudar con mem_context→mem_search fase36/contacto→mem_get_observation2112→este archivo; cwd/rama/HEAD deben coincidir con checkpoint. T3 usa autorización L17 pero revalida PID/cwd/puertos/DB/browser antes de actuar. Presupuesto agregado del checkpoint386/400 (14 líneas disponibles), medido con `git diff 01a4031 --numstat`; si soporte final excede400, resolver estrategia sin recortar evidencia. Primer timeout paralelo/filtro omitido no se declara reparado.
