@@ -55,8 +55,10 @@ F35: decisión conjunta limitada a esta jerarquía, no cierra su auditoría rest
   Revisión consumida: `sha256:49f0f17d4796b563901ed31dcbd651e16f1a1752e5830af969572606d2b0873b`.
   No STATUS posterior al burn. Este cierre documental es posterior al candidato revisado.
   Suite global, build e integración no ejecutados en esta porción de presentación.
-  Commit de producto: 294 A+D; cierre documental contado en el scope final antes del push.
-  Push/PR pendientes; publicación autorizada, no integrada. CI a cargo del fundador.
+  Commit de producto: 294 A+D; cierre verificado en `f09b7d4a4241f85e411a57041765bfb0f03c6f0a`.
+  [x] Publicación: push confirmado y PR https://github.com/gianelo/rentoru/pull/410 contra dev.
+  Scope final con este registro: 297 A+D, 8 archivos; .env.local y .tmp excluidos.
+  No integrada todavía. CI a cargo del fundador; ningún watcher ni merge iniciado.
 
 ## Límites de verificación y entrega
 
