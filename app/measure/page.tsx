@@ -246,6 +246,20 @@ export default async function MeasureHarnessPage({
           contenedor mediría la caja equivocada — el mismo error de puntería
           que dejó el encabezado contra el borde mientras los campos flotaban
           centrados. */}
+      <div data-testid="publish-step-quien">
+        {stepHarness("quien", {
+          ...harnessDraft(),
+          listing: {
+            ...harnessDraft().listing,
+            publisherType:
+              params.publisher === "owner" || params.publisher === "broker"
+                ? params.publisher
+                : undefined,
+            contactMethod: "whatsapp",
+            contactValue: "04121234567",
+          },
+        })}
+      </div>
       <div data-testid="publish-step-tamano">{stepHarness("tamano", harnessDraft())}</div>
       <div data-testid="publish-step-photos">
         {stepHarness("fotos", {

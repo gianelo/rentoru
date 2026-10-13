@@ -1,5 +1,98 @@
 import { expect, test } from "@playwright/test";
 
+test.describe("publisher hierarchy", () => {
+  test.beforeEach(async ({ page, baseURL }) => {
+    if (!baseURL) throw new Error("owned baseURL is required");
+    const origin = new URL(baseURL).origin;
+    await page.route("**/*", (route) => {
+      const request = route.request();
+      if (
+        new URL(request.url()).origin !== origin ||
+        request.method() !== "GET" ||
+        request.resourceType() === "image"
+      ) {
+        return route.abort();
+      }
+      return route.continue();
+    });
+  });
+
+  for (const width of [390, 440, 768, 1440]) {
+    test(`${width}px: accessible legend, labels, keyboard and saved responses`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.goto("/measure");
+      const step = page.getByTestId("publish-step-quien");
+      const heading = step.getByRole("heading", { level: 1, name: "¿Quién publica?", exact: true });
+      await expect(heading).toHaveCount(1);
+      await expect(heading).toBeVisible();
+      await expect(step.locator("h1")).toHaveCount(1);
+      const group = step.getByRole("group", { name: "¿Quién publica?", exact: true });
+      await expect(group).toHaveCount(1);
+      const legend = group.locator("legend");
+      await expect(legend).toHaveText("¿Quién publica?");
+      await expect(legend).not.toHaveAttribute("aria-hidden");
+      await expect(group).not.toHaveAttribute("aria-hidden");
+      const clipping = await legend.evaluate((node) => {
+        const style = getComputedStyle(node);
+        return {
+          position: style.position,
+          width: style.width,
+          height: style.height,
+          overflow: style.overflow,
+          clipPath: style.clipPath,
+        };
+      });
+      expect(clipping).toEqual({
+        position: "absolute",
+        width: "1px",
+        height: "1px",
+        overflow: "hidden",
+        clipPath: "inset(50%)",
+      });
+      const owner = group.getByRole("radio", { name: "Soy el dueño", exact: true });
+      const broker = group.getByRole("radio", { name: "Inmobiliaria o corredor", exact: true });
+      await expect(group.getByRole("radio")).toHaveCount(2);
+      await expect(owner).not.toBeChecked();
+      await expect(broker).not.toBeChecked();
+      for (const text of ["Soy el dueño", "Inmobiliaria o corredor"]) {
+        const label = group.locator("label").filter({ hasText: text });
+        await expect(label).toBeVisible();
+        const box = await label.boundingBox();
+        if (!box) throw new Error(`${text} has no measurable target`);
+        expect(box.width).toBeGreaterThanOrEqual(44);
+        expect(box.height).toBeGreaterThanOrEqual(44);
+        await label.click();
+        await expect(group.getByRole("radio", { name: text, exact: true })).toBeChecked();
+      }
+      await owner.focus();
+      await page.keyboard.press("ArrowLeft");
+      await expect(broker).toBeFocused();
+      await expect(broker).toBeChecked();
+      await expect(owner).not.toBeChecked();
+      await page.keyboard.press("ArrowRight");
+      await expect(owner).toBeFocused();
+      await expect(owner).toBeChecked();
+      await expect(broker).not.toBeChecked();
+      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.press("Tab");
+      await expect(owner).toBeFocused();
+      const contact = step.getByRole("group", { name: "¿Cómo te contactan?", exact: true });
+      await expect(contact.locator("legend")).toBeVisible();
+      await page.keyboard.press("Tab");
+      await expect(contact.getByRole("radio", { name: "WhatsApp", exact: true })).toBeFocused();
+
+      for (const publisher of ["owner", "broker"]) {
+        await page.goto(`/measure?publisher=${publisher}`);
+        await expect(owner).toBeChecked({ checked: publisher === "owner" });
+        await expect(broker).toBeChecked({ checked: publisher === "broker" });
+        await expect(contact.locator("legend")).toBeVisible();
+      }
+    });
+  }
+});
+
 /**
  * Real-layout proof for tasks.md 1b.10–1b.12, 1b.14 — the four claims a
  * stylesheet-content assertion cannot honestly prove. Reads genuine

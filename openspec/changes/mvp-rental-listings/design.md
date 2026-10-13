@@ -572,6 +572,32 @@ ver [autoridad visual](../../../design/reference/sistema/SISTEMA.md#menú-de-fot
 P1 sólo documenta: sin app servida ni aceptación manual actual; implementación,
 RED/GREEN, mutación y evidencia servida quedan para P2. No cierra 36.1 ni 36.11.
 
+### Jerarquía de Quién publica — decisión acotada (F36.12, P1)
+
+El fundador aprobó mostrar «¿Quién publica?» una sola vez visualmente, como H1.
+El `fieldset` conserva su `legend` nativo con ese texto, accesible pero oculto
+visualmente mediante `styles.srOnly`; no se elimina ni se usa `aria-hidden`.
+Los labels «Soy el dueño» e «Inmobiliaria o corredor» permanecen intactos.
+Sin selección por defecto para un borrador sin respuesta; se conserva la ya guardada.
+La razón es quitar la pregunta duplicada sin perder el nombre accesible del grupo
+ni convertir una omisión en una declaración de dueño.
+Referencias: [Publicar Mobile](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Mobile.dc.html#12c)
+(líneas 246–249) y [Publicar Desktop](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Desktop.dc.html#13a)
+(líneas 368–371): un titular seguido de opciones; su dueño ilustrado no autoriza default.
+Esta decisión conjunta resuelve sólo esta jerarquía de F35.4, no su auditoría restante.
+No cambia contacto, reglas de negocio, estilos globales ni revisar (36.18).
+
+Baseline inspeccionado: `e6a3c650d0cb853e75a46382320eaa3dbfb0d900` (dev, merge #409).
+El caller `/publicar/paso/quien`, en `app/publicar/paso/[paso]/page.tsx`, renderiza
+`app/publicar/PublishStep.tsx`: H1 en línea 222 y legend visible en 579;
+`app/publicar/step-copy.ts` define la pregunta de `quien`.
+`app/publicar/publish-steps.module.css:23–25` ya compone `srOnly` desde
+`src/styles/a11y.module.css`; no hace falta una utilidad ni CSS global nuevos.
+P1 sólo registra la decisión: sin cambio de comportamiento, app servida ni RED significativo.
+Readback estructural por padre/verificador; P2 queda pausada, sin inicio automático.
+P2 requerirá RED/GREEN sobre HTML del caller, mutación restaurada, nombre accesible,
+labels, teclado/foco, ausencia de default y aceptación visual humana; 36.12 sigue sin cerrar.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.
