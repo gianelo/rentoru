@@ -419,8 +419,23 @@
   .menuTrigger {
     inline-size: var(--target-min-desktop);
     block-size: var(--target-min-desktop);
+    position: relative;
+    isolation: isolate;
+    background: transparent;
+    border: 0;
+  }
+
+  .menuTrigger::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    inset: calc((var(--target-min-desktop) - var(--photo-menu-visible-size)) / 2);
+    inline-size: var(--photo-menu-visible-size);
+    block-size: var(--photo-menu-visible-size);
     background: var(--surface);
     border: 1px solid var(--line);
+    border-radius: var(--rs);
+    pointer-events: none;
   }
 
   .menuSheet {

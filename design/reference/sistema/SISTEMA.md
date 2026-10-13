@@ -153,6 +153,19 @@ Escala: `4 · 8 · 12 · 16 · 24 · 32 · 48`. Nada fuera de esa escala.
 - **El velo de los modales** (`--scrim`, tarea 14.46). Un modal se dibuja sobre lo que había, y sin un token de velo la única salida que dejaba `lint:tokens` era tapar el viewport con `var(--surface)`: un token, gate en verde, y una hoja opaca donde la 14.33 dice modal. Lo usan la puerta de entrar y el panel de filtros, y **tiene par claro/oscuro** — a diferencia de `--viewer-scrim`, que vive fuera del tema a propósito. La razón está medida y no es de gusto: el velo de `menta` (`rgba(30,32,34,.55)`, el que dibuja la lámina 9b) separa el fondo velado de la lámina **3,98:1** contra 1,10:1 sin velo, y ese mismo velo en `oscuro` da **1,13:1 contra el 1,15:1 que el tema ya tenía sin nada** — oscurecer un fondo ya oscuro no separa, empeora. La cuenta la hace `components/design-contract.test.tsx` contra `src/styles/tokens.css`, y el color que sale del compositor lo mide `tests/measure/layout.spec.ts` en un navegador.
 - Altura mínima de control: **44px en las dos pantallas**. Era 36 en escritorio; **decidido por el fundador el 2026-08-27** (tarea 16.24) porque de los tres candidatos —36, los 40 de su especificación y 44— **sólo 44 alcanza WCAG 2.2 SC 2.5.5 (AAA)**. Los botones de acción miden 46 (`--action-h`), que es un valor propio y no una variante de éste.
 
+### Menú de fotos — superficie visible F36.11
+
+Decisión aprobada del fundador: desde **768px**, círculo visible de **30px**
+centrado dentro del `<summary>` existente de **44×44px**; la caja completa sigue
+pulsable y con foco visible. Por debajo de 768px, móvil sin cambios. Se mantienen
+el glifo `⋯`, las acciones y el menú abierto (geometría, Escape y cierre exterior).
+La lámina [Publicar Desktop](../../pantallas/Rentoru%20-%20Publicar%20-%20Desktop.dc.html)
+dibuja los 30px visibles; no sustituye el mínimo táctil aprobado de 44px.
+Registrar en P2 un token semántico propio para el diámetro visible, independiente
+de `--target-min` y `--target-min-desktop`; usar `--rs` para el círculo.
+[Baseline y razón](../../../openspec/changes/mvp-rental-listings/design.md#menú-de-fotos-compacto--decisión-acotada-f3611-p1):
+P1 documenta la decisión, no su implementación ni una aceptación de navegador.
+
 ### Indicador de carga — base aprobada F36.3
 
 Tarjeta `--surface` centrada a pantalla completa sobre velo gris `--scrim`, con ancho máximo `--door-w`, radio `--r` y sombra `--door-shadow`; padding 32px/24px, grid centrada con gap 16px y margen exterior de 16px. El indicador circular sobre `--tint` reutiliza `--wait-mark-size` (56px) y `--wait-mark-fs` (22px): **R de texto fija y decorativa** en `--mono` e interlínea 1, no un logotipo ni un monograma nuevo de marca; aro de `--line` con segmento `--accent`. La etiqueta usa el par de cuerpo `--ficha-body-fs`/`--ficha-body-lh`, con variante de escritorio desde 768px y margen cero.
