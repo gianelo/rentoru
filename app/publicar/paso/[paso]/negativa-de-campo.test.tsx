@@ -416,6 +416,43 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
    * a cada uno: un mensaje de quién publica leído en el bloque del contacto
    * diría que el contacto está mal.
    */
+  it.each([
+    "+1 212 555 0134",
+    "+58 0412 1234567",
+    "02121234567",
+    "0412 1234567 ext 2",
+    "0412123456",
+  ])("sirve negativa y conserva el contacto rechazado %s", async (contactValue) => {
+    const base = borradorCompleto();
+    borrador = { ...base, listing: { ...base.listing, contactValue } };
+    const html = await servido("quien");
+    expect(conjunto(html, "¿Cómo te contactan?")).toContain('id="contact-error"');
+    expect(control(html, "contactValue")).toContain(`value="${contactValue}"`);
+    expect(conjunto(html, "¿Cómo te contactan?").match(/type="radio"/g)).toHaveLength(3);
+  });
+
+  it.each(["0412 123 4567", "4121234567", "+58 412 1234567", "0058 412 1234567", "584121234567"])(
+    "sirve el formato admitido %s sin negativa",
+    async (contactValue) => {
+      const base = borradorCompleto();
+      borrador = { ...base, listing: { ...base.listing, contactValue } };
+      const html = await servido("quien");
+      expect(conjunto(html, "¿Cómo te contactan?")).not.toContain('id="contact-error"');
+      expect(control(html, "contactValue")).toContain(`value="${contactValue}"`);
+    },
+  );
+
+  it("sirve teléfono fijo sin negativa ni cambio de canal", async () => {
+    const base = borradorCompleto();
+    borrador = {
+      ...base,
+      listing: { ...base.listing, contactMethod: "telefono", contactValue: "02121234567" },
+    };
+    const html = await servido("quien");
+    expect(conjunto(html, "¿Cómo te contactan?")).not.toContain('id="contact-error"');
+    expect(control(html, "contactValue")).toContain('value="02121234567"');
+  });
+
   it("el paso 9 pone la negativa de quién publica en su fieldset y no en el del contacto", async () => {
     borrador = sin("publisherType");
 

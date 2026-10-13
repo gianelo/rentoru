@@ -479,6 +479,51 @@ describe("validatePublishableListing", () => {
  * while no form in the system collects a contact.
  */
 describe("contact — a method plus a value, not a phone number", () => {
+  it.each(["4121234567", "0058 412 1234567", "584121234567", "(0412) 123-4567"])(
+    "accepts approved Venezuelan notation %s",
+    (contactValue) => {
+      expect(validatePublishableListing(draft({ contactValue }), ZONES)).toEqual([]);
+    },
+  );
+
+  it.each([
+    "+1 212 555 0134",
+    "+58 0412 1234567",
+    "0412 1234567 ext 2",
+    "0412.1234567",
+    "041212345678",
+    "0412123456",
+    "04321234567",
+    "0412)1234567",
+    "(0412 1234567",
+    "٠٤١٢١٢٣٤٥٦٧",
+  ])("rejects malformed or foreign contact %s without modifying it", (contactValue) => {
+    const input = draft({ contactValue });
+    expect(validatePublishableListing(input, ZONES)).toContain("contactValue.invalid");
+    expect(input.contactValue).toBe(contactValue);
+  });
+
+  it.each(["02121234567", "02611234567", "08001234567"])(
+    "accepts fixed %s for telephone but not WhatsApp",
+    (contactValue) => {
+      expect(
+        validatePublishableListing(draft({ contactMethod: "telefono", contactValue }), ZONES),
+      ).toEqual([]);
+      expect(validatePublishableListing(draft({ contactValue }), ZONES)).toContain(
+        "contactValue.invalid",
+      );
+    },
+  );
+
+  it.each(["0412", "0414", "0415", "0416", "0422", "0424", "0426"])(
+    "accepts published mobile prefix %s",
+    (prefix) => {
+      expect(
+        validatePublishableListing(draft({ contactValue: `${prefix}1234567` }), ZONES),
+      ).toEqual([]);
+    },
+  );
+
   it("rejects a missing method", () => {
     expect(validatePublishableListing(draft({ contactMethod: undefined }), ZONES)).toContain(
       "contactMethod.required",
