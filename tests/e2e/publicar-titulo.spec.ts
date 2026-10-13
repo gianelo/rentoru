@@ -37,7 +37,11 @@ async function nativePost(
   expect(post.status()).toBe(303);
   if (!served) throw new Error("native POST returned no served navigation");
   expect(served.status()).toBe(200);
-  expect(page.url()).toBe(`${origin}/publicar/paso/${destination}`);
+  expect(page.url()).toBe(
+    destination === "revisar"
+      ? `${origin}/publicar/revisar`
+      : `${origin}/publicar/paso/${destination}`,
+  );
   return { started, finished, html: await served.text(), request: post.request() };
 }
 
@@ -452,6 +456,141 @@ for (const javaScriptEnabled of [true, false]) {
       // Retain every case row, including attempts, photo stamps and renewed expiry.
       expect(await baseline.snapshot()).toEqual(retained);
     } finally {
+      await db.close();
+    }
+  });
+}
+
+const cases = [
+  ["whatsapp", "0412 123 4567", "+584121234567", null],
+  ["whatsapp", "4121234567", "+584121234567", null],
+  ["whatsapp", "+58 412 1234567", "+584121234567", null],
+  ["whatsapp", "0058 412 1234567", "+584121234567", null],
+  ["whatsapp", "584121234567", "+584121234567", null],
+  ["telefono", "0212 123 4567", "+582121234567", null],
+  ["email", "contacto@example.invalid", "contacto@example.invalid", null],
+  ["whatsapp", "0212 1234567", "0212 1234567", "contactValue.invalid"],
+  ["whatsapp", "+1 4121234567", "+1 4121234567", "contactValue.invalid"],
+  ["whatsapp", "+58 0412 1234567", "+58 0412 1234567", "contactValue.invalid"],
+  ["whatsapp", "0412ABC4567", "0412ABC4567", "contactValue.invalid"],
+  ["whatsapp", "04121234567 ext 1", "04121234567 ext 1", "contactValue.invalid"],
+  ["whatsapp", "0412123456", "0412123456", "contactValue.invalid"],
+  ["whatsapp", "(0412 1234567", "(0412 1234567", "contactValue.invalid"],
+  ["whatsapp", "", "", "contactValue.required"],
+] as const;
+
+for (const [method, value, expected, violation] of cases) {
+  test(`owned contact: ${method} ${JSON.stringify(value)}`, async ({ browser, baseURL }) => {
+    if (baseURL !== "http://127.0.0.1:31467") throw new Error("exact owned origin required");
+    const origin = baseURL;
+    const db = await connectOwnedDatabase(OWNED_DSN);
+    const baseline = new ContactSavedDraft(OWNED_DSN, {
+      query(sql, values) {
+        if (!sql.startsWith("SELECT")) throw new Error("baseline is read-only");
+        return db.query(sql, values);
+      },
+    });
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    try {
+      const retained = await baseline.snapshot();
+      const identity = `case-title-contact-${randomUUID().replaceAll("-", "").slice(0, 12)}`;
+      const fixture = new TitleSavedDraft(OWNED_DSN, db, identity);
+      expect(fixture.publisherId).not.toBe(baseline.publisherId);
+      await fixture.ensure(new Date());
+      await context.route("**/*", (route) => {
+        const url = new URL(route.request().url());
+        return url.origin === origin &&
+          !url.username &&
+          !url.password &&
+          route.request().resourceType() !== "image"
+          ? route.continue()
+          : route.abort();
+      });
+      await context.addCookies([
+        { name: "authjs.session-token", value: fixture.sessionToken, url: origin },
+      ]);
+      const page = await context.newPage();
+      expect((await page.goto(`${origin}/api/auth/session`))?.status()).toBe(200);
+      const session = JSON.parse((await page.locator("body").textContent()) ?? "null");
+      expect(session.user.email).toBe(`owned-f367-${identity}@example.invalid`);
+      expect(Date.parse(session.expires)).toBeGreaterThan(Date.now());
+      expect((await page.goto(`${origin}/publicar/paso/titulo`))?.status()).toBe(200);
+      await nativePost(page, origin, "Casa luminosa", "descripcion");
+      await nativePost(
+        page,
+        origin,
+        "Casa luminosa ".repeat(10),
+        "fotos",
+        "descripcion",
+        "Descripción",
+      );
+      const entered = await page.goto(`${origin}/publicar/paso/quien`);
+      expect(entered?.status()).toBe(200);
+      expect(page.url()).toBe(`${origin}/publicar/paso/quien`);
+      const beforeContact = await fixture.snapshot();
+      await page.getByLabel("Soy el dueño", { exact: true }).check();
+      await page.locator(`input[name="contactMethod"][value="${method}"]`).check();
+      const result = await nativePost(
+        page,
+        origin,
+        value,
+        violation ? "quien" : "revisar",
+        "quien",
+        "Tu dato de contacto",
+      );
+      expect(result.request.postData()).toContain(`name="contactMethod"\r\n\r\n${method}`);
+      const persisted = await fixture.snapshot();
+      expect(persisted.answers.listing).toEqual({
+        ...beforeContact.answers.listing,
+        publisherType: "owner",
+        contactMethod: method,
+        // Empty fields become undefined at the reader and are absent from stored JSON.
+        ...(expected === "" ? {} : { contactValue: expected }),
+      });
+      expect(persisted.answers.violations).toEqual(violation ? [violation] : []);
+      // Quien retains rejected text in listing; raw is reserved for other step readers.
+      expect(persisted.answers.raw).toEqual(violation ? {} : undefined);
+      const {
+        listing: _beforeListing,
+        violations: _beforeViolations,
+        raw: _beforeRaw,
+        ...rest
+      } = beforeContact.answers;
+      const {
+        listing: _afterListing,
+        violations: _afterViolations,
+        raw: _afterRaw,
+        ...afterRest
+      } = persisted.answers;
+      expect(afterRest).toEqual(rest);
+      expect(persisted.photos).toEqual(beforeContact.photos);
+      expect(Date.parse(persisted.expiresAt)).toBeGreaterThanOrEqual(
+        result.started + DRAFT_LIFETIME_MS,
+      );
+      expect(Date.parse(persisted.expiresAt)).toBeLessThanOrEqual(
+        result.finished + DRAFT_LIFETIME_MS,
+      );
+      const errorMessage =
+        violation === "contactValue.required"
+          ? "✱ obligatorio. Poné el dato por el que te contactan."
+          : "Revisá el dato: un correo lleva @, y un teléfono solo números.";
+      if (violation) expect(result.html).toContain(errorMessage);
+      for (const reload of [false, true]) {
+        const served = reload
+          ? await page.reload()
+          : await page.goto(`${origin}/publicar/paso/quien`);
+        expect(served?.status()).toBe(200);
+        expect(page.url()).toBe(`${origin}/publicar/paso/quien`);
+        await expect(page.getByLabel("Tu dato de contacto", { exact: true })).toHaveValue(expected);
+        await expect(page.getByLabel("Soy el dueño", { exact: true })).toBeChecked();
+        await expect(page.locator(`input[name="contactMethod"][value="${method}"]`)).toBeChecked();
+        if (violation) await expect(page.locator("#contact-error")).toHaveText(errorMessage);
+        else await expect(page.locator("#contact-error")).toHaveCount(0);
+        expect(await fixture.snapshot()).toEqual(persisted);
+        expect(await baseline.snapshot()).toEqual(retained);
+      }
+    } finally {
+      await context.close();
       await db.close();
     }
   });
