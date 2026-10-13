@@ -2962,8 +2962,9 @@ Estado reconciliado: 36.1 parcial; 36.2–36.6 completadas en implementación; 3
   - Integrado por #409 en `e6a3c65`, base de 36.12; fundador confirmó merge y rerun de integración correcto. `photo-uploader.module.css` y token `--photo-menu-visible-size`; `tests/measure/photo-menu.spec.ts` prueba «photo menu geometry» y las interacciones servidas. RED/GREEN/mutación, 8/8 browser y 3.373 unitarias; autoridad aprobada/consumida y aceptación humana en `odd/tasks/fase-36-menu-fotos-compacto.md`. No se estableció la causa del fallo original de integración.
 - [x] 36.12 Resolver conjuntamente jerarquía de Quién publica sin perder labels.
   - Verificada y aceptada: H1 visible único, legend nativo `styles.srOnly` en `app/publicar/PublishStep.tsx`, labels/defaults/respuestas guardadas intactos. `negativa-de-campo.test.tsx` prueba «sirve un solo H1 y conserva la leyenda nativa con srOnly, sin aria-hidden» mediante el caller real; `tests/measure/layout.spec.ts` prueba «publisher hierarchy» en cuatro anchos. RED/GREEN/mutación/restauración, 29/29 enfocadas, browser 4/4, tipos/tokens/Biome PASS y revisión nativa aprobada/consumida. Cierre y límites en `odd/tasks/fase-36-jerarquia-publicador.md`; publicación autorizada, no integrada aún.
-- [ ] 36.13 Resolver compatibilidad de WhatsApp único: legado, editar, importación, defaults y migración.
-- [ ] 36.14 Publicar con WhatsApp y número validado tras gate país/formato; sin verificar cuenta.
+- [ ] 36.13 Resolver compatibilidad de un contacto entre WhatsApp, teléfono y correo: legado, editar, importación, defaults y migración.
+  - Decisión multicanal y formatos aprobados; inventario y cierre documental local en `odd/tasks/fase-36-contacto-compatible.md`. No integrado ni publicado.
+- [ ] 36.14 Validar teléfonos/WhatsApp venezolanos conservando elección entre tres canales; formato internacional aprobado, sin verificar cuenta. Implementación diferida.
 - [ ] 36.15 Diagnosticar/corregir miniaturas al volver sin presumir causa de storage/URL.
 - [ ] 36.16 Aprobar lámina de revisar móvil/tablet/escritorio antes de implementación.
 - [ ] 36.17 Implementar revisar aprobado, conservando regreso/guardado/descarte.

@@ -66,8 +66,8 @@ C = confirmado en este entorno (no aceptación de solución); NR = no reproducid
 | 9 | C | Ayudas de no borrar del teléfono y portada presentes. |
 | 10 | C medición | Menú mide 44×44; juicio visual de tamaño pendiente. |
 | 11 | C | `Quién publica` repetido en h1/legend. |
-| 12 | S / C | Canales superados por #13; selector de país ausente observado. Formatos completos NP. |
-| 13 | C | Tres canales actuales frente a decisión WhatsApp único; compatibilidad G4 pendiente. |
+| 12 | S / C | Supersesión por #13 histórica; 36.13 restablece elección multicanal. Selector ausente observado; implementación de formatos pendiente. |
+| 13 | S | WhatsApp único superado por decisión del fundador en 36.13: un contacto entre tres canales. |
 | 14 | NP | Atrás conserva metadatos de fixture, cero imágenes; no prueba miniaturas subidas. |
 | 15 | C | `Cambiar` centrado en dos filas en móvil. |
 | 16 | C medición | Texto tablet 147.28 px; descripción 633.38 px de alto, sin overflow horizontal; aceptación visual pendiente. |
@@ -150,8 +150,8 @@ El número conserva el orden cronológico. «Destino» asigna trabajo o superses
 | [9](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956519719) | Quitar ayuda de no borrar del teléfono; aclarar dónde aparece portada. | 36.10; tres alternativas de portada para aprobar. |
 | [10](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956554011) | Menú `⋯` demasiado grande en tablet/escritorio. | 36.11; preservar target ≥44 px. |
 | [11](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956583646) | `Quién publica` repetido como título/label. | 36.12; decisión conjunta de jerarquía. |
-| [12](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956627130) | Labels de llamada/correo, validación y elección de país. | Canales superados por #13; número/país en 36.13–36.14. |
-| [13](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956647895) | Decisión posterior: sólo WhatsApp y número, sin verificar cuenta todavía. | 36.13–36.14; autenticación por correo intacta. |
+| [12](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956627130) | Labels de llamada/correo, validación y elección de país. | Elección multicanal vigente por corrección en 36.13; formato en 36.14. |
+| [13](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956647895) | Antecedente: sólo WhatsApp y número, sin verificar cuenta. | Superado en 36.13: un contacto entre WhatsApp, teléfono y correo; autenticación intacta. |
 | [14](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956742439) | Miniaturas subidas desaparecen al volver al paso. | 36.15; causa no determinada. |
 | [15](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956790430) | Móvil: `Cambiar` junto al encabezado para liberar el cuerpo. | 36.16–36.17 |
 | [16](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956819730) | Revisar roto en tablet; pide lámina aprobada antes de implementar. | 36.16–36.17; `Cambiar` puede seguir a la derecha. |
@@ -168,7 +168,7 @@ El número conserva el orden cronológico. «Destino» asigna trabajo o superses
 | G1 — Transición | 36.3: reproducir alcance de carga y proponer solución contextual; aprobar patrón derivado del sistema. | Loader global ni spinner inventado. |
 | G2 — Anchos/boards | 36.4: política de pastilla; 36.16: lámina de revisar móvil/tablet/escritorio aprobada. | Estirar todos los campos o copiar medidas de capturas. |
 | G3 — Copy/jerarquía | 36.10: tres propuestas por texto; 36.12: título/legend; coordinar F35. | Rediseñar todo el copy ni eliminar labels accesibles. |
-| G4 — Contacto | 36.13: decidir legado, edición, importación, defaults y necesidad de migración; 36.14: país/formato aceptado. | Convertir contactos históricos silenciosamente ni verificar cuenta WhatsApp. |
+| G4 — Contacto | 36.13: conservar tres canales y compatibilidad por superficie; formatos aprobados en su checkpoint. 36.14: implementación diferida, sólo Venezuela. | Convertir contactos históricos silenciosamente ni verificar cuenta WhatsApp. |
 | G5 — Tipo de publicador | 36.18: conservar dueño → inmobiliaria; preguntar si mantener o cambiar el bloqueo inverso. | Suprimir regla antiengaño por una duda del issue. |
 | G6 — Producción | 36.19: autorización separada de acceso/credenciales y consultas read-only acotadas, con datos redactados. | Mutación, siembra, reintento real o descarga de secretos/datos personales. |
 | G7 — Atributos | 36.21: aprobar botón o checkbox con explicación de semántica y jerarquía. | Confundir vacío declarado con paso no contestado. |
@@ -247,15 +247,15 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 
 ### D — Contacto: decisión y aplicación separadas
 
-- [ ] **36.13 — Resolver compatibilidad de WhatsApp único.** Después de 36.1; gate G4.
-  - Trabajo: inventariar contacto nuevo, borrador, legado, editar, importación, defaults y revelación; specs multicanal quedan como antecedente superado para nueva publicación.
-  - Aceptar: tabla de tratamiento aprobada por superficie, necesidad/no necesidad de migración y secuencia de rollout; no perder correo/teléfono histórico por conversión silenciosa.
-  - Comprobar: revisión de lectores/escritores y fixtures legacy; autenticación Google/correo no cambia; no verificación de existencia de cuenta WhatsApp en esta fase.
+- [ ] **36.13 — Resolver compatibilidad de un contacto entre tres canales.** Después de 36.1; gate G4.
+  - Trabajo: inventariar contacto nuevo, borrador, legado, editar, importación, defaults y revelación; WhatsApp único queda como antecedente superado.
+  - Aceptar: conservar elección WhatsApp/teléfono/correo, sin conversión histórica ni migración de esquema/datos propuesta; mantener destinos por canal y autenticación intacta.
+  - Comprobar: lectura de lectores/escritores y coherencia documental; no afirmar pruebas funcionales ejecutadas. Decisiones, formatos y límites en `fase-36-contacto-compatible.md`.
 
-- [ ] **36.14 — Publicar con WhatsApp y número validado.** Después de 36.13 aprobado; gate país/formato G4.
-  - Trabajo: quitar elección de canal del alta nueva, hacer explícito WhatsApp sin inventar default en UI; acordar selector de país/prefijo y normalización aceptada en dominio.
-  - Aceptar: número válido persistido como WhatsApp por servidor; errores locales claros, revisar y revelación coherentes; aplicar política aprobada de edición/import/defaults por unidades acotadas si hace falta.
-  - Comprobar: HTML servido y POST nativo, vacío/formato inválido/prefijos admitidos, petición manual de otro canal rechazada conforme a 36.13; integración de persistencia y autenticación sin cambios.
+- [ ] **36.14 — Validar teléfono/WhatsApp conservando tres canales.** Después de 36.13; implementación diferida.
+  - Trabajo: parser/validación puros con política de país centralizada; sólo Venezuela activa, ampliable sin framework genérico. Teléfono admite móvil/fijo; WhatsApp no requiere comprobar cuenta.
+  - Aceptar: formatos aprobados en 36.13, canonización internacional antes de persistir nuevos valores y destinos sin inferir país nuevamente; conservar correo y legado sin conversión silenciosa.
+  - Comprobar: HTML servido y POST nativo, equivalencias y rechazos aprobados, persistencia y destinos `wa.me`/`tel:`/`mailto:`; preservar elección multicanal, edición/import/defaults y autenticación. TDD y mutación al implementar, no en este corte documental.
 
 ### E — Fotos y revisar
 
@@ -309,7 +309,7 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 | 2 | 36.2–36.4, cada una independiente | Gates de loader y ancho; no un PR de «shell completo». |
 | 3 | 36.7 aceptada y entrega humana cerrada;36.5/36.6 según índice central | Escape cerrado; seguimientos técnicos separados. |
 | 4 | 36.8 → 36.9; 36.10/36.11/36.12 aparte | Patrón vivo compartido; copy coordinado con F35. |
-| 5 | 36.13 → 36.14 | Compatibilidad aprobada antes de retirar canales. |
+| 5 | 36.13 → 36.14 | Compatibilidad multicanal aprobada antes de implementar país/formato; no retirar canales. |
 | 6 | 36.15; 36.16 → 36.17; 36.18 aparte | Diagnóstico de fotos y aprobación de revisar, no arreglo a ciegas. |
 | 7 | 36.19 → 36.20; 36.21 aparte | Causa confirmada y elección del control; diagnóstico puede adelantarse tras 36.1. |
 | 8 | 36.22 | Aceptación agregada, sin sustituir evidencia propia de cada unidad. |
