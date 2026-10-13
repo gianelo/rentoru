@@ -576,7 +576,7 @@ function StepFields(props: FieldsProps) {
       return (
         <>
           <fieldset className={styles.choices}>
-            <legend className={styles.legend}>¿Quién publica?</legend>
+            <legend className={styles.srOnly}>¿Quién publica?</legend>
             <FieldError id="publisherType-error" message={errors.get("publisherType")} />
             {/* Sin default, y no puede agregarse: un default convertiria "al
                 que se le olvido" en "todos son duenos", y esa distincion es la

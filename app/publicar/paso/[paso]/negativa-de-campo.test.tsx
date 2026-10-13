@@ -11,6 +11,7 @@ import {
   validatePublishableListing,
 } from "@/modules/listing-publication/domain/publishable-listing";
 import type { StoredDraft } from "../../draft";
+import styles from "../../publish-steps.module.css";
 
 /**
  * **El mensaje de campo de los seis pasos que quedaban** (tasks.md 18.24).
@@ -202,6 +203,65 @@ function antesDe(alcance: string, primero: string, segundo: string): void {
   expect(alcance).toContain(segundo);
   expect(alcance.indexOf(primero)).toBeLessThan(alcance.indexOf(segundo));
 }
+
+describe("jerarquía de quién publica (36.12)", () => {
+  it("sirve un solo H1 y conserva la leyenda nativa con srOnly, sin aria-hidden", async () => {
+    huboIntento = false;
+    borrador = abre("quien");
+
+    const html = await servido("quien");
+    const campo = conjunto(html, "¿Quién publica?");
+    const leyenda = campo.match(/<legend[^>]*>¿Quién publica\?<\/legend>/g);
+
+    expect(html.match(/<h1\b[^>]*>¿Quién publica\?<\/h1>/g)).toHaveLength(1);
+    expect(html.match(/<h1\b/g)).toHaveLength(1);
+    expect(leyenda).toHaveLength(1);
+    expect(campo).not.toContain("aria-hidden");
+    expect(clase(leyenda?.[0] ?? "")).toBe(styles.srOnly);
+  });
+
+  it("conserva ambos labels y radios sin respuesta ni selección por defecto", async () => {
+    huboIntento = false;
+    borrador = abre("quien");
+
+    const campo = conjunto(await servido("quien"), "¿Quién publica?");
+    const labels = campo.match(/<label\b[^>]*>[\s\S]*?<\/label>/g) ?? [];
+
+    expect(labels).toHaveLength(2);
+    for (const [index, value, texto] of [
+      [0, "owner", "Soy el dueño"],
+      [1, "broker", "Inmobiliaria o corredor"],
+    ] as const) {
+      const label = labels[index];
+      if (label === undefined) throw new Error(`no se dibuja el label de ${value}`);
+      const radio = control(label, "publisherType");
+      expect(radio).toContain('type="radio"');
+      expect(radio).toContain(`value="${value}"`);
+      expect(label).toContain(`<span>${texto}</span>`);
+      expect(radio).not.toContain("checked");
+    }
+  });
+
+  it.each(["owner", "broker"] as const)(
+    "conserva exclusivamente la respuesta %s y la leyenda visible del contacto",
+    async (publisherType) => {
+      const base = borradorCompleto();
+      borrador = { ...base, listing: { ...base.listing, publisherType } };
+
+      const html = await servido("quien");
+      const campo = conjunto(html, "¿Quién publica?");
+      const radios = campo.match(/<input\b[^>]*name="publisherType"[^>]*>/g) ?? [];
+      const seleccionados = radios.filter((radio) => radio.includes("checked"));
+
+      expect(radios).toHaveLength(2);
+      expect(seleccionados).toHaveLength(1);
+      expect(seleccionados[0]).toContain(`value="${publisherType}"`);
+      expect(conjunto(html, "¿Cómo te contactan?")).toContain(
+        `<legend class="${styles.legend}">¿Cómo te contactan?</legend>`,
+      );
+    },
+  );
+});
 
 describe("cada paso lee su negativa al lado del control que la produjo (18.24)", () => {
   /**
