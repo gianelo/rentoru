@@ -202,7 +202,7 @@ describe("confirmImport", () => {
     expect(captured?.photos).toEqual([]);
     expect(captured?.publisherType).toBe("broker");
     expect(captured?.contactMethod).toBe("whatsapp");
-    expect(captured?.contactValue).toBe("04121234567");
+    expect(captured?.contactValue).toBe("+584121234567");
     expect(captured?.publisherId).toBe("broker-1");
   });
 

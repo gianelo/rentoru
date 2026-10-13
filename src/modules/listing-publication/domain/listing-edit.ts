@@ -8,6 +8,7 @@ import {
   referenceOrNone,
   validatePublishableListing,
 } from "./publishable-listing";
+import { contactValueForWrite } from "./venezuelan-phone";
 
 /**
  * Editar un aviso ya publicado.
@@ -199,6 +200,9 @@ export type ListingEditPlan =
  * campo editable sea una decisión y no un descuido.
  */
 function writeFor(current: EditableListingSnapshot, edit: ListingEdit): ListingEditWrite {
+  const method = edit.contactMethod ?? current.contactMethod;
+  const value = edit.contactValue ?? current.contactValue;
+  const contactChanged = method !== current.contactMethod || value !== current.contactValue;
   return {
     title: edit.title ?? current.title,
     description: edit.description ?? current.description,
@@ -214,8 +218,8 @@ function writeFor(current: EditableListingSnapshot, edit: ListingEdit): ListingE
     // decide «en blanco es ninguna» al publicar, así que las dos puertas no
     // pueden discrepar sobre qué queda en la columna.
     reference: referenceOrNone(edit.reference ?? current.reference),
-    contactMethod: edit.contactMethod ?? current.contactMethod,
-    contactValue: edit.contactValue ?? current.contactValue,
+    contactMethod: method,
+    contactValue: contactChanged ? (contactValueForWrite(method, value) ?? value) : value,
     // Se compone igual que los demás, y la guarda de abajo es lo único que lo
     // acota: cuando el cambio no está permitido no hay `write` que aplicar,
     // porque el plan entero vuelve rechazado.

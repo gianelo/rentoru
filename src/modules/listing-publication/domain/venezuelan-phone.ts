@@ -1,3 +1,5 @@
+import type { ContactMethod } from "./publishable-listing";
+
 // CONATEL, 7.V.2025, published by ITU; format policy, not line/account verification.
 // Country-specific policy stays here; adding countries does not change callers.
 const VENEZUELA = {
@@ -69,6 +71,16 @@ const VENEZUELA = {
     "800",
   ]),
 };
+
+/** New valid numeric answers are canonical; email, absence and invalid text stay intact. */
+export function contactValueForWrite(
+  method: ContactMethod | undefined,
+  value: string | undefined,
+): string | undefined {
+  return value !== undefined && (method === "whatsapp" || method === "telefono")
+    ? (canonicalVenezuelanPhone(value, method) ?? value)
+    : value;
+}
 
 /** Accepted notation in, international value out; invalid text is never repaired. */
 export function canonicalVenezuelanPhone(

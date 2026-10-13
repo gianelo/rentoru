@@ -68,7 +68,7 @@ describe("validateImportRows — reuses validatePublishableListing for every rul
     expect(validRows[0]?.externalReference).toBe("REF-1");
     expect(validRows[0]?.rowNumber).toBe(2);
     expect(validRows[0]?.listing.contactMethod).toBe("whatsapp");
-    expect(validRows[0]?.listing.contactValue).toBe("04121234567");
+    expect(validRows[0]?.listing.contactValue).toBe("+584121234567");
   });
 
   // tasks.md 9.12: "a row whose zone is not curated for its city is rejected

@@ -177,6 +177,16 @@ describe("planListingEdit — lo que la oferta sí puede tocar (18.14)", () => {
     });
   });
 
+  it("canoniza el contacto cambiado sin convertir un contacto histórico sin cambios", () => {
+    const current = published();
+    expect(writeOf(planListingEdit(current, ZONES, { priceUsd: 600 })).contactValue).toBe(
+      current.contactValue,
+    );
+    const write = writeOf(planListingEdit(current, ZONES, { contactValue: "0058 412 1234567" }));
+    expect(write.contactValue).toBe("+584121234567");
+    expect(current.contactValue).toBe("04121234567");
+  });
+
   it("el contacto de ESTE aviso se cambia, que es lo que el fundador autorizó", () => {
     // «El que reveló, reveló. Si entra de nuevo que vea el contacto nuevo.»
     const write = writeOf(
