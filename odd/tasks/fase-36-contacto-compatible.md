@@ -59,7 +59,7 @@ El validador compartido también protege edición, importación y activación; n
 
 Fuentes/formatos aprobados y premisas reconciliadas localmente. La validación actual admite 10–13 dígitos, guarda escritura del usuario y revelación infiere 58; riesgos deducidos, no ejecutados: `+58 0412 1234567` conserva cero indebido y `+1 212 555 0134` recibe 58. 36.14 debe abordar nuevos valores sin convertir legado; secuenciar alta, edición e importación según sus callers compartidos, no dar por cubierto import porque publica por repositorio directamente.
 
-Cierre documental preparado y verificado localmente; 36.13 permanece sin marcar integrada en el índice central. 36.14 sigue diferida. Commit autorizado; integración aún no observada. Sin cambios de código, app servida ni DB. Mantener worktree y recursos históricos/manuales; no limpieza autorizada.
+36.13 cerrada documentalmente y publicada directamente a dev por excepción explícita del fundador: `75bf7ba` (decisión) y `80ac622` (sincronización de cierres). Push no forzado exit 0; `git ls-remote origin refs/heads/dev` confirmó `80ac622a75bcef7b4cb6ff96928000481e01f033`, coincidente con HEAD. No hubo PR ni merge humano, sino push autorizado. 36.14 sigue sin implementar; autorizado reutilizar este mismo worktree para ella. Sin cambios de código, app servida ni DB. Mantener worktree y recursos históricos/manuales; no limpieza autorizada.
 
 ## Evidencia de cierre local
 

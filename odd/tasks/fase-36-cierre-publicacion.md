@@ -247,7 +247,7 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 
 ### D — Contacto: decisión y aplicación separadas
 
-- [ ] **36.13 — Resolver compatibilidad de un contacto entre tres canales.** Después de 36.1; gate G4.
+- [x] **36.13 — Resolver compatibilidad de un contacto entre tres canales.** Cierre documental publicado a dev (`75bf7ba`, `80ac622`) por excepción explícita; checks estructurales PASS y evidencia en `fase-36-contacto-compatible.md`. Sin implementación de 36.14.
   - Trabajo: inventariar contacto nuevo, borrador, legado, editar, importación, defaults y revelación; WhatsApp único queda como antecedente superado.
   - Aceptar: conservar elección WhatsApp/teléfono/correo, sin conversión histórica ni migración de esquema/datos propuesta; mantener destinos por canal y autenticación intacta.
   - Comprobar: lectura de lectores/escritores y coherencia documental; no afirmar pruebas funcionales ejecutadas. Decisiones, formatos y límites en `fase-36-contacto-compatible.md`.
