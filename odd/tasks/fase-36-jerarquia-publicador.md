@@ -31,7 +31,8 @@ F35: decisión conjunta limitada a esta jerarquía, no cierra su auditoría rest
 - [x] P1 — Registrar diseño y baseline. `design.md:575–600`, +26 líneas.
   mv5zo77j-2c-rs55: PASS enlaces/anchors, caller, srOnly, base/scope/diff; 36.11 intacta.
   Documentación pasiva sin RED significativo. P2 autorizado tras checkpoint.
-- [ ] P2 — Implementar y verificar jerarquía. Verificada; commit y publicación en curso.
+- [x] P2 — Implementar y verificar jerarquía. Verificada y aceptada; unidad comprometida.
+  Commit `4fe0654887badb463d14f8c368f734b7cd80ee27`: comportamiento, pruebas y diseño P1/P2.
   Producción: una clase en PublishStep.tsx:579, styles.legend → styles.srOnly.
   HTML: negativa-de-campo.test.tsx, caller real `/publicar/paso/quien`, +62 líneas.
   RED mv60x36f-2k-x08n: 1 falla/3 pasan; :220:39 espera srOnly, recibe legend.
@@ -54,8 +55,8 @@ F35: decisión conjunta limitada a esta jerarquía, no cierra su auditoría rest
   Revisión consumida: `sha256:49f0f17d4796b563901ed31dcbd651e16f1a1752e5830af969572606d2b0873b`.
   No STATUS posterior al burn. Este cierre documental es posterior al candidato revisado.
   Suite global, build e integración no ejecutados en esta porción de presentación.
-  Scope antes de entrega: 285 A+D; cierre y conciliación pasiva del plan se cuentan al publicar.
-  No publicada ni integrada todavía; commit/push/PR en curso.
+  Commit de producto: 294 A+D; cierre documental contado en el scope final antes del push.
+  Push/PR pendientes; publicación autorizada, no integrada. CI a cargo del fundador.
 
 ## Límites de verificación y entrega
 
