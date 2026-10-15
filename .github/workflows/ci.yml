@@ -600,6 +600,7 @@ jobs:
       # not fail; refusing to measure a page that is not there is how this one
       # avoids becoming the fourth: missing access or a non-200 is a failure.
       - name: Lighthouse budget
+        id: lighthouse
         env:
           VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
@@ -637,3 +638,18 @@ jobs:
           fi
           export CHROME_PATH="$chrome"
           pnpm run budget:lighthouse --collect.puppeteerScript=scripts/lighthouse-preview-auth.cjs
+
+      - name: Extract sanitized Lighthouse diagnostic
+        id: lighthouse_diagnostic
+        if: ${{ !cancelled() && (steps.lighthouse.outcome == 'success' || steps.lighthouse.outcome == 'failure') }}
+        run: node scripts/lighthouse-summary.mjs
+
+      - name: Preserve sanitized Lighthouse diagnostic
+        if: ${{ !cancelled() && steps.lighthouse_diagnostic.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-diagnostic-${{ github.sha }}-${{ github.run_attempt }}
+          path: .lighthouseci/diagnostic.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 7

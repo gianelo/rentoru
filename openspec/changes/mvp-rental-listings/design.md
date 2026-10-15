@@ -442,6 +442,9 @@ Hard numbers, verified on the preview deployment before each user-facing PR merg
 | JavaScript on the read path | ≤ 130 KB (was 30 — see the revision note below) |
 | LCP on a throttled 3G profile | ≤ 2.5 s |
 
+CI preserves a sanitized diagnostic even when Lighthouse assertions fail. `node scripts/lighthouse-summary.mjs` reads only `.lighthouseci/lhr-<digits>.json` and writes `.lighthouseci/diagnostic.json`; only this exact file is uploaded, retained for seven days and named with the commit SHA/run attempt. Raw reports, HTML, request details, URLs, cookies and screenshots are never uploaded.
+The summary contains allowlisted numeric metrics, the legacy Lighthouse LCP phase timings and an enumerated element tag/rectangle. Missing phases stay `null`; observed timings are not mixed with the scored/simulated breakdown. This is diagnostic evidence, not an optimization or a threshold change.
+
 **Revision, 2026-08-16 — two of these numbers were unreachable and are now measured rather than assumed.**
 
 Building the budget gates surfaced it immediately: **Next.js 15 App Router plus React 19 ship ~102 KB gzip of shared framework runtime on every route, before a single line of this application's code exists.** Verified against Next's own build output, not estimated. The original 30 KB was set by analogy and never checked against the framework floor — the same failure as the review forecast that omitted the cost of proof, and caught the same way: by building the thing that measures.
