@@ -282,6 +282,9 @@ Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability an
 
 Deployment verification requires the automation bypass credential and a reachable HTTP 200 page; missing prerequisites fail rather than reporting unmeasured Lighthouse as green. The deployment URL comes from GitHub's matching deployment record, not `dev.rentoru.com`/`staging.rentoru.com`. GitHub/Vercel metadata is the identity authority; this is not an independent attestation of the running application's SHA.
 
+`measure` retains CI traces only for unexpectedly failed cases and uploads only `test-results/**/trace.zip` for three days, without changing timeouts, retries or assertions. DOM/network snapshots remain enabled; screenshots, sources and extra attachments are disabled. These ZIPs are unsanitized: the local harness uses fixtures/fake DB wiring but may request public external images and set synthetic cookies. Never reuse this upload policy for authenticated remote E2E or real user sessions. A failure before trace finalization may leave no ZIP; that warning does not turn the failed measure step green.
+After Chromium installation, `node --test scripts/measure-trace.test.cjs` checks the actual runner/config using synthetic manual browser contexts without Next, navigation or DB: an unexpected failure must retain browser events, while a passing case must discard its trace.
+
 ### D9 — Bulk import is a loader, not a second publication path
 
 The CSV import parses, validates, and creates **drafts**, then hands every listing to the existing `listing-publication` use cases. It gets no repository write path of its own into `listing`.

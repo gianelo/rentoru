@@ -177,7 +177,18 @@ jobs:
       # in that cache, so a hit without them leaves a browser that cannot
       # start.
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:measure
+      - run: node --test scripts/measure-trace.test.cjs
+      - id: measure
+        run: pnpm test:measure
+
+      - name: Preserve failed local measure traces
+        if: ${{ !cancelled() && steps.measure.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: measure-traces-${{ github.sha }}-${{ github.run_attempt }}
+          path: test-results/**/trace.zip
+          if-no-files-found: warn
+          retention-days: 3
 
   integration:
     if: github.event_name == 'pull_request'

@@ -18,6 +18,16 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
+    // Local fixture harness only; raw traces may contain DOM and network data.
+    trace: process.env.CI
+      ? {
+          mode: "retain-on-failure",
+          screenshots: false,
+          snapshots: true,
+          sources: false,
+          attachments: false,
+        }
+      : "off",
   },
   webServer: {
     command: `pnpm exec next dev -p ${PORT}`,
