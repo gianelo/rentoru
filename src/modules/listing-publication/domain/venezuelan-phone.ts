@@ -1,3 +1,4 @@
+import type { ContactIssue } from "./contact-feedback";
 import type { ContactMethod } from "./publishable-listing";
 
 // CONATEL, 7.V.2025, published by ITU; format policy, not line/account verification.
@@ -80,6 +81,46 @@ export function contactValueForWrite(
   return value !== undefined && (method === "whatsapp" || method === "telefono")
     ? (canonicalVenezuelanPhone(value, method) ?? value)
     : value;
+}
+
+/** Explain a refusal using the same country policy, without changing admission. */
+export function venezuelanPhoneIssue(
+  value: string,
+  method: "whatsapp" | "telefono",
+): ContactIssue | undefined {
+  if (canonicalVenezuelanPhone(value, method) !== undefined) return undefined;
+  if (method === "whatsapp" && canonicalVenezuelanPhone(value, "telefono") !== undefined) {
+    return { code: "fixedWhatsapp" };
+  }
+  const notation = value.trim().replace(/[\s-]/g, "");
+  if (!/^[+0-9()]+$/.test(notation)) return { code: "notation" };
+  const country = VENEZUELA.countryCode;
+  const international = notation.startsWith("+") || notation.startsWith("00");
+  if (
+    international &&
+    !notation.startsWith(`+${country}`) &&
+    !notation.startsWith(`00${country}`)
+  ) {
+    return { code: "foreignCountry" };
+  }
+  // Like admission, parentheses can wrap only the national prefix.
+  if (!/^(?:\+58|0058|58)?(?:0?[0-9]{3}|\(0?[0-9]{3}\))[0-9]*$/.test(notation)) {
+    return { code: "notation" };
+  }
+  const digits = notation.replace(/[+()]/g, "");
+  const countryLength =
+    notation.startsWith("+") || notation.startsWith(country)
+      ? country.length
+      : notation.startsWith("00")
+        ? country.length + 2
+        : 0;
+  if (countryLength > 0 && digits.slice(countryLength).startsWith("0")) {
+    return { code: "internationalZero" };
+  }
+  const expected = VENEZUELA.nationalLength + (countryLength || (digits.startsWith("0") ? 1 : 0));
+  return digits.length !== expected
+    ? { code: "length", digits: digits.length, expected }
+    : { code: "notation" };
 }
 
 /** Accepted notation in, international value out; invalid text is never repaired. */

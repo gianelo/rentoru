@@ -227,7 +227,7 @@ const PROPERTY_TYPES: readonly string[] = ["apartamento", "casa", "quinta", "ane
  * afterwards the cost lands on a tenant who reveals a contact that goes
  * nowhere, and they have no way to tell that from being ignored.
  */
-function looksLikeEmail(value: string): boolean {
+export function looksLikeEmail(value: string): boolean {
   // Deliberately loose. The strict grammar for an address is famously
   // unimplementable, and every over-tight regex rejects somebody's real one.
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
