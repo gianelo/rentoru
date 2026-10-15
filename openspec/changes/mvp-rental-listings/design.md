@@ -253,7 +253,9 @@ Instead: a **90% floor on `src/modules/*/domain/` and `src/modules/*/application
 
 ## Continuous Integration
 
-No pipeline exists today. These gates run on every pull request and block merge:
+Pull requests targeting `dev`, `staging` or `main` run lint, types, tokens, unit/coverage, integration on ephemeral PostgreSQL 18 and a production build once, without waiting for Vercel. Their fake build credentials never point at a live database. Required GitHub checks must be configured separately; workflow presence alone does not block merge.
+
+Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability and budgets. Browser suites use only the job-owned database; Lighthouse measures the matching live deployment without creating application data. The resolver binds the newest Preview deployment to the pushed SHA, accepts the expected branch or SHA as the provider's ref, requires its latest status to succeed and fails on timeout/API errors instead of substituting a stable domain or local success. Vercel may publish SHA-only refs, which do not independently attest the source branch.
 
 | Gate | Command | Needs |
 |---|---|---|
@@ -265,7 +267,7 @@ No pipeline exists today. These gates run on every pull request and block merge:
 | Build | `pnpm build` | — |
 | Bundle budget | `pnpm budget:bundle` | build output |
 | Token contract (D16) | `pnpm lint:tokens` | — |
-| E2E + crawlability | `pnpm test:e2e` | preview deployment URL |
+| E2E + crawlability | `pnpm test:e2e` | local production app + job-owned PostgreSQL |
 | Lighthouse budget | `pnpm budget:lighthouse` | preview deployment URL |
 
 **A budget nobody measures automatically is a wish.** `budget:bundle` reads the build output and fails when read-path first-load JS exceeds 130 KB — fast, needs no deployment, and catches the most common regression (someone converts a server component to a client component). `budget:lighthouse` runs against the preview deployment and fails on LCP over 2.5 s on a throttled 3G profile, search transfer over 230 KB, or detail transfer over 500 KB. Image derivative budgets are already asserted at generation time in unit tests, so they need no separate gate.
@@ -276,7 +278,9 @@ No pipeline exists today. These gates run on every pull request and block merge:
 
 **`lint:tokens` is the enforcement half of D16.** It fails when a component stylesheet contains a colour literal, a corner radius, a thumbnail dimension, or a type size written as a value rather than a custom property. It costs no deployment and runs in milliseconds. Without it, D16 is a convention — and a convention that every future component must remember is precisely what this codebase's guiding principle rejects.
 
-**CI minutes are a metered resource here.** The repository is private, so Actions minutes come out of a monthly quota rather than being free as they would be on a public repository. Accordingly: lint, types, unit, coverage, the token contract and integration run on every push; E2E, crawlability and both budget gates run **on pull requests only**, since they require a deployment and are the expensive half. This is the same free-tier discipline applied to Neon, R2 and Resend — see F2, which must now re-verify the Actions quota as well.
+**Deployment scope is explicit.** `vercel.json` allows automatic Git deployments only for `dev`, `staging` and `main`; it does not revoke manual/CLI deployment privileges. Preview branch variables isolate Dev and Staging; Production belongs to `main`. Feature PRs require neither a deployment nor live DB credentials. These repository rules take effect only after integration into the relevant refs; old feature refs may retain their previous deployment configuration.
+
+Deployment verification requires the automation bypass credential and a reachable HTTP 200 page; missing prerequisites fail rather than reporting unmeasured Lighthouse as green. The deployment URL comes from GitHub's matching deployment record, not `dev.rentoru.com`/`staging.rentoru.com`. GitHub/Vercel metadata is the identity authority; this is not an independent attestation of the running application's SHA.
 
 ### D9 — Bulk import is a loader, not a second publication path
 
