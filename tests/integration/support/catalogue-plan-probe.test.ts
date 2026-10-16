@@ -18,6 +18,8 @@ function fixture(enabled = true) {
                 "Execution Time": 4,
                 "PRIVATE SQL": "PRIVATE ROW",
                 Plan: {
+                  "Node Type": "Sort",
+                  "Plan Rows": 1,
                   "Actual Rows": 5798,
                   "Actual Loops": 1,
                   "Shared Hit Blocks": 10,
@@ -53,7 +55,7 @@ describe("catalogue plan probe", () => {
       query_timeout: 5_000,
     });
     expect(f.lines).toEqual([
-      '[import-plan] {"event":"plan","driver_explain_ms":7,"server_execution_ms":4,"planning_ms":1,"rows":5798,"max_loops":3,"nested_loops":1,"shared_hits":10,"shared_reads":0,"temp_reads":0,"temp_written":0,"jit_ms":null}',
+      '[import-plan] {"event":"plan","driver_explain_ms":7,"server_execution_ms":4,"planning_ms":1,"rows":5798,"max_loops":3,"nested_loops":1,"shared_hits":10,"shared_reads":0,"temp_reads":0,"temp_written":0,"jit_ms":null,"nodes":[{"type":"Sort","estimate":1,"rows":5798,"loops":1,"hits":10,"filtered":null,"join_filtered":null},{"type":"Nested Loop","estimate":null,"rows":null,"loops":3,"hits":null,"filtered":null,"join_filtered":null}]}',
     ]);
     expect(f.lines.join(" ")).not.toContain("PRIVATE");
   });
@@ -116,7 +118,7 @@ describe("catalogue plan probe", () => {
     f.probe.logger.logQuery(CATALOGUE_ZONES_SQL, []);
     await f.probe.run();
     expect(f.lines).toEqual([
-      '[import-plan] {"event":"plan","driver_explain_ms":0,"server_execution_ms":4,"planning_ms":null,"rows":null,"max_loops":null,"nested_loops":0,"shared_hits":null,"shared_reads":null,"temp_reads":null,"temp_written":null,"jit_ms":null}',
+      '[import-plan] {"event":"plan","driver_explain_ms":0,"server_execution_ms":4,"planning_ms":null,"rows":null,"max_loops":null,"nested_loops":0,"shared_hits":null,"shared_reads":null,"temp_reads":null,"temp_written":null,"jit_ms":null,"nodes":[{"type":null,"estimate":null,"rows":null,"loops":null,"hits":null,"filtered":null,"join_filtered":null},{"type":null,"estimate":null,"rows":null,"loops":null,"hits":null,"filtered":null,"join_filtered":null}]}',
     ]);
   });
 

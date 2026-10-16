@@ -2,6 +2,21 @@ export const CATALOGUE_ZONES_SQL =
   'select "zone"."id", "zone"."name", "zone"."city_id", "zone"."kind", "zone"."category", "parent"."name" from "zone" left join "zone" "parent" on "zone"."parent_id" = "parent"."id" order by "zone"."name" asc';
 
 type Plan = Record<string, unknown>;
+const nodeTypes = new Set([
+  "Sort",
+  "Hash Join",
+  "Nested Loop",
+  "Seq Scan",
+  "Index Scan",
+  "Index Only Scan",
+  "Hash",
+  "Materialize",
+  "Memoize",
+  "Merge Join",
+  "Incremental Sort",
+  "Gather",
+  "Gather Merge",
+]);
 const numeric = (value: unknown): number | null =>
   typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
 function nodes(value: unknown): Plan[] {
@@ -78,6 +93,15 @@ export function createCataloguePlanProbe(
           temp_reads: numeric(root["Temp Read Blocks"]),
           temp_written: numeric(root["Temp Written Blocks"]),
           jit_ms: numeric(jit?.Timing?.Total),
+          nodes: tree.map((node) => ({
+            type: nodeTypes.has(node["Node Type"] as string) ? node["Node Type"] : null,
+            estimate: numeric(node["Plan Rows"]),
+            rows: numeric(node["Actual Rows"]),
+            loops: numeric(node["Actual Loops"]),
+            hits: numeric(node["Shared Hit Blocks"]),
+            filtered: numeric(node["Rows Removed by Filter"]),
+            join_filtered: numeric(node["Rows Removed by Join Filter"]),
+          })),
         });
       } catch {
         emit({ event: "unavailable", reason: "explain_failed" });
