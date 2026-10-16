@@ -29,6 +29,8 @@ export interface ListingCardProps {
   readonly areaM2: number;
   readonly publisherType: "owner" | "broker";
   readonly photo: ListingCardPhoto;
+  /** Prioridad de carga de la portada visible; el resto conserva descarga diferida. */
+  readonly prioritizePhoto?: boolean;
   /** El contador sobre la portada — "1 / 6" (tasks.md 22.8, artboard 7c). */
   readonly photoCount: number;
 }
@@ -56,6 +58,7 @@ export function ListingCard({
   publisherType,
   photo,
   photoCount,
+  prioritizePhoto = false,
 }: ListingCardProps) {
   return (
     <article className={styles.card} data-testid="listing-card">
@@ -65,7 +68,13 @@ export function ListingCard({
             que la 14.27 dice que decide si esta cuadrícula sobrevive. */}
         <picture>
           <source media="(min-width: 768px)" srcSet={photo.cardUrl} />
-          <img className={styles.photo} src={photo.thumbUrl} alt={photo.alt} loading="lazy" />
+          <img
+            className={styles.photo}
+            src={photo.thumbUrl}
+            alt={photo.alt}
+            loading={prioritizePhoto ? "eager" : "lazy"}
+            fetchPriority={prioritizePhoto ? "high" : undefined}
+          />
         </picture>
 
         {/* **La placa encima de la portada**, que es lo que dibujan las dos
