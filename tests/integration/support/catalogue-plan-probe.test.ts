@@ -14,19 +14,11 @@ function fixture(enabled = true) {
           {
             "QUERY PLAN": [
               {
-                "Planning Time": 1,
-                "Execution Time": 4,
                 "PRIVATE SQL": "PRIVATE ROW",
                 Plan: {
                   "Node Type": "Sort",
                   "Plan Rows": 1,
-                  "Actual Rows": 5798,
-                  "Actual Loops": 1,
-                  "Shared Hit Blocks": 10,
-                  "Shared Read Blocks": 0,
-                  "Temp Read Blocks": 0,
-                  "Temp Written Blocks": 0,
-                  Plans: [{ "Node Type": "Nested Loop", "Actual Loops": 3 }],
+                  Plans: [{ "Node Type": "Nested Loop", "Plan Rows": 1 }],
                 },
               },
             ],
@@ -51,11 +43,11 @@ describe("catalogue plan probe", () => {
     await f.probe.run();
     await f.probe.run();
     expect(f.query).toHaveBeenCalledExactlyOnceWith({
-      text: `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) ${CATALOGUE_ZONES_SQL}`,
+      text: `EXPLAIN (FORMAT JSON) ${CATALOGUE_ZONES_SQL}`,
       query_timeout: 5_000,
     });
     expect(f.lines).toEqual([
-      '[import-plan] {"event":"plan","driver_explain_ms":7,"server_execution_ms":4,"planning_ms":1,"rows":5798,"max_loops":3,"nested_loops":1,"shared_hits":10,"shared_reads":0,"temp_reads":0,"temp_written":0,"jit_ms":null,"nodes":[{"type":"Sort","estimate":1,"rows":5798,"loops":1,"hits":10,"filtered":null,"join_filtered":null},{"type":"Nested Loop","estimate":null,"rows":null,"loops":3,"hits":null,"filtered":null,"join_filtered":null}]}',
+      '[import-plan] {"event":"plan","mode":"estimated","driver_explain_ms":7,"server_execution_ms":null,"planning_ms":null,"rows":null,"max_loops":null,"nested_loops":1,"shared_hits":null,"shared_reads":null,"temp_reads":null,"temp_written":null,"jit_ms":null,"nodes":[{"type":"Sort","estimate":1,"rows":null,"loops":null,"hits":null,"filtered":null,"join_filtered":null},{"type":"Nested Loop","estimate":1,"rows":null,"loops":null,"hits":null,"filtered":null,"join_filtered":null}]}',
     ]);
     expect(f.lines.join(" ")).not.toContain("PRIVATE");
   });
@@ -118,7 +110,7 @@ describe("catalogue plan probe", () => {
     f.probe.logger.logQuery(CATALOGUE_ZONES_SQL, []);
     await f.probe.run();
     expect(f.lines).toEqual([
-      '[import-plan] {"event":"plan","driver_explain_ms":0,"server_execution_ms":4,"planning_ms":null,"rows":null,"max_loops":null,"nested_loops":0,"shared_hits":null,"shared_reads":null,"temp_reads":null,"temp_written":null,"jit_ms":null,"nodes":[{"type":null,"estimate":null,"rows":null,"loops":null,"hits":null,"filtered":null,"join_filtered":null},{"type":null,"estimate":null,"rows":null,"loops":null,"hits":null,"filtered":null,"join_filtered":null}]}',
+      '[import-plan] {"event":"plan","mode":"estimated","driver_explain_ms":0,"server_execution_ms":null,"planning_ms":null,"rows":null,"max_loops":null,"nested_loops":0,"shared_hits":null,"shared_reads":null,"temp_reads":null,"temp_written":null,"jit_ms":null,"nodes":[{"type":null,"estimate":null,"rows":null,"loops":null,"hits":null,"filtered":null,"join_filtered":null},{"type":null,"estimate":null,"rows":null,"loops":null,"hits":null,"filtered":null,"join_filtered":null}]}',
     ]);
   });
 
