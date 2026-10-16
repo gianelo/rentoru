@@ -21,6 +21,7 @@ import {
   type PublicationDatabase,
 } from "../../src/modules/listing-publication/infrastructure/drizzle-listing-repository";
 import * as schema from "../../src/shared/db/schema";
+import { createCataloguePlanProbe } from "./support/catalogue-plan-probe";
 import { observeCatalogueQueries } from "./support/catalogue-query-observer";
 
 /**
@@ -47,7 +48,8 @@ function getTestDatabaseUrl(): string {
 }
 
 const pool = new Pool({ connectionString: getTestDatabaseUrl() });
-const db = drizzle(pool, { schema }) as unknown as PublicationDatabase;
+const planProbe = createCataloguePlanProbe(pool, process.env.CI === "true");
+const db = drizzle(pool, { schema, logger: planProbe.logger }) as unknown as PublicationDatabase;
 
 const listings = new DrizzleListingRepository(db);
 const zones = new DrizzleZoneCatalogue(db);
@@ -116,6 +118,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await planProbe.run();
   if (USER_IDS.length > 0) {
     await pool.query(`DELETE FROM "user" WHERE id = ANY($1)`, [USER_IDS]);
   }

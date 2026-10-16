@@ -37,6 +37,8 @@ export interface ListingStripProps {
    */
   readonly subtitle: string | null;
   readonly cards: readonly ListingStripCard[];
+  /** Solo la primera tira visible adelanta la descarga de su primera portada. */
+  readonly prioritizeFirstPhoto?: boolean;
   /** `null` cuando la tira no promete nada más de lo que muestra. */
   readonly seeAll: ListingStripLink | null;
 }
@@ -64,7 +66,14 @@ export interface ListingStripProps {
  * trae, si lleva placa y qué dice esa placa lo decidió `home-collections.ts`.
  * Este archivo dibuja lo que le dan.
  */
-export function ListingStrip({ stripKey, title, subtitle, cards, seeAll }: ListingStripProps) {
+export function ListingStrip({
+  stripKey,
+  title,
+  subtitle,
+  cards,
+  seeAll,
+  prioritizeFirstPhoto = false,
+}: ListingStripProps) {
   // El `:` de una clave como `ciudad:dc` es válido en un id de HTML pero hay
   // que escaparlo en cualquier selector; cambiarlo acá es formato, no regla.
   const headingId = `tira-${stripKey.replace(/[^a-zA-Z0-9-]/g, "-")}`;
@@ -104,7 +113,7 @@ export function ListingStrip({ stripKey, title, subtitle, cards, seeAll }: Listi
           es el último de esos elementos, y eso es cierto: es lo que sigue
           después del quinto aviso. */}
       <ol className={styles.rail}>
-        {cards.map((card) => (
+        {cards.map((card, index) => (
           <li className={styles.item} key={card.id}>
             <ListingCard
               href={card.href}
@@ -116,6 +125,7 @@ export function ListingStrip({ stripKey, title, subtitle, cards, seeAll }: Listi
               publisherType={card.publisherType}
               photoCount={card.photoCount}
               photo={card.photo}
+              prioritizePhoto={prioritizeFirstPhoto && index === 0}
             />
           </li>
         ))}

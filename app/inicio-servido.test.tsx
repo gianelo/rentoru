@@ -138,6 +138,60 @@ describe("selector del inicio servido", () => {
     expect(coversFor).toHaveBeenCalledWith([]);
   });
 
+  it.each(["visible", "vacía", "sin portada"] as const)(
+    "prioriza solo la primera portada renderizada con la colección reciente %s",
+    async (recent) => {
+      const row = (id: string) => ({
+        id,
+        title: `Apartamento ${id}`,
+        priceUsd: 350,
+        rooms: 2,
+        areaM2: 65,
+        publisherType: "owner",
+        cityName: "Maracaibo",
+        zoneName: "Centro",
+      });
+      collectionsFor.mockImplementationOnce(
+        async (specs: { key: string }[]) =>
+          new Map(
+            specs.map(({ key }) => {
+              const rows =
+                key === "recientes" && recent !== "vacía"
+                  ? [row("recent-1"), row("recent-2")]
+                  : key === "ciudad:mcbo" || key === "presupuesto"
+                    ? [row("mar-1"), row("mar-2")]
+                    : [];
+              return [key, { rows, total: rows.length, zoneCount: rows.length ? 1 : 0 }];
+            }),
+          ),
+      );
+      if (recent === "sin portada") {
+        coversFor.mockImplementationOnce(
+          async (ids: string[]) =>
+            new Map(
+              ids
+                .filter((id) => !id.startsWith("recent-"))
+                .map((id) => [
+                  id,
+                  { keys: { thumb: "thumb.webp", card: "card.webp" }, photoCount: 1 },
+                ]),
+            ),
+        );
+      }
+
+      const html = await served();
+      const images = [...html.matchAll(/<img\b[^>]*>/g)].map(([image]) => image);
+      expect(images).toHaveLength(recent === "visible" ? 6 : 4);
+      expect(images[0]).toContain(`Apartamento ${recent === "visible" ? "recent-1" : "mar-1"}`);
+      expect(images[0]).toContain('loading="eager"');
+      expect(images[0]).toMatch(/\bfetchpriority="high"/i);
+      for (const image of images.slice(1)) {
+        expect(image).toContain('loading="lazy"');
+        expect(image).not.toMatch(/\bfetchpriority=/i);
+      }
+    },
+  );
+
   it("sirve la ciudad seleccionada con oferta sin sustituirla por la landing vacía", async () => {
     const html = await served("maracaibo");
     expect(html).toMatch(/aria-current="true"[^>]*href="\/"[^>]*>Maracaibo/);
@@ -202,6 +256,7 @@ describe("selector del inicio servido", () => {
     const html = await served("maracaibo");
     expect(html).toContain("Todavía no hay avisos disponibles en Maracaibo");
     expect(html).not.toContain("Apartamento en Maracaibo");
+    expect(html).not.toMatch(/<img\b|\bfetchpriority=/i);
     expect(html).not.toContain('aria-label="Ciudades"');
     expect(html).toContain('href="/"');
   });
