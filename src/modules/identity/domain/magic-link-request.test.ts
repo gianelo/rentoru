@@ -192,13 +192,13 @@ describe("la pantalla de espera, que el enlace por correo obliga a tener (15.9)"
   const espera = magicLinkWaitFor({ ticket: TICKET, nowMs: AHORA + 18_000 });
 
   it("muestra de vuelta la dirección tecleada, para cazar el tipeo sin volver", () => {
-    expect(espera.title).toBe("Revisá tu correo");
+    expect(espera.title).toBe("Revisa tu correo");
     expect(espera.address).toBe("maria.f@gmail.com");
     expect(espera.leadBefore).toBe("Le mandamos un enlace a ");
     // «Tocalo» (8c) y «Hacé clic» (9c) son cada una falsa en el otro ancho, y
     // la copia sale del dominio: no puede cambiar con el ancho. Se toma el
     // verbo que sigue siendo cierto en los dos (ver 22.27).
-    expect(espera.leadAfter).toBe(". Abrilo y entrás sin escribir nada más.");
+    expect(espera.leadAfter).toBe(". Ábrelo y entras sin escribir nada más.");
   });
 
   /**
@@ -213,7 +213,7 @@ describe("la pantalla de espera, que el enlace por correo obliga a tener (15.9)"
     expect(espera.troublesTitle).toBe("Si no llega");
     expect(espera.troubles).toEqual([
       "Puede tardar hasta dos minutos.",
-      "Mirá en correo no deseado.",
+      "Mira en correo no deseado.",
       "El enlace sirve una sola vez y vence en 15 minutos.",
     ]);
     expect(MAGIC_LINK_MAX_AGE_SECONDS).toBe(15 * 60);
@@ -350,7 +350,7 @@ describe("el sondeo pregunta por el enlace, no por la persona (15.14)", () => {
   /** La frase que la 9c promete, y que hasta ahora no se podía decir sin mentir. */
   it("dice que la sesión quedó en el otro dispositivo, no que ya entró acá", () => {
     expect(magicLinkWaitFor({ ticket: CON_HUELLA, nowMs: AHORA }).signedInNotice).toBe(
-      "Abriste el enlace en otro dispositivo. Podés seguir ahí: acá ya no hace falta esperar.",
+      "Abriste el enlace en otro dispositivo. Puedes seguir ahí: aquí ya no hace falta esperar.",
     );
   });
 });

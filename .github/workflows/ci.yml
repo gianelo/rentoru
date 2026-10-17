@@ -3,12 +3,15 @@ name: CI
 # CI minutes are metered on this private repository (design.md, "Continuous
 # Integration") — Actions minutes come from a monthly quota, not the free
 # unlimited tier public repos get. Cheap gates that need no deployment run
-# on every push (which already covers commits pushed to an open PR branch,
-# so they still surface as PR status checks). The expensive half — E2E,
-# crawlability, and both budget gates — needs a deployed preview and runs
-# on pull_request only, so it is never paid for twice per commit.
+# on pull requests into dev/staging/main. The expensive half — E2E,
+# crawlability, measurement and budgets — runs on pushes to dev/staging.
+# Only Lighthouse needs the exact commit's deployed preview.
+# Full remains the default on dev and mandatory on staging. Enable the optional
+# CI_DEV_PROFILE=critical repository variable only after validating the staging
+# replacement and the promotion prerequisites; this file does not enable it.
+# Critical dev keeps isolated publication/authentication and selects public reads.
 #
-# No repository variable or secret is required for any of this.
+# No repository variable is required to discover deployment URLs.
 #
 #   - The preview URL is resolved at run time from GitHub's Deployments API,
 #     which Vercel populates. Nothing to keep in sync by hand.
@@ -16,15 +19,15 @@ name: CI
 #     container, local to the job and never the production Neon database.
 #   - The `build` job uses a deliberately fake, unroutable DATABASE_URL.
 #
-# Founder-side setup that DOES matter, and lives in Vercel rather than here:
-# the Preview environment must point at its own Neon branch, so an E2E run
-# writes listings and users into a throwaway database instead of the real
-# catalogue. Same variable name, different value per environment — the app
-# neither knows nor cares.
+# E2E always uses the job-owned local catalogue, never a Vercel database.
+# Remote Lighthouse requires VERCEL_AUTOMATION_BYPASS_SECRET; missing access
+# fails closed rather than reporting an unmeasured deployment as passing.
 
 on:
   push:
+    branches: [dev, staging]
   pull_request:
+    branches: [dev, staging, main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -47,7 +50,7 @@ env:
 
 jobs:
   lint:
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -62,7 +65,7 @@ jobs:
       - run: pnpm exec biome ci .
 
   types:
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +80,7 @@ jobs:
       - run: pnpm typecheck
 
   lint-tokens:
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -97,7 +100,7 @@ jobs:
   # A failing test and a threshold violation are still distinguishable from
   # this job's own output.
   test:
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -118,7 +121,7 @@ jobs:
   # config, server/client boundary violations — could only ever be discovered
   # by deploying. Type-checking is not building.
   build:
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     env:
       # src/shared/db/client.ts resolves and validates DATABASE_URL at module
@@ -149,15 +152,10 @@ jobs:
       - run: pnpm build
 
   # Layout-measurement harness (tasks.md 1b.10-1b.12, 1b.14). Runs on every
-  # push, not pull_request only, unlike the e2e/budget jobs below: it needs
-  # a Next.js build and a real browser, but — unlike those — it needs no
-  # deployed preview (its own webServer starts a local `next dev`), which is
-  # exactly the distinction design.md draws between the cheap push-gated
-  # half and the expensive PR-only half of this pipeline. It waits on no
-  # deployment, so gating it to pull_request would only delay the same proof
-  # for no saved cost.
+  # push to dev/staging alongside e2e/budget: it needs a Next.js build and
+  # a real browser, but no deployed preview (its webServer runs `next dev`).
   measure:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && (github.ref != 'refs/heads/dev' || vars.CI_DEV_PROFILE != 'critical')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -183,10 +181,21 @@ jobs:
       # in that cache, so a hit without them leaves a browser that cannot
       # start.
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:measure
+      - run: node --test scripts/measure-trace.test.cjs
+      - id: measure
+        run: pnpm test:measure
+
+      - name: Preserve failed local measure traces
+        if: ${{ !cancelled() && steps.measure.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: measure-traces-${{ github.sha }}-${{ github.run_attempt }}
+          path: test-results/**/trace.zip
+          if-no-files-found: warn
+          retention-days: 3
 
   integration:
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -275,38 +284,21 @@ jobs:
   # copies of a wait loop drift, and the second copy is the one nobody
   # notices is broken.
   preview:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push' && (github.ref != 'refs/heads/dev' || vars.CI_DEV_PROFILE != 'critical')
     runs-on: ubuntu-latest
     outputs:
       url: ${{ steps.resolve.outputs.url }}
     steps:
+      - uses: actions/checkout@v4
       - name: Wait for the Vercel preview deployment
         id: resolve
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          url=""
-          for attempt in $(seq 1 40); do
-            for id in $(gh api "repos/${GITHUB_REPOSITORY}/deployments?sha=${HEAD_SHA}" --jq '.[].id' 2>/dev/null); do
-              found=$(gh api "repos/${GITHUB_REPOSITORY}/deployments/${id}/statuses" \
-                --jq 'map(select(.state == "success" and .environment_url != null)) | .[0].environment_url // empty' 2>/dev/null)
-              if [ -n "$found" ]; then url="$found"; break; fi
-            done
-            [ -n "$url" ] && break
-            echo "attempt ${attempt}/40: no successful preview deployment for ${HEAD_SHA} yet"
-            sleep 15
-          done
-          if [ -z "$url" ]; then
-            echo "::warning title=No preview deployment::Vercel published no successful deployment for ${HEAD_SHA} within 10 minutes."
-          else
-            echo "resolved preview URL: ${url}"
-          fi
-          echo "url=${url}" >> "$GITHUB_OUTPUT"
+          HEAD_SHA: ${{ github.sha }}
+        run: bash .github/scripts/wait-for-preview.sh
 
   e2e:
-    if: github.event_name == 'pull_request'
-    needs: preview
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     # **El arnés que le devuelve los dientes al proyecto `crawlability`**
     # (tasks.md 11.22). Hasta acá este job compilaba contra una DATABASE_URL
@@ -321,9 +313,7 @@ jobs:
     # ciudades con fotos. La aplicacion no cambia una linea, y
     # `assertPooledConnectionString` no se debilita.
     #
-    # **Sigue corriendo por PR y no por push** (decision del fundador,
-    # 2026-08-27): lo que tiene que morder es la fusion, y los minutos de
-    # Actions estan medidos en este repositorio.
+    # Ahora corre tras actualizar dev/staging, siempre contra este contenedor.
     services:
       postgres:
         # El mismo 18 que el job `integration` y que la instancia de Neon.
@@ -384,16 +374,32 @@ jobs:
       - name: Seed the deterministic e2e catalogue
         run: pnpm db:test:seed:e2e
 
-      # The preview URL is used ONLY when a bypass secret exists to get past
-      # Vercel's deployment-protection SSO wall. Without it every request
-      # lands on vercel.com/login and the suite reports the app as broken --
-      # which is exactly what happened the first time these specs ran. With
-      # no secret the config falls back to a local production build, which
-      # covers less and says so.
+      # This preservation fixture needs the seed publisher still draft-free.
+      # Keep it before all general suites, local only, with no ambient worker DB.
+      # Only the build gets a fake pooled URL; webServer supplies its own DB/proxy.
+      - name: '36.3: publication entry (local production build)'
+        env:
+          PLAYWRIGHT_BASE_URL: ''
+          VERCEL_AUTOMATION_BYPASS_SECRET: ''
+          AUTH_URL: http://localhost:3001
+          AUTH_TRUST_HOST: 'true'
+          AUTH_SECRET: build-time-placeholder-not-a-real-secret
+          SITE_URL: http://localhost:3001
+          R2_BUCKET_PUBLIC_URL: http://localhost:3001
+          PLAYWRIGHT_PORT: '3001'
+          NEON_PROXY_PORT: '55436'
+          PLAYWRIGHT_WEB_COMMAND: pnpm start --port 3001
+        run: |
+          DATABASE_URL=postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require pnpm build
+          env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts --project=chromium --workers=1 --retries=0
+          env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts --project=crawlability --workers=1 --retries=0
+
+      # Always exercise the seeded job-owned app, not the remote deployment.
       - name: E2E + crawlability
         env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' && needs.preview.outputs.url || '' }}
-          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+          READ_PROFILE: ${{ github.ref == 'refs/heads/dev' && vars.CI_DEV_PROFILE == 'critical' && 'critical' || 'full' }}
+          PLAYWRIGHT_BASE_URL: ''
+          VERCEL_AUTOMATION_BYPASS_SECRET: ''
           # The same deliberately fake, unroutable value the build job carries,
           # and for the same reason: src/shared/db/client.ts resolves and
           # validates DATABASE_URL at module load ON PURPOSE, so a change that
@@ -409,8 +415,7 @@ jobs:
           RENEWAL_TOKEN_SECRET: e2e-fake-secret-signs-nothing-real
           # Igual que arriba: desde la 26.10 `readSiteBaseUrl` falla cerrado, y
           # `robots.txt` y `sitemap.xml` se prerenderizan, así que el `pnpm
-          # build` de reserva de este job no termina sin ella. Sólo la usa esa
-          # rama local; contra una vista previa desplegada manda la de Vercel.
+          # build` local de este job no termina sin ella.
           SITE_URL: https://ci-build-no-es-el-dominio-real.invalid
           # El origen público de las fotos. Hasta que 11.22 encendió las
           # especificaciones que dibujan avisos, este job no lo necesitaba: todo
@@ -440,6 +445,10 @@ jobs:
           if [ -z "$PLAYWRIGHT_BASE_URL" ]; then
             pnpm build
           fi
+          if [ "$READ_PROFILE" = "critical" ]; then
+            pnpm test:e2e:critical:read
+            exit $?
+          fi
           fail=0
           # `if cmd` rather than capturing $? after an assignment: Actions runs
           # these steps under `bash -e`, where a failing command substitution
@@ -447,7 +456,7 @@ jobs:
           # runs, so both the loop and the "no tests yet" tolerance below would
           # be dead code and one real failure would skip the remaining project.
           for project in chromium crawlability; do
-            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:|30\.7:' 2>&1); then
+            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:|30\.7:|36\.3:' 2>&1); then
               echo "$output"
             else
               echo "$output"
@@ -462,8 +471,8 @@ jobs:
           exit $fail
 
       # The listing and missing-route diagnostics need the seeded local catalogue
-      # even when the main suite runs against a protected preview. Run them before
-      # pagination changes those six rows, and never send them to the preview.
+      # just like the main suite. Run them before pagination changes those six
+      # rows, and never send them to the preview.
       - name: 30.2–30.4 served listing and route diagnostics (local production build)
         env:
           PLAYWRIGHT_BASE_URL: ''
@@ -483,6 +492,7 @@ jobs:
       - name: 30.4b2–30.7 authenticated contact and door (local production build)
         env:
           PLAYWRIGHT_BASE_URL: ''
+          VERCEL_AUTOMATION_BYPASS_SECRET: ''
           AUTH_URL: http://localhost:3000
           AUTH_TRUST_HOST: 'true'
           AUTH_SECRET: build-time-placeholder-not-a-real-secret
@@ -515,27 +525,8 @@ jobs:
           pnpm exec playwright test tests/e2e/paginacion-catalogo.spec.ts --project=chromium
           pnpm exec playwright test tests/e2e/paginacion-catalogo.spec.ts --project=crawlability
 
-      # Warns on the MISSING SECRET too, not only on a missing preview. The
-      # old condition looked at the preview URL alone, so the run that had a
-      # published preview and no bypass secret -- which is every run today --
-      # fell back to the DB-less local build and said nothing at all. The
-      # specs that need a catalogue skipped themselves and the job reported
-      # green. Whichever half is absent, the read path went unverified, and
-      # this says which half so it is one action to fix rather than a hunt.
-      - name: E2E ran without a live deployment
-        if: env.PLAYWRIGHT_BASE_URL == ''
-        env:
-          PLAYWRIGHT_BASE_URL: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' && needs.preview.outputs.url || '' }}
-        run: |
-          if [ -z "${{ needs.preview.outputs.url }}" ]; then
-            cause="no Vercel preview deployment was published for this commit"
-          else
-            cause="VERCEL_AUTOMATION_BYPASS_SECRET is not set on this repository, so the preview's SSO wall cannot be passed"
-          fi
-          echo "::warning title=No preview deployment::$cause. The suite ran against a production build served locally, backed by the seeded e2e catalogue (tasks.md 11.22) rather than an unroutable database — so the read path WAS verified. What this run could not verify is Vercel's own routing, its environment, and the real deployment."
-
   budget:
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push' && (github.ref != 'refs/heads/dev' || vars.CI_DEV_PROFILE != 'critical')
     needs: preview
     runs-on: ubuntu-latest
     # tasks.md 27.4 — the row half of the budget pair. Unlike the byte half
@@ -594,7 +585,7 @@ jobs:
       # jobs run in parallel with no ordering dependency between them, and
       # wiring an artifact hand-off would trade a few seconds of duplicate
       # build time for a real cross-job coupling — not a trade worth making
-      # for a job that is already gated to pull_request only.
+      # for a job that is already gated to dev/staging pushes.
       - name: Bundle budget (build-output size assertion)
         run: |
           pnpm build
@@ -627,14 +618,58 @@ jobs:
       # would sail through every byte budget and report green having verified
       # nothing. This repository has already shipped three checks that could
       # not fail; refusing to measure a page that is not there is how this one
-      # avoids becoming the fourth. It warns and skips rather than failing,
-      # because "the home page does not exist yet" is a schedule fact, not a
-      # performance regression.
+      # avoids becoming the fourth: missing access or a non-200 is a failure.
       - name: Lighthouse budget
+        id: lighthouse
+        env:
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
         run: |
-          status=$(curl -s -o /dev/null -w '%{http_code}' "$PREVIEW_BASE_URL/")
-          if [ "$status" != "200" ]; then
-            echo "::warning title=Lighthouse budget not measured::${PREVIEW_BASE_URL}/ returned HTTP ${status}. No page weight or LCP was checked. A 404 passes every byte budget trivially, so this step refuses to report a pass it did not earn. It starts measuring for real once a read-path page exists."
-            exit 0
+          if [ -z "$PREVIEW_BASE_URL" ] || [ -z "$VERCEL_AUTOMATION_BYPASS_SECRET" ]; then
+            echo "::error title=Lighthouse budget not measured::Preview URL or automation bypass credential unavailable. No page weight or LCP was checked."
+            exit 1
           fi
-          pnpm run budget:lighthouse
+          # No redirect follows, response body, header dump or credential in argv.
+          # curl errors are failures, not a successful empty-page measurement.
+          if ! status=$(printf 'x-vercel-protection-bypass: %s\n' "$VERCEL_AUTOMATION_BYPASS_SECRET" | curl --silent --show-error --max-time 30 --output /dev/null --write-out '%{http_code}' --header @- "$PREVIEW_BASE_URL/"); then
+            echo "::error title=Lighthouse probe failed::Preview transport failed; no measurement was made."
+            exit 1
+          fi
+          if [ "$status" != "200" ]; then
+            echo "::error title=Lighthouse budget not measured::Preview root returned HTTP ${status}. No page weight or LCP was checked."
+            exit 1
+          fi
+          # LHCI's puppeteerScript uses puppeteer-core, which cannot infer a
+          # browser binary. Resolve one only after the preview is measurable;
+          # a reachable preview must fail rather than silently skip Lighthouse.
+          if [ -n "${CHROME_PATH:-}" ] && [ -x "$CHROME_PATH" ]; then
+            chrome="$CHROME_PATH"
+          else
+            chrome=""
+            for candidate in google-chrome google-chrome-stable chromium; do
+              if path=$(command -v "$candidate") && [ -x "$path" ]; then
+                chrome="$path"
+                break
+              fi
+            done
+          fi
+          if [ -z "$chrome" ]; then
+            echo "::error title=Lighthouse Chrome unavailable::No executable Chrome found in CHROME_PATH or runner PATH. Preview root returned 200; budget was not measured."
+            exit 1
+          fi
+          export CHROME_PATH="$chrome"
+          pnpm run budget:lighthouse --collect.puppeteerScript=scripts/lighthouse-preview-auth.cjs
+
+      - name: Extract sanitized Lighthouse diagnostic
+        id: lighthouse_diagnostic
+        if: ${{ !cancelled() && (steps.lighthouse.outcome == 'success' || steps.lighthouse.outcome == 'failure') }}
+        run: node scripts/lighthouse-summary.mjs
+
+      - name: Preserve sanitized Lighthouse diagnostic
+        if: ${{ !cancelled() && steps.lighthouse_diagnostic.outcome == 'success' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-diagnostic-${{ github.sha }}-${{ github.run_attempt }}
+          path: .lighthouseci/diagnostic.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 7

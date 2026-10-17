@@ -33,7 +33,8 @@ export interface ToponymEntry {
 const ROW = /^\|\s*\*\*(.+?)\*\*\s*\|\s*(.+?)\s*\|\s*$/u;
 
 /** Una aparición dentro de la segunda celda. */
-const OCCURRENCE = /\*\*(.+?)\*\*\s*→\s*\*(.+?)\*/u;
+const OCCURRENCE = /\*\*(.+?)\*\*\s*→\s*(.+)/u;
+const ENTRY = /\*([^*]+)\*/gu;
 
 /**
  * El índice empieza en su propio encabezado de primer nivel y termina donde
@@ -73,7 +74,11 @@ export function parseToponymIndex(markdown: string): readonly ToponymEntry[] {
     for (const chunk of row[2].split("<br>")) {
       const occurrence = OCCURRENCE.exec(chunk);
       if (!occurrence?.[1] || !occurrence[2]) continue;
-      entries.push({ toponym, parish: occurrence[1], entry: occurrence[2] });
+      // Una parroquia puede listar varias entradas homónimas con ·. Todas
+      // heredan la parroquia del segmento, no la del siguiente <br>.
+      for (const match of occurrence[2].matchAll(ENTRY)) {
+        if (match[1]) entries.push({ toponym, parish: occurrence[1], entry: match[1] });
+      }
     }
   }
 

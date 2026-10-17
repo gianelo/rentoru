@@ -113,7 +113,9 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
     <div className={styles.shell}>
       <header className={styles.bar}>
         <div className={styles.barInner}>
-          <p className={styles.brand}>Rentoru</p>
+          <AppLink className={styles.brand} href="/" aria-label="Rentoru, ir al inicio">
+            Rentoru
+          </AppLink>
           <span className={styles.saved}>Guardado</span>
           <AppLink className={styles.exit} href="/" aria-label="Salir de publicar">
             ×

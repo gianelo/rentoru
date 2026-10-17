@@ -323,7 +323,7 @@ export async function seedTaxonomy(database?: SeedDatabase): Promise<void> {
   }
 
   // **Los alias de busqueda.** El arbol guarda el nombre que la fuente publica;
-  // esto guarda el nombre por el que la gente lo busca. Son 3.547 filas, y
+  // esto guarda el nombre por el que la gente lo busca. Son 4.203 filas, y
   // ninguna crea una zona: cada una apunta a una que ya existe.
   const aliasResult = buildAliasRows(
     territoryDocuments,

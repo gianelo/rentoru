@@ -172,6 +172,8 @@ describe("ListingStrip — lo que reusa y lo que no repinta", () => {
     const markup = render();
 
     expect(markup.match(/data-testid="listing-card"/g) ?? []).toHaveLength(5);
+    expect(markup.match(/loading="lazy"/g) ?? []).toHaveLength(5);
+    expect(markup).not.toMatch(/\bfetchpriority=/i);
     expect(stripSource).toContain("ListingCard");
   });
 

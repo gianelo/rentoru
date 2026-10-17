@@ -28,9 +28,9 @@ describe("la puerta del contacto se abre por la dirección (15.8)", () => {
   it("se abre con el token exacto y nombra a quien publica", () => {
     const puerta = contactDoorFor(CON_LLAVE, DUENO, DOOR_OPEN_TOKEN, false);
 
-    expect(puerta?.title).toBe("Entrá para ver el WhatsApp de María F.");
+    expect(puerta?.title).toBe("Entra para ver el WhatsApp de María F.");
     expect(puerta).not.toHaveProperty("stayLabel");
-    expect(puerta?.assurance).toBe("Volvés a este mismo aviso al terminar.");
+    expect(puerta?.assurance).toBe("Vuelves a este mismo aviso al terminar.");
   });
 
   /** El canal sale del método, y el papel sale del tipo cuando no hay nombre. */
@@ -44,10 +44,10 @@ describe("la puerta del contacto se abre por la dirección (15.8)", () => {
     const sinNombre = (type: "owner" | "broker") =>
       contactDoorFor(CON_LLAVE, { type, name: null }, DOOR_OPEN_TOKEN, false)?.title;
 
-    expect(porTelefono?.title).toBe("Entrá para ver el teléfono de María F.");
+    expect(porTelefono?.title).toBe("Entra para ver el teléfono de María F.");
     // «de el dueño» no es una frase: la contracción va adentro de la regla.
-    expect(sinNombre("owner")).toBe("Entrá para ver el WhatsApp del dueño");
-    expect(sinNombre("broker")).toBe("Entrá para ver el WhatsApp de la inmobiliaria");
+    expect(sinNombre("owner")).toBe("Entra para ver el WhatsApp del dueño");
+    expect(sinNombre("broker")).toBe("Entra para ver el WhatsApp de la inmobiliaria");
   });
 
   /**
@@ -145,7 +145,7 @@ describe("lo que se lee al lado del número tapado (F20, 15.11)", () => {
   it("dice qué falta, por qué, y que no cuesta nada", () => {
     expect(lockedContactNotice("whatsapp")).toBe(
       "Mostramos el WhatsApp a usuarios registrados. " +
-        "Pedimos la cuenta para frenar avisos falsos: es gratis y es un toque.",
+        "Pedimos la cuenta para frenar avisos falsos: es gratis y es rápido.",
     );
   });
 
@@ -174,7 +174,7 @@ describe("lo que se lee al lado del número tapado (F20, 15.11)", () => {
     );
     // La mayúscula es lo único que cambia: la hoja abre frase con «Es gratis»
     // y el bloque la encadena con dos puntos. Se pinea lo que afirman.
-    expect(hoja?.reason).toContain("gratis y es un toque");
-    expect(lockedContactNotice("whatsapp")).toContain("gratis y es un toque");
+    expect(hoja?.reason).toContain("gratis y es rápido");
+    expect(lockedContactNotice("whatsapp")).toContain("gratis y es rápido");
   });
 });

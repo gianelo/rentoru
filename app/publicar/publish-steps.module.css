@@ -45,6 +45,13 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: var(--target-min);
+  min-block-size: var(--target-min);
+  flex-shrink: 0;
+  color: var(--ink);
+  text-decoration: none;
   font-family: var(--disp);
   font-size: var(--title-fs);
   font-weight: var(--title-fw);
@@ -395,6 +402,45 @@
   display: flex;
   gap: 8px;
   margin-block-end: 12px;
+}
+
+.searchField {
+  position: relative;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+/* Sólo durante la búsqueda: al volver a reposo se recupera la × nativa. */
+.searchBusy::-webkit-search-cancel-button {
+  visibility: hidden;
+}
+
+.searchSpinner {
+  position: absolute;
+  /* Centro de la × UA medido con padding nativo de 14px, no padding extra. */
+  inset-inline-end: 16px;
+  inset-block-start: 50%;
+  margin-block-start: calc(var(--loading-inline-size) / -2);
+  inline-size: var(--loading-inline-size);
+  block-size: var(--loading-inline-size);
+  box-sizing: border-box;
+  border: var(--loading-ring-width) solid var(--line);
+  border-block-start-color: var(--accent);
+  border-radius: var(--rs);
+  pointer-events: none;
+  animation: zoneSpin var(--loading-duration) linear infinite;
+}
+
+@keyframes zoneSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .searchSpinner {
+    animation: none;
+  }
 }
 
 .searchButton {

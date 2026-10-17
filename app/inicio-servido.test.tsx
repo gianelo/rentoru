@@ -21,6 +21,17 @@ vi.mock("@/modules/listing-catalogue/infrastructure/drizzle-catalogue", () => ({
     listCities = listCities;
   },
 }));
+vi.mock("@/modules/listing-catalogue/infrastructure/drizzle-search-vocabulary", () => ({
+  DrizzleSearchVocabulary: class {
+    lookup = async (typed: string) => ({
+      cities: (await listCities()).filter((city) =>
+        city.name.toLowerCase().includes(typed.toLowerCase()),
+      ),
+      zones: [],
+      aliases: [],
+    });
+  },
+}));
 vi.mock("@/modules/listing-discovery/infrastructure/drizzle-active-zones", () => ({
   DrizzleActiveZones: class {
     listActiveZones = async () => [];
@@ -46,9 +57,9 @@ vi.mock("./_lib/nav-account", () => ({ readNavAccountFlags: async () => ({}) }))
 
 import InicioPage from "./page";
 
-async function served(city?: string): Promise<string> {
+async function served(city?: string, q?: string): Promise<string> {
   return renderToStaticMarkup(
-    await InicioPage({ searchParams: Promise.resolve(city ? { ciudad: city } : {}) }),
+    await InicioPage({ searchParams: Promise.resolve({ ciudad: city, q }) }),
   );
 }
 
@@ -84,6 +95,30 @@ beforeEach(() => {
 });
 
 describe("selector del inicio servido", () => {
+  it("F35.3: sirve la pregunta neutra en label y placeholder del inicio", async () => {
+    const html = await served();
+    expect(html).toMatch(
+      /<label[^>]*for="pastilla-de-busqueda"[^>]*>¿En qué zona buscas\?<\/label>/,
+    );
+    expect(html).toMatch(
+      /<input[^>]*id="pastilla-de-busqueda"[^>]*placeholder="¿En qué zona buscas\?"[^>]*name="q"[^>]*value=""/,
+    );
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
+    expect(html).toContain('href="/?ciudad=maracaibo"');
+  });
+
+  it("F35.3: sirve la ayuda desconocida completa con texto recortado y escapado", async () => {
+    const html = await served(undefined, '  <nave> & "espacial"  ');
+    expect(html).toMatch(
+      /<p[^>]*>No reconocimos «&lt;nave&gt; &amp; &quot;espacial&quot;». Prueba con una zona, una ciudad o un tipo de vivienda\.<\/p>/,
+    );
+    expect(html).toContain('value="&lt;nave&gt; &amp; &quot;espacial&quot;"');
+    expect(html).not.toContain("<nave>");
+    expect(html).not.toContain("No reconocimos «  ");
+    expect(html).not.toContain("sin resultados");
+    expect(html).toMatch(/<form[^>]*action="\/"[^>]*method="get"/);
+  });
+
   it("omite ciudad vacía, muestra la disponible y conserva la copia actual", async () => {
     const html = await served();
     expect(html).toContain('href="/?ciudad=maracaibo"');
@@ -102,6 +137,60 @@ describe("selector del inicio servido", () => {
     expect(html).toContain("Todavía no hay avisos disponibles en Distrito Capital");
     expect(coversFor).toHaveBeenCalledWith([]);
   });
+
+  it.each(["visible", "vacía", "sin portada"] as const)(
+    "prioriza solo la primera portada renderizada con la colección reciente %s",
+    async (recent) => {
+      const row = (id: string) => ({
+        id,
+        title: `Apartamento ${id}`,
+        priceUsd: 350,
+        rooms: 2,
+        areaM2: 65,
+        publisherType: "owner",
+        cityName: "Maracaibo",
+        zoneName: "Centro",
+      });
+      collectionsFor.mockImplementationOnce(
+        async (specs: { key: string }[]) =>
+          new Map(
+            specs.map(({ key }) => {
+              const rows =
+                key === "recientes" && recent !== "vacía"
+                  ? [row("recent-1"), row("recent-2")]
+                  : key === "ciudad:mcbo" || key === "presupuesto"
+                    ? [row("mar-1"), row("mar-2")]
+                    : [];
+              return [key, { rows, total: rows.length, zoneCount: rows.length ? 1 : 0 }];
+            }),
+          ),
+      );
+      if (recent === "sin portada") {
+        coversFor.mockImplementationOnce(
+          async (ids: string[]) =>
+            new Map(
+              ids
+                .filter((id) => !id.startsWith("recent-"))
+                .map((id) => [
+                  id,
+                  { keys: { thumb: "thumb.webp", card: "card.webp" }, photoCount: 1 },
+                ]),
+            ),
+        );
+      }
+
+      const html = await served();
+      const images = [...html.matchAll(/<img\b[^>]*>/g)].map(([image]) => image);
+      expect(images).toHaveLength(recent === "visible" ? 6 : 4);
+      expect(images[0]).toContain(`Apartamento ${recent === "visible" ? "recent-1" : "mar-1"}`);
+      expect(images[0]).toContain('loading="eager"');
+      expect(images[0]).toMatch(/\bfetchpriority="high"/i);
+      for (const image of images.slice(1)) {
+        expect(image).toContain('loading="lazy"');
+        expect(image).not.toMatch(/\bfetchpriority=/i);
+      }
+    },
+  );
 
   it("sirve la ciudad seleccionada con oferta sin sustituirla por la landing vacía", async () => {
     const html = await served("maracaibo");
@@ -167,6 +256,7 @@ describe("selector del inicio servido", () => {
     const html = await served("maracaibo");
     expect(html).toContain("Todavía no hay avisos disponibles en Maracaibo");
     expect(html).not.toContain("Apartamento en Maracaibo");
+    expect(html).not.toMatch(/<img\b|\bfetchpriority=/i);
     expect(html).not.toContain('aria-label="Ciudades"');
     expect(html).toContain('href="/"');
   });

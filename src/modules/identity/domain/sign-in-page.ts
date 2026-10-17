@@ -105,8 +105,8 @@ const EMAIL_ERROR_MESSAGE = "✱ Ese correo no es válido.";
  * La misma frase que la hoja de la ficha (`contactDoorFor`), pineada por valor
  * en `sign-in-page.test.ts`: son dos formas de una sola puerta.
  */
-const ACCOUNT_REASON = "Pedimos la cuenta para frenar avisos falsos. Es gratis y es un toque.";
-const RETURN_ASSURANCE = "Volvés a este mismo aviso al terminar.";
+const ACCOUNT_REASON = "Pedimos la cuenta para frenar avisos falsos. Es gratis y es rápido.";
+const RETURN_ASSURANCE = "Vuelves a este mismo aviso al terminar.";
 
 /**
  * Las dos palabras enlazadas a `/legal/terminos` y `/legal/privacidad`
@@ -116,7 +116,7 @@ const RETURN_ASSURANCE = "Volvés a este mismo aviso al terminar.";
  * pide una cuenta— se cayó solo.
  */
 export const SIGN_IN_LEGAL: readonly LegalFragment[] = [
-  { kind: "text", value: "Al entrar aceptás los " },
+  { kind: "text", value: "Al entrar aceptas los " },
   { kind: "link", label: "términos", href: "/legal/terminos" },
   { kind: "text", value: " y la " },
   { kind: "link", label: "privacidad", href: "/legal/privacidad" },
@@ -149,9 +149,9 @@ const EMAIL_DOOR: SignInEmailDoor = {
 type DoorCopy = Pick<SignInPage, "title" | "reason" | "steps" | "aside" | "assurance">;
 
 const ACCOUNT_DOOR: DoorCopy = {
-  title: "Entrá a tu cuenta",
+  title: "Entra a tu cuenta",
   reason:
-    "Con tu cuenta editás tus avisos, los renovás cuando vencen y los das de baja. Es gratis y no cobramos comisión.",
+    "Con tu cuenta editas tus avisos, los renuevas cuando vencen y los das de baja. Es gratis y no cobramos comisión.",
   steps: [],
   aside: null,
   assurance: null,
@@ -159,22 +159,22 @@ const ACCOUNT_DOOR: DoorCopy = {
 
 const DOORS: Record<SignInDoor, DoorCopy> = {
   "/publicar": {
-    title: "Entrá para publicar tu propiedad",
+    title: "Entra para publicar tu propiedad",
     reason:
       "Publicar es gratis y no cobramos comisión. Necesitamos una cuenta para que puedas editar tu aviso y renovarlo cuando venza.",
     // Donde 8a y 9a difieren se toma la de 9a —«en tu navegador» y no «en tu
     // teléfono»— porque la copia sale del dominio y no puede cambiar con el
     // ancho, y «en tu teléfono» es falso en una computadora (ver 22.26).
     steps: [
-      "Llenás los datos de la propiedad: zona, precio, habitaciones.",
-      "Subís las fotos, que comprimimos en tu navegador antes de mandarlas.",
-      "Verificás tu teléfono por WhatsApp y el aviso queda activo 30 días.",
+      "Llenas los datos de la propiedad: zona, precio, habitaciones.",
+      "Subes las fotos, que comprimimos en tu navegador antes de mandarlas.",
+      "Verificas tu teléfono por WhatsApp y el aviso queda activo 30 días.",
     ],
-    aside: "Si ya tenés cuenta, el mismo botón te lleva a tus publicaciones.",
+    aside: "Si ya tienes cuenta, el mismo botón te lleva a tus publicaciones.",
     assurance: null,
   },
   "/alquiler/": {
-    title: "Entrá y volvés a este aviso",
+    title: "Entra y vuelves a este aviso",
     reason: ACCOUNT_REASON,
     steps: [],
     aside: null,

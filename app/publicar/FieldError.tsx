@@ -1,8 +1,9 @@
 import styles from "./publish-steps.module.css";
 
 /**
- * **El mensaje va ANTES del campo que lo produjo y se anuncia, no sólo se
- * dibuja.** La razón está escrita en `violation-copy.ts` y no es estética: *«un
+ * **El mensaje acompaña al campo que lo produjo y se vincula, no sólo se
+ * dibuja.** Suele preceder al control; en contacto va debajo del input.
+ * La razón está escrita en `violation-copy.ts` y no es estética: *«un
  * borde rojo es invisible para quien no distingue colores y para el modo de
  * alto contraste»*. El `id` es el que el control nombra en su
  * `aria-describedby`, y el control lleva además `aria-invalid`.

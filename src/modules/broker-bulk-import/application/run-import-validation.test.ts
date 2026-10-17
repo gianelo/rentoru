@@ -121,7 +121,7 @@ describe("runImportValidation", () => {
     expect(result.totalRows).toBe(1);
     expect(result.errors).toEqual([]);
     expect(result.validRows).toHaveLength(1);
-    expect(result.validRows[0]?.listing.contactValue).toBe("04121234567");
+    expect(result.validRows[0]?.listing.contactValue).toBe("+584121234567");
   });
 
   // mvp-rental-listings unplanned work unit: "bulk import: resolve ciudad

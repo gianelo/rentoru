@@ -11,6 +11,7 @@ import {
   validatePublishableListing,
 } from "@/modules/listing-publication/domain/publishable-listing";
 import type { StoredDraft } from "../../draft";
+import styles from "../../publish-steps.module.css";
 
 /**
  * **El mensaje de campo de los seis pasos que quedaban** (tasks.md 18.24).
@@ -203,6 +204,65 @@ function antesDe(alcance: string, primero: string, segundo: string): void {
   expect(alcance.indexOf(primero)).toBeLessThan(alcance.indexOf(segundo));
 }
 
+describe("jerarquía de quién publica (36.12)", () => {
+  it("sirve un solo H1 y conserva la leyenda nativa con srOnly, sin aria-hidden", async () => {
+    huboIntento = false;
+    borrador = abre("quien");
+
+    const html = await servido("quien");
+    const campo = conjunto(html, "¿Quién publica?");
+    const leyenda = campo.match(/<legend[^>]*>¿Quién publica\?<\/legend>/g);
+
+    expect(html.match(/<h1\b[^>]*>¿Quién publica\?<\/h1>/g)).toHaveLength(1);
+    expect(html.match(/<h1\b/g)).toHaveLength(1);
+    expect(leyenda).toHaveLength(1);
+    expect(campo).not.toContain("aria-hidden");
+    expect(clase(leyenda?.[0] ?? "")).toBe(styles.srOnly);
+  });
+
+  it("conserva ambos labels y radios sin respuesta ni selección por defecto", async () => {
+    huboIntento = false;
+    borrador = abre("quien");
+
+    const campo = conjunto(await servido("quien"), "¿Quién publica?");
+    const labels = campo.match(/<label\b[^>]*>[\s\S]*?<\/label>/g) ?? [];
+
+    expect(labels).toHaveLength(2);
+    for (const [index, value, texto] of [
+      [0, "owner", "Soy el dueño"],
+      [1, "broker", "Inmobiliaria o corredor"],
+    ] as const) {
+      const label = labels[index];
+      if (label === undefined) throw new Error(`no se dibuja el label de ${value}`);
+      const radio = control(label, "publisherType");
+      expect(radio).toContain('type="radio"');
+      expect(radio).toContain(`value="${value}"`);
+      expect(label).toContain(`<span>${texto}</span>`);
+      expect(radio).not.toContain("checked");
+    }
+  });
+
+  it.each(["owner", "broker"] as const)(
+    "conserva exclusivamente la respuesta %s y la leyenda visible del contacto",
+    async (publisherType) => {
+      const base = borradorCompleto();
+      borrador = { ...base, listing: { ...base.listing, publisherType } };
+
+      const html = await servido("quien");
+      const campo = conjunto(html, "¿Quién publica?");
+      const radios = campo.match(/<input\b[^>]*name="publisherType"[^>]*>/g) ?? [];
+      const seleccionados = radios.filter((radio) => radio.includes("checked"));
+
+      expect(radios).toHaveLength(2);
+      expect(seleccionados).toHaveLength(1);
+      expect(seleccionados[0]).toContain(`value="${publisherType}"`);
+      expect(conjunto(html, "¿Cómo te contactan?")).toContain(
+        `<legend class="${styles.legend}">¿Cómo te contactan?</legend>`,
+      );
+    },
+  );
+});
+
 describe("cada paso lee su negativa al lado del control que la produjo (18.24)", () => {
   /**
    * **El par de todo lo que sigue, y por eso va primero.** Cada aserción de
@@ -356,6 +416,54 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
    * a cada uno: un mensaje de quién publica leído en el bloque del contacto
    * diría que el contacto está mal.
    */
+  it.each([
+    ["+1 212 555 0134", "Para WhatsApp, usa un número venezolano: el código de país es +58."],
+    [
+      "+58 0412 1234567",
+      "Después de +58 o 0058, no incluyas el 0 inicial del número para WhatsApp.",
+    ],
+    [
+      "02121234567",
+      "Este número es fijo. Selecciona Llamada; WhatsApp requiere un móvil venezolano.",
+    ],
+    [
+      "0412 1234567 ext 2",
+      "Revisa el formato y el prefijo del número para WhatsApp. Se permiten espacios, guiones y paréntesis alrededor del prefijo, no letras ni extensiones.",
+    ],
+    ["0412123456", "El número para WhatsApp tiene 10 dígitos. Este formato requiere 11."],
+  ])("sirve negativa y conserva el contacto rechazado %s", async (contactValue, message) => {
+    const base = borradorCompleto();
+    borrador = { ...base, listing: { ...base.listing, contactValue } };
+    const html = await servido("quien");
+    expect(html).toContain(message);
+    expect(html.indexOf('id="contact-error"')).toBeGreaterThan(html.indexOf('id="contactValue"'));
+    expect(conjunto(html, "¿Cómo te contactan?")).not.toContain("-error");
+    expect(control(html, "contactValue")).toContain(`value="${contactValue}"`);
+    expect(conjunto(html, "¿Cómo te contactan?").match(/type="radio"/g)).toHaveLength(3);
+  });
+
+  it.each(["0412 123 4567", "4121234567", "+58 412 1234567", "0058 412 1234567", "584121234567"])(
+    "sirve el formato admitido %s sin negativa",
+    async (contactValue) => {
+      const base = borradorCompleto();
+      borrador = { ...base, listing: { ...base.listing, contactValue } };
+      const html = await servido("quien");
+      expect(html).not.toContain('id="contact-error"');
+      expect(control(html, "contactValue")).toContain(`value="${contactValue}"`);
+    },
+  );
+
+  it("sirve teléfono fijo sin negativa ni cambio de canal", async () => {
+    const base = borradorCompleto();
+    borrador = {
+      ...base,
+      listing: { ...base.listing, contactMethod: "telefono", contactValue: "02121234567" },
+    };
+    const html = await servido("quien");
+    expect(html).not.toContain('id="contact-error"');
+    expect(control(html, "contactValue")).toContain('value="02121234567"');
+  });
+
   it("el paso 9 pone la negativa de quién publica en su fieldset y no en el del contacto", async () => {
     borrador = sin("publisherType");
 
@@ -372,21 +480,17 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
 
     const html = await servido("quien");
 
-    expect(conjunto(html, "¿Cómo te contactan?")).toContain('id="contact-error"');
+    expect(conjunto(html, "¿Cómo te contactan?")).toContain('id="contact-method-error"');
+    expect(conjunto(html, "¿Cómo te contactan?")).toContain(
+      'aria-describedby="contact-method-error"',
+    );
+    expect(html).not.toContain('id="contact-error"');
     expect(conjunto(html, "¿Quién publica?")).not.toContain("-error");
     expect(conjunto(html, "¿Quién publica?").match(/type="radio"/g)).toHaveLength(2);
   });
 
-  /**
-   * Paso 9, el hallazgo. El dato de contacto rechazado recibe el mensaje en el
-   * fieldset de arriba y, sobre sí mismo, **sólo una clase de más: un borde**.
-   * Es exactamente lo que `violation-copy.ts` llama «invisible para quien no
-   * distingue colores y para el modo de alto contraste». Anotado en el PR.
-   *
-   * Se comparan las dos etiquetas —la sana y la rechazada— en vez de nombrar
-   * la clase, que es un hash del CSS.
-   */
-  it("el dato de contacto rechazado sólo suma una clase: ni aria-invalid ni aria-describedby", async () => {
+  /** F36.14 corrige el hallazgo: causa bajo el input, borde y vínculo accesible. */
+  it("el dato rechazado vincula su causa debajo del control y conserva la ayuda", async () => {
     borrador = borradorCompleto();
     const sano = control(await servido("quien"), "contactValue");
 
@@ -395,11 +499,16 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
     const html = await servido("quien");
     const roto = control(html, "contactValue");
 
-    expect(conjunto(html, "¿Cómo te contactan?")).toContain(
-      "Revisá el dato: un correo lleva @, y un teléfono solo números.",
+    expect(html).toContain(
+      "Revisa el formato y el prefijo del número para WhatsApp. Se permiten espacios, guiones y paréntesis alrededor del prefijo, no letras ni extensiones.",
     );
+    expect(html.indexOf('id="contact-error"')).toBeGreaterThan(html.indexOf('id="contactValue"'));
     expect(clase(roto)).toContain(clase(sano));
     expect(clase(roto)).not.toEqual(clase(sano));
-    expect(roto).not.toContain("aria-");
+    expect(roto).toContain('aria-invalid="true"');
+    expect(roto).toContain('aria-describedby="contact-error contact-help"');
+    expect(sano).not.toContain("aria-invalid");
+    expect(sano).toContain('aria-describedby="contact-help"');
+    expect(html).toContain('id="contact-help"');
   });
 });

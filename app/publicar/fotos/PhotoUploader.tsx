@@ -17,6 +17,7 @@ import {
   coverChangedNotice,
   discardPhotoLabel,
   PHOTO_ACTION_COPY,
+  PHOTO_COVER_EXPLANATION,
   PHOTO_REMOVAL_REFUSAL_COPY,
   photoActionLabel,
 } from "../photo-action-copy";
@@ -357,7 +358,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       {photos.length === 0 ? (
         <div className={styles.empty}>
           <span className={styles.emptyLabel}>Todavía no hay fotos</span>
-          {picker("Elegir del teléfono", styles.pickButton)}
+          {picker("Elegir fotos", styles.pickButton)}
           <span className={styles.hint}>Hasta {MAX_PHOTOS_PER_LISTING} fotos · JPG o PNG</span>
         </div>
       ) : (
@@ -439,9 +440,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
                 )}
               </div>
 
-              {/* Un renglón por acción, con nombre y con la aclaración A LA
-                  VISTA: los dos textos largos no son decorativos, y un
-                  `title` no aparece nunca en un teléfono. Es un `<details>`
+              {/* Un renglón por acción, con nombre. Es un `<details>`
                   y no un panel propio, así que las cuatro acciones siguen ahí
                   para el teclado y el lector en los dos anchos — el arrastre
                   de escritorio se suma a esto, no lo reemplaza. */}
@@ -475,7 +474,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       ) : null}
 
       <p className={styles.hint}>
-        Las comprimimos acá antes de subirlas, así gastás menos datos. La primera es la portada.
+        Las comprimimos acá antes de subirlas, así gastás menos datos. {PHOTO_COVER_EXPLANATION}.
       </p>
 
       <div className={styles.trust}>
@@ -513,11 +512,13 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
  * `<details>` de verdad — el mismo mecanismo que el comentario de arriba
  * documenta, sin una pantalla propia — y **sigue sin una línea de
  * JavaScript para abrir**: el navegador abre y cierra el disclosure con su
- * propio evento `toggle`, que es lo único que este componente escucha.
+ * propio evento `toggle`, que sincroniza el estado de este componente.
  *
  * Lo único que cambia es que ahora TAMBIÉN escucha `useDismissLayer`, así
  * que un clic afuera o Escape lo cierran — antes ninguno de los dos hacía
- * nada, y había que volver a tocar el mismo botón. **Sin JavaScript el
+ * nada, y había que volver a tocar el mismo botón. Escape también cierra el
+ * DOM local sin esperar al toggle ni a los efectos, y devuelve el foco a
+ * su propio summary. **Sin JavaScript el
  * `open` controlado nunca se adjunta** (React no serializa `onToggle` a
  * HTML), así que el `<details>` sigue siendo exactamente el de antes: la
  * mejora se monta encima, nunca reemplaza el mecanismo.
@@ -541,6 +542,13 @@ function PhotoActionsMenu({
       className={styles.menu}
       open={open}
       onToggle={(event) => setOpen(event.currentTarget.open)}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || !event.currentTarget.open) return;
+        event.preventDefault();
+        event.currentTarget.open = false;
+        setOpen(false);
+        triggerRef.current?.focus();
+      }}
     >
       <summary
         ref={triggerRef}

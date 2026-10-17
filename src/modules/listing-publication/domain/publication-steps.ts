@@ -1,4 +1,5 @@
 import type { DraftListing, PublishViolation } from "./publishable-listing";
+import { contactValueForWrite } from "./venezuelan-phone";
 
 /**
  * Los nueve pasos de Publicar, como reglas y no como pantallas.
@@ -358,7 +359,13 @@ export function applyStepAnswers(
   const listing = copyOwnedFields(draft.listing, answers.listing, STEP_LISTING_FIELDS[stepId]);
 
   return {
-    listing,
+    listing:
+      stepId === "quien"
+        ? {
+            ...listing,
+            contactValue: contactValueForWrite(listing.contactMethod, listing.contactValue),
+          }
+        : listing,
     // Solo el paso 8 toca las fotos. Los otros ocho las dejan como estan,
     // porque volver a escribir el titulo no puede costar una subida.
     photos: stepId === "fotos" ? answers.photos : draft.photos,

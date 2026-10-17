@@ -13,6 +13,7 @@ import {
   referenceOrNone,
   validatePublishableListing,
 } from "../domain/publishable-listing";
+import { contactValueForWrite } from "../domain/venezuelan-phone";
 import type {
   ListingRepositoryPort,
   NewListing,
@@ -163,6 +164,11 @@ export async function publishListing(
     throw new PublishRejectedError(violations);
   }
 
+  const contactValue = present(
+    contactValueForWrite(request.contactMethod, request.contactValue),
+    "contactValue",
+  );
+
   // Antes de las fotos y sin poder frenar nada. Es un hecho sobre el CONTACTO
   // DE LA CUENTA —cierto se complete o no esta publicación—, así que no tiene
   // por qué colgar del camino caro. Devuelve la decisión y nadie la mira
@@ -173,7 +179,7 @@ export async function publishListing(
       userId: session.userId,
       contact: {
         method: present(request.contactMethod, "contactMethod"),
-        value: present(request.contactValue, "contactValue"),
+        value: contactValue,
       },
     },
     {
@@ -261,7 +267,7 @@ export async function publishListing(
     hasSecurity: request.hasSecurity ?? false,
     hasAppliances: request.hasAppliances ?? false,
     contactMethod: present(request.contactMethod, "contactMethod"),
-    contactValue: present(request.contactValue, "contactValue"),
+    contactValue,
     status: "active",
     publishedAt,
     expiresAt: new Date(publishedAt.getTime() + LISTING_ACTIVE_DAYS * 86_400_000),

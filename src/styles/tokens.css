@@ -64,6 +64,7 @@
      verdad con `toBe(44)` — antes afirmaba `>= 36`, que aceptaba las tres
      respuestas y por lo tanto no preguntaba nada. */
   --target-min-desktop: 44px;
+  --photo-menu-visible-size: 30px;
 
   /* ---------- La barra de búsqueda del inicio: NO se declara, y la ausencia
      es deliberada ----------
@@ -369,6 +370,11 @@
      misma discusión sobre estas dos láminas. */
   --wait-mark-size: 56px;
   --wait-mark-fs: 22px;
+  /* Indicador de carga aprobado (F36.3): sólo gira el aro. */
+  --loading-ring-width: 3px;
+  --loading-inline-size: 1em;
+  --loading-duration: 1.2s;
+  --loading-layer: 1000;
 
   /* Home vacío, concepto 03: escala exclusiva del hero (390/768/1440).
      --title-fs conserva el papel de título de página en resultados y demás. */
@@ -461,6 +467,8 @@
      (36 → 44, tasks.md 16.24). */
   --nav-h: 60px;
   --nav-h-desktop: 68px;
+  /* Búsqueda pública F36.4: máximo de las láminas desktop 14i/Lista. */
+  --nav-search-max: 420px;
   /* Dock A móvil (28.6): geometría propia y rótulo visible. */
   --nav-dock-h: 64px;
   --nav-dock-inset: 16px;

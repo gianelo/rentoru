@@ -81,10 +81,10 @@ test.describe("la puerta de WhatsApp funciona sin JavaScript (15.8, 22.23)", () 
 
     const puerta = page.getByTestId("puerta-panel");
     await expect(puerta.getByRole("heading", { level: 2 })).toHaveText(
-      `Entrá para ver el WhatsApp de ${PUBLISHER.name}`,
+      `Entra para ver el WhatsApp de ${PUBLISHER.name}`,
     );
     await expect(puerta.getByText("Pedimos la cuenta para frenar avisos falsos.")).toBeVisible();
-    await expect(puerta.getByText("Volvés a este mismo aviso al terminar.")).toBeVisible();
+    await expect(puerta.getByText("Vuelves a este mismo aviso al terminar.")).toBeVisible();
 
     // Las dos entradas —Google y el correo— son POST nativos: es lo que un
     // navegador sin una sola línea de script sabe hacer solo. La reescritura

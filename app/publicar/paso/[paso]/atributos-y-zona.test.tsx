@@ -1,5 +1,9 @@
+// @vitest-environment happy-dom
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { SuggestionVocabulary } from "@/modules/listing-catalogue/domain/suggest-filters";
 import {
   currentStepId,
   draftListingOf,
@@ -45,19 +49,21 @@ const { redirect, notFound, lookup } = vi.hoisted(() => ({
     throw new Error("NEXT_NOT_FOUND");
   }),
   /**
-   * El puerto devuelve el vocabulario ANCHO —`ILIKE` a 60 filas— y quién de
+   * El puerto devuelve el vocabulario ANCHO —candidatos por `ILIKE`— y quién de
    * esas filas se ofrece lo decide `searchPublicationZones`, que es puro y ya
    * está cubierto. Por eso el doble no filtra: devolver acá lo ya filtrado
    * escondería el reparto de trabajo que este paso realmente hace.
    */
-  lookup: vi.fn(async () => ({
-    cities: [{ id: "dc", name: "Distrito Capital" }],
-    zones: [
-      { id: "altamira", name: "Altamira", cityId: "dc", parentName: "Municipio Chacao" },
-      { id: "chacao", name: "Chacao", cityId: "dc", parentName: "Municipio Chacao" },
-    ],
-    aliases: [],
-  })),
+  lookup: vi.fn(
+    async (): Promise<SuggestionVocabulary> => ({
+      cities: [{ id: "dc", name: "Distrito Capital" }],
+      zones: [
+        { id: "altamira", name: "Altamira", cityId: "dc", parentName: "Municipio Chacao" },
+        { id: "chacao", name: "Chacao", cityId: "dc", parentName: "Municipio Chacao" },
+      ],
+      aliases: [],
+    }),
+  ),
 }));
 
 vi.mock("next/navigation", () => ({ redirect, notFound }));
@@ -77,6 +83,85 @@ vi.mock("../../publication-context", () => ({
 }));
 
 import StepPage from "./page";
+
+it("caller real conecta tecleo con radios dentro del POST sin remonte de referencia", async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  let finish!: (response: unknown) => void;
+  const pending = new Promise((resolve) => {
+    finish = resolve;
+  });
+  const fetchZones = vi.fn().mockReturnValue(pending);
+  const response = {
+    ok: true,
+    json: async () => [
+      {
+        zoneId: "nueva",
+        cityId: "mc",
+        label: "Zona sin avisos de nombre largo",
+        scope: "Maracaibo",
+      },
+    ],
+  };
+  vi.stubGlobal("fetch", fetchZones);
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  try {
+    const page = await StepPage({
+      params: Promise.resolve({ paso: "zona" }),
+      searchParams: Promise.resolve({}),
+    });
+    await act(async () => root.render(page));
+    function required<T>(value: T | null | undefined): T {
+      if (value === null || value === undefined) throw new Error("missing caller control");
+      return value;
+    }
+    const reference = required(container.querySelector<HTMLInputElement>("#reference"));
+    reference.value = "Referencia editada";
+    const search = required(container.querySelector<HTMLInputElement>("#q"));
+    search.focus();
+    act(() => {
+      required(Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set).call(
+        search,
+        "zona",
+      );
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("Buscando zonas…");
+    expect(search.getAttribute("aria-busy")).toBe("true");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("Buscando zonas…");
+    await act(async () => finish(response));
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("");
+    expect(search.getAttribute("aria-busy")).toBeNull();
+    const post = required(reference.form);
+    const step = required(
+      container.querySelector<HTMLInputElement>('input[name="step"][value="zona"]'),
+    );
+    expect(step.form).toBe(post);
+    expect(post.querySelector<HTMLButtonElement>('button[type="submit"]')?.form).toBe(post);
+    expect(new FormData(post).get("step")).toBe("zona");
+    expect(search.form).not.toBe(post);
+    expect(post.textContent).toContain("Zona sin avisos de nombre largo");
+    expect(post.textContent).toContain("Maracaibo");
+    const radio = required(post.querySelector<HTMLInputElement>('input[value="nueva"]'));
+    expect(radio).not.toBeNull();
+    act(() => radio.click());
+    expect(new FormData(post).getAll("zoneId")).toEqual(["nueva"]);
+    expect(new FormData(post).get("reference")).toBe("Referencia editada");
+    expect(container.querySelector("#reference")).toBe(reference);
+    expect(document.activeElement).toBe(search);
+    expect(fetchZones).toHaveBeenCalledTimes(1);
+  } finally {
+    act(() => root.unmount());
+    container.remove();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  }
+});
 
 const ZONES: readonly CuratedZone[] = [{ id: "altamira", cityId: "dc" }];
 
@@ -259,6 +344,38 @@ describe("los cinco atributos del paso 5 (18.24)", () => {
 });
 
 describe("el buscador de zona del paso 2 (18.24)", () => {
+  it("el GET sirve alias y homónimos del catálogo con radios etiquetados y alcance", async () => {
+    lookup.mockResolvedValueOnce({
+      cities: [
+        { id: "dc", name: "Distrito Capital" },
+        { id: "mc", name: "Maracaibo" },
+      ],
+      zones: [
+        { id: "bella-dc", name: "Bella Vista", cityId: "dc", parentName: "Libertador" },
+        { id: "bella-mc", name: "Bella Vista", cityId: "mc", parentName: "Coquivacoa" },
+        { id: "centro", name: "Centro", cityId: "dc", parentName: "Libertador" },
+      ],
+      aliases: [
+        { zoneId: "centro", alias: "Bella Vista" },
+        { zoneId: "centro", alias: "Bella" },
+      ],
+    });
+    const html = await servido("zona", "Bella");
+    const formulario = html.slice(html.indexOf('name="step" value="zona"'));
+
+    expect(control(buscador(html), "q")).toContain('value="Bella"');
+    expect(formulario).toMatch(/<label[^>]*><input[^>]*name="zoneId"[^>]*value="centro"\/>/);
+    expect(formulario).toContain("<span>Centro<span");
+    expect(formulario).toContain("Libertador · Distrito Capital");
+    expect(formulario).toContain("Coquivacoa · Maracaibo");
+    expect(formulario.match(/value="centro"/g)).toHaveLength(1);
+    expect(formulario.indexOf('value="centro"')).toBeLessThan(
+      formulario.indexOf('value="bella-dc"'),
+    );
+    expect(formulario).toMatch(/name="zoneId" checked="" value="altamira"/);
+    // Sin conteos de avisos en el puerto: las zonas sin avisos siguen elegibles.
+    expect(formulario).toContain('value="bella-mc"');
+  });
   /**
    * **Buscar es un GET hermano, no un formulario anidado.** Se comprueba que
    * CIERRA antes de que empiece el que guarda —comparando posiciones y no la
@@ -300,6 +417,8 @@ describe("el buscador de zona del paso 2 (18.24)", () => {
     const html = await servido("zona", "alta");
     const formulario = html.slice(html.indexOf('name="step" value="zona"'));
 
+    expect(html).not.toContain('aria-busy="true"');
+    expect(html).not.toContain("Buscando zonas…");
     expect(formulario).toMatch(/<input[^>]*type="radio"[^>]*name="zoneId"[^>]*value="altamira"/);
     expect(formulario).toContain("Municipio Chacao · Distrito Capital");
     expect(lookup).toHaveBeenCalledWith("alta");

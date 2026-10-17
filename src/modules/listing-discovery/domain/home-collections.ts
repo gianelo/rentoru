@@ -44,7 +44,7 @@ export const HOME_BUDGET_CEILING_USD = 400;
  * tira: es lo que el producto le pregunta a quien llega, no una etiqueta de
  * maquetado. El componente lo recibe y lo dibuja.
  */
-export const HOME_SEARCH_LABEL = "¿En qué zona buscás?";
+export const HOME_SEARCH_LABEL = "¿En qué zona buscas?";
 
 /**
  * El parámetro con el que el inicio recuerda la ciudad elegida (F2).

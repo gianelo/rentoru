@@ -54,7 +54,7 @@ const {
     async () =>
       null as null | {
         publisherId: string;
-        contactMethod: "whatsapp" | "email";
+        contactMethod: "whatsapp" | "telefono" | "email";
         contactValue: string;
       },
   ),
@@ -264,6 +264,35 @@ beforeEach(() => {
   findRevealable.mockResolvedValue(null);
   findLatestMessage.mockResolvedValue(null);
 });
+
+it.each([
+  {
+    method: "whatsapp" as const,
+    value: "+584121234567",
+    href: "https://wa.me/584121234567?text=Hola",
+  },
+  { method: "telefono" as const, value: "+582121234567", href: "tel:+582121234567" },
+])(
+  "serves canonical $method destination without country inference",
+  async ({ method, value, href }) => {
+    sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+    findForDetail.mockResolvedValue(
+      detail({ status: "active", expiresAt: VIGENTE(), contactMethod: method }),
+    );
+    findUniquePairs.mockResolvedValue([{ tenantUserId: "tenant-1", listingId: VENCIDO_ID }]);
+    findRevealable.mockResolvedValue({
+      publisherId: "publisher-1",
+      contactMethod: method,
+      contactValue: value,
+    });
+    findLatestMessage.mockResolvedValue("Hola");
+    const html = await servedBody();
+    expect(html).toContain(`href="${href}"`);
+    expect(html).toContain(`data-testid="contact-value">${value}`);
+    sessionForPage.mockResolvedValue(null);
+    expect(await servedBody()).not.toContain(value);
+  },
+);
 
 it("31.6: serves revealed email with native mailto and scoped copy styling hook", async () => {
   sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
@@ -915,7 +944,20 @@ describe("un aviso activo no arrastra el costo de las sugerencias", () => {
  */
 describe("la puerta del WhatsApp no saca al inquilino de la ficha (15.8)", () => {
   const RUTA = `/alquiler/maracaibo/tierra-negra/${VENCIDO_SLUG}`;
-  const TITULO_PUERTA = "Entrá para ver el WhatsApp de Publicante de ejemplo";
+  const TITULO_PUERTA = "Entra para ver el WhatsApp de Publicante de ejemplo";
+
+  it("35.2a: sirve la puerta neutra y el aviso bloqueado sin revelar el contacto", async () => {
+    const html = await servedBody(VENCIDO_SLUG, { entrar: "si" });
+    expect(html).toMatch(
+      /<h2[^>]*id="puerta-titulo"[^>]*>Entra para ver el WhatsApp de Publicante de ejemplo<\/h2>/,
+    );
+    expect(html).toContain("Pedimos la cuenta para frenar avisos falsos. Es gratis y es rápido.");
+    expect(html).toContain("Pedimos la cuenta para frenar avisos falsos: es gratis y es rápido.");
+    expect(html).toContain("Vuelves a este mismo aviso al terminar.");
+    expect(html).toContain("Al entrar aceptas los ");
+    expect(html).toContain(`href="${RUTA}"`);
+    expect(html).not.toContain(TELEFONO);
+  });
 
   beforeEach(() => {
     findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
@@ -945,7 +987,7 @@ describe("la puerta del WhatsApp no saca al inquilino de la ficha (15.8)", () =>
 
     expect(html).toContain(TITULO_PUERTA);
     expect(html).toContain("Pedimos la cuenta para frenar avisos falsos.");
-    expect(html).toContain("Volvés a este mismo aviso al terminar.");
+    expect(html).toContain("Vuelves a este mismo aviso al terminar.");
     // Fail closed: dibujar la puerta nunca destapa el número.
     expect(html).not.toContain(TELEFONO);
     // Sin fila viva —el default de este archivo— no hay nada que afirmar.
@@ -991,7 +1033,7 @@ describe("la puerta del WhatsApp no saca al inquilino de la ficha (15.8)", () =>
     );
     expect(html).not.toContain("Seguir mirando sin entrar");
     expect(html).toMatch(new RegExp(`<a[^>]*aria-label="Cerrar sin entrar"[^>]*href="${RUTA}"`));
-    expect(html).toContain("Al entrar aceptás los ");
+    expect(html).toContain("Al entrar aceptas los ");
     expect(html).toContain('href="/legal/terminos">términos</a>');
     expect(html).toContain('href="/legal/privacidad">privacidad</a>');
     expect(html).toContain(

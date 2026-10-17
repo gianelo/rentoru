@@ -246,7 +246,38 @@ export default async function MeasureHarnessPage({
           contenedor mediría la caja equivocada — el mismo error de puntería
           que dejó el encabezado contra el borde mientras los campos flotaban
           centrados. */}
+      <div data-testid="publish-step-quien">
+        {stepHarness("quien", {
+          ...harnessDraft(),
+          listing: {
+            ...harnessDraft().listing,
+            publisherType:
+              params.publisher === "owner" || params.publisher === "broker"
+                ? params.publisher
+                : undefined,
+            contactMethod: "whatsapp",
+            contactValue: "04121234567",
+          },
+        })}
+      </div>
       <div data-testid="publish-step-tamano">{stepHarness("tamano", harnessDraft())}</div>
+      <div data-testid="publish-step-photos">
+        {stepHarness("fotos", {
+          ...harnessDraft(),
+          listing: {
+            ...harnessDraft().listing,
+            title: "Apartamento en Altamira",
+            description: "Una propiedad con cocina y habitaciones amplias. ".repeat(4),
+            publisherType: "owner",
+          },
+          featuresDeclared: true,
+          photos: [
+            { key: "k1", name: "Sala", bytes: 40_000 },
+            { key: "k2", name: "Cocina", bytes: 41_000 },
+            { key: "k3", name: "Balcón", bytes: 42_000 },
+          ],
+        })}
+      </div>
       {/* **El panel de filtros, medido y no leído** (14.32).
           `SearchPanel.module.css` afirmaba abrir los cuatro grupos en
           escritorio con `::details-content`, y eso era una declaración que

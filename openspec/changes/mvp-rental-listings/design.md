@@ -243,6 +243,10 @@ Ports as interfaces make the domain and application layers fully testable with z
 
 **Integration tests must use real Postgres, not an emulator**, because `bit_count` semantics and composite-FK enforcement are precisely what is under test. The same reasoning now extends to bulk import: its idempotency guarantee is a unique index, not application code, so a fake would verify the fake.
 
+With `CI=true`, the bulk-import confirmation file requests one estimated plan in `afterAll`, before fixture cleanup and outside the unchanged five-second test cases. Its Drizzle logger accepts only the exact observed parameter-free `listZones()` SELECT; absent/mismatched SQL emits `query_not_observed`. `EXPLAIN (FORMAT JSON)` plans that SELECT without executing it: no `ANALYZE` or `BUFFERS`. `[import-plan]` marks `mode=estimated`, preserves fixed-allowlist operator types and numeric/null row estimates, and keeps actual execution times, rows, loops, buffers and JIT fields `null` for compatibility. `driver_explain_ms` measures only the planning request round trip, not SQL execution. The snapshot is after the tests and need not match an earlier plan. Predicates, arbitrary identifiers, index names, SQL, parameters, raw plans, row data and exception text are never logged. Errors emit unavailable or remain silent without replacing test outcomes. The five-second outer deadline and per-query `query_timeout=5000` remain; existing test/hook limits are unchanged.
+
+Probe evidence: RED4 → focused GREEN12 with the existing query-observer tests; removing the parameter guard caused the intended test to fail, then was restored. The real confirmation caller passed 4/4 on the owned PostgreSQL 18 and emitted exactly one parsed plan summary. The later full integration run passed 407 tests but two suites refused the noncanonical diagnostic DSN before collection; those guards were not relaxed. Full unit coverage exited 1 with 3419 passing tests and three unchanged preview-resolver timeouts, without concurrent build/measure; no retry or cause claim. Types, lint, tokens and diff checks passed. These local results do not establish CI timing or a globally green suite. Independent static S1–S3 inspection found no demonstrated severe candidate defect; its sole runtime attempt failed before collection because the scratch could not resolve `@vitest/utils`: zero tests executed, no PASS. That inspection preceded the deadline addition and node-summary projection. The projection observed RED2 → GREEN13, but CI38924430876 returned unavailable, not nodes. The subsequent plain-EXPLAIN correction observed RED2 → GREEN13 with a realistic report lacking execution timings, plus types/format/diff PASS; it does not execute the SELECT or mix estimates with actual measurements. No additional database query, full suite or independent verifier was run for that correction. Its focused RED/GREEN now covers pool acquisition that never completes (13 focused tests passed); one real PostgreSQL lock check returned unavailable after 5003 ms, released the lock, reused the pool and preserved stored counts. The normal real-adapter path also emitted its plan. No full-suite or independent-runtime retry was performed.
+
 **Crawlability is tested with scripting disabled, not asserted by inspection.** D11 makes organic search the distribution channel, and "renders without JavaScript" is the kind of property that silently breaks the first time someone reaches for a client component. If it is not executed as a test, it is not a guarantee.
 
 ### Coverage policy
@@ -253,7 +257,9 @@ Instead: a **90% floor on `src/modules/*/domain/` and `src/modules/*/application
 
 ## Continuous Integration
 
-No pipeline exists today. These gates run on every pull request and block merge:
+Pull requests targeting `dev`, `staging` or `main` run lint, types, tokens, unit/coverage, integration on ephemeral PostgreSQL 18 and a production build once, without waiting for Vercel. Their fake build credentials never point at a live database. Required GitHub checks must be configured separately; workflow presence alone does not block merge.
+
+Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability and budgets. Browser suites use only the job-owned database; Lighthouse measures the matching live deployment without creating application data. The resolver binds the newest Preview deployment to the pushed SHA, accepts the expected branch or SHA as the provider's ref, requires its latest status to succeed and fails on timeout/API errors instead of substituting a stable domain or local success. Vercel may publish SHA-only refs, which do not independently attest the source branch.
 
 | Gate | Command | Needs |
 |---|---|---|
@@ -265,8 +271,36 @@ No pipeline exists today. These gates run on every pull request and block merge:
 | Build | `pnpm build` | — |
 | Bundle budget | `pnpm budget:bundle` | build output |
 | Token contract (D16) | `pnpm lint:tokens` | — |
-| E2E + crawlability | `pnpm test:e2e` | preview deployment URL |
+| E2E + crawlability | `pnpm test:e2e` | local production app + job-owned PostgreSQL |
 | Lighthouse budget | `pnpm budget:lighthouse` | preview deployment URL |
+
+### E2E profiles: selection is not the complete CI sequence
+
+`pnpm test:e2e:smoke:read` selects anonymous home, search and publication-access checks from `publish-access` and `busqueda-inicio`. `pnpm test:e2e:critical:read` adds `camino-de-lectura-sin-javascript`, `filtros-sin-javascript`, `sugerencias-sin-javascript` and `aviso-malformado-sin-javascript`: results/detail navigation, filters, suggestions and invalid routes. Both explicitly select the existing `chromium` and JavaScript-disabled `crawlability` projects; per-test skips still apply. Neither includes the separate `measure` harness.
+
+Append `--list` to either command to inspect the actual selection without launching browsers, servers or database fixtures. Running the tests requires the existing local app/proxy and deterministic catalogue on a separately owned disposable PostgreSQL database. Do not seed or run mutating fixtures against manual Dev/Staging/Production data. Missing catalogue can cause existing tests to skip: collection alone is not a functional PASS.
+
+The accepted destination policy is critical public reads **plus isolated publication and authenticated contact checks in dev**, with exhaustive checks in staging and unchanged basic PR gates. The `:read` commands cover only its public-read portion. This first slice defines selectors; it does not change current workflow triggers, gate conditions, retries, assertions or coverage.
+
+| Tier | Composition | Current execution |
+|---|---|---|
+| Smoke public reads | `pnpm test:e2e:smoke:read` | Explicit command, not wired into CI yet |
+| Critical public reads | `pnpm test:e2e:critical:read` | Explicit command, not the entire critical tier |
+| Critical writes/authentication | Existing exclusive publication, logout, contact revelation, report and door blocks | Remain isolated and mandatory in current CI |
+| Complete E2E | Exclusive publication first; general specs with existing exclusions; listing diagnostics/routes; isolated authenticated/door blocks; seeded pagination last | Existing ordered `e2e` job on dev/staging |
+| Other complete gates | `measure`, bundle/row budgets and SHA-bound Lighthouse | Existing separate jobs on dev/staging |
+
+`pnpm test:e2e` remains the general Playwright command, **not an alias for the complete ordered CI sequence**. Two opt-in fixtures remain excluded by the default configuration. Do not replace the full pipeline with a bare Playwright invocation or `pnpm verify` (which can recreate a DB and stop processes). Before retiring current dev jobs, validate the staging replacement and the before/after guarantees, including the existing Notion13 dependencies; no profile definition alone permits skipping a gate.
+
+### Prepared CI transition: full by default, staging always full
+
+The optional, nonsecret repository variable `CI_DEV_PROFILE=critical` prepares a controlled switch for dev only. An unset or unrecognized value preserves complete dev execution. GitHub string comparisons are case-insensitive. Staging always keeps the complete E2E sequence, measure and budgets regardless of that variable; PR gates are unchanged.
+
+Critical dev selects `test:e2e:critical:read` instead of the exhaustive general read loop. Exclusive publication, served listing/route diagnostics, authenticated logout/contact/report/door checks and seeded pagination still run in their original order against job-owned PostgreSQL, without preview access. General read failures still fail the step. Only dev's measure, preview resolver and budget jobs are deferred to staging in that mode.
+
+**Do not enable this variable yet.** First integrate the prepared configuration, validate an intermediate staging candidate (the product phase need not be finished), and satisfy the existing replacement/promotion dependencies09/12/13. Setting the variable is a separate explicit operator action, not something this workflow or implementation performs. Returning it to `full` or removing it restores the previous complete dev schedule; it does not undo application data or migrations. Main promotion remains a separate normal dev→main PR for the validated content.
+
+`ci-profiles.test.ts` checks the branch/profile matrix and executes the actual general-step shell with a disposable fake `pnpm`, verifying exact selected commands, stdout/stderr and failure exit codes without browsers, servers or databases. This proves dispatch, not an executed staging deployment or functional browser PASS.
 
 **A budget nobody measures automatically is a wish.** `budget:bundle` reads the build output and fails when read-path first-load JS exceeds 130 KB — fast, needs no deployment, and catches the most common regression (someone converts a server component to a client component). `budget:lighthouse` runs against the preview deployment and fails on LCP over 2.5 s on a throttled 3G profile, search transfer over 230 KB, or detail transfer over 500 KB. Image derivative budgets are already asserted at generation time in unit tests, so they need no separate gate.
 
@@ -276,7 +310,12 @@ No pipeline exists today. These gates run on every pull request and block merge:
 
 **`lint:tokens` is the enforcement half of D16.** It fails when a component stylesheet contains a colour literal, a corner radius, a thumbnail dimension, or a type size written as a value rather than a custom property. It costs no deployment and runs in milliseconds. Without it, D16 is a convention — and a convention that every future component must remember is precisely what this codebase's guiding principle rejects.
 
-**CI minutes are a metered resource here.** The repository is private, so Actions minutes come out of a monthly quota rather than being free as they would be on a public repository. Accordingly: lint, types, unit, coverage, the token contract and integration run on every push; E2E, crawlability and both budget gates run **on pull requests only**, since they require a deployment and are the expensive half. This is the same free-tier discipline applied to Neon, R2 and Resend — see F2, which must now re-verify the Actions quota as well.
+**Deployment scope is explicit.** `vercel.json` allows automatic Git deployments only for `dev`, `staging` and `main`; it does not revoke manual/CLI deployment privileges. Preview branch variables isolate Dev and Staging; Production belongs to `main`. Feature PRs require neither a deployment nor live DB credentials. These repository rules take effect only after integration into the relevant refs; old feature refs may retain their previous deployment configuration.
+
+Deployment verification requires the automation bypass credential and a reachable HTTP 200 page; missing prerequisites fail rather than reporting unmeasured Lighthouse as green. The deployment URL comes from GitHub's matching deployment record, not `dev.rentoru.com`/`staging.rentoru.com`. GitHub/Vercel metadata is the identity authority; this is not an independent attestation of the running application's SHA.
+
+`measure` retains CI traces only for unexpectedly failed cases and uploads only `test-results/**/trace.zip` for three days, without changing timeouts, retries or assertions. DOM/network snapshots remain enabled; screenshots, sources and extra attachments are disabled. These ZIPs are unsanitized: the local harness uses fixtures/fake DB wiring but may request public external images and set synthetic cookies. Never reuse this upload policy for authenticated remote E2E or real user sessions. A failure before trace finalization may leave no ZIP; that warning does not turn the failed measure step green.
+After Chromium installation, `node --test scripts/measure-trace.test.cjs` checks the actual runner/config using synthetic manual browser contexts without Next, navigation or DB: an unexpected failure must retain browser events, while a passing case must discard its trace.
 
 ### D9 — Bulk import is a loader, not a second publication path
 
@@ -438,6 +477,15 @@ Hard numbers, verified on the preview deployment before each user-facing PR merg
 | JavaScript on the read path | ≤ 130 KB (was 30 — see the revision note below) |
 | LCP on a throttled 3G profile | ≤ 2.5 s |
 
+The homepage marks only the first cover of its first rendered collection as `loading="eager"` with `fetchPriority="high"`. Empty collections and unavailable covers have already been omitted by the domain. Every other cover, including other `ListingStrip`/`ListingCard` consumers, keeps lazy loading without a priority override. This native HTML hint adds no client JavaScript and preserves `<picture>` variants. `app/inicio-servido.test.tsx` asserts the page body for a populated, empty or coverless recent collection; component tests protect the default. The request-start delay in CI motivated this change, but its LCP effect must be measured on the exact deployment; the 2.5 s limit is unchanged.
+
+Local implementation evidence, not CI or LCP proof: homepage-body RED3 → focused GREEN62; disabling the page's priority handoff made all three new cases fail, then the handoff was restored. Layout `measure` passed 218/218; types, lint and tokens passed. The full coverage command exited 1 with 3415 passing tests and two 5000 ms timeouts in the unchanged `scripts/wait-for-preview.test.ts`; their cause remains unproven. Independent source inspection found consistent wiring/defaults, but its isolated Corepack bootstrap required a blocked download: zero tests executed, no retry/install. Full-suite and independent runtime proof remain incomplete; no performance improvement or publication is claimed.
+
+The explicitly authorized isolated resolver diagnostic executed its five no-match cases once with the installed Vitest entry point and one worker: exit 0, five passed, seventeen filtered out, 13.50 s wall time. The previously timed-out empty/staging cases took 3178/2534 ms against the unchanged 5000 ms limit. Their exit/error/output and 39 simulated waits remained asserted. This did not reproduce the failures in isolation; it does not establish contention as their cause, replace the failed full-suite result or supply the missing independent runtime proof.
+
+CI preserves a sanitized diagnostic even when Lighthouse assertions fail. `node scripts/lighthouse-summary.mjs` reads only `.lighthouseci/lhr-<digits>.json` and writes `.lighthouseci/diagnostic.json`; only this exact file is uploaded, retained for seven days and named with the commit SHA/run attempt. Raw reports, HTML, request details, URLs, cookies and screenshots are never uploaded.
+The summary contains allowlisted numeric metrics, the legacy Lighthouse LCP phase timings and an enumerated element tag/rectangle. Missing phases stay `null`; observed timings are not mixed with the scored/simulated breakdown. This is diagnostic evidence, not an optimization or a threshold change.
+
 **Revision, 2026-08-16 — two of these numbers were unreachable and are now measured rather than assumed.**
 
 Building the budget gates surfaced it immediately: **Next.js 15 App Router plus React 19 ship ~102 KB gzip of shared framework runtime on every route, before a single line of this application's code exists.** Verified against Next's own build output, not estimated. The original 30 KB was set by analogy and never checked against the framework floor — the same failure as the review forecast that omitted the cost of proof, and caught the same way: by building the thing that measures.
@@ -537,6 +585,68 @@ La ficha adopta navegación visible con flechas y gesto táctil fuera del visor,
 El reporte pide un motivo obligatorio entre «posible estafa», «datos incorrectos», «duplicado», «no disponible» y «otro», con explicación opcional. La identidad de quien reporta ya está en su sesión y permanece privada; persistencia y validación corresponden a dominio/aplicación, no al componente. El mensaje obligatorio de revelación decidido en Open Questions sigue vigente; estudiar el enlace WhatsApp condicional existente antes de cualquier modificación. La salida de sesión de 28.11 dirige por defecto a `/`; la ficha requiere una excepción de retorno seguro a esa misma URL pública, ya anónima.
 
 Medidas canónicas compartidas: móvil 390×844, tablet 768×1024 y escritorio 1440×900; todo ancho inferior a 768 usa composición móvil, incluido 440×956. Las pruebas previas a 390×840 permanecen como evidencia histórica. **Esta fase sólo corrige y acepta la ficha**: una auditoría separada debe verificar las otras pantallas antes de afirmar cumplimiento transversal. Las capturas del issue son hipótesis a contrastar con dev, no resultados actuales. Plan, imágenes y trazabilidad: `odd/tasks/fase-30-cierre-ficha.md`; la Fase 29 ya está integrada en `dev` y `main`; #287 permanece abierto y #288 sigue abierto.
+
+## Fase 36 — Supersesiones y gates de publicación (#289)
+
+La premisa de sólo WhatsApp del [comentario 13](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956647895) queda superada por la corrección del fundador en 36.13: «el whatsapp no es obligatorio es una opcion mas» y «debe haber 1 contacto cualquier de los 3». Se exige un contacto elegido entre WhatsApp, teléfono y correo, conservando `wa.me`, `tel:` y `mailto:`. Teléfono y WhatsApp admiten sólo Venezuela; teléfono incluye móviles y fijos. Se valida formato, no titularidad, asignación real ni existencia de cuenta WhatsApp. No cambia autenticación por correo, ni se convierten contactos históricos. El inventario conserva alta, borradores, legado, edición, importación y defaults sin migración de esquema/datos propuesta.
+
+Formatos aprobados: `0412 123 4567`, `4121234567`, `+58 412 1234567`, `0058 412 1234567` y `584121234567` equivalen a `+584121234567`; espacios, guiones y paréntesis alrededor del prefijo son admitidos. Extensiones, letras, países distintos y `+58 0412…` se rechazan, sin reparación silenciosa. `wa.me` recibe dígitos internacionales sin `+`; `tel:` conserva `+58`. 36.14 implementará la política centralizada de país en dominio, sólo Venezuela activa y ampliable sin framework genérico. Al iniciar 36.14 el fundador exige validación vigente siempre, también al editar o activar contactos sin cambios porque aún no hay clientes, y WhatsApp sólo móvil; teléfono conserva móviles y fijos. No se convierten datos almacenados: un formato inválido bloquea la operación hasta su corrección explícita. Implementación por cortes en `odd/tasks/fase-36-validacion-contacto.md`, aún sin completar. Fuentes, límites y tratamiento por superficie: `odd/tasks/fase-36-contacto-compatible.md`.
+
+El [comentario 21](https://github.com/gianelo/rentoru/issues/289#issuecomment-5957005019) descarta tamaños de capturas como autoridad; rigen D30 y el sistema responsive vigente, coordinando la discrepancia de 390×840 con F34. Revisar requiere lámina aprobada antes de implementación. El warning actual de inmutabilidad absoluta contradice la regla existente de 18.38: dueño → inmobiliaria sí; la dirección inversa sigue cerrada hasta decisión explícita, no queda autorizada por el comentario 18.
+
+Copy/jerarquía, loader contextual, país/formato y botón vs checkbox quedan como gates al iniciar sus unidades. El digest `901444967` no prueba deduplicación ni fallo de sesión: cualquier consulta productiva requiere autorización read-only separada, sin mutación. Plan y criterios completos: `odd/tasks/fase-36-cierre-publicacion.md`; esta adenda confirma alcance, no implementación ni nuevas decisiones numeradas.
+
+### Photo copy — bounded G3/F35 coordination (F36.10)
+
+Founder approved «Elegir fotos» and «Es la foto principal de tu aviso» for publication and editing. The cover explanation appears once per surface; the historical phone-deletion help is removed, while «Quitar del aviso», «Hacer portada», photo identities and native POST remain intact. Editing supplies presentation copy to the shared uploader; imported drafts retain its «Subir fotos» default. This supersedes only those historical 18.15 literals, not compression copy, photo rules, menu sizing (36.11) or the remaining F35.4 audit. Browser acceptance remains T2 in `odd/tasks/fase-36-fotos-textos.md`.
+
+### Menú de fotos compacto — decisión acotada (F36.11, P1)
+
+El fundador aprobó dos porciones: registrar el diseño y después implementarlo.
+Desde el breakpoint existente de **768px**, el disparador tendrá un círculo visible
+de **30px** dentro del mismo `<summary>` pulsable de **44×44px**; por debajo,
+móvil sin cambios. Se conservan el glifo `⋯`, el foco visible, las acciones y
+la geometría/comportamiento del menú abierto, incluido Escape y cierre exterior.
+La razón es reducir el peso visual sobre la foto sin exigir más precisión al pulsar.
+Referencia: [Publicar Desktop](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Desktop.dc.html)
+(líneas 335–336); la decisión posterior conserva el target accesible del sistema.
+
+Baseline inspeccionado en `f8bf20a07826b26afa8dacaf9674c2af6fe22d38`, no en el WIP anterior:
+`app/publicar/fotos/photo-uploader.module.css:229–260,357–437` define el summary
+44×44 con radio `--r` y pinta fondo/borde en toda esa caja desde 768px;
+`src/styles/tokens.css:43,66` fija ambos targets en 44px. El caller real es
+`app/publicar/PublishStep.tsx:567–572`, con `draft.photos`; el summary nativo y
+el glifo están en `app/publicar/fotos/PhotoUploader.tsx:550–559`.
+El rol visible requiere un token semántico propio, no reducir ni reutilizar el target:
+ver [autoridad visual](../../../design/reference/sistema/SISTEMA.md#menú-de-fotos--superficie-visible-f3611).
+P1 sólo documenta: sin app servida ni aceptación manual actual; implementación,
+RED/GREEN, mutación y evidencia servida quedan para P2. No cierra 36.1 ni 36.11.
+
+### Jerarquía de Quién publica — decisión acotada (F36.12, P1)
+
+El fundador aprobó mostrar «¿Quién publica?» una sola vez visualmente, como H1.
+El `fieldset` conserva su `legend` nativo con ese texto, accesible pero oculto
+visualmente mediante `styles.srOnly`; no se elimina ni se usa `aria-hidden`.
+Los labels «Soy el dueño» e «Inmobiliaria o corredor» permanecen intactos.
+Sin selección por defecto para un borrador sin respuesta; se conserva la ya guardada.
+La razón es quitar la pregunta duplicada sin perder el nombre accesible del grupo
+ni convertir una omisión en una declaración de dueño.
+Referencias: [Publicar Mobile](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Mobile.dc.html#12c)
+(líneas 246–249) y [Publicar Desktop](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Desktop.dc.html#13a)
+(líneas 368–371): un titular seguido de opciones; su dueño ilustrado no autoriza default.
+Esta decisión conjunta resuelve sólo esta jerarquía de F35.4, no su auditoría restante.
+No cambia contacto, reglas de negocio, estilos globales ni revisar (36.18).
+
+Baseline inspeccionado: `e6a3c650d0cb853e75a46382320eaa3dbfb0d900` (dev, merge #409).
+El caller `/publicar/paso/quien`, en `app/publicar/paso/[paso]/page.tsx`, renderiza
+`app/publicar/PublishStep.tsx`: H1 en línea 222 y legend visible en 579;
+`app/publicar/step-copy.ts` define la pregunta de `quien`.
+`app/publicar/publish-steps.module.css:23–25` ya compone `srOnly` desde
+`src/styles/a11y.module.css`; no hace falta una utilidad ni CSS global nuevos.
+P1 sólo registra la decisión: sin cambio de comportamiento, app servida ni RED significativo.
+Readback estructural por padre/verificador; P2 queda pausada, sin inicio automático.
+P2 requerirá RED/GREEN sobre HTML del caller, mutación restaurada, nombre accesible,
+labels, teclado/foco, ausencia de default y aceptación visual humana; 36.12 sigue sin cerrar.
 
 ## Open Questions
 

@@ -312,7 +312,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
         ) : (
           <div className={styles.strips}>
             <h1 className={styles.srOnly}>Alquileres de larga estancia en Venezuela</h1>
-            {home.strips.map((strip) => (
+            {home.strips.map((strip, index) => (
               <ListingStrip
                 key={strip.key}
                 stripKey={strip.key}
@@ -320,6 +320,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
                 subtitle={strip.subtitle}
                 cards={strip.cards}
                 seeAll={strip.seeAll}
+                prioritizeFirstPhoto={index === 0}
               />
             ))}
           </div>

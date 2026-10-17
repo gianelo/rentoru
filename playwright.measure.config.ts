@@ -18,6 +18,16 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
+    // Local fixture harness only; raw traces may contain DOM and network data.
+    trace: process.env.CI
+      ? {
+          mode: "retain-on-failure",
+          screenshots: false,
+          snapshots: true,
+          sources: false,
+          attachments: false,
+        }
+      : "off",
   },
   webServer: {
     command: `pnpm exec next dev -p ${PORT}`,
@@ -28,6 +38,7 @@ export default defineConfig({
       // Only this webServer sets it — see app/measure/page.tsx. A real
       // deploy never sets this, so the route 404s outside this harness.
       MEASURE_HARNESS_ENABLED: "true",
+      F365_ZONE_MEASURE: "true",
       // Un destino que no existe, a propósito.
       //
       // El arnés monta `PublishStep`, que arrastra la Server Action del paso,

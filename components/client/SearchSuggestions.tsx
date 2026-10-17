@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  SEARCH_SUGGESTIONS_LABEL,
   type SearchChoice,
   searchChoices,
+  searchSuggestionsStatus,
 } from "@/modules/listing-catalogue/domain/search-destination";
 import type { SuggestionVocabulary } from "@/modules/listing-catalogue/domain/suggest-filters";
 import styles from "./SearchSuggestions.module.css";
-
-/** Cómo se anuncia la lista a quien navega con lector de pantalla. */
-const PANEL_LABEL = "Sugerencias";
 
 /**
  * **Las sugerencias mientras se escribe** (tasks.md 14.51 — la 14.35 con la
@@ -170,11 +169,11 @@ export function SearchSuggestions({ vocabulary }: { readonly vocabulary: Suggest
       {/* Sin esto el cambio existe sólo para quien lo ve. La lista aparece sin
           que nadie navegue, así que hay que decir que apareció y cuántas trae. */}
       <p className={styles.srOnly} role="status">
-        {choices.length === 0 ? "" : `${choices.length} ${PANEL_LABEL.toLowerCase()}`}
+        {searchSuggestionsStatus(choices.length)}
       </p>
 
       {choices.length === 0 ? null : (
-        <ul className={styles.panel} aria-label={PANEL_LABEL}>
+        <ul className={styles.panel} aria-label={SEARCH_SUGGESTIONS_LABEL}>
           {choices.map((choice) => (
             <li key={choice.href}>
               {/* Un `<a>` pelado y no `AppLink`: el destino es la búsqueda de

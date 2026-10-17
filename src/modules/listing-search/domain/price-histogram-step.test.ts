@@ -110,8 +110,7 @@ describe("por debajo del piso el paso 3 no dibuja un histograma vacío (18.9)", 
     // falta; acá hay que impedir que tres vecinos le fijen el precio a alguien.
     expect(view).toEqual({
       kind: "insufficient",
-      notice:
-        "Con 3 avisos en Chacao no alcanza para decir cuánto se pide: el precio lo ponés vos.",
+      notice: "Con 3 avisos en Chacao no alcanza para decir cuánto se pide: el precio lo pones tú.",
     });
   });
 
@@ -120,7 +119,10 @@ describe("por debajo del piso el paso 3 no dibuja un histograma vacío (18.9)", 
       zoneName: "Chacao",
     });
 
-    expect(view.kind === "insufficient" && view.notice).toContain("Con 1 aviso en Chacao");
+    expect(view).toEqual({
+      kind: "insufficient",
+      notice: "Con 1 aviso en Chacao no alcanza para decir cuánto se pide: el precio lo pones tú.",
+    });
   });
 
   it("ningún aviso se dice distinto de pocos avisos", () => {
@@ -128,7 +130,7 @@ describe("por debajo del piso el paso 3 no dibuja un histograma vacío (18.9)", 
 
     expect(view).toEqual({
       kind: "insufficient",
-      notice: "Todavía no hay avisos en Chacao: el precio lo ponés vos.",
+      notice: "Todavía no hay avisos en Chacao: el precio lo pones tú.",
     });
   });
 });

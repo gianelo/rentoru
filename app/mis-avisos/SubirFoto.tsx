@@ -69,6 +69,7 @@ export function SubirFoto({
   firmar,
   adjuntar,
   exito,
+  chooserLabel = "Subir fotos",
 }: {
   readonly listingId: string;
   readonly photoCount: number;
@@ -86,6 +87,8 @@ export function SubirFoto({
   }) => Promise<unknown>;
   /** Qué se dice cuando llegó: lo que sigue no es lo mismo en los dos sujetos. */
   readonly exito: string;
+  /** Presentation only; imported drafts retain the existing default. */
+  readonly chooserLabel?: string;
 }) {
   const inputId = useId();
   const [estado, setEstado] = useState<Estado>("listo");
@@ -154,7 +157,7 @@ export function SubirFoto({
           ? estado === "comprimiendo"
             ? "Comprimiendo en tu teléfono…"
             : "Subiendo…"
-          : "Subir fotos"}
+          : chooserLabel}
       </label>
 
       {mensaje === "" ? null : (
