@@ -1,5 +1,10 @@
 # Tasks: MVP Rental Listings
 
+## CI diagnostic S8 (separate from PR419)
+
+- [x] Local instrumentation: `tests/integration/broker-bulk-import-confirm.test.ts` wraps both zone reads; `support/catalogue-plan-probe.test.ts` names "finishes state and candidate plan before each action; matches only fresh exact SQL" and covers identity, privacy, unknown/error/disabled states. RED5 → GREEN18 including unchanged observer/legacy cases; fresh-match mutation failed the intended test, then restored. No app/DB served or business assertions changed.
+- [ ] Delivery: real PostgreSQL SQL/schema smoke and actual GitHub Actions first/second logs remain pending; no publication, integration, CI-cause/fix or phase completion claimed. S1–S7 unchanged.
+
 ## Review Workload Forecast
 
 | Field | Value |

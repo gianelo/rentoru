@@ -202,7 +202,14 @@ describe("confirmImport — against real Postgres", () => {
       accounts: tracedPort(accounts, `${confirmation}.accounts`),
       contact: tracedPort(contact, `${confirmation}.contact`),
       zones: tracedPort(zones, `${confirmation}.zones`),
-      catalogue: tracedPort(catalogue, `${confirmation}.catalogue`),
+      catalogue: {
+        listCities: () =>
+          trace(`${confirmation}.catalogue.listCities`, () => catalogue.listCities()),
+        listZones: () =>
+          planProbe.aroundZonesRead(confirmation, () =>
+            trace(`${confirmation}.catalogue.listZones`, () => catalogue.listZones()),
+          ),
+      },
       listings: tracedPort(listings, `${confirmation}.listings`),
     });
     const restoreQueries = observeCatalogueQueries(pool, traceEnabled);
