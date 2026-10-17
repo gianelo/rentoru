@@ -3,7 +3,23 @@
 ## CI diagnostic S8 (separate from PR419)
 
 - [x] Local instrumentation: `tests/integration/broker-bulk-import-confirm.test.ts` wraps both zone reads; `support/catalogue-plan-probe.test.ts` names "finishes state and candidate plan before each action; matches only fresh exact SQL" and covers identity, privacy, unknown/error/disabled states. RED5 → GREEN18 including unchanged observer/legacy cases; fresh-match mutation failed the intended test, then restored. No app/DB served or business assertions changed.
-- [ ] Delivery: real PostgreSQL SQL/schema smoke and actual GitHub Actions first/second logs remain pending; no publication, integration, CI-cause/fix or phase completion claimed. S1–S7 unchanged.
+- [x] Delivery: real PostgreSQL read-only SQL/schema smoke passed; PR420 merged
+  in `435b936`. PR CI39031240685 passed447 integration tests with both snapshots;
+  postmerge push gates39032550741 passed. PR419 CI39034668002 then captured the
+  slow state before both reads. These logs alone were not a performance fix.
+
+## CI fixture statistics correction
+
+- [x] Local behavior: `tests/integration/broker-bulk-import-confirm.test.ts`,
+  `refreshes zone fixture statistics`; controlled stale0/page1 reproduced both the
+  guard failure and original SAME-reference timeout. Awaited fixture ANALYZE made
+  the matching two cases pass; removing it failed the intended guard, then the
+  restored file passed5/5. Original four business assertions and timeout unchanged.
+- [x] Final typed candidate: typecheck, Biome and diff passed; job105 ran the
+  complete integration suite on new owned PG18 at55431: 47 files,448 tests PASS.
+  Protected-suite DSN guards remain unchanged. No UI/served-HTML change applies.
+- [ ] Risk-plan checks and publication: `odd/tasks/ci-catalogue-fixture-statistics.md`,
+  T1. No GitHub CI or human merge claimed yet.
 
 ## Review Workload Forecast
 
