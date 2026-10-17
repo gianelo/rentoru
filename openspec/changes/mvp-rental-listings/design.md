@@ -274,6 +274,24 @@ Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability an
 | E2E + crawlability | `pnpm test:e2e` | local production app + job-owned PostgreSQL |
 | Lighthouse budget | `pnpm budget:lighthouse` | preview deployment URL |
 
+### E2E profiles: selection is not the complete CI sequence
+
+`pnpm test:e2e:smoke:read` selects anonymous home, search and publication-access checks from `publish-access` and `busqueda-inicio`. `pnpm test:e2e:critical:read` adds `camino-de-lectura-sin-javascript`, `filtros-sin-javascript`, `sugerencias-sin-javascript` and `aviso-malformado-sin-javascript`: results/detail navigation, filters, suggestions and invalid routes. Both explicitly select the existing `chromium` and JavaScript-disabled `crawlability` projects; per-test skips still apply. Neither includes the separate `measure` harness.
+
+Append `--list` to either command to inspect the actual selection without launching browsers, servers or database fixtures. Running the tests requires the existing local app/proxy and deterministic catalogue on a separately owned disposable PostgreSQL database. Do not seed or run mutating fixtures against manual Dev/Staging/Production data. Missing catalogue can cause existing tests to skip: collection alone is not a functional PASS.
+
+The accepted destination policy is critical public reads **plus isolated publication and authenticated contact checks in dev**, with exhaustive checks in staging and unchanged basic PR gates. The `:read` commands cover only its public-read portion. This first slice defines selectors; it does not change current workflow triggers, gate conditions, retries, assertions or coverage.
+
+| Tier | Composition | Current execution |
+|---|---|---|
+| Smoke public reads | `pnpm test:e2e:smoke:read` | Explicit command, not wired into CI yet |
+| Critical public reads | `pnpm test:e2e:critical:read` | Explicit command, not the entire critical tier |
+| Critical writes/authentication | Existing exclusive publication, logout, contact revelation, report and door blocks | Remain isolated and mandatory in current CI |
+| Complete E2E | Exclusive publication first; general specs with existing exclusions; listing diagnostics/routes; isolated authenticated/door blocks; seeded pagination last | Existing ordered `e2e` job on dev/staging |
+| Other complete gates | `measure`, bundle/row budgets and SHA-bound Lighthouse | Existing separate jobs on dev/staging |
+
+`pnpm test:e2e` remains the general Playwright command, **not an alias for the complete ordered CI sequence**. Two opt-in fixtures remain excluded by the default configuration. Do not replace the full pipeline with a bare Playwright invocation or `pnpm verify` (which can recreate a DB and stop processes). Before retiring current dev jobs, validate the staging replacement and the before/after guarantees, including the existing Notion13 dependencies; no profile definition alone permits skipping a gate.
+
 **A budget nobody measures automatically is a wish.** `budget:bundle` reads the build output and fails when read-path first-load JS exceeds 130 KB — fast, needs no deployment, and catches the most common regression (someone converts a server component to a client component). `budget:lighthouse` runs against the preview deployment and fails on LCP over 2.5 s on a throttled 3G profile, search transfer over 230 KB, or detail transfer over 500 KB. Image derivative budgets are already asserted at generation time in unit tests, so they need no separate gate.
 
 **`build` is a gate because type-checking is not building.** This was learned the expensive way: a production deploy failed on `Module not found: Can't resolve '@/modules/...'` while every gate was green, because nothing in the gate set compiled the application. `tsc --noEmit` resolved the path alias through tsconfig `paths`; the bundler resolved it through a different mechanism and did not. Module resolution, bundler configuration, and server/client boundary violations are all invisible to the other gates and all fatal at deploy. The gate costs one build and no deployment.
