@@ -10,14 +10,22 @@ Fresh dev base: `435b936f80403ce7bbb799ed1876baa364da2483`. No app is served.
    «Mantendré intactos la consulta de producción, los datos manuales, las aserciones y el timeout. El merge seguirá siendo tuyo.»
    Existing business assertions remain unchanged; the added regression protects
    the fixture-statistics maintenance itself.
+3. S3 — User: «si primero como borrador y luego revisamos recuerda dejar los logs a ver si pasa algo tienes tu respuesta».
+   Publish an explicitly partial Draft first, retain the existing diagnostic logs,
+   and defer review. This does not claim unavailable checks passed.
 
 ## Tasks
-- T1 [in_progress: final suite, assessment and publication] — S1–S2; bounded worker,
+- T1 [in_progress: authorized partial Draft publication] — S1–S3; bounded worker,
   parent-owned resources/Git. RED/GREEN and mutation/restoration observed. Named
   proof: `tests/integration/broker-bulk-import-confirm.test.ts`,
   `refreshes zone fixture statistics` and the four unchanged business cases.
-  Commit pending; Draft PR to dev and one normal new-head CI follow verification.
+  Work-unit commit `2582ece6d31cacdd7e0d5ea1ba2f1c6b4acef2b0` is local.
+  User explicitly authorized partial Draft publication despite the stated proof
+  limits. Preserve logs and observe the new-head CI, without rerunning old CI.
   No Ready, merge, main promotion, critical-profile activation or cleanup authority.
+- T2 [blocked: user deferred review until after the Draft] — S3; independent
+  PostgreSQL runtime and native assessment remain unavailable, not approved.
+  No extra implementation, verification retry or publication beyond the Draft.
 
 ## Log
 - L1 — Original user messages verbatim: «dale», then «prepara y publica».
@@ -108,3 +116,29 @@ Fresh dev base: `435b936f80403ce7bbb799ed1876baa364da2483`. No app is served.
   or dev-profile activation. Manual5433, peer55437, historical54482 and S7's
   diagnostic57893 are untouched. Neither task-owned PG resource may be deleted
   without fresh ownership/loss inspection and human confirmation.
+
+- L15 — Committed-range ASSESS also refused undeclared private scratch. It did
+  not produce a candidate/risk verdict; no third attempt or native approval.
+  Independent verification mvcgpxih-u-iq9p read the entire committed document and
+  archived baseline/candidate into its own scratch. Source hash42c62ba3 and the
+  exact25 added lines were confirmed; all four original cases, S8, cleanup and
+  timeout are unchanged. Node22.23.3 ran. Docker failed before connection at the
+  default unix:///var/run/docker.sock (missing socket in isolated verifier HOME).
+  No context/socket change or retry: SQL0, callback0, negative probes0. This is
+  static proof only, not independent PostgreSQL verification. Its proposed
+  callback harness was not executed and is not added to this focused fix.
+  Parent448 PASS remains valid but cannot be relabelled independent proof.
+  Candidate code remains unchanged; this latest status is local/mirrored only.
+  T1 is blocked on the human's disposition: publish explicitly PARTIAL Draft
+  with both limitations, without Ready/merge, or preserve locally. Do not begin
+  more verification or claim the missing evidence passed. No push/PR yet.
+
+- L16 — User decision verbatim: «si primero como borrador y luego revisamos recuerda dejar los logs a ver si pasa algo tienes tu respuesta».
+  The prior blocked state in L15 is superseded for partial publication ONLY.
+  Parent will commit this complete disposition, push normally, create Draft to
+  dev and observe one new-head CI. Existing S8 first/second snapshot, association,
+  driver and legacy plan logs stay untouched; no new logger or weakened errors.
+  Private local RED/GREEN/mutation/full-suite artifacts and resources are retained.
+  State the native-assessment and independent-runtime limitations in the PR body;
+  defer review rather than claiming T2 complete. No Ready/merge/Main/profile flag,
+  cleanup or new verification round. Publication/CI still pending actual evidence.

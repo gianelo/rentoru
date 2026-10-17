@@ -18,8 +18,11 @@
 - [x] Final typed candidate: typecheck, Biome and diff passed; job105 ran the
   complete integration suite on new owned PG18 at55431: 47 files,448 tests PASS.
   Protected-suite DSN guards remain unchanged. No UI/served-HTML change applies.
-- [ ] Risk-plan checks and publication: `odd/tasks/ci-catalogue-fixture-statistics.md`,
-  T1. No GitHub CI or human merge claimed yet.
+- [ ] Partial Draft publication (explicitly authorized), then later review:
+  `odd/tasks/ci-catalogue-fixture-statistics.md`, T1–T2. Native assessment could
+  not evaluate scratch scope; independent inspection was static only because
+  Docker was unavailable. Existing first/second diagnostic logs remain intact.
+  No GitHub CI, completed review or human merge claimed yet.
 
 ## Review Workload Forecast
 
