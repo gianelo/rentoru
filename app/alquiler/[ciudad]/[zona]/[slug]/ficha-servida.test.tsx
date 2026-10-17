@@ -54,7 +54,7 @@ const {
     async () =>
       null as null | {
         publisherId: string;
-        contactMethod: "whatsapp" | "email";
+        contactMethod: "whatsapp" | "telefono" | "email";
         contactValue: string;
       },
   ),
@@ -264,6 +264,35 @@ beforeEach(() => {
   findRevealable.mockResolvedValue(null);
   findLatestMessage.mockResolvedValue(null);
 });
+
+it.each([
+  {
+    method: "whatsapp" as const,
+    value: "+584121234567",
+    href: "https://wa.me/584121234567?text=Hola",
+  },
+  { method: "telefono" as const, value: "+582121234567", href: "tel:+582121234567" },
+])(
+  "serves canonical $method destination without country inference",
+  async ({ method, value, href }) => {
+    sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+    findForDetail.mockResolvedValue(
+      detail({ status: "active", expiresAt: VIGENTE(), contactMethod: method }),
+    );
+    findUniquePairs.mockResolvedValue([{ tenantUserId: "tenant-1", listingId: VENCIDO_ID }]);
+    findRevealable.mockResolvedValue({
+      publisherId: "publisher-1",
+      contactMethod: method,
+      contactValue: value,
+    });
+    findLatestMessage.mockResolvedValue("Hola");
+    const html = await servedBody();
+    expect(html).toContain(`href="${href}"`);
+    expect(html).toContain(`data-testid="contact-value">${value}`);
+    sessionForPage.mockResolvedValue(null);
+    expect(await servedBody()).not.toContain(value);
+  },
+);
 
 it("31.6: serves revealed email with native mailto and scoped copy styling hook", async () => {
   sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });

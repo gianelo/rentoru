@@ -1,3 +1,4 @@
+import type { ContactFeedback } from "../../src/modules/listing-publication/domain/contact-feedback";
 import type { ListingEditViolation } from "../../src/modules/listing-publication/domain/listing-edit";
 import {
   MAX_DESCRIPTION_CHARACTERS,
@@ -58,6 +59,8 @@ export interface PublishCopyContext {
   readonly descriptionLength?: number;
   /** Lo mismo para el titulo: el paso 6 tambien cuenta. */
   readonly titleLength?: number;
+  /** Channel and derived issue only, never the submitted contact. */
+  readonly contact?: ContactFeedback;
 }
 
 export interface ViolationCopy {
@@ -76,6 +79,31 @@ const REQUIRED = "✱ obligatorio";
  */
 function counted(measure: number | undefined): string {
   return measure === undefined ? "" : ` Vas ${measure}.`;
+}
+
+function contactMessage(contact: ContactFeedback | undefined): string | undefined {
+  if (!contact?.method || !contact.issue) return undefined;
+  const channel = contact.method === "whatsapp" ? "WhatsApp" : "llamadas";
+  switch (contact.issue.code) {
+    case "required":
+      return contact.method === "email"
+        ? `${REQUIRED}. Escribe tu correo.`
+        : contact.method === "whatsapp"
+          ? `${REQUIRED}. Escribe tu número de WhatsApp.`
+          : `${REQUIRED}. Escribe tu número para llamadas.`;
+    case "email":
+      return "Escribe un correo completo, como nombre@dominio.com.";
+    case "fixedWhatsapp":
+      return "Este número es fijo. Selecciona Llamada; WhatsApp requiere un móvil venezolano.";
+    case "foreignCountry":
+      return `Para ${channel}, usa un número venezolano: el código de país es +58.`;
+    case "internationalZero":
+      return `Después de +58 o 0058, no incluyas el 0 inicial del número para ${channel}.`;
+    case "length":
+      return `El número para ${channel} tiene ${contact.issue.digits} dígitos. Este formato requiere ${contact.issue.expected}.`;
+    case "notation":
+      return `Revisa el formato y el prefijo del número para ${channel}. Se permiten espacios, guiones y paréntesis alrededor del prefijo, no letras ni extensiones.`;
+  }
 }
 
 export const PUBLISH_VIOLATION_COPY: Record<PublishViolation, ViolationCopy> = {
@@ -187,13 +215,15 @@ export const PUBLISH_VIOLATION_COPY: Record<PublishViolation, ViolationCopy> = {
     message: () => "Elegí WhatsApp, teléfono o correo.",
   },
   "contactValue.required": {
-    message: () => `${REQUIRED}. Poné el dato por el que te contactan.`,
+    message: ({ contact }) =>
+      contactMessage(contact) ?? `${REQUIRED}. Poné el dato por el que te contactan.`,
   },
   // Shape, not verification: nothing here proves the line rings. It catches
   // the typo while the publisher is still on the form, which is the only
   // moment it is cheap to fix.
   "contactValue.invalid": {
-    message: () => "Revisá el dato: un correo lleva @, y un teléfono solo números.",
+    message: ({ contact }) =>
+      contactMessage(contact) ?? "Revisá el dato: un correo lleva @, y un teléfono solo números.",
   },
   "photos.required": {
     message: () => `${REQUIRED}. Subí al menos una foto en el paso 2.`,

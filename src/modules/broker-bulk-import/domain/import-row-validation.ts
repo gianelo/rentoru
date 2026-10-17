@@ -6,6 +6,7 @@ import type {
   PublishViolation,
 } from "../../listing-publication/domain/publishable-listing";
 import { validatePublishableListing } from "../../listing-publication/domain/publishable-listing";
+import { contactValueForWrite } from "../../listing-publication/domain/venezuelan-phone";
 import { parseImportBooleanCell } from "./csv-import-boolean-cell";
 import {
   IMPORT_BOOLEAN_COLUMNS,
@@ -243,7 +244,8 @@ export function validateImportRows(
         hasSecurity: draft.hasSecurity,
         hasAppliances: draft.hasAppliances,
         contactMethod: contact.contactMethod,
-        contactValue: contact.contactValue,
+        contactValue:
+          contactValueForWrite(contact.contactMethod, contact.contactValue) ?? contact.contactValue,
       },
     });
   });

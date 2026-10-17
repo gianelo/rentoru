@@ -37,7 +37,11 @@ async function nativePost(
   expect(post.status()).toBe(303);
   if (!served) throw new Error("native POST returned no served navigation");
   expect(served.status()).toBe(200);
-  expect(page.url()).toBe(`${origin}/publicar/paso/${destination}`);
+  expect(page.url()).toBe(
+    destination === "revisar"
+      ? `${origin}/publicar/revisar`
+      : `${origin}/publicar/paso/${destination}`,
+  );
   return { started, finished, html: await served.text(), request: post.request() };
 }
 
@@ -231,8 +235,12 @@ for (const javaScriptEnabled of [true, false]) {
   });
 }
 
-for (const javaScriptEnabled of [true, false]) {
-  const mode = javaScriptEnabled ? "on" : "off";
+for (const [mode, javaScriptEnabled, rejectedCount] of [
+  ["on", true, undefined],
+  ["off-short", false, 119],
+  ["off-long", false, 1201],
+  ["off-valid", false, undefined],
+] as const) {
   test(`owned description: JavaScript ${mode}`, async ({ browser, baseURL }) => {
     if (baseURL !== "http://127.0.0.1:31467") {
       throw new Error("owned description requires its exact loopback origin");
@@ -249,7 +257,7 @@ for (const javaScriptEnabled of [true, false]) {
     try {
       // Retain the baseline and bootstrap only this fresh synthetic identity.
       const retained = await baseline.snapshot();
-      const identity = `case-title-description-${randomUUID().replaceAll("-", "").slice(0, 12)}-${mode}`;
+      const identity = `case-title-desc-${randomUUID().replaceAll("-", "").slice(0, 12)}-${mode}`;
       const fixture = new TitleSavedDraft(OWNED_DSN, db, identity);
       expect(fixture.publisherId).not.toBe(baseline.publisherId);
       const own = await fixture.ensure(new Date());
@@ -354,16 +362,24 @@ for (const javaScriptEnabled of [true, false]) {
             await live("a".repeat(1201), 1201, "ya alcanza", 100);
           } else {
             let previous = ready;
-            for (const [count, violation, message, guide, progress] of [
+            for (const [count, violation, message, guide, progress] of (
               [
-                119,
-                "description.tooShort",
-                "✱ Mínimo 120 caracteres. Vas 119.",
-                "te faltan 1 caracteres",
-                99,
-              ],
-              [1201, "description.tooLong", "Máximo 1200 caracteres. Vas 1201.", "ya alcanza", 100],
-            ] as const) {
+                [
+                  119,
+                  "description.tooShort",
+                  "✱ Mínimo 120 caracteres. Vas 119.",
+                  "te faltan 1 caracteres",
+                  99,
+                ],
+                [
+                  1201,
+                  "description.tooLong",
+                  "Máximo 1200 caracteres. Vas 1201.",
+                  "ya alcanza",
+                  100,
+                ],
+              ] as const
+            ).filter(([count]) => count === rejectedCount)) {
               const rejected = "a".repeat(count);
               const invalid = await nativePost(
                 page,
@@ -401,6 +417,7 @@ for (const javaScriptEnabled of [true, false]) {
               expect(await baseline.snapshot()).toEqual(retained);
               previous = attempted;
             }
+            if (rejectedCount !== undefined) continue;
             const description = `${"Casa luminosa ".repeat(10)}\nPatio interior.`;
             const paddedDescription = `  ${description}  `;
             // Native multipart serialization uses CRLF; derive it from input, not the DB.
@@ -452,6 +469,194 @@ for (const javaScriptEnabled of [true, false]) {
       // Retain every case row, including attempts, photo stamps and renewed expiry.
       expect(await baseline.snapshot()).toEqual(retained);
     } finally {
+      await db.close();
+    }
+  });
+}
+
+const notationContactError =
+  "Revisa el formato y el prefijo del número para WhatsApp. Se permiten espacios, guiones y paréntesis alrededor del prefijo, no letras ni extensiones.";
+const contactErrors: Record<string, string> = {
+  "0212 1234567": "Este número es fijo. Selecciona Llamada; WhatsApp requiere un móvil venezolano.",
+  "+1 4121234567": "Para WhatsApp, usa un número venezolano: el código de país es +58.",
+  "+58 0412 1234567": "Después de +58 o 0058, no incluyas el 0 inicial del número para WhatsApp.",
+  "0412ABC4567": notationContactError,
+  "04121234567 ext 1": notationContactError,
+  "(0412 1234567": notationContactError,
+  "0412123456": "El número para WhatsApp tiene 10 dígitos. Este formato requiere 11.",
+  "042431244444": "El número para WhatsApp tiene 12 dígitos. Este formato requiere 11.",
+  "": "✱ obligatorio. Escribe tu número de WhatsApp.",
+};
+
+const cases = [
+  ["whatsapp", "0412 123 4567", "+584121234567", null],
+  ["whatsapp", "4121234567", "+584121234567", null],
+  ["whatsapp", "+58 412 1234567", "+584121234567", null],
+  ["whatsapp", "0058 412 1234567", "+584121234567", null],
+  ["whatsapp", "584121234567", "+584121234567", null],
+  ["telefono", "0212 123 4567", "+582121234567", null],
+  ["email", "contacto@example.invalid", "contacto@example.invalid", null],
+  ["whatsapp", "0212 1234567", "0212 1234567", "contactValue.invalid"],
+  ["whatsapp", "+1 4121234567", "+1 4121234567", "contactValue.invalid"],
+  ["whatsapp", "+58 0412 1234567", "+58 0412 1234567", "contactValue.invalid"],
+  ["whatsapp", "0412ABC4567", "0412ABC4567", "contactValue.invalid"],
+  ["whatsapp", "04121234567 ext 1", "04121234567 ext 1", "contactValue.invalid"],
+  ["whatsapp", "0412123456", "0412123456", "contactValue.invalid"],
+  ["whatsapp", "042431244444", "042431244444", "contactValue.invalid"],
+  ["whatsapp", "04246162812", "+584246162812", null],
+  ["whatsapp", "(0412 1234567", "(0412 1234567", "contactValue.invalid"],
+  ["whatsapp", "", "", "contactValue.required"],
+] as const;
+
+const liveCase = ["whatsapp", "042431244444", "042431244444", "contactValue.invalid"] as const;
+for (const [index, [method, value, expected, violation]] of [...cases, liveCase].entries()) {
+  const scripted = index === cases.length;
+  test(`owned contact${scripted ? " JS-on" : ""}: ${method} ${JSON.stringify(value)}`, async ({
+    browser,
+    baseURL,
+  }) => {
+    if (baseURL !== "http://127.0.0.1:31467") throw new Error("exact owned origin required");
+    const origin = baseURL;
+    const db = await connectOwnedDatabase(OWNED_DSN);
+    const baseline = new ContactSavedDraft(OWNED_DSN, {
+      query(sql, values) {
+        if (!sql.startsWith("SELECT")) throw new Error("baseline is read-only");
+        return db.query(sql, values);
+      },
+    });
+    const context = await browser.newContext({ javaScriptEnabled: scripted });
+    try {
+      const retained = await baseline.snapshot();
+      const identity = `case-title-contact-${randomUUID().replaceAll("-", "").slice(0, 12)}`;
+      const fixture = new TitleSavedDraft(OWNED_DSN, db, identity);
+      expect(fixture.publisherId).not.toBe(baseline.publisherId);
+      await fixture.ensure(new Date());
+      await context.route("**/*", (route) => {
+        const url = new URL(route.request().url());
+        return url.origin === origin &&
+          !url.username &&
+          !url.password &&
+          route.request().resourceType() !== "image"
+          ? route.continue()
+          : route.abort();
+      });
+      await context.addCookies([
+        { name: "authjs.session-token", value: fixture.sessionToken, url: origin },
+      ]);
+      const page = await context.newPage();
+      expect((await page.goto(`${origin}/api/auth/session`))?.status()).toBe(200);
+      const session = JSON.parse((await page.locator("body").textContent()) ?? "null");
+      expect(session.user.email).toBe(`owned-f367-${identity}@example.invalid`);
+      expect(Date.parse(session.expires)).toBeGreaterThan(Date.now());
+      expect((await page.goto(`${origin}/publicar/paso/titulo`))?.status()).toBe(200);
+      await nativePost(page, origin, "Casa luminosa", "descripcion");
+      await nativePost(
+        page,
+        origin,
+        "Casa luminosa ".repeat(10),
+        "fotos",
+        "descripcion",
+        "Descripción",
+      );
+      const entered = await page.goto(`${origin}/publicar/paso/quien`);
+      expect(entered?.status()).toBe(200);
+      expect(page.url()).toBe(`${origin}/publicar/paso/quien`);
+      const beforeContact = await fixture.snapshot();
+      await page.getByLabel("Soy el dueño", { exact: true }).check();
+      await page.locator(`input[name="contactMethod"][value="${method}"]`).check();
+      if (scripted) {
+        const liveMessage = contactErrors[value];
+        const fixedMessage = contactErrors["0212 1234567"];
+        if (liveMessage === undefined || fixedMessage === undefined)
+          throw new Error("missing live contact copy");
+        const input = page.getByLabel("Tu dato de contacto", { exact: true });
+        await input.fill(value);
+        await expect(page.locator("#contact-error")).toHaveCount(0);
+        await input.blur();
+        await expect(page.locator("#contact-error")).toHaveText(liveMessage);
+        await expect(input).toHaveAttribute("aria-invalid", "true");
+        await input.fill("04246162812");
+        await expect(page.locator("#contact-error")).toHaveCount(0);
+        await expect(input).not.toHaveAttribute("aria-invalid", "true");
+        await input.fill("0212 1234567");
+        await expect(page.locator("#contact-error")).toHaveText(fixedMessage);
+        await page.locator('input[name="contactMethod"][value="telefono"]').check();
+        await expect(page.locator("#contact-error")).toHaveCount(0);
+        await page.locator('input[name="contactMethod"][value="email"]').check();
+        await expect(page.locator("#contact-error")).toContainText("correo");
+        await expect(input).toHaveValue("0212 1234567");
+        await page.locator('input[name="contactMethod"][value="whatsapp"]').check();
+      }
+      const result = await nativePost(
+        page,
+        origin,
+        value,
+        violation ? "quien" : "revisar",
+        "quien",
+        "Tu dato de contacto",
+      );
+      expect(result.request.postData()).toContain(`name="contactMethod"\r\n\r\n${method}`);
+      const persisted = await fixture.snapshot();
+      expect(persisted.answers.listing).toEqual({
+        ...beforeContact.answers.listing,
+        publisherType: "owner",
+        contactMethod: method,
+        // Empty fields become undefined at the reader and are absent from stored JSON.
+        ...(expected === "" ? {} : { contactValue: expected }),
+      });
+      expect(persisted.answers.violations).toEqual(violation ? [violation] : []);
+      // Quien retains rejected text in listing; raw is reserved for other step readers.
+      expect(persisted.answers.raw).toEqual(violation ? {} : undefined);
+      const {
+        listing: _beforeListing,
+        violations: _beforeViolations,
+        raw: _beforeRaw,
+        ...rest
+      } = beforeContact.answers;
+      const {
+        listing: _afterListing,
+        violations: _afterViolations,
+        raw: _afterRaw,
+        ...afterRest
+      } = persisted.answers;
+      expect(afterRest).toEqual(rest);
+      expect(persisted.photos).toEqual(beforeContact.photos);
+      expect(Date.parse(persisted.expiresAt)).toBeGreaterThanOrEqual(
+        result.started + DRAFT_LIFETIME_MS,
+      );
+      expect(Date.parse(persisted.expiresAt)).toBeLessThanOrEqual(
+        result.finished + DRAFT_LIFETIME_MS,
+      );
+      const errorMessage = contactErrors[value];
+      if (violation) {
+        expect(errorMessage).toBeTruthy();
+        expect(result.html).toContain(errorMessage);
+        const inputPosition = result.html.indexOf('id="contactValue"');
+        const errorPosition = result.html.indexOf('id="contact-error"');
+        expect(inputPosition).toBeGreaterThanOrEqual(0);
+        expect(errorPosition).toBeGreaterThan(inputPosition);
+        const control = result.html.match(/<input\b[^>]*id="contactValue"[^>]*>/)?.[0];
+        expect(control).toContain('aria-invalid="true"');
+        expect(control).toContain('aria-describedby="contact-error contact-help"');
+      }
+      for (const reload of [false, true]) {
+        const served = reload
+          ? await page.reload()
+          : await page.goto(`${origin}/publicar/paso/quien`);
+        expect(served?.status()).toBe(200);
+        expect(page.url()).toBe(`${origin}/publicar/paso/quien`);
+        await expect(page.getByLabel("Tu dato de contacto", { exact: true })).toHaveValue(expected);
+        await expect(page.getByLabel("Soy el dueño", { exact: true })).toBeChecked();
+        await expect(page.locator(`input[name="contactMethod"][value="${method}"]`)).toBeChecked();
+        if (violation) {
+          if (errorMessage === undefined) throw new Error("Missing expected contact error copy");
+          await expect(page.locator("#contact-error")).toHaveText(errorMessage);
+        } else await expect(page.locator("#contact-error")).toHaveCount(0);
+        expect(await fixture.snapshot()).toEqual(persisted);
+        expect(await baseline.snapshot()).toEqual(retained);
+      }
+    } finally {
+      await context.close();
       await db.close();
     }
   });

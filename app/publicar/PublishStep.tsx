@@ -1,5 +1,6 @@
 import { AppLink } from "@/../components/atoms/AppLink";
 import { measureOf } from "../../src/modules/listing-publication/domain/carried-value";
+import { contactFeedback } from "../../src/modules/listing-publication/domain/contact-feedback";
 import type {
   PublicationDraft,
   PublishStepId,
@@ -15,6 +16,7 @@ import { missingZoneContactHref } from "../../src/modules/site-contact/domain/co
 import { submitStep } from "./actions";
 import { FieldError } from "./FieldError";
 import { PhotoUploader } from "./fotos/PhotoUploader";
+import { PublicationContactEnhancement } from "./PublicationContactEnhancement";
 import { PublicationDescriptionField } from "./PublicationDescriptionField";
 import { PublicationTitleField } from "./PublicationTitleField";
 import { PublicationZoneReference } from "./PublicationZoneControls";
@@ -128,6 +130,7 @@ function errorsByField(violations: readonly PublishViolation[], draft: Publicati
       PUBLISH_VIOLATION_COPY[violation].message({
         descriptionLength: measureOf(draft.listing.description),
         titleLength: measureOf(draft.listing.title),
+        contact: contactFeedback(draft.listing.contactMethod, draft.listing.contactValue),
       }),
     );
   }
@@ -607,11 +610,16 @@ function StepFields(props: FieldsProps) {
             <strong>{PUBLISHER_TYPE_ONE_WAY_STRESS}</strong>.
           </p>
 
-          <fieldset className={styles.choices}>
+          <fieldset
+            className={styles.choices}
+            aria-invalid={errors.has("contactMethod") || undefined}
+            aria-describedby={errors.has("contactMethod") ? "contact-method-error" : undefined}
+          >
             <legend className={styles.legend}>¿Cómo te contactan?</legend>
-            <FieldError
-              id="contact-error"
-              message={errors.get("contactMethod") ?? errors.get("contactValue")}
+            <PublicationContactEnhancement
+              field="method"
+              message={errors.get("contactMethod")}
+              initiallyTouched={errors.has("contactMethod") || errors.has("contactValue")}
             />
             {(
               [
@@ -643,11 +651,22 @@ function StepFields(props: FieldsProps) {
               type="text"
               className={`${styles.control} ${errors.get("contactValue") ? styles.controlInvalid : ""}`}
               defaultValue={listing.contactValue ?? ""}
+              aria-invalid={errors.has("contactValue") || undefined}
+              aria-describedby={
+                errors.has("contactValue") ? "contact-error contact-help" : "contact-help"
+              }
+            />
+            <PublicationContactEnhancement
+              field="value"
+              message={errors.get("contactValue")}
+              initiallyTouched={errors.has("contactMethod") || errors.has("contactValue")}
             />
             {/* El boton de la ficha toma su texto del metodo: decir "Ver
                 WhatsApp" sobre un correo es una promesa que el producto no
                 cumple. */}
-            <p className={styles.help}>Se muestra solo a quien inicie sesión.</p>
+            <p className={styles.help} id="contact-help">
+              Se muestra solo a quien inicie sesión.
+            </p>
           </div>
         </>
       );
