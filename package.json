@@ -29,6 +29,8 @@
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:e2e": "playwright test",
+    "test:e2e:smoke:read": "playwright test tests/e2e/publish-access.spec.ts tests/e2e/busqueda-inicio.spec.ts --project=chromium --project=crawlability",
+    "test:e2e:critical:read": "playwright test tests/e2e/publish-access.spec.ts tests/e2e/busqueda-inicio.spec.ts tests/e2e/camino-de-lectura-sin-javascript.spec.ts tests/e2e/filtros-sin-javascript.spec.ts tests/e2e/sugerencias-sin-javascript.spec.ts tests/e2e/aviso-malformado-sin-javascript.spec.ts --project=chromium --project=crawlability",
     "test:measure": "playwright test --config=playwright.measure.config.ts",
     "verify": "node scripts/verify.mjs",
     "budget:bundle": "tsx scripts/budget-bundle.ts",
