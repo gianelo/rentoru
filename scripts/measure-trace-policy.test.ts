@@ -65,7 +65,9 @@ it("uploads only local measure failure ZIPs with short retention and preserves t
   const job = workflow.jobs.measure;
   const index = job.steps.findIndex((step: { id?: string }) => step.id === "measure");
   expect(index).toBeGreaterThan(0);
-  expect(job.if).toBe("github.event_name == 'push'");
+  expect(job.if).toBe(
+    "github.event_name == 'push' && (github.ref != 'refs/heads/dev' || vars.CI_DEV_PROFILE != 'critical')",
+  );
   expect(job.env).toBeUndefined();
   expect(job.steps[index - 1].run).toBe("node --test scripts/measure-trace.test.cjs");
   expect(job.steps[index]).toEqual({ id: "measure", run: "pnpm test:measure" });

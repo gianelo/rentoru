@@ -34,7 +34,11 @@ describe("CI branch routing", () => {
       expect(jobs[name].if, name).toBe("github.event_name == 'pull_request'");
     }
     for (const name of heavyJobs) {
-      expect(jobs[name].if, name).toBe("github.event_name == 'push'");
+      expect(jobs[name].if, name).toBe(
+        name === "e2e"
+          ? "github.event_name == 'push'"
+          : "github.event_name == 'push' && (github.ref != 'refs/heads/dev' || vars.CI_DEV_PROFILE != 'critical')",
+      );
     }
     expect(commands(jobs.lint)).toContain("pnpm exec biome ci .");
     expect(commands(jobs.types)).toContain("pnpm typecheck");

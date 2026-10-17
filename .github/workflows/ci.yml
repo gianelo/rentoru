@@ -6,6 +6,10 @@ name: CI
 # on pull requests into dev/staging/main. The expensive half — E2E,
 # crawlability, measurement and budgets — runs on pushes to dev/staging.
 # Only Lighthouse needs the exact commit's deployed preview.
+# Full remains the default on dev and mandatory on staging. Enable the optional
+# CI_DEV_PROFILE=critical repository variable only after validating the staging
+# replacement and the promotion prerequisites; this file does not enable it.
+# Critical dev keeps isolated publication/authentication and selects public reads.
 #
 # No repository variable is required to discover deployment URLs.
 #
@@ -151,7 +155,7 @@ jobs:
   # push to dev/staging alongside e2e/budget: it needs a Next.js build and
   # a real browser, but no deployed preview (its webServer runs `next dev`).
   measure:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && (github.ref != 'refs/heads/dev' || vars.CI_DEV_PROFILE != 'critical')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -280,7 +284,7 @@ jobs:
   # copies of a wait loop drift, and the second copy is the one nobody
   # notices is broken.
   preview:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && (github.ref != 'refs/heads/dev' || vars.CI_DEV_PROFILE != 'critical')
     runs-on: ubuntu-latest
     outputs:
       url: ${{ steps.resolve.outputs.url }}
@@ -393,6 +397,7 @@ jobs:
       # Always exercise the seeded job-owned app, not the remote deployment.
       - name: E2E + crawlability
         env:
+          READ_PROFILE: ${{ github.ref == 'refs/heads/dev' && vars.CI_DEV_PROFILE == 'critical' && 'critical' || 'full' }}
           PLAYWRIGHT_BASE_URL: ''
           VERCEL_AUTOMATION_BYPASS_SECRET: ''
           # The same deliberately fake, unroutable value the build job carries,
@@ -439,6 +444,10 @@ jobs:
           # tells the config to serve what this step already produced.
           if [ -z "$PLAYWRIGHT_BASE_URL" ]; then
             pnpm build
+          fi
+          if [ "$READ_PROFILE" = "critical" ]; then
+            pnpm test:e2e:critical:read
+            exit $?
           fi
           fail=0
           # `if cmd` rather than capturing $? after an assignment: Actions runs
@@ -517,7 +526,7 @@ jobs:
           pnpm exec playwright test tests/e2e/paginacion-catalogo.spec.ts --project=crawlability
 
   budget:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && (github.ref != 'refs/heads/dev' || vars.CI_DEV_PROFILE != 'critical')
     needs: preview
     runs-on: ubuntu-latest
     # tasks.md 27.4 — the row half of the budget pair. Unlike the byte half
