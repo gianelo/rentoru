@@ -247,7 +247,7 @@ With `CI=true`, the bulk-import confirmation file requests one estimated plan in
 
 S8 adds `aroundZonesRead(first|second, action)` to both CI duplicate-confirmation catalogue `listZones` reads. `[import-plan]` emits `snapshot_start`, numeric/null `state`, unverified `candidate_plan` (or phase-specific `unavailable`), then `snapshot_end` before the actual read trace. Its subsequent `association` accepts only fresh exact SQL with zero parameters; unknown is not a match. State covers public.zone counts/estimates/pages, lagging analyze counters/epochs, snapshot PID/version, work_mem bytes and 0/1 planner/JIT flags. No raw SQL, settings strings, data or error text is emitted; SQLSTATE is restricted to 57014/42P01/42501, otherwise unknown.
 
-The snapshot PID identifies only its single metadata SELECT; EXPLAIN/original backend remain unknown. Temporal SQL association is not the actual executed server plan. These awaited reads consume the unchanged five-second test budget and can warm caches/influence outcomes; a later PASS is not a fix. Per-query deadlines stop waiting, not cancellation. Legacy afterAll output remains unchanged; GitHub logs and real PostgreSQL validation are still pending.
+The snapshot PID identifies only its single metadata SELECT; EXPLAIN/original backend remain unknown. Temporal SQL association is not the actual executed server plan. These awaited reads consume the unchanged five-second test budget and can warm caches/influence outcomes; a later PASS is not a fix. Per-query deadlines stop waiting, not cancellation. Legacy afterAll output remains unchanged. A real PostgreSQL read-only smoke and the first/second GitHub logs were verified in PR420 (merge `435b936`, PR CI39031240685; postmerge push gates39032550741). Instrumentation alone did not correct the historical latency.
 
 Probe evidence: RED4 → focused GREEN12 with the existing query-observer tests; removing the parameter guard caused the intended test to fail, then was restored. The real confirmation caller passed 4/4 on the owned PostgreSQL 18 and emitted exactly one parsed plan summary. The later full integration run passed 407 tests but two suites refused the noncanonical diagnostic DSN before collection; those guards were not relaxed. Full unit coverage exited 1 with 3419 passing tests and three unchanged preview-resolver timeouts, without concurrent build/measure; no retry or cause claim. Types, lint, tokens and diff checks passed. These local results do not establish CI timing or a globally green suite. Independent static S1–S3 inspection found no demonstrated severe candidate defect; its sole runtime attempt failed before collection because the scratch could not resolve `@vitest/utils`: zero tests executed, no PASS. That inspection preceded the deadline addition and node-summary projection. The projection observed RED2 → GREEN13, but CI38924430876 returned unavailable, not nodes. The subsequent plain-EXPLAIN correction observed RED2 → GREEN13 with a realistic report lacking execution timings, plus types/format/diff PASS; it does not execute the SELECT or mix estimates with actual measurements. No additional database query, full suite or independent verifier was run for that correction. Its focused RED/GREEN now covers pool acquisition that never completes (13 focused tests passed); one real PostgreSQL lock check returned unavailable after 5003 ms, released the lock, reused the pool and preserved stored counts. The normal real-adapter path also emitted its plan. No full-suite or independent-runtime retry was performed.
 
@@ -277,6 +277,20 @@ Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability an
 | Token contract (D16) | `pnpm lint:tokens` | — |
 | E2E + crawlability | `pnpm test:e2e` | local production app + job-owned PostgreSQL |
 | Lighthouse budget | `pnpm budget:lighthouse` | preview deployment URL |
+
+### Shared catalogue fixture statistics
+
+The confirmation integration fixture runs `ANALYZE public.zone` after its city/zone
+inserts. Earlier tests can empty and reseed the shared catalogue, leaving an empty
+table estimate despite thousands of rows. Refreshing statistics at this fixture's
+completion isolates its reads from that inherited state; production SQL, seeding,
+business assertions and the five-second test limit stay unchanged.
+
+`refreshes zone fixture statistics` checks actual cardinality and `pg_class` through
+PostgreSQL: nonempty data, positive pages/estimate, and a 5% cardinality allowance
+(at least one row) for approximate statistics. This is not a latency allowance or
+a required planner choice. Controlled RED/GREEN and removal of the maintenance
+protect this boundary; neither reconstructs the historical autoanalyze interleaving.
 
 ### E2E profiles: selection is not the complete CI sequence
 
