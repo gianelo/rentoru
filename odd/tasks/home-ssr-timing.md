@@ -10,10 +10,11 @@ Fresh dev base `262ce143cdac977049705c7c0c9c8dcb958b0d82`; no app served.
    comportamiento».
 
 ## Tasks
-- T1 [in_progress: owner-authorized partial Draft publication for GitHub CI] — S1–S2; inline, one dependent
+- T1 [in_progress: verified closure publication] — S1–S2; inline, one dependent
   behavior including helper/caller/tests/docs. Prepare local opt-in diagnostics,
   observe served-output RED/GREEN, mutation and baseline differential, run
-  focused/full applicable checks and the risk-gated verification. Closure pending.
+  focused/full applicable checks and the risk-gated verification.
+  Commit: `48d4446cbb46826b667e7708f5beb22216998e36`; closure pending.
   Publication, Vercel flag activation and merge remain human decisions.
 
 ## Log
@@ -96,3 +97,8 @@ Fresh dev base `262ce143cdac977049705c7c0c9c8dcb958b0d82`; no app served.
   entornos. sube esto al PR como otro commit no se para probar en el github».
   Publish partial Draft→dev for normal GitHub CI; stop local reruns. CI results,
   native assessment/privacy verification and live preview timings are pending.
+- L18 — PR422 published as Draft→dev at48d4446; normal GitHub CI39167481401
+  started. Publication is not CI success, privacy approval or flag activation.
+- L19 — CI39167481401:3591 unit/448 integration passed, build/types/lint/tokens
+  passed. Independent source/evidence review S1/S2 PASS; no local reruns.
+  Native assess: medium, reviewDue=false. Prepared, not merged or activated.
