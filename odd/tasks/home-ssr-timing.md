@@ -10,11 +10,11 @@ Fresh dev base `262ce143cdac977049705c7c0c9c8dcb958b0d82`; no app served.
    comportamiento».
 
 ## Tasks
-- T1 [in_progress: verified closure publication] — S1–S2; inline, one dependent
+- T1 [done: prepared and verified; human integration/activation separate] — S1–S2; inline, one dependent
   behavior including helper/caller/tests/docs. Prepare local opt-in diagnostics,
   observe served-output RED/GREEN, mutation and baseline differential, run
   focused/full applicable checks and the risk-gated verification.
-  Commit: `48d4446cbb46826b667e7708f5beb22216998e36`; closure pending.
+  Commit: `48d4446cbb46826b667e7708f5beb22216998e36`; closure recorded below.
   Publication, Vercel flag activation and merge remain human decisions.
 
 ## Log
