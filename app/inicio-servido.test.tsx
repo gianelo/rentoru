@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { collectionsFor, coversFor, listCities, getSession } = vi.hoisted(() => ({
   collectionsFor: vi.fn(),
@@ -63,7 +63,11 @@ async function served(city?: string, q?: string): Promise<string> {
   );
 }
 
+afterEach(() => vi.unstubAllEnvs());
+
 beforeEach(() => {
+  vi.unstubAllEnvs();
+  vi.stubEnv("HOME_SSR_TIMING_DIAGNOSTICS", undefined);
   vi.clearAllMocks();
   collectionsFor.mockImplementation(
     async (specs: { key: string }[]) =>
@@ -95,6 +99,55 @@ beforeEach(() => {
 });
 
 describe("selector del inicio servido", () => {
+  it("emits preview-dev timing through the served caller without changing HTML or leaking values", async () => {
+    getSession.mockResolvedValue({ name: "PRIVATE_NAME", email: "PRIVATE_EMAIL" });
+    const baseline = await served();
+    vi.stubEnv("HOME_SSR_TIMING_DIAGNOSTICS", "1");
+    vi.stubEnv("VERCEL_ENV", "preview");
+    vi.stubEnv("VERCEL_GIT_COMMIT_REF", "dev");
+    const log = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      expect(await served()).toBe(baseline);
+      expect(log).toHaveBeenCalledTimes(1);
+      const line = String(log.mock.calls[0]?.[0]);
+      expect(JSON.parse(line)).toEqual({
+        schema: "home-ssr-timing/v1",
+        dataPreparationMs: expect.any(Number),
+        phasesMs: {
+          cities: expect.any(Number),
+          activeZones: expect.any(Number),
+          collections: expect.any(Number),
+          covers: expect.any(Number),
+          session: expect.any(Number),
+          navFlags: expect.any(Number),
+        },
+      });
+      expect(line).not.toContain("PRIVATE_");
+      expect(line).not.toContain("mar-1");
+      expect(line).not.toContain("fotos.example");
+    } finally {
+      log.mockRestore();
+      getSession.mockResolvedValue(null);
+    }
+  });
+
+  it.each([
+    ["production", "dev"],
+    ["preview", "staging"],
+  ])("preserves served HTML without timing in %s/%s", async (environment, branch) => {
+    const baseline = await served();
+    vi.stubEnv("HOME_SSR_TIMING_DIAGNOSTICS", "1");
+    vi.stubEnv("VERCEL_ENV", environment);
+    vi.stubEnv("VERCEL_GIT_COMMIT_REF", branch);
+    const log = vi.spyOn(console, "info").mockImplementation(() => {});
+    try {
+      expect(await served()).toBe(baseline);
+      expect(log).not.toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+    }
+  });
+
   it("F35.3: sirve la pregunta neutra en label y placeholder del inicio", async () => {
     const html = await served();
     expect(html).toMatch(

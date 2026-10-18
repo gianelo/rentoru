@@ -115,6 +115,8 @@ beforeAll(async () => {
     `INSERT INTO "zone" (id, city_id, name, kind, source) VALUES ($1,$2,$3,'parroquia','INE')`,
     [ZONE, CITY, `Zona ${ZONE}`],
   );
+  // The shared catalogue fixture may inherit stale empty-table statistics.
+  await pool.query("ANALYZE public.zone");
 });
 
 afterAll(async () => {
@@ -128,6 +130,29 @@ afterAll(async () => {
 });
 
 describe("confirmImport — against real Postgres", () => {
+  it("refreshes zone fixture statistics", async () => {
+    const result = await pool.query<{
+      actual: number;
+      estimated: number;
+      pages: number;
+    }>(
+      `SELECT (SELECT count(*)::float8 FROM public.zone) AS actual,
+              reltuples::float8 AS estimated, relpages::float8 AS pages
+         FROM pg_catalog.pg_class
+        WHERE oid = 'public.zone'::regclass`,
+    );
+    expect(result.rows).toHaveLength(1);
+    const row = result.rows[0];
+    if (!row) throw new Error("Expected zone fixture statistics metadata row");
+    const { actual, estimated, pages } = row;
+    expect(actual).toBeGreaterThan(0);
+    expect(pages).toBeGreaterThan(0);
+    expect(estimated).toBeGreaterThan(0);
+    // Allow 5% of fixture cardinality (at least one row) for ANALYZE's
+    // estimate and neighbouring fixtures, not as a performance budget.
+    expect(Math.abs(estimated - actual)).toBeLessThanOrEqual(Math.max(1, actual * 0.05));
+  });
+
   it("creates a draft with zero photos and the external reference set", async () => {
     const userId = randomUUID();
     USER_IDS.push(userId);
@@ -202,7 +227,14 @@ describe("confirmImport — against real Postgres", () => {
       accounts: tracedPort(accounts, `${confirmation}.accounts`),
       contact: tracedPort(contact, `${confirmation}.contact`),
       zones: tracedPort(zones, `${confirmation}.zones`),
-      catalogue: tracedPort(catalogue, `${confirmation}.catalogue`),
+      catalogue: {
+        listCities: () =>
+          trace(`${confirmation}.catalogue.listCities`, () => catalogue.listCities()),
+        listZones: () =>
+          planProbe.aroundZonesRead(confirmation, () =>
+            trace(`${confirmation}.catalogue.listZones`, () => catalogue.listZones()),
+          ),
+      },
       listings: tracedPort(listings, `${confirmation}.listings`),
     });
     const restoreQueries = observeCatalogueQueries(pool, traceEnabled);

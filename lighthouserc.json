@@ -23,6 +23,7 @@
       }
     },
     "assert": {
+      "includePassedAssertions": true,
       "assertMatrix": [
         {
           "matchingUrlPattern": "^https?://[^/]+/alquiler/[^/]+/[^/]+/[^/?#]*-[0-9]+/?([?#].*)?$",

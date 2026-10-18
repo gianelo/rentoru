@@ -245,6 +245,10 @@ Ports as interfaces make the domain and application layers fully testable with z
 
 With `CI=true`, the bulk-import confirmation file requests one estimated plan in `afterAll`, before fixture cleanup and outside the unchanged five-second test cases. Its Drizzle logger accepts only the exact observed parameter-free `listZones()` SELECT; absent/mismatched SQL emits `query_not_observed`. `EXPLAIN (FORMAT JSON)` plans that SELECT without executing it: no `ANALYZE` or `BUFFERS`. `[import-plan]` marks `mode=estimated`, preserves fixed-allowlist operator types and numeric/null row estimates, and keeps actual execution times, rows, loops, buffers and JIT fields `null` for compatibility. `driver_explain_ms` measures only the planning request round trip, not SQL execution. The snapshot is after the tests and need not match an earlier plan. Predicates, arbitrary identifiers, index names, SQL, parameters, raw plans, row data and exception text are never logged. Errors emit unavailable or remain silent without replacing test outcomes. The five-second outer deadline and per-query `query_timeout=5000` remain; existing test/hook limits are unchanged.
 
+S8 adds `aroundZonesRead(first|second, action)` to both CI duplicate-confirmation catalogue `listZones` reads. `[import-plan]` emits `snapshot_start`, numeric/null `state`, unverified `candidate_plan` (or phase-specific `unavailable`), then `snapshot_end` before the actual read trace. Its subsequent `association` accepts only fresh exact SQL with zero parameters; unknown is not a match. State covers public.zone counts/estimates/pages, lagging analyze counters/epochs, snapshot PID/version, work_mem bytes and 0/1 planner/JIT flags. No raw SQL, settings strings, data or error text is emitted; SQLSTATE is restricted to 57014/42P01/42501, otherwise unknown.
+
+The snapshot PID identifies only its single metadata SELECT; EXPLAIN/original backend remain unknown. Temporal SQL association is not the actual executed server plan. These awaited reads consume the unchanged five-second test budget and can warm caches/influence outcomes; a later PASS is not a fix. Per-query deadlines stop waiting, not cancellation. Legacy afterAll output remains unchanged. A real PostgreSQL read-only smoke and the first/second GitHub logs were verified in PR420 (merge `435b936`, PR CI39031240685; postmerge push gates39032550741). Instrumentation alone did not correct the historical latency.
+
 Probe evidence: RED4 → focused GREEN12 with the existing query-observer tests; removing the parameter guard caused the intended test to fail, then was restored. The real confirmation caller passed 4/4 on the owned PostgreSQL 18 and emitted exactly one parsed plan summary. The later full integration run passed 407 tests but two suites refused the noncanonical diagnostic DSN before collection; those guards were not relaxed. Full unit coverage exited 1 with 3419 passing tests and three unchanged preview-resolver timeouts, without concurrent build/measure; no retry or cause claim. Types, lint, tokens and diff checks passed. These local results do not establish CI timing or a globally green suite. Independent static S1–S3 inspection found no demonstrated severe candidate defect; its sole runtime attempt failed before collection because the scratch could not resolve `@vitest/utils`: zero tests executed, no PASS. That inspection preceded the deadline addition and node-summary projection. The projection observed RED2 → GREEN13, but CI38924430876 returned unavailable, not nodes. The subsequent plain-EXPLAIN correction observed RED2 → GREEN13 with a realistic report lacking execution timings, plus types/format/diff PASS; it does not execute the SELECT or mix estimates with actual measurements. No additional database query, full suite or independent verifier was run for that correction. Its focused RED/GREEN now covers pool acquisition that never completes (13 focused tests passed); one real PostgreSQL lock check returned unavailable after 5003 ms, released the lock, reused the pool and preserved stored counts. The normal real-adapter path also emitted its plan. No full-suite or independent-runtime retry was performed.
 
 **Crawlability is tested with scripting disabled, not asserted by inspection.** D11 makes organic search the distribution channel, and "renders without JavaScript" is the kind of property that silently breaks the first time someone reaches for a client component. If it is not executed as a test, it is not a guarantee.
@@ -273,6 +277,33 @@ Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability an
 | Token contract (D16) | `pnpm lint:tokens` | — |
 | E2E + crawlability | `pnpm test:e2e` | local production app + job-owned PostgreSQL |
 | Lighthouse budget | `pnpm budget:lighthouse` | preview deployment URL |
+
+### Shared catalogue fixture statistics
+
+The confirmation integration fixture runs `ANALYZE public.zone` after its city/zone
+inserts. Earlier tests can empty and reseed the shared catalogue, leaving an empty
+table estimate despite thousands of rows. Refreshing statistics at this fixture's
+completion isolates its reads from that inherited state; production SQL, seeding,
+business assertions and the five-second test limit stay unchanged.
+
+`refreshes zone fixture statistics` checks actual cardinality and `pg_class` through
+PostgreSQL: nonempty data, positive pages/estimate, and a 5% cardinality allowance
+(at least one row) for approximate statistics. This is not a latency allowance or
+a required planner choice. Controlled RED/GREEN and removal of the maintenance
+protect this boundary; neither reconstructs the historical autoanalyze interleaving.
+
+### Opt-in home data timing (preview dev only)
+
+`HOME_SSR_TIMING_DIAGNOSTICS=1` emits `home-ssr-timing/v1` only when Vercel
+runtime metadata also says `VERCEL_ENV=preview` and `VERCEL_GIT_COMMIT_REF=dev`.
+Missing metadata, Production, staging and other values remain silent. Enable only
+as a Preview/dev override; removing the flag disables it without changing data.
+One completed home preparation emits closed phase labels and finite ms/null,
+never arguments, results, errors, URLs, SQL, IDs or session/environment contents.
+`dataPreparationMs` excludes edge/startup, root layout and React/HTML rendering;
+parallel phase times overlap and must not be summed. Redirects/errors retain their
+behavior without claiming completed preparation. Queries, order and HTML stay
+unchanged; clock/sink failures cannot replace the application's result or error.
 
 ### E2E profiles: selection is not the complete CI sequence
 
@@ -485,6 +516,21 @@ The explicitly authorized isolated resolver diagnostic executed its five no-matc
 
 CI preserves a sanitized diagnostic even when Lighthouse assertions fail. `node scripts/lighthouse-summary.mjs` reads only `.lighthouseci/lhr-<digits>.json` and writes `.lighthouseci/diagnostic.json`; only this exact file is uploaded, retained for seven days and named with the commit SHA/run attempt. Raw reports, HTML, request details, URLs, cookies and screenshots are never uploaded.
 The summary contains allowlisted numeric metrics, the legacy Lighthouse LCP phase timings and an enumerated element tag/rectangle. Missing phases stay `null`; observed timings are not mixed with the scored/simulated breakdown. This is diagnostic evidence, not an optimization or a threshold change.
+
+**T5 / S6 — safe budget stdout.** The single authorized staging budget rerun passed on the unchanged SHA; this establishes variation, not a fix, original cause or stability. The exporter now optionally reads `.lighthouseci/assertion-results.json` and emits one JSON line per sorted report **after** successfully writing the unchanged `lighthouse-diagnostic/v1` artifact. Invocation remains `node scripts/lighthouse-summary.mjs`, with no arguments or environment inputs; invalid/missing reports retain exit 1, empty stdout and the fixed sanitized stderr. Valid reports retain exit 0 and empty stderr, even without usable assertions.
+
+Stdout schema `lighthouse-budget-log/v1`:
+- `ordinal`: one-based report order, never a filename, URL or fingerprint.
+- `configuredThrottlingMethod`: `simulate`, `devtools`, `provided` or `unknown`; configuration, not an independently observed method.
+- `scoredLcpMs`, `pageBytes`, `scoredLcpPhasesMs`: existing scored metrics/four phases; unavailable values stay null.
+- `observedLargestContentfulPaintMs`: explicitly separate observed metric, not budget-tested. The legacy mixed timings object is not relabeled as observed.
+- `assertionScope`: `url-aggregate`; `constraints`: null when unavailable, otherwise sanitized distinct `{metric, unit, limit, actual, delta, producerPassed, level}` records. Units are `ms` or `bytes`; signed delta is producer actual minus limit, never a recomputed pass decision.
+
+Only exact nonempty private `finalUrl` matches contribute. Accepted producer records require known LCP/byte audit IDs, `maxNumericValue`, `<=`, finite nonnegative actual/expected, boolean passed and `error`/`warn`/`off` level. All distinct matching constraints survive; identical sanitized tuples collapse. URL-aggregate actual may differ from the report's scored metric. Missing/malformed/empty/unmatched assertion results never fabricate limits or PASS. Nonfinite deltas serialize as null (accepted nonnegative finite operands already bound their difference).
+
+`ci.assert.includePassedAssertions=true` retains producer passing results; thresholds, matrix, run count and throttling remain unchanged. New exporter output contains no raw records/errors, URLs, DOM, headers, cookies or request identities. This does not sanitize upstream LHCI logs: including passed assertions expands its normal output. No workflow/context fields, resource/cache claims or performance changes are introduced.
+
+Proof is the public CLI in `scripts/lighthouse-summary.test.ts`: exact stdout/stderr/exit/artifact checks, producer constraints, final-vs-requested URL selection, hostile sentinels, invalid records, method labels and original artifact/error/workflow behavior. Log-only work has no meaningful served-HTML/browser acceptance; real child-process CLI execution is the functional caller. S1–S5 policy is unchanged; complete staging validation, original diagnosis and dev-profile activation remain separate pending work. Publication and integration remain parent-owned.
 
 **Revision, 2026-08-16 — two of these numbers were unreachable and are now measured rather than assumed.**
 

@@ -10,6 +10,7 @@ const secret = "DO_NOT_PUBLISH_SENTINEL";
 // Source-derived Lighthouse 12.6.1 shape; these are not measurements of Dev.
 function report() {
   return {
+    finalUrl: `https://example.test/final?token=${secret}`,
     requestedUrl: `https://example.test/?token=${secret}`,
     screenshots: secret,
     headers: { authorization: secret },
@@ -81,7 +82,7 @@ it("exports only allowlisted numeric diagnostics and safe element identity throu
     "lhr-1.html": secret,
   });
   expect(result.status).toBe(0);
-  expect(result.stdout).toBe("");
+  expect(result.stdout).toBe(`${JSON.stringify(budgetLog())}\n`);
   expect(result.stderr).toBe("");
   expect(result.output).not.toContain(secret);
   expect(JSON.parse(result.output as string)).toEqual({
@@ -130,16 +131,200 @@ it("rejects numeric strings and never copies unrecognized element identifiers", 
   });
 });
 
-it.each([{ "flags-1.json": secret }, { "lhr-1.json": secret }] as Record<string, string>[])(
-  "fails without publishing raw or incomplete input: %j",
-  (files) => {
-    const result = run(files);
-    expect(result.status).toBe(1);
-    expect(result.stdout).toBe("");
-    expect(result.stderr).toBe("Lighthouse diagnostic unavailable; no valid saved report.\n");
-    expect(result.output).toBeNull();
+it.each([
+  { "flags-1.json": secret },
+  { "lhr-1.json": secret },
+  { "lhr-1.json": JSON.stringify(report()), "lhr-2.json": secret },
+] as Record<string, string>[])("fails without publishing raw or incomplete input: %j", (files) => {
+  const result = run(files);
+  expect(result.status).toBe(1);
+  expect(result.stdout).toBe("");
+  expect(result.stderr).toBe("Lighthouse diagnostic unavailable; no valid saved report.\n");
+  expect(result.output).toBeNull();
+});
+
+function budgetLog(method = "unknown", constraints: unknown[] | null = null, ordinal = 1) {
+  return {
+    schema: "lighthouse-budget-log/v1",
+    ordinal,
+    configuredThrottlingMethod: method,
+    scoredLcpMs: 2707.167,
+    observedLargestContentfulPaintMs: 900,
+    pageBytes: 200000,
+    scoredLcpPhasesMs: { ttfb: 700, loadDelay: 500, loadDuration: 600, renderDelay: 907.167 },
+    assertionScope: "url-aggregate",
+    constraints,
+  };
+}
+const assertion = {
+  url: report().finalUrl,
+  auditId: "largest-contentful-paint",
+  name: "maxNumericValue",
+  operator: "<=",
+  expected: 2500,
+  actual: 2600,
+  passed: false,
+  level: "error",
+  extra: secret,
+};
+const constraint = {
+  metric: "largest-contentful-paint",
+  unit: "ms",
+  limit: 2500,
+  actual: 2600,
+  delta: 100,
+  producerPassed: false,
+  level: "error",
+};
+function expectLog(records: unknown, expected: unknown, data = report()) {
+  const baseline = run({ "lhr-1.json": JSON.stringify(data) });
+  const result = run({
+    "lhr-1.json": JSON.stringify(data),
+    "assertion-results.json": typeof records === "string" ? records : JSON.stringify(records),
+  });
+  expect(result.status).toBe(0);
+  expect(result.stdout).toBe(`${JSON.stringify(expected)}\n`);
+  expect(result.stderr).toBe("");
+  expect(result.output).toBe(baseline.output);
+  expect(`${result.stdout}${result.stderr}${result.output}`).not.toContain(secret);
+}
+
+it("logs every distinct producer constraint, pass/fail and signed delta, not per-report guesses", () => {
+  const byte = {
+    ...assertion,
+    auditId: "total-byte-weight",
+    expected: 512000,
+    actual: 210000,
+    passed: true,
+    level: "warn",
+  };
+  expectLog(
+    [assertion, byte, { ...byte, expected: 235520 }, assertion],
+    budgetLog("unknown", [
+      constraint,
+      {
+        metric: "total-byte-weight",
+        unit: "bytes",
+        limit: 512000,
+        actual: 210000,
+        delta: -302000,
+        producerPassed: true,
+        level: "warn",
+      },
+      {
+        metric: "total-byte-weight",
+        unit: "bytes",
+        limit: 235520,
+        actual: 210000,
+        delta: -25520,
+        producerPassed: true,
+        level: "warn",
+      },
+    ]),
+  );
+});
+
+it.each([
+  "broken",
+  "{}",
+  "[]",
+  '[null,1,"hostile"]',
+  JSON.stringify([{ ...assertion, url: report().requestedUrl }]),
+  JSON.stringify([{ ...assertion, url: `${report().finalUrl}/wrong` }]),
+])("keeps missing, malformed or unmatched assertions unavailable: %s", (records) => {
+  expectLog(records, budgetLog());
+});
+
+it.each([
+  { auditId: secret },
+  { name: secret },
+  { operator: ">" },
+  { actual: "2600" },
+  { actual: -1 },
+  { actual: null },
+  { expected: -1 },
+  { expected: "2500" },
+  { expected: null },
+  { passed: "false" },
+  { level: secret },
+  { url: "" },
+])("rejects invalid assertion fields without leaking or inventing constraints: %j", (patch) => {
+  expectLog([{ ...assertion, ...patch }], budgetLog());
+});
+
+it("rejects nonfinite JSON numbers and requires a nonempty private final URL", () => {
+  expectLog(JSON.stringify([assertion]).replace('"actual":2600', '"actual":1e400'), budgetLog());
+  expectLog([{ ...assertion, url: "" }], budgetLog(), { ...report(), finalUrl: "" });
+});
+
+it.each(["simulate", "devtools", "provided", secret])(
+  "labels only the configured method and separates observed from scored LCP: %s",
+  (method) => {
+    const data = { ...report(), configSettings: { throttlingMethod: method, extra: secret } };
+    expectLog([], budgetLog(method === secret ? "unknown" : method), data);
   },
 );
+
+it("emits one ordinal log per sorted report with unchanged artifact ordering", () => {
+  const result = run({
+    "lhr-2.json": JSON.stringify(report()),
+    "lhr-1.json": JSON.stringify(report()),
+  });
+  expect(result.status).toBe(0);
+  expect(result.stdout).toBe(
+    `${JSON.stringify(budgetLog())}\n${JSON.stringify(budgetLog("unknown", null, 2))}\n`,
+  );
+  expect(result.stderr).toBe("");
+  const baseline = run({ "lhr-1.json": JSON.stringify(report()) });
+  const artifact = JSON.parse(baseline.output as string);
+  artifact.runs.push(artifact.runs[0]);
+  expect(result.output).toBe(`${JSON.stringify(artifact, null, 2)}\n`);
+});
+
+it("only enables passed assertion retention without changing the source budgets", () => {
+  const config = JSON.parse(readFileSync("lighthouserc.json", "utf8"));
+  expect(config).toEqual({
+    ci: {
+      collect: {
+        numberOfRuns: 1,
+        settings: {
+          formFactor: "mobile",
+          screenEmulation: {
+            mobile: true,
+            width: 360,
+            height: 640,
+            deviceScaleFactor: 2,
+            disabled: false,
+          },
+          throttlingMethod: "simulate",
+          throttling: {
+            rttMs: 150,
+            throughputKbps: 1638.4,
+            requestLatencyMs: 562.5,
+            downloadThroughputKbps: 1474.56,
+            uploadThroughputKbps: 675,
+            cpuSlowdownMultiplier: 4,
+          },
+        },
+      },
+      assert: {
+        includePassedAssertions: true,
+        assertMatrix: [
+          ["^https?://[^/]+/alquiler/[^/]+/[^/]+/[^/?#]*-[0-9]+/?([?#].*)?$", 512000],
+          ["^https?://[^/]+/alquiler(/[^/]+){0,2}/?([?#].*)?$", 235520],
+          [".*", 235520],
+        ].map(([matchingUrlPattern, bytes]) => ({
+          matchingUrlPattern,
+          assertions: {
+            "largest-contentful-paint": ["error", { maxNumericValue: 2500 }],
+            "total-byte-weight": ["error", { maxNumericValue: bytes }],
+          },
+        })),
+      },
+      upload: { target: "filesystem", outputDir: "./.lighthouseci" },
+    },
+  });
+});
 
 it("uploads only the sanitized summary after Lighthouse, including assertion failures", () => {
   const require = createRequire(import.meta.url);
