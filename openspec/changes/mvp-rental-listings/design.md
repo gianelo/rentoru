@@ -292,6 +292,19 @@ PostgreSQL: nonempty data, positive pages/estimate, and a 5% cardinality allowan
 a required planner choice. Controlled RED/GREEN and removal of the maintenance
 protect this boundary; neither reconstructs the historical autoanalyze interleaving.
 
+### Opt-in home data timing (preview dev only)
+
+`HOME_SSR_TIMING_DIAGNOSTICS=1` emits `home-ssr-timing/v1` only when Vercel
+runtime metadata also says `VERCEL_ENV=preview` and `VERCEL_GIT_COMMIT_REF=dev`.
+Missing metadata, Production, staging and other values remain silent. Enable only
+as a Preview/dev override; removing the flag disables it without changing data.
+One completed home preparation emits closed phase labels and finite ms/null,
+never arguments, results, errors, URLs, SQL, IDs or session/environment contents.
+`dataPreparationMs` excludes edge/startup, root layout and React/HTML rendering;
+parallel phase times overlap and must not be summed. Redirects/errors retain their
+behavior without claiming completed preparation. Queries, order and HTML stay
+unchanged; clock/sink failures cannot replace the application's result or error.
+
 ### E2E profiles: selection is not the complete CI sequence
 
 `pnpm test:e2e:smoke:read` selects anonymous home, search and publication-access checks from `publish-access` and `busqueda-inicio`. `pnpm test:e2e:critical:read` adds `camino-de-lectura-sin-javascript`, `filtros-sin-javascript`, `sugerencias-sin-javascript` and `aviso-malformado-sin-javascript`: results/detail navigation, filters, suggestions and invalid routes. Both explicitly select the existing `chromium` and JavaScript-disabled `crawlability` projects; per-test skips still apply. Neither includes the separate `measure` harness.
