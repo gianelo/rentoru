@@ -14,6 +14,7 @@ import { readPublicationContext } from "../publication-context";
 import styles from "../publish-steps.module.css";
 import { changeNoticeMessage, FEATURE_LABELS, STEP_COPY, stepSummary } from "../step-copy";
 import { PUBLISH_VIOLATION_COPY } from "../violation-copy";
+import reviewStyles from "./review.module.css";
 
 export const metadata: Metadata = {
   title: "Revisá tu aviso — Rentoru",
@@ -110,7 +111,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
   ];
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${reviewStyles.shell}`}>
       <header className={styles.bar}>
         <div className={styles.barInner}>
           <AppLink className={styles.brand} href="/" aria-label="Rentoru, ir al inicio">
@@ -123,12 +124,9 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
         </div>
       </header>
 
-      <div className={styles.review}>
-        {/* Sin riel: acá ya no hay pasos que recorrer. */}
-        <div />
-
-        <main className={styles.column}>
-          <h1 className={styles.title}>Revisá tu aviso</h1>
+      <div className={reviewStyles.review}>
+        <main className={reviewStyles.reviewBody}>
+          <h1 className={reviewStyles.title}>Revisá tu aviso</h1>
 
           {/* Regla 4 de la sección 4: se dice qué cambió. Sin esto nadie sabe
               si se guardó, y quien no sabe vuelve a entrar al paso a
@@ -154,14 +152,35 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
             </p>
           ))}
 
-          <dl className={styles.reviewList}>
+          <dl className={reviewStyles.list}>
             {rows.map((row) => (
-              <div key={row.step} className={styles.reviewRow}>
-                <dt className={styles.reviewTerm}>{row.term}</dt>
-                <dd className={styles.reviewValue}>{row.value}</dd>
+              <div key={row.step} className={reviewStyles.row}>
+                <dt className={reviewStyles.term}>{row.term}</dt>
+                <dd className={reviewStyles.value} data-step={row.step}>
+                  {row.value}
+                  {row.step === "fotos" ? (
+                    <ol className={reviewStyles.photos} aria-label="Fotos en orden">
+                      {draft.photos.map((photo, index) => (
+                        <li key={photo.key}>
+                          <figure>
+                            {/* biome-ignore lint/performance/noImgElement: lectura privada con cookie, nunca mediante proxy público de optimización. */}
+                            <img
+                              src={`/publicar/fotos/vista/${index}?foto=${encodeURIComponent(photo.key.split("/").at(-1) ?? "")}`}
+                              alt={photo.name}
+                            />
+                            <figcaption>
+                              <strong>{index === 0 ? "1 · Portada" : index + 1}</strong>
+                              <span>{photo.name}</span>
+                            </figcaption>
+                          </figure>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : null}
+                </dd>
                 {/* Vuelve AL PASO, no al principio, y avisa de dónde vino. */}
                 <AppLink
-                  className={styles.reviewChange}
+                  className={reviewStyles.change}
                   href={`/publicar/paso/${row.step}?volver=revisar`}
                   aria-label={`Cambiar ${STEP_COPY[row.step].railLabel}`}
                 >
@@ -178,7 +197,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
             <strong>menos si publicás como dueño o inmobiliaria</strong>.
           </p>
 
-          <form action={publishFromReview} method="post" className={styles.actions}>
+          <form action={publishFromReview} method="post" className={reviewStyles.actions}>
             <button type="submit" className={styles.primary}>
               Publicar aviso
             </button>
