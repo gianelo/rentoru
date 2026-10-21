@@ -392,6 +392,20 @@ Two reasons, and the second is a hard product ceiling:
 
 **The `compacto` structure (D14) shrinks the thumbnail derivative.** The row thumbnail is 44 × 34 CSS px on mobile and 64 × 48 on desktop, so one derivative at **128 × 96** covers both at 2× device pixel ratio. The earlier figure was sized for a 96 × 72 row (192 × 144 at 2×) — 2.25× the pixels. The consequence is that the search-results byte budget stops being tight and the storage ceiling moves further out. This is the clearest case of a visual choice paying for itself in the performance budget rather than costing against it, and it is the real return on `compacto` — see the density note in D14, which explains why the return does *not* show up as more listings per screen.
 
+### D12a — Lectura privada de fotos retenidas (36.15, T1; S2–S3/S7)
+
+La recuperación reutiliza `readPublicationDraft`: `store.load(publisherId, now)` excluye
+borradores vencidos y la normalización no escribe. `readDraftPhoto` recibe identidad
+confiable del futuro adaptador de sesión y un índice entero exacto del orden guardado;
+verifica la clave con `tokenFromOwnedKey` antes de `PhotoStoragePort.read`.
+Devuelve sólo bytes admitidos por `detectContentType`/`inspectUploadedPhoto` y su MIME,
+sin claves ni URLs públicas de `incoming`, sin renovar, borrar, derivar o promover.
+La ausencia/selección/propiedad/bytes inválidos dan `notFound`; errores opacos de lectura
+dan `unavailable` (el puerto no distingue objeto ausente de servicio inaccesible).
+`read-draft-photo.test.ts` protege autorización, borde de vencimiento, orden y admisión.
+Este núcleo no restaura aún miniaturas: ruta autenticada, cabeceras privadas, explicación
+recuperable y prueba de bytes/navegación quedan para T2/T3; no implica entrega ni cierre.
+
 ### D13 — Spartan density over visual identity
 
 The reference point is a classifieds board, not a design showcase: information-dense, single column on mobile, system font stack, no carousel, no hero, no animation. Justified by the audience (mobile on metered, often expensive data), the product (people come for the catalog), and the team (one part-time founder).

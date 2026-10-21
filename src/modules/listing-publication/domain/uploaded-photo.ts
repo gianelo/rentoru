@@ -104,7 +104,7 @@ function matchesAt(bytes: Uint8Array, offset: number, expected: readonly number[
   return expected.every((byte, index) => bytes[offset + index] === byte);
 }
 
-function detectContentType(bytes: Uint8Array): SupportedContentType | null {
+export function detectContentType(bytes: Uint8Array): SupportedContentType | null {
   for (const signature of SIGNATURES) {
     if (!matchesAt(bytes, signature.offset, signature.bytes)) continue;
     if (signature.also && !matchesAt(bytes, signature.also.offset, signature.also.bytes)) continue;
