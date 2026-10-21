@@ -45,6 +45,35 @@ describe("PhotoUploader — el menú de tres puntos se cierra de verdad (28.1)",
     return summary;
   }
 
+  it("conserva la identidad al reordenar y permite recuperar una miniatura fallida", () => {
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    act(() =>
+      root.render(<PhotoUploader initial={[...DOS, { key: "k3", name: "Patio", bytes: 10 }]} />),
+    );
+    const original = container.querySelectorAll("img")[1]?.getAttribute("src");
+    expect(original).toBe("/publicar/fotos/vista/1?foto=k2");
+    act(() =>
+      (container.querySelector('[aria-label="Hacer portada: Cocina"]') as HTMLElement).click(),
+    );
+    expect(container.querySelector("img")?.getAttribute("src")).toBe(original);
+    act(() => container.querySelector("img")?.dispatchEvent(new Event("error")));
+    expect(container.querySelectorAll("img")).toHaveLength(2);
+    expect(container.textContent).toContain("No pudimos mostrar la foto");
+    expect(container.querySelectorAll('[name="photoKey"]')).toHaveLength(3);
+    act(() =>
+      (
+        container.querySelector('[aria-label="Reintentar miniatura: Cocina"]') as HTMLElement
+      ).click(),
+    );
+    expect(container.querySelector("img")?.getAttribute("src")).toBe(original);
+    act(() =>
+      (container.querySelector('[aria-label="Quitar del aviso: Cocina"]') as HTMLElement).click(),
+    );
+    expect(container.querySelectorAll('[name="photoKey"]')).toHaveLength(2);
+    expect(revoke).not.toHaveBeenCalled();
+    revoke.mockRestore();
+  });
+
   it("un clic afuera cierra el menú de acciones", () => {
     openFirstMenu();
     const details = container.querySelector("details") as HTMLDetailsElement;

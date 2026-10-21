@@ -50,9 +50,21 @@ import StepPage from "./page";
 
 let draft: StoredDraft;
 const photos = [
-  { key: "publisher-1/sala.webp", name: "Sala", bytes: 40_000 },
-  { key: "publisher-1/cocina.webp", name: "Cocina", bytes: 41_000 },
-  { key: "publisher-1/balcon.webp", name: "Balcón", bytes: 42_000 },
+  {
+    key: "incoming/publisher-1/33333333333333333333333333333333",
+    name: "Sala",
+    bytes: 40_000,
+  },
+  {
+    key: "incoming/publisher-1/11111111111111111111111111111111",
+    name: "Cocina",
+    bytes: 41_000,
+  },
+  {
+    key: "incoming/publisher-1/22222222222222222222222222222222",
+    name: "Balcón",
+    bytes: 42_000,
+  },
 ];
 
 // Render the real uploader through the route; double only backend boundaries.
@@ -113,6 +125,16 @@ describe("fotos servidas por la ruta real", () => {
           ])
         : [],
     );
+    // Las claves persistidas no son URLs blob ni derivadas públicas. Volver
+    // debe servir imágenes reales, no sólo conservar los campos del formulario.
+    const rows = [...html.matchAll(/<li\b[^>]*>[\s\S]*?<\/li>/g)]
+      .map(([row]) => row)
+      .filter((row) => row.includes('aria-label="Acciones de '));
+    expect(rows).toHaveLength(saved ? photos.length : 0);
+    for (const [index, row] of rows.entries()) {
+      expect(row).toContain(`>${photos[index]?.name}<`);
+      expect(row.includes(">Portada<")).toBe(index === 0);
+    }
     if (saved) {
       expect(html).toContain(">Portada<");
       expect(html).toContain('aria-label="Quitar del aviso: Cocina"');
@@ -131,6 +153,16 @@ describe("fotos servidas por la ruta real", () => {
       expect(menus[1]).toContain('aria-label="Mover arriba: Cocina"');
       expect(menus[1]).toContain('aria-label="Mover abajo: Cocina"');
       expect(menus[1]).toContain('aria-label="Hacer portada: Cocina"');
+    }
+    expect(rows.flatMap((row) => row.match(/<img\b[^>]*>/g) ?? [])).toHaveLength(
+      saved ? photos.length : 0,
+    );
+    for (const [index, row] of rows.entries()) {
+      expect(row).toContain(
+        `/publicar/fotos/vista/${index}?foto=${photos[index]?.key.split("/").at(-1)}`,
+      );
+      expect(row).toMatch(/<img\b[^>]*\bsrc="[^"]+"/);
+      expect(row).not.toMatch(/<img\b[^>]*\bsrc="(?:blob:|data:)/);
     }
   });
 });
