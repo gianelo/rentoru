@@ -406,6 +406,23 @@ dan `unavailable` (el puerto no distingue objeto ausente de servicio inaccesible
 Este núcleo no restaura aún miniaturas: ruta autenticada, cabeceras privadas, explicación
 recuperable y prueba de bytes/navegación quedan para T2/T3; no implica entrega ni cierre.
 
+### D12b — Miniaturas autenticadas al regresar (36.15, T2; S2–S3/S7)
+
+`/publicar/fotos/vista/[indice]` reutiliza la sesión confiable y `readDraftPhoto`:
+bytes/MIME admitidos o cuerpo vacío 401/404/503, siempre `private, no-store` y
+`nosniff`. No acepta propietario, clave ni URL del request como autorización.
+`draft-photo-preview` restringe la misma lectura del borrador por identidad de foto;
+una URL posicional anterior al guardado/reordenamiento no muestra otra ocupante.
+`PhotoUploader` conserva esa URL al mover filas, orden/portada y campos nativos;
+el error de imagen conserva la foto y ofrece reintentar o quitar/volver a subir,
+sin imagen ficticia. Sólo revoca previews blob creadas localmente.
+Pruebas: `route.test.ts` cubre respuestas/autorización/propiedad/admisión sin escritura;
+`fotos-servido.test.tsx` atraviesa StepPage/PublishStep y protege imágenes/orden/portada;
+`PhotoUploader.dismiss.test.tsx` protege reordenar, fallo, reintento y retirada.
+Verificación local T2: 39 pruebas enfocadas, tipos y Biome; mutaciones de sesión y
+miniaturas detectadas/restauradas. No es prueba de DB/storage real, decodificación,
+navegación ni aceptación visual (T3/T4); revisión nativa T1 sigue diferida, sin aprobación.
+
 ### D13 — Spartan density over visual identity
 
 The reference point is a classifieds board, not a design showcase: information-dense, single column on mobile, system font stack, no carousel, no hero, no animation. Justified by the audience (mobile on metered, often expensive data), the product (people come for the catalog), and the team (one part-time founder).
