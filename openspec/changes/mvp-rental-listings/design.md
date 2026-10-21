@@ -725,6 +725,10 @@ Readback estructural por padre/verificador; P2 queda pausada, sin inicio automá
 P2 requerirá RED/GREEN sobre HTML del caller, mutación restaurada, nombre accesible,
 labels, teclado/foco, ausencia de default y aceptación visual humana; 36.12 sigue sin cerrar.
 
+### Revisar — composición aprobada F36.16
+
+El fundador aprobó la lámina `design/pantallas/Rentoru - Revisar - Responsive-v1.html` y su CSS v1: «si me gusta alli vi las 3 medidas con el inspecionadro». Derivada del sistema, móvil sitúa Cambiar junto al título; tablet apila valores a ancho completo y escritorio distribuye etiqueta, valor y Cambiar en el contenedor centrado1100px. Evidencia y versión aceptada: `odd/tasks/fase-36-revisar-lamina.md` L15–L20; cuatro medidas del agente PASS y aceptación humana separadas. Aprobación local, sin implementación36.17 ni integración acreditada; warning sin cambio, reservado a36.18. No amplía tokens ni auditoría F34.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.
