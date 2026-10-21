@@ -253,6 +253,12 @@ Probe evidence: RED4 → focused GREEN12 with the existing query-observer tests;
 
 **Crawlability is tested with scripting disabled, not asserted by inspection.** D11 makes organic search the distribution channel, and "renders without JavaScript" is the kind of property that silently breaks the first time someone reaches for a client component. If it is not executed as a test, it is not a guarantee.
 
+### Preview-provider test double
+
+`scripts/wait-for-preview.test.ts` caches synthetic provider JSON during setup and serves it through a POSIX-shell `gh` double. Starting Node on every simulated poll added process overhead despite the fake `sleep`. The production resolver, real JSON/URL validation, 40 attempts, 39 simulated sleeps and default five-second test limits remain unchanged.
+
+`serves fake deployment responses without starting Node for each poll` runs the generated provider with a Node-denying executable and checks its exit, exact JSON/stdout/stderr and absence of Node calls. RED observed exit77; an ignored-Node-call mutation also failed the marker assertion, was restored, and returned GREEN. All 23 focused tests passed, preserving the previous 22 cases and their output/counter assertions; the local full unit suite passed 3643 tests across 321 files. This does not erase earlier recorded timeouts or establish their exact scheduling cause. Initial type validation caught a missing `NODE_ENV` in the new test's subprocess environment; it was made explicit and the regression test passed again. Typecheck, lint (eight warnings and two infos in untouched files), token gate and ShellCheck of the generated shell doubles passed. An initial lint run scanned generated negative fixtures under unignored `.tmp`; those task-owned artifacts were preserved in the existing ignored `test-results` directory, without modifying guards, lint configuration or fixture contents. No application, database or browser behavior changes; build/browser acceptance are inapplicable to this test-only unit. 36.17 still needs its own remaining checks and human acceptance.
+
 ### Coverage policy
 
 No global percentage target. A repository-wide number rewards testing whatever is cheapest to cover, which is rarely what carries risk.
