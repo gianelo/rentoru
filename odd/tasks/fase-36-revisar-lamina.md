@@ -10,8 +10,8 @@ Responsive v1 approved by the founder (L18); 36.16 locally complete, not publish
 - S5: «Comprobar: política 390×844/768×1024/1440×900 más 440×956, contenedor centrado y uso de tokens; coordinar F34 sin absorber auditoría global.»
 
 ## Tasks
-- T1 [done] — S1/S3–S5; worker mviembqn-f-s4qv, context backstop77,525; v1 board/structural checks and parent readback complete, no approval claimed; commit pending.
-- T2 [done] — S3–S5; parent HTTP/browser checks4/4PASS, four screenshots retained, static URL L14; versioned human acceptance belongs to T3; commit pending.
+- T1 [done] — S1/S3–S5; worker mviembqn-f-s4qv, context backstop77,525; v1 board/structural checks and parent readback complete; approval L18; commit ea83f5b.
+- T2 [done] — S3–S5; parent HTTP/browser checks4/4PASS, four screenshots retained, static URL L14; versioned human acceptance recorded in T3/L18; commit ea83f5b.
 - T3 [done] — S2/S4; founder explicitly approved responsive v1, L18; local closure synchronized to task/mirror/OpenSpec, not publication or36.17; commit recorded below.
 
 ## Log
@@ -34,3 +34,4 @@ Responsive v1 approved by the founder (L18); 36.16 locally complete, not publish
 - L17: Parent task/mirror/OpenSpec synchronized to local candidate awaiting human approval, not remote delivery. 36.16 remains unchecked; no commit/push/PR/merge/36.17 authorized by these checks. Proposed v1 and actual served URL now available for human acceptance or corrections.
 - L18: User «si me gusta alli vi las 3 medidas con el inspecionadro» explicitly approves the served responsive v1 after reviewing three sizes/categories with browser inspector. Parent four-viewport checks remain separate evidence; no claim of four human measurements. Accepted HTML SHA25699b29a57692062cddd06adc06bb11379fa7bc645c5dcb68bab123276b232b40c, CSSf7c84ea07e5c88bd10fcf0c174061f5a63f1881c9d28fd3f9b3cc15b18eccc74; neither artifact changed after acceptance.
 - L19: 36.16 locally complete: v1 composition approved, structural and browser evidence L9–L16, passive-design exceptions retained. Board's original proposal annotations stay frozen; current approval is this record. OpenSpec36.16 checked for design approval only; no product implementation, CI, native approval, push/PR/merge or cleanup claimed. Preview job27 retained; all unrelated services/data unchanged. Commit work unit follows ODD on this task branch, not a publication grant.
+- L20: T1–T3 held by local commit ea83f5b38745692a5a84e02222cc3a8e27fbe79f, all five design/evidence files,389lines against actual dev base477e120. Final metadata records that SHA in the same direct-dev design slice (390lines total); no publication. Hook's20442line warning compares origin/main, not the approved dev base; no inherited dev history is part of this unit. Runtime .tmp/screenshots excluded; accepted board bytes remain unchanged. Structural approval/byte/budget checks PASS; historical runner failures retained separately.
