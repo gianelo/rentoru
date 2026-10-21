@@ -1,5 +1,5 @@
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { expect, it } from "vitest";
@@ -13,24 +13,48 @@ function run(deployments = [deployment], statuses = [[ready]], apiError = "") {
   const dir = mkdtempSync(join(tmpdir(), "preview-resolver-"));
   const output = join(dir, "output");
   writeFileSync(output, "existing=value\n");
-  writeFileSync(join(dir, "fixtures"), JSON.stringify({ deployments, statuses, apiError }));
+  const fixture = join(dir, "fixtures");
+  writeFileSync(fixture, JSON.stringify({ deployments, statuses, apiError }));
+  // Cache JSON once: a simulated poll must not pay for another Node process.
+  writeFileSync(`${fixture}.deployments`, `${JSON.stringify([deployments])}\n`);
+  for (let index = 0; index < Math.max(statuses.length, 1); index++) {
+    writeFileSync(
+      `${fixture}.status-${index}`,
+      `${JSON.stringify(statuses[index]) ?? "undefined"}\n`,
+    );
+  }
   writeFileSync(
     join(dir, "gh"),
-    `#!/usr/bin/env node
-const fs = require("node:fs");
-const f = JSON.parse(fs.readFileSync(process.env.FIXTURES, "utf8"));
-const args = process.argv.slice(2);
-if (f.apiError === "deployments" || (f.apiError === "statuses" && args.some(a => a.includes("statuses")))) {
-  console.error("private provider diagnostic"); process.exit(1);
-}
-if (args.includes("repos/owner/repo/deployments?sha=${sha}&per_page=100")) {
-  console.log(JSON.stringify([f.deployments]));
-} else if (args.includes("repos/owner/repo/deployments/7/statuses?per_page=1")) {
-  const path = process.env.FIXTURES + ".count";
-  const n = fs.existsSync(path) ? Number(fs.readFileSync(path)) : 0;
-  fs.writeFileSync(path, String(n + 1));
-  console.log(JSON.stringify(f.statuses[Math.min(n, f.statuses.length - 1)]));
-} else { console.error("Unexpected GitHub request"); process.exit(2); }
+    `#!/bin/sh
+request=""
+api_failure=${apiError === "deployments" ? "true" : "false"}
+for arg do
+  case "$arg" in
+    "repos/owner/repo/deployments?sha=${sha}&per_page=100") request=deployments ;;
+    "repos/owner/repo/deployments/7/statuses?per_page=1")
+      if [ "$request" != deployments ]; then request=statuses; fi ;;
+  esac
+  case "$arg" in
+    *statuses*) if ${apiError === "statuses" ? "true" : "false"}; then api_failure=true; fi ;;
+  esac
+done
+if "$api_failure"; then
+  printf '%s\\n' 'private provider diagnostic' >&2
+  exit 1
+fi
+case "$request" in
+  deployments) response_file="$FIXTURES.deployments" ;;
+  statuses)
+    n=0
+    if [ -f "$FIXTURES.count" ]; then IFS= read -r n < "$FIXTURES.count"; fi
+    printf '%s' "$((n + 1))" > "$FIXTURES.count"
+    if [ "$n" -ge ${statuses.length} ]; then n=${Math.max(statuses.length - 1, 0)}; fi
+    response_file="$FIXTURES.status-$n"
+    ;;
+  *) printf '%s\\n' 'Unexpected GitHub request' >&2; exit 2 ;;
+esac
+IFS= read -r response < "$response_file"
+printf '%s\\n' "$response"
 `,
     { mode: 0o755 },
   );
@@ -80,6 +104,31 @@ it("accepts the exact SHA-valued ref returned by Vercel", () => {
   expect(result.stdout).toBe(`Preview ready: ${url} (${sha})\n`);
   expect(result.stderr).toBe("");
   expect(result.output).toBe(`existing=value\nurl=${url}\n`);
+});
+
+it("serves fake deployment responses without starting Node for each poll", () => {
+  const result = run();
+  writeFileSync(
+    join(result.dir, "node"),
+    '#!/bin/sh\nprintf forbidden >> "$FIXTURES.node-calls"\nexit 77\n',
+    { mode: 0o755 },
+  );
+  const provider = spawnSync(
+    join(result.dir, "gh"),
+    ["api", "--paginate", "--slurp", `repos/owner/repo/deployments?sha=${sha}&per_page=100`],
+    {
+      encoding: "utf8",
+      env: {
+        NODE_ENV: "test",
+        PATH: `${result.dir}:${process.env.PATH}`,
+        FIXTURES: join(result.dir, "fixtures"),
+      },
+    },
+  );
+  expect(provider.status).toBe(0);
+  expect(provider.stdout).toBe(`${JSON.stringify([[deployment]])}\n`);
+  expect(provider.stderr).toBe("");
+  expect(existsSync(join(result.dir, "fixtures.node-calls"))).toBe(false);
 });
 
 it("polls pending until ready without real sleeps", () => {
