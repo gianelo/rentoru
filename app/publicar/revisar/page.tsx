@@ -13,7 +13,11 @@ import { publishFromReview } from "../actions";
 import { readPublicationContext } from "../publication-context";
 import styles from "../publish-steps.module.css";
 import { changeNoticeMessage, FEATURE_LABELS, STEP_COPY, stepSummary } from "../step-copy";
-import { PUBLISH_VIOLATION_COPY } from "../violation-copy";
+import {
+  PUBLISH_VIOLATION_COPY,
+  PUBLISHER_TYPE_ONE_WAY_LEAD,
+  PUBLISHER_TYPE_ONE_WAY_STRESS,
+} from "../violation-copy";
 import reviewStyles from "./review.module.css";
 
 export const metadata: Metadata = {
@@ -190,11 +194,11 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
             ))}
           </dl>
 
-          {/* La advertencia, otra vez y antes de publicar. Es lo único del
-              aviso que después no se puede corregir. */}
+          {/* La misma advertencia de Quién publica y Editar: 18.38 permite
+              corregir dueño a inmobiliaria, pero no volver atrás. */}
           <p className={styles.warning}>
-            Después de publicar podés editar todo,{" "}
-            <strong>menos si publicás como dueño o inmobiliaria</strong>.
+            {PUBLISHER_TYPE_ONE_WAY_LEAD}
+            <strong>{PUBLISHER_TYPE_ONE_WAY_STRESS}</strong>.
           </p>
 
           <form action={publishFromReview} method="post" className={reviewStyles.actions}>

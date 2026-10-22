@@ -677,6 +677,16 @@ Formatos aprobados: `0412 123 4567`, `4121234567`, `+58 412 1234567`, `0058 412 
 
 El [comentario 21](https://github.com/gianelo/rentoru/issues/289#issuecomment-5957005019) descarta tamaños de capturas como autoridad; rigen D30 y el sistema responsive vigente, coordinando la discrepancia de 390×840 con F34. Revisar requiere lámina aprobada antes de implementación. El warning actual de inmutabilidad absoluta contradice la regla existente de 18.38: dueño → inmobiliaria sí; la dirección inversa sigue cerrada hasta decisión explícita, no queda autorizada por el comentario 18.
 
+36.18 ratifica explícitamente con el fundador «Sí, mantener el bloqueo — recomendado»: dueño →
+inmobiliaria sí; inmobiliaria → dueño no. Revisar debe reutilizar la advertencia
+`PUBLISHER_TYPE_ONE_WAY_*` existente en Quién publica/Editar, sin cambiar la regla de 18.38 ni sus
+consumidores compartidos.
+La revisión posterior cuestionó la claridad y la razón de esa asimetría, sin autorizar cambiarla.
+El fundador aplazó la revisión: «listo luego lo veo. cerremos ya esto.» En esa pausa no había aceptación
+visual ni nueva decisión que permitiera inmobiliaria → dueño; se conservó el cambio local sin publicar.
+Posteriormente aceptó el aviso servido sin cambios: «ya probe todo bien cierra los dos chrome test que
+abriste». Se mantiene la regla vigente; esta aceptación no autoriza cambios de dominio ni publicación.
+
 Copy/jerarquía, loader contextual, país/formato y botón vs checkbox quedan como gates al iniciar sus unidades. El digest `901444967` no prueba deduplicación ni fallo de sesión: cualquier consulta productiva requiere autorización read-only separada, sin mutación. Plan y criterios completos: `odd/tasks/fase-36-cierre-publicacion.md`; esta adenda confirma alcance, no implementación ni nuevas decisiones numeradas.
 
 ### Photo copy — bounded G3/F35 coordination (F36.10)

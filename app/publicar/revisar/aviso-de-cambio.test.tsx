@@ -127,7 +127,19 @@ describe("la pantalla de revisar dice qué cambió", () => {
     // React19 no serializa el POST de una Server Action simulada; se comprueba en Next real.
     expect(html).toContain('type="submit"');
     expect(html).toContain('href="/publicar/paso/tipo"');
-    expect(html).toContain("menos si publicás como dueño o inmobiliaria");
+    expect(html).toMatch(/<p class="[^"]*warning[^"]*">/);
+  });
+
+  it("advierte antes de publicar que dueño a inmobiliaria se puede corregir, nunca al revés", async () => {
+    const html = await served({});
+
+    expect(html).toContain(
+      "Aparece siempre en tu aviso. Después podés corregirlo de dueño a inmobiliaria, " +
+        "<strong>nunca al revés</strong>.",
+    );
+    expect(html).not.toContain("menos si publicás como dueño o inmobiliaria");
+    expect(html).not.toContain("Después de publicar podés editar todo");
+    expect(html.indexOf("nunca al revés")).toBeLessThan(html.indexOf('type="submit"'));
   });
 
   it("sirve las fotos guardadas mediante la vista privada, con nombre y portada", async () => {
