@@ -326,6 +326,8 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
     parte de36.18 ni hay una tarea F36 pendiente específica; no se reabre36.17 automáticamente.
     Base remota revalidada en `081cfc9`, sin diferencias nuevas. Este registro es precommit/push,
     no acredita publicación; sin autorización para crear PR ni realizar merge.
+  - Evidencia Git: implementación, prueba y decisiones en `6b4753bc5e37eab619197b8b0e92b780b547fb27`.
+    Registro de cierre previo al push autorizado; publicación remota aún no observada al escribirlo.
 
 ### F — Fallo final y atributos
 
