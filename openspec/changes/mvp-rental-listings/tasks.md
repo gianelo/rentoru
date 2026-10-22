@@ -3021,6 +3021,8 @@ Estado reconciliado: 36.1 parcial; 36.2–36.6 completadas en implementación; 3
     Autorización posterior explícita de commit/push del cambio aceptado, sin tocar espaciado ni
     crear PR/merge. Base remota081cfc9 revalidada, hashes de entrega se registran al observarlos.
     Implementación y evidencia: commit local `6b4753bc5e37eab619197b8b0e92b780b547fb27`; cierre previo al push.
+    Publicado [PR #429](https://github.com/gianelo/rentoru/pull/429) a `dev`; registro premerge dentro
+    del mismo PR. CI final aún no observada al registrarlo; no acredita merge ni entrega integrada.
 - [ ] 36.19 Diagnosticar digest 901444967; producción sólo con permiso read-only separado.
 - [ ] 36.20 Corregir causa confirmada y proteger reintento; enlazar 18.39/18.40 si corresponde.
 - [ ] 36.21 Elegir botón vs checkbox de No tiene ninguna; conservar `featuresDeclared`.

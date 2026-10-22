@@ -328,6 +328,8 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
     no acredita publicación; sin autorización para crear PR ni realizar merge.
   - Evidencia Git: implementación, prueba y decisiones en `6b4753bc5e37eab619197b8b0e92b780b547fb27`.
     Registro de cierre previo al push autorizado; publicación remota aún no observada al escribirlo.
+  - Publicado [PR #429](https://github.com/gianelo/rentoru/pull/429) hacia `dev`, abierto y no borrador.
+    Registro en el mismo PR antes del merge; CI final no observada al escribirlo, sin integración.
 
 ### F — Fallo final y atributos
 
