@@ -2997,7 +2997,29 @@ Estado reconciliado: 36.1 parcial; 36.2–36.6 completadas en implementación; 3
   - Lámina v1 aprobada por el fundador: «si me gusta alli vi las 3 medidas con el inspecionadro». `design/pantallas/Rentoru - Revisar - Responsive-v1.html` y `revisar-responsive-v1.css`, sin cambios posteriores; evidencia y commit en `odd/tasks/fase-36-revisar-lamina.md` L13–L20. Navegador del agente4/4PASS (390×844/440×956/768×1024/1440×900), sin overflow, contenedor centrado y foco/targets44px. Cierre local de aprobación, no publicación/integración ni implementación36.17; warning conservado para36.18.
 - [x] 36.17 Implementar revisar aprobado, conservando regreso/guardado/descarte.
   - Implementación local verificada: `app/publicar/revisar/page.tsx` + `review.module.css`; HTML servido `aviso-de-cambio.test.tsx` (7PASS,2mutantes detectados/restaurados), pantalla compilada `tests/e2e/revisar-responsive.spec.ts` (9PASS/1SKIPintencional:4medidas×JSon/off, fotos privadas decodificadas, foco/targets, guardar303 y descartar0POST/snapshotSQL intacto). Suite integrada3645PASS, build/tipos/lint/tokens PASS; fallos históricos e incidente conservados en `odd/tasks/fase-36-revisar-responsive.md` L17–L25. Fundador aprobó en navegador tamaños y responsive de la versión compilada (L26); implementación `f707cbdedd04a39690da3d38b51986d9076a76a0`, ASSESS402líneas medium/reviewDuefalse/sin revisión adicional; publicado PR[#428](https://github.com/gianelo/rentoru/pull/428) a `dev`, cierre en el mismo PR (L28), 403líneas≤405 autorizadas. CI final no observado al registrar este cierre; comprobar checks del HEAD actual. Sin merge humano ni limpieza adicional.
-- [ ] 36.18 Corregir warning según dueño → inmobiliaria; decidir aparte sentido inverso.
+- [x] 36.18 Corregir warning según dueño → inmobiliaria; decidir aparte sentido inverso.
+  - Gate resuelto por el fundador: «Sí, mantener el bloqueo — recomendado»; no se habilita
+    inmobiliaria → dueño ni se modifica 18.38. Revisar reutiliza el aviso existente del paso Quién
+    publica/Editar. Prueba HTML `app/publicar/revisar/aviso-de-cambio.test.tsx`, «advierte antes de
+    publicar que dueño a inmobiliaria se puede corregir, nunca al revés»:
+    RED/GREEN/mutación/restauración observadas; 136 pruebas enfocadas PASS. Avance y límites en
+    `odd/tasks/fase-36-cierre-publicacion.md`, unidad 36.18; suite global3646PASS/321archivos y
+    tipos/lint/tokens PASS. Conexión resuelta con rol `f3617` y credencial sintética autorizada solo
+    en memoria; SQL read-only/HTTP200 confirmados. Navegador79 exit1 conserva cuatro tamaños sin JS
+    PASS y el fallo del contador de POST. Diagnóstico autorizado identificó el POST de Next DevTools
+    `/__nextjs_original-stack-frames`, confirmado en su código instalado. Con clasificación acotada,
+    navegador80 exit0: cuatro tamaños con JS PASS; todos los POST siguieron bloqueados y no hubo
+    intentos de escritura del producto. No se renovó sesión ni se escribieron datos; fotos no probadas.
+    Parada expresa «listo luego lo veo. cerremos ya esto.»: revisión de claridad/regla y aceptación
+    visual aplazadas, sin cambiar el bloqueo inverso. Ventana/app/proxy propios detenidos, datos y
+    cambios locales conservados; falta evaluación nativa al retomar. Sin commit/push/PR/CI nuevos ni
+    integración; en esa pausa 36.18 permanecía abierta aunque la corrección local estuviera probada.
+    Aceptación posterior explícita: «ya probe todo bien cierra los dos chrome test que abriste»,
+    sobre la misma página servida; cierre local verificado/aceptado, no entrega remota. Ambos Chrome
+    de pruebas cerrados y ausencia de procesos verificada; app/proxy y datos conservados. Sin
+    commit/push/PR ni merge al registrar la aceptación; ASSESS104líneas medium/reviewDuefalse.
+    Autorización posterior explícita de commit/push del cambio aceptado, sin tocar espaciado ni
+    crear PR/merge. Base remota081cfc9 revalidada, hashes de entrega se registran al observarlos.
 - [ ] 36.19 Diagnosticar digest 901444967; producción sólo con permiso read-only separado.
 - [ ] 36.20 Corregir causa confirmada y proteger reintento; enlazar 18.39/18.40 si corresponde.
 - [ ] 36.21 Elegir botón vs checkbox de No tiene ninguna; conservar `featuresDeclared`.

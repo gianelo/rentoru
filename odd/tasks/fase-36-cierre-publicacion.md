@@ -274,10 +274,58 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: cuerpo legible sin columnas apretadas/solapes; `Cambiar` en posición aprobada y mensaje de cambio visible.
   - Comprobar: geometría real de cuatro medidas, descripción/zona largas; HTML y navegación sin JS, guardar vuelve a revisar conservando pasos posteriores y descartar no escribe (18.8/18.18).
 
-- [ ] **36.18 — Warning veraz y gate de cambio inverso.** Después de 36.1; G5; coordinar 36.12/36.17/F35.
+- [x] **36.18 — Warning veraz y gate de cambio inverso.** Después de 36.1; G5; coordinar 36.12/36.17/F35.
   - Trabajo: contrastar warning de revisar con regla 18.38; corregir afirmación de inmutabilidad absoluta, sin retirar prohibición inmobiliaria → dueño.
   - Aceptar: copy explica dueño → inmobiliaria y su irreversibilidad; respuesta explícita del fundador sobre sentido inverso. Si lo abre, documentar nueva razón y unidad adicional antes de modificar dominio.
   - Comprobar: HTML servido de pasos/revisar/editar coherente; casos de conservar valor, ascenso permitido y reversión rechazada; las casillas históricas de 18.38 no se desmarcan.
+  - Decisión ratificada por el fundador: «Sí, mantener el bloqueo — recomendado». Se conserva dueño
+    → inmobiliaria y se prohíbe la vuelta; no cambia el dominio ni se abre una unidad de
+    reversibilidad.
+  - Implementación local: `app/publicar/revisar/page.tsx` reutiliza
+    `PUBLISHER_TYPE_ONE_WAY_LEAD/STRESS`, ya consumidos por Quién publica; Editar conserva el mismo
+    aviso. `aviso-de-cambio.test.tsx`, «advierte antes de publicar que dueño a inmobiliaria se puede
+    corregir, nunca al revés», prueba texto servido, énfasis, ausencia de la promesa falsa y
+    posición anterior al botón. RED 1FAIL/7PASS → GREEN8; mutante del texto antiguo detectado
+    (1FAIL/7SKIP) y restaurado por bytes. Seis archivos enfocados, 136PASS, incluyen
+    pasos/editar/copia y conservar valor/ascenso/rechazo en dominio/aplicación.
+  - Entorno aislado: `rentoru-phase36-task-36-18`, rama `fix/fase-36-aviso-publicador`, base
+    `081cfc967ce3e98b3119f1f735d3eaffa38415b0`. Sin cambios de reglas, helpers compartidos,
+    seguridad, datos ni estilos; sin commit/push/PR. Verificación global `pnpm test:unit`
+    3646PASS/321archivos, tipos/lint/tokens PASS (8 warnings/2 infos previos). Inspección real: tres
+    probes fallidos (`28P01`, el primero sin código registrado); diagnóstico inicial de
+    contraseña/forma de respuesta supersedido por el rol local incorrecto: el contenedor declara
+    `f3617`, no `postgres`. Tras autorización explícita de credencial sintética solo en memoria y
+    corrección del rol, SQL confirma `default_transaction_read_only=on` y Revisar responde HTTP200
+    con el aviso nuevo, usando la sesión existente sin renovarla ni escribir. Navegador79 exit1: los
+    cuatro tamaños sin JS pasan; a390 con JS pasan texto/énfasis/posición/overflow, pero falla el
+    contador de intentos POST (1 frente a0), bloqueado por el arnés antes de enviarse. El diagnóstico
+    posterior autorizado (solo método/origen/ruta) identificó `/__nextjs_original-stack-frames`;
+    `next/dist/next-devtools/shared/stack-frame.js:81–83` confirma el POST de Next DevTools, no una
+    acción de publicación. Se corrigió esa clasificación demasiado amplia sin permitir envíos:
+    navegador80 exit0, cuatro tamaños con JS PASS, cero intentos de escritura del producto y todos
+    los POST bloqueados, incluidos los de DevTools. Se conservan los cuatro tamaños sin JS PASS
+    del79 y su fallo original; no se presenta79 como exitoso ni se afirma causa del error de consola.
+    Fotos fuera de alcance: sus bytes RAM se descartaron previamente con autorización y los probes
+    respondieron404; no se acredita storage/fotos.
+  - Parada expresa: «listo luego lo veo. cerremos ya esto.» La revisión posterior cuestionó la
+    claridad y el motivo del bloqueo inverso, pero no autorizó cambiarlo ni aceptó visualmente el
+    aviso. Se conserva el cambio local y las pruebas; faltan esa revisión humana y la evaluación
+    nativa al retomar, sin commit/push/PR/CI/integración nuevos. Ventana81/app76/proxy78 propios
+    detenidos tras identificar recursos; sin app servida. Datos, caché privada y worktree conservados.
+    Cierre operativo por pausa, no aceptación ni cierre de36.18; no reabre36.16/36.17.
+  - Aceptación posterior: «ya probe todo bien cierra los dos chrome test que abriste», tras reabrir
+    el visor autenticado84 a petición humana. Página sin cambios, SHA256 `f37617135726e76036eff55c4849c8a895cc37eb53884968729dc174d1b2afac`.
+    Se acepta el aviso observado, no se acredita CRUD/fotos ni se autoriza cambiar la regla inversa.
+    Los dos Chrome quedaron huérfanos al detener los jobs e ignoraron SIGTERM; cierre forzado solo de
+    sus perfiles de pruebas y comprobación independiente sin procesos restantes. App/proxy82/83 y
+    datos conservados: el pedido final fue cerrar navegadores. Implementación local verificada y
+    aceptada, sin commit/push/PR/CI/integración al registrar esa aceptación; ASSESS104líneas medium,
+    reviewDuefalse/under_budget, self-verification vigente, sin verificador separado ni aprobación nativa.
+  - Entrega autorizada después: «bueno hagamos commit y push». Se publica solo el cambio aprobado;
+    la pregunta sobre advertencia pegada a botones no autoriza modificar CSS. Ese espaciado no es
+    parte de36.18 ni hay una tarea F36 pendiente específica; no se reabre36.17 automáticamente.
+    Base remota revalidada en `081cfc9`, sin diferencias nuevas. Este registro es precommit/push,
+    no acredita publicación; sin autorización para crear PR ni realizar merge.
 
 ### F — Fallo final y atributos
 
