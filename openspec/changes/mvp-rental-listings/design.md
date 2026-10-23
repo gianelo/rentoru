@@ -804,3 +804,12 @@ La confirmación posterior a publicar deja de ser un texto provisional. La ficha
 - **Compartir falla cerrado.** El enlace de WhatsApp necesita la URL absoluta; sin `SITE_URL` el bloque no se dibuja, en vez de compartir un enlace relativo que no abre nada.
 
 Plan y gates: `odd/tasks/fase-37-publicar-listo.md`.
+
+### Correos — fase 38
+
+Los cinco correos comparten hoy un renderizador copiado cuatro veces, con un color (`#101010`) que no pertenece al sistema. Dos decisiones con su razón:
+
+- **Un solo renderizador que recibe bloques ya decididos.** Cada dominio sigue decidiendo qué dice su correo; el renderizador sólo sabe dibujar párrafos y una acción. Así el diseño cambia en un lugar y ninguna regla de producto se muda a la presentación (AGENTS.md §1).
+- **Valores del sistema resueltos, con una prueba que los ata a `tokens.css`.** Los clientes de correo no entienden variables CSS, así que el correo necesita literales; una tabla única y comprobada evita que esos literales se desvíen del sistema en silencio, que es justo lo que pasó con `#101010`.
+
+Plan y gates: `odd/tasks/fase-38-correos.md`.
