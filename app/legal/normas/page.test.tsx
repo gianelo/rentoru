@@ -55,4 +55,13 @@ describe("NormasPage", () => {
   it("is indexable — the page carries no noindex directive", () => {
     expect(metadata.robots).toBeUndefined();
   });
+
+  it("F35.9: addresses the reader in neutral tuteo, not voseo", () => {
+    const markup = renderToStaticMarkup(<NormasPage />);
+
+    expect(markup).toContain(
+      "No se acepta local comercial ni ningún otro uso. Te identificas como dueño o como inmobiliaria al crear el aviso.",
+    );
+    expect(markup).not.toContain("Te identificás como dueño");
+  });
 });

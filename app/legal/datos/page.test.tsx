@@ -46,4 +46,27 @@ describe("DatosPage", () => {
   it("is indexable — the page carries no noindex directive", () => {
     expect(metadata.robots).toBeUndefined();
   });
+
+  it("F35.9: addresses the reader in neutral tuteo, not voseo", () => {
+    const markup = renderToStaticMarkup(<DatosPage />);
+
+    expect(markup).toContain(
+      "Este texto detalla, dato por dato, qué guardamos sobre ti y para qué. <a",
+    );
+    expect(markup).toContain(
+      "Política de privacidad</a> explica el marco general; aquí está el inventario.</p>",
+    );
+    expect(markup).toContain(
+      "</strong> — el que eliges mostrar al publicar. Sirve para que quien vea tu aviso pueda escribirte.",
+    );
+    expect(markup).toContain(
+      "no compartimos tu contacto con nadie fuera de quien tú eliges que lo vea. Para cualquier pregunta sobre este tratamiento, escribe a <a",
+    );
+
+    expect(markup).not.toContain("qué guardamos sobre vos");
+    expect(markup).not.toContain("acá está el inventario");
+    expect(markup).not.toContain("el que elegís mostrar");
+    expect(markup).not.toContain("quien vos elegís que lo vea");
+    expect(markup).not.toContain("este tratamiento, escribí a");
+  });
 });

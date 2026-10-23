@@ -52,4 +52,30 @@ describe("PrivacidadPage", () => {
   it("is indexable — the page carries no noindex directive", () => {
     expect(metadata.robots).toBeUndefined();
   });
+
+  it("F35.9: addresses the reader in neutral tuteo, not voseo", () => {
+    const markup = renderToStaticMarkup(<PrivacidadPage />);
+
+    expect(markup).toContain(
+      "Si entras con Google: el nombre y el correo verificado que Google confirma. No se guarda ninguna foto de perfil ni ningún otro dato de tu cuenta de Google.",
+    );
+    expect(markup).toContain(
+      "Si entras con el enlace por correo: la dirección de correo a la que lo enviamos.",
+    );
+    expect(markup).toContain(
+      "Al publicar un aviso: el método y el valor de contacto que eliges mostrar (WhatsApp, teléfono o correo), y los datos del inmueble.",
+    );
+    expect(markup).toContain(
+      "Al contactar a un dueño: el mensaje que escribes antes de ver su contacto queda asociado a ese momento — qué aviso, cuándo, y tu cuenta.",
+    );
+    expect(markup).toContain(
+      "Hoy no existe una pantalla propia para corregir o borrar tus datos. Mientras tanto, escribe a <a",
+    );
+
+    expect(markup).not.toContain("Si entrás con Google:");
+    expect(markup).not.toContain("Si entrás con el enlace por correo:");
+    expect(markup).not.toContain("el valor de contacto que elegís mostrar");
+    expect(markup).not.toContain("el mensaje que escribís antes de ver su contacto");
+    expect(markup).not.toContain("Mientras tanto, escribí a");
+  });
 });
