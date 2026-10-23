@@ -19,8 +19,8 @@ import type {
  * la 18.22 cita —«el mensaje va ANTES del campo que lo produjo»— estaba escrita
  * en un comentario y en ninguna aserción.
  *
- * Esto no prueba los nueve pasos. Prueba el mecanismo que las dos pantallas
- * comparten, en el paso donde es más barato mirarlo.
+ * Las negativas prueban el mecanismo compartido; la matriz de copia recorre
+ * los nueve componentes en SSR, no nueve rutas HTTP autenticadas.
  */
 
 // El componente arrastra la acción de servidor (que trae `next/headers` y la
@@ -60,6 +60,37 @@ function dibujar(
     />,
   );
 }
+
+describe("los nueve pasos muestran instrucciones en tuteo neutro (35.4)", () => {
+  it.each([
+    ["tipo", "¿Qué vas a alquilar?", null],
+    ["zona", "¿En qué zona queda?", null],
+    ["precio", "¿Cuánto pides al mes?", "En dólares, sin centavos."],
+    [
+      "tamano",
+      "¿Cómo es de grande?",
+      "Un estudio cuenta como 1 habitación. Si no tiene estacionamiento, déjalo en 0.",
+    ],
+    [
+      "atributos",
+      "¿Qué tiene?",
+      "Marca lo que tenga. Lo que dejes sin marcar no se menciona en el aviso.",
+    ],
+    ["titulo", "Ponle un título", "Lo más importante primero. Es lo que se lee en la lista."],
+    ["descripcion", "Cuenta lo que no se ve en las fotos", null],
+    ["fotos", "Sube las fotos", "Entre 1 y 6."],
+    ["quien", "¿Quién publica?", null],
+  ] as const)("%s conserva su pregunta, ayuda y control de paso", (paso, pregunta, ayuda) => {
+    const html = dibujar(paso, []);
+
+    expect(html.match(/<h1[^>]*>([^<]*)<\/h1>/)?.[1]).toBe(pregunta);
+    if (ayuda) expect(html).toContain(`<p class="${stepStyles.help}">${ayuda}</p>`);
+    else expect(html.slice(html.indexOf("</h1>"))).not.toMatch(/^<\/h1><p/);
+    expect(html).toContain(`name="step" value="${paso}"`);
+    expect(html).toContain('type="submit"');
+    expect(html).toContain("Siguiente</button>");
+  });
+});
 
 /**
  * tasks.md 18.25 — **de dónde sale el «Vas N» que la pantalla dibuja.**

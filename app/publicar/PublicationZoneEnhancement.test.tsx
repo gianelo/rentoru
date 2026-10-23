@@ -152,6 +152,8 @@ describe("sugerencias progresivas en el POST existente", () => {
     expect(fetchMock).not.toHaveBeenCalled();
     idle();
     expect(query().value).toBe("initial");
+    expect(container.querySelector('label[for="q"]')?.textContent).toBe("Busca tu zona");
+    expect(query().placeholder).toBe("Busca tu zona");
     expect(values()).toEqual(["saved"]);
   });
   it("retiene la nueva elección y la referencia en nueva, vacía y error", async () => {
