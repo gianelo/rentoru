@@ -271,6 +271,10 @@ Pull requests targeting `dev`, `staging` or `main` run lint, types, tokens, unit
 
 Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability and budgets. Browser suites use only the job-owned database; Lighthouse measures the matching live deployment without creating application data. The resolver binds the newest Preview deployment to the pushed SHA, accepts the expected branch or SHA as the provider's ref, requires its latest status to succeed and fails on timeout/API errors instead of substituting a stable domain or local success. Vercel may publish SHA-only refs, which do not independently attest the source branch.
 
+The push `e2e` job is a `fail-fast: false` matrix of three parallel legs, each with its own PostgreSQL 18 container, migrations and deterministic seed: `publication` (36.3), `reads` (general E2E + crawlability, then 30.2–30.4) and `auth` (30.4b2–30.7, then 29.2 pagination last because it appends rows). No leg sees another's writes, so cross-block ordering no longer rests on a shared database. The optional dev critical profile still changes only the general read step.
+
+Concurrency keeps one group per workflow and ref; a newer run cancels a stale one only for pull requests and `dev`, so every `staging` push validation finishes. CI never deploys (Vercel migrates in `vercel-build`), so cancelling CI cannot cancel a migrating deployment. The repository is public; heavy suites stay on pushes for proportionality and speed, and F2's private-repo minutes row below no longer constrains that split.
+
 | Gate | Command | Needs |
 |---|---|---|
 | Lint + format | `pnpm biome ci` | — |

@@ -8,11 +8,12 @@ import { afterEach, describe, expect, it } from "vitest";
 const require = createRequire(import.meta.url);
 const cliRequire = createRequire(require.resolve("@lhci/cli/package.json"));
 const utilsRequire = createRequire(cliRequire.resolve("@lhci/utils/package.json"));
-type Step = { name?: string; run?: string; env?: Record<string, string> };
+type Step = { name?: string; if?: string; run?: string; env?: Record<string, string> };
 type Job = { if: string; steps: Step[] };
 const yaml = utilsRequire("js-yaml");
-const { jobs } = yaml.safeLoad(readFileSync(".github/workflows/ci.yml", "utf8")) as {
+const { jobs, concurrency } = yaml.safeLoad(readFileSync(".github/workflows/ci.yml", "utf8")) as {
   jobs: Record<"measure" | "preview" | "budget" | "e2e", Job>;
+  concurrency: { group: string; "cancel-in-progress": string | boolean };
 };
 const general = jobs.e2e.steps.find((step) => step.name === "E2E + crawlability") as Step;
 const profileExpression = `\${{ github.ref == 'refs/heads/dev' && vars.CI_DEV_PROFILE == 'critical' && 'critical' || 'full' }}`;
@@ -73,6 +74,25 @@ describe("CI profile routing", () => {
     expect(runInNewContext(jobs.e2e.if, context(branch, profile))).toBe(true);
     expect(general.env?.READ_PROFILE).toBe(profileExpression);
     expect(runInNewContext(profileExpression.slice(3, -2), context(branch, profile))).toBe(reads);
+  });
+
+  it("lets the critical profile change only the reads leg's general step", () => {
+    expect(general.if).toBe("matrix.leg == 'reads'");
+    const profiled = jobs.e2e.steps.filter((step) =>
+      JSON.stringify(step).match(/READ_PROFILE|critical/),
+    );
+    expect(profiled).toEqual([general]);
+  });
+
+  it.each([
+    ["dev", "pull_request", true],
+    ["staging", "pull_request", true],
+    ["dev", "push", true],
+    ["staging", "push", false],
+  ] as const)("cancels a stale %s %s run: %s", (branch, event, cancels) => {
+    expect(concurrency.group).toBe(`\${{ github.workflow }}-\${{ github.ref }}`);
+    const value = String(concurrency["cancel-in-progress"]).replace(/^\$\{\{|\}\}$/g, "");
+    expect(runInNewContext(value, context(branch, "", event))).toBe(cancels);
   });
 
   it("never schedules push gates on a PR even when critical mode is requested", () => {
