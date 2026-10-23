@@ -43,7 +43,7 @@ No se enumeran todos los literales ni se sustituye la auditoría de estados futu
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `app/importar/import-copy.ts`; `src/modules/broker-bulk-import/domain/resolve-import-locations.ts` | Cliente/HTML, inmobiliaria; filas válidas, errores y resumen | `app/api/bulk-import/route.ts`; `app/importar/ImportarCartera.tsx`; `app/importar/VistaPrevia.tsx` | `app/importar/importar-contract.test.tsx:104`: «cuenta las dos mitades y nombra cada fila con problema y su razón». Pendiente fetch/confirmación; excluir columnas CSV, códigos y valores del usuario |
+| `app/importar/import-copy.ts`; `src/modules/broker-bulk-import/domain/resolve-import-locations.ts` | Cliente/HTML, inmobiliaria; filas válidas, errores y resumen | `app/api/bulk-import/route.ts`; `app/importar/ImportarCartera.tsx`; `app/importar/VistaPrevia.tsx` | `app/importar/importar-contract.test.tsx:104`: «cuenta las dos mitades y nombra cada fila con problema y su razón». **35.6 cerrada localmente:** tuteo en carga, vista previa, rechazos (cinco excepciones traducidas), resolución de zona, plantilla y razón compartida «reconoces»; cliente real «F35.6: revisa filas mixtas con razón real, confirma y conserva resumen y duplicados». Columnas CSV, códigos y valores del usuario intactos; evidencia en [importación](../tasks/fase-35-importacion-neutra.md) |
 
 ### 35.7 — ficha, confianza y contacto
 

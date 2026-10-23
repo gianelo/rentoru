@@ -42,7 +42,7 @@ import { ImportTooManyRowsError, readBoundedImportFile } from "./read-bounded-im
 export class ImportEncodingError extends Error {
   constructor() {
     super(
-      'parse-import-file: the file could not be decoded as UTF-8. Re-export it as "CSV UTF-8" from your spreadsheet application (Excel: File > Save As > CSV UTF-8; Google Sheets: File > Download > Comma Separated Values).',
+      'No se pudo leer el archivo como UTF-8. Vuelve a exportarlo como "CSV UTF-8" desde tu hoja de cálculo (Excel: Archivo > Guardar como > CSV UTF-8; Google Sheets: Archivo > Descargar > Valores separados por comas).',
     );
     this.name = "ImportEncodingError";
   }
@@ -53,7 +53,7 @@ export class ImportMissingColumnsError extends Error {
 
   constructor(missingColumns: readonly RequiredImportColumn[]) {
     super(
-      `parse-import-file: the file is missing required column(s): ${missingColumns.join(", ")}. Download the template and compare the header row.`,
+      `Faltan columnas obligatorias en el archivo: ${missingColumns.join(", ")}. Descarga la plantilla y compara la fila de encabezados.`,
     );
     this.name = "ImportMissingColumnsError";
     this.missingColumns = missingColumns;

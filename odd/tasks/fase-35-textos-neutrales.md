@@ -74,7 +74,7 @@ Las referencias son puntos de entrada actuales; verificar estados y consumidores
   Referencias: `app/mis-avisos/`, `src/modules/listing-lifecycle/domain/{retention-notice.ts,lifecycle-notice.ts}`.
   Aceptación: textos/acciones de estados en `app/mis-avisos/mis-avisos-contract.test.tsx` y `[id]/editar/editar-servido.test.tsx`, con fechas/interpolaciones y errores; sin cambiar tiempos de retención ni ciclo de vida.
 
-- [ ] **35.6 Importación de cartera.** Auditar carga CSV, vista previa, errores por fila, resumen y confirmación.
+- [x] **35.6 Importación de cartera.** Auditar carga CSV, vista previa, errores por fila, resumen y confirmación. Cerrada localmente con aceptación del fundador en navegador; PR a `dev` abierto, merge pendiente. Prueba `app/importar/importar-cliente.test.tsx` — «F35.6: revisa filas mixtas con razón real, confirma y conserva resumen y duplicados»; evidencia, límites y suite en [importación](fase-35-importacion-neutra.md).
   Referencias: `app/importar/{ImportarCartera.tsx,VistaPrevia.tsx,import-copy.ts}`, `src/modules/broker-bulk-import/domain/resolve-import-locations.ts`.
   Aceptación: ampliar `app/importar/importar-contract.test.tsx` y probar la vista previa cliente con filas correctas/erróneas y confirmación; observar valores escapados y cantidades sin modificar columnas CSV ni códigos.
 

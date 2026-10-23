@@ -22,6 +22,18 @@ import { VistaPrevia } from "./VistaPrevia";
 describe("Importar · antes de elegir archivo (14e)", () => {
   const html = renderToStaticMarkup(<ImportarCartera />);
 
+  it("F35.6: sirve instrucciones completas en tuteo", () => {
+    expect(html).toContain("Descarga la plantilla");
+    expect(html).toContain(
+      "Trae las 6 columnas obligatorias con los nombres exactos y una fila de ejemplo. Pega tus datos debajo y guarda como CSV.",
+    );
+    expect(html).toContain("Descargar plantilla CSV");
+    expect(html).toContain("Sube tu archivo");
+    expect(html).toContain(
+      "Esta pantalla necesita JavaScript para leer el archivo en tu computadora antes de subirlo. Actívalo y recarga; la plantilla de arriba se descarga igual sin él.",
+    );
+  });
+
   it("la plantilla se baja con un enlace real: es el paso 1 y funciona sin JavaScript", () => {
     expect(html).toMatch(/<a[^>]*href="\/importar\/plantilla"/);
   });
@@ -104,6 +116,10 @@ describe("Importar · vista previa (14g)", () => {
   it("cuenta las dos mitades y nombra cada fila con problema y su razón", () => {
     const html = renderToStaticMarkup(<VistaPrevia preview={preview} archivo="cartera.csv" />);
 
+    expect(html).toContain("Revisa antes de crear");
+    expect(html).toContain(
+      "Puedes crear las 38 ahora y las 2 con problema quedan fuera, o corregir el archivo y volver a subirlo completo.",
+    );
     expect(html).toContain("38");
     expect(html).toContain("2");
     expect(html).toContain("Fila 7");
@@ -156,6 +172,32 @@ describe("Importar · vista previa (14g)", () => {
     expect(html).not.toMatch(/<mark[^>]*><\/mark>/);
   });
 
+  it("F35.6: conserva y escapa archivo, celdas y razones del usuario", () => {
+    const value = '<script>"Mirá & subí"</script>';
+    const error = preview.errores[0];
+    if (!error) throw new Error("Missing preview fixture row");
+    const html = renderToStaticMarkup(
+      <VistaPrevia
+        archivo={value}
+        preview={{
+          ...preview,
+          errores: [
+            {
+              ...error,
+              razones: [value],
+              celdas: { ...error.celdas, referencia: value, titulo: value, zona: value },
+            },
+          ],
+        }}
+      />,
+    );
+    expect(html).not.toContain("<script>");
+    expect(html.match(/&lt;script&gt;&quot;Mirá &amp; subí&quot;&lt;\/script&gt;/g)).toHaveLength(
+      5,
+    );
+    expect(html).toContain("Crear las 38 propiedades");
+  });
+
   it("el botón de crear dice cuántas va a crear — no «Confirmar»", () => {
     const html = renderToStaticMarkup(<VistaPrevia preview={preview} archivo="cartera.csv" />);
 
@@ -172,6 +214,9 @@ describe("Importar · vista previa (14g)", () => {
       <VistaPrevia preview={{ ...preview, listas: 0, totalFilas: 2 }} archivo="cartera.csv" />,
     );
 
+    expect(html).toContain(
+      "Ninguna fila quedó lista para crear. Corrige los problemas de abajo y vuelve a subir el archivo completo.",
+    );
     expect(html).not.toContain("Crear las");
     expect(html).toContain("Corregir el archivo");
   });
