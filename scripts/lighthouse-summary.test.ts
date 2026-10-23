@@ -286,7 +286,7 @@ it("only enables passed assertion retention without changing the source budgets"
   expect(config).toEqual({
     ci: {
       collect: {
-        numberOfRuns: 1,
+        numberOfRuns: 3,
         settings: {
           formFactor: "mobile",
           screenEmulation: {
@@ -315,6 +315,7 @@ it("only enables passed assertion retention without changing the source budgets"
           [".*", 235520],
         ].map(([matchingUrlPattern, bytes]) => ({
           matchingUrlPattern,
+          aggregationMethod: "median",
           assertions: {
             "largest-contentful-paint": ["error", { maxNumericValue: 2500 }],
             "total-byte-weight": ["error", { maxNumericValue: bytes }],
@@ -352,4 +353,38 @@ it("uploads only the sanitized summary after Lighthouse, including assertion fai
     },
   });
   expect(steps[lighthouse].run).not.toContain("exit 0");
+});
+
+/**
+ * One Lighthouse run decided the gate, and the same home page measured 2336,
+ * 2512, 2603 and 2707 ms with no change on its path. Three runs reduce that to
+ * the median. LHCI's default aggregation is "optimistic" — for a maximum, the
+ * fastest run — which would quietly loosen the 2500 ms budget, so the median is
+ * proved through LHCI's own evaluator rather than by reading the config.
+ */
+it("decides the LCP budget on the median of three runs, never the fastest one", () => {
+  const require = createRequire(import.meta.url);
+  const cli = createRequire(require.resolve("@lhci/cli/package.json"));
+  const { getAllAssertionResults } = cli("@lhci/utils/src/assertions.js");
+  const config = JSON.parse(readFileSync("lighthouserc.json", "utf8"));
+  const lhr = (lcp: number) => ({
+    requestedUrl: "https://preview.example/",
+    finalUrl: "https://preview.example/",
+    audits: {
+      "largest-contentful-paint": { id: "largest-contentful-paint", score: 0.9, numericValue: lcp },
+      "total-byte-weight": { id: "total-byte-weight", score: 1, numericValue: 152_000 },
+    },
+  });
+  const lcpFailures = (values: number[]) =>
+    getAllAssertionResults(config.ci.assert, values.map(lhr)).filter(
+      (result: { auditId: string; passed: boolean }) =>
+        result.auditId === "largest-contentful-paint" && !result.passed,
+    );
+
+  expect(config.ci.collect.numberOfRuns).toBe(3);
+  // Fastest run under budget, median over it: the gate must fail.
+  expect(lcpFailures([2400, 2600, 2700])).toHaveLength(1);
+  expect(lcpFailures([2400, 2600, 2700])[0].actual).toBe(2600);
+  // One slow outlier with a median under budget: the gate passes.
+  expect(lcpFailures([2900, 2400, 2450])).toHaveLength(0);
 });
