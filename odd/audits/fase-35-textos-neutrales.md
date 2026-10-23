@@ -27,7 +27,7 @@ No se enumeran todos los literales ni se sustituye la auditoría de estados futu
 
 ### 35.4 — publicación
 
-Estado f35-a: A0 integrado #374; A1a parcial con preguntas/ayudas/mapa/zona neutros. `paso-servido.test.tsx` matriz literal nueve pasos, ruta `mapa-de-pasos.test.tsx` y DOM `PublicationZoneEnhancement.test.tsx`: RED9→GREEN29; mutantes5+1 restaurados; `zona-faltante.test.tsx` GREEN3 tras expectativa antigua. Tipos/lint/tokens PASS; suite completa 3649 PASS/20 timeouts no diagnosticados, sin reintento. Sin HTTP/navegador/aceptación ni publicación A1a. Revisión/negativas/fotos aún abiertas; detalles en `../tasks/fase-35-publicacion-neutra.md`, «Evidencia A1a».
+Estado f35-a: 35.4 cerrada localmente con aceptación del fundador (versión servida `9f2fb91`), PR a `dev` sin merge. Pasos, mapa, zona, revisión, 19 negativas, aviso de una sola dirección, fotos y última foto en tuteo. Matriz SSR de nueve pasos y de 18 códigos de negativa, y DOM de fotos; suite 3709/3709. Pendiente: disposición semántica de `listo/page.tsx`. Detalle en `../tasks/fase-35-publicacion-neutra.md`, «Cierre 35.4».
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
