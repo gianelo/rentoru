@@ -105,6 +105,13 @@ export const DISCARD_CHANGE_LABEL = "Descartar el cambio";
 export const STEP_MAP_TRIGGER_LABEL = "Ver los pasos a los que puedes volver";
 
 /**
+ * Nombre accesible y placeholder del buscador de zona. Vive aca, y no escrito en
+ * el componente, para que las pruebas de `tests/measure/` lo importen: cuando el
+ * texto cambia, una copia a mano en la prueba se queda atras sin que nadie lo vea.
+ */
+export const ZONE_SEARCH_LABEL = "Busca tu zona";
+
+/**
  * Reusado por la pantalla de editar desde la 18.27, que ahora ofrece el tipo:
  * dos listas de castellano para los mismos cinco valores es como una pantalla
  * termina diciendo «Habitación» donde la otra dice «Cuarto».

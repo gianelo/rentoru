@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { STEP_MAP_TRIGGER_LABEL } from "../../app/publicar/step-copy";
 
 test.describe("publisher hierarchy", () => {
   test.beforeEach(async ({ page, baseURL }) => {
@@ -300,7 +301,7 @@ test.describe("paso 4 — los cuatro números (3.9)", () => {
     await page.goto("/measure");
 
     const step = page.getByTestId("publish-step-tamano");
-    const trigger = step.getByLabel("Ver los pasos a los que podés volver");
+    const trigger = step.getByLabel(STEP_MAP_TRIGGER_LABEL);
 
     // **Medido contra el propio paso y no contra la ventana**: abrir el mapa
     // desplaza la página, y una caja de Playwright es relativa a la ventana.
