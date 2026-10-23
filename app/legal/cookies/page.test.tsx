@@ -39,4 +39,21 @@ describe("CookiesPage", () => {
   it("is indexable — the page carries no noindex directive", () => {
     expect(metadata.robots).toBeUndefined();
   });
+
+  it("F35.9: addresses the reader in neutral tuteo, not voseo", () => {
+    const markup = renderToStaticMarkup(<CookiesPage />);
+
+    expect(markup).toContain(
+      "La escribe Auth.js cuando entras con Google o con el enlace por correo; es <code>httpOnly</code> y dura mientras tu sesión esté activa. Sin ella no puedes publicar un aviso ni ver el contacto de un dueño.",
+    );
+    expect(markup).toContain(
+      "Se escribe sólo cuando pides que te enviemos un enlace por correo, es <code>httpOnly</code>,",
+    );
+    expect(markup).toContain(">¿Puedes navegar sin ellas?</h2>");
+
+    expect(markup).not.toContain("cuando entrás con Google");
+    expect(markup).not.toContain("Sin ella no podés publicar");
+    expect(markup).not.toContain("cuando pedís que te enviemos");
+    expect(markup).not.toContain("¿Podés navegar sin ellas?");
+  });
 });

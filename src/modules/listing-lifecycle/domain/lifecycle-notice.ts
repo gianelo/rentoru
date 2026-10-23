@@ -82,9 +82,9 @@ export function composeNotice(
       subject: `Tu aviso vence en ${remaining}`,
       body:
         `«${listing.title}» vence el ${spellDate(listing.expiresAt)}.\n\n` +
-        `Renovalo por 30 días más desde acá:\n${renewalUrl}\n\n` +
-        "Si no lo renovás, el aviso sale de la búsqueda pero no se borra: " +
-        "podés volver a activarlo después.",
+        `Renuévalo por 30 días más desde aquí:\n${renewalUrl}\n\n` +
+        "Si no lo renuevas, el aviso sale de la búsqueda pero no se borra: " +
+        "puedes volver a activarlo después.",
     };
   }
 
@@ -94,7 +94,7 @@ export function composeNotice(
     body:
       `«${listing.title}» venció el ${spellDate(listing.expiresAt)} y sus fotos ` +
       `se borran el ${spellDate(purgeAt)}.\n\n` +
-      `Renovalo antes de esa fecha y el aviso vuelve con sus fotos:\n${renewalUrl}\n\n` +
+      `Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:\n${renewalUrl}\n\n` +
       "Después de esa fecha el aviso sigue existiendo, pero para volver a " +
       "publicarlo vas a tener que subir las fotos de nuevo. Esto no se deshace.",
   };

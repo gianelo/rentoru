@@ -1,6 +1,6 @@
 # Fase 36 — Cierre de publicación (#289)
 
-Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Estado vigente de este cierre:36.1 parcial;36.7 aceptada funcionalmente y entrega humana cerrada;36.8/36.9 con merges humanos registrados;36.10–36.22 pendientes. Para36.2–36.6 se conserva el índice central vigente. El checkpoint documental separado de36.7 fue fusionado por humano en #403 hacia dev `da34a8990b800f854439e0400652969ba271d589` (2026-10-09T10:26:46Z). Escribir el plan no acreditó aceptación funcional: los cierres proceden de las unidades posteriores citadas abajo, sin cerrar #289.
+Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Estado del checkpoint documental histórico:36.1 parcial;36.7 aceptada funcionalmente y entrega humana cerrada;36.8/36.9 con merges humanos registrados;36.10–36.22 pendientes. Para36.2–36.6 se conserva el índice central vigente. El checkpoint documental separado de36.7 fue fusionado por humano en #403 hacia dev `da34a8990b800f854439e0400652969ba271d589` (2026-10-09T10:26:46Z). Escribir el plan no acreditó aceptación funcional: los cierres proceden de las unidades posteriores citadas abajo, sin cerrar #289.
 
 ## Reconciliación documental — progreso
 
@@ -181,7 +181,8 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 
 ### A — Baseline y shell
 
-- [ ] **36.1 — Reproducir los nueve pasos y fijar baseline.** Sin dependencia.
+- [x] **36.1 — Reproducir los nueve pasos y fijar baseline.** Sin dependencia.
+  - Conciliada 2026-10-23: El fundador la da por cerrada («desde la 36.18 para abajo todo está cerrado»); 36.1a integrada por #365/#366. 36.1b (fotos reales, final/loader, conciliación F34) no se midió y no se afirma.
   - Trabajo: recorrer entrada, respuestas, guardado, Atrás, mapa, descarte, revisar y publicación en entorno de prueba autorizado; cruzar los checks completados del issue y fases previas.
   - Aceptar: matriz comentario → reproducción/resultado/entorno, separando confirmado, no reproducido y no probado; reconciliación dimensional con F34 asignada.
   - Comprobar: cuatro medidas vigentes, navegación nativa sin JS salvo fotos; no repetir baseline ya protegido sin hallazgo.
@@ -208,7 +209,8 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: sugerencias al teclear, teclado/selección accesibles, estados vacío/error y zona guardada preservada; servidor valida ID y ciudad.
   - Comprobar: selección real y persistencia en HTML servido, consulta con/sin JS, nombres largos, acentos y respuesta tardía que no reemplace búsqueda nueva.
 
-- [ ] **36.6 — Conciliar catálogo de zonas soportadas.** Después de 36.1; alimenta fixtures de 36.5.
+- [x] **36.6 — Conciliar catálogo de zonas soportadas.** Después de 36.1; alimenta fixtures de 36.5.
+  - Conciliada 2026-10-23: integrada por #382, #383 y #384.
   - Trabajo: comparar fuentes territoriales, seed, búsqueda y registros en entorno autorizado para todas las ciudades ya soportadas; identificar Maracaibo faltante vs alias/consulta.
   - Aceptar: lista de faltantes comprobados y fuente, propuesta curada aprobada; sin ciudades nuevas ni geografía ampliada por este issue.
   - Comprobar: IDs/slugs sin colisiones, aislamiento ciudad-zona y búsqueda por nombre; migración/seed sólo si diagnóstico lo exige y con autorización posterior.
@@ -220,7 +222,8 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 
 ### C — Texto vivo, copy y controles
 
-- [ ] **36.8 — Contador y preview vivos del título.** Después de 36.1.
+- [x] **36.8 — Contador y preview vivos del título.** Después de 36.1.
+  - Conciliada 2026-10-23: integrada por #395, #396, #397 y #398.
   - Trabajo: añadir mejora cliente reutilizando medición/límites de dominio; servidor conserva autoridad y guardado.
   - Aceptar: contador y preview reflejan texto actual al escribir/pegar/borrar, sin alterar precio/zona ni aceptar un título inválido.
   - Comprobar: límites y Unicode conforme a medición compartida; con JS reacción inmediata, sin JS guardar/revisar muestra lo guardado y errores del servidor.
@@ -230,17 +233,20 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: debajo del mínimo indica faltantes exactos; al alcanzar/superar cambia a suficiencia sin número negativo.
   - Comprobar: vacío, borde mínimo, pegado/borrado y recarga; HTML servido y rechazo servidor sin JS siguen funcionando.
 
-- [ ] **36.10 — Copy neutral de fotos y portada.** G3 aprobado por el fundador: «Elegir fotos» y «Es la foto principal de tu aviso», en publicación y edición.
+- [x] **36.10 — Copy neutral de fotos y portada.** G3 aprobado por el fundador: «Elegir fotos» y «Es la foto principal de tu aviso», en publicación y edición.
+  - Conciliada 2026-10-23: integrada por #405 (`6a2eab4`); la casilla quedó sin marcar después del merge.
   - Implementación funcional T1: `PhotoUploader.tsx`, `photo-action-copy.ts` y edición sirven la selección; `SubirFoto` recibe copia de presentación sólo en edición y conserva «Subir fotos» por defecto para importación.
   - Protección: `fotos-servido.test.tsx` («conserva copia y formulario») y `editar-servido.test.tsx` («sirve la copia aprobada de fotos») ejercitan los componentes reales. Ayuda de teléfono retirada; acciones y nombres accesibles conservados; explicación de portada una vez por superficie. Supersesión acotada de 18.15, coordinada con F35 sin cerrar 35.4.
   - Pendiente T2: texto y acciones en móvil/tablet/desktop; no se declara 36.10 completa ni publicación/commit por este pase.
 
-- [ ] **36.11 — Reducir huella visual del menú de fotos.** Después de 36.1.
+- [x] **36.11 — Reducir huella visual del menú de fotos.** Después de 36.1.
+  - Conciliada 2026-10-23: integrada por #409 (`e6a3c65`).
   - Trabajo: distinguir glyph/superficie visible de área interactiva; ajustar con tokens, no nuevos iconos.
   - Aceptar: tamaño visual compacto aprobado en tablet/desktop, blanco accesible ≥44×44 y menú legible.
   - Comprobar: medidas, teclado/foco y abrir/cerrar; mover, portada y quitar siguen disponibles conforme a 18.15, sin regresión móvil.
 
-- [ ] **36.12 — Resolver jerarquía de Quién publica.** Después de 36.1; gate G3/F35.
+- [x] **36.12 — Resolver jerarquía de Quién publica.** Después de 36.1; gate G3/F35.
+  - Conciliada 2026-10-23: integrada por #410 (`919da49`).
   - Trabajo: decidir conjuntamente conservar título con legend accesible no repetido visualmente, o título general con legend específico visible; registrar alternativa elegida.
   - Aceptar: pregunta visible una sola vez en la jerarquía aprobada, controles etiquetados, sin selección de dueño por defecto.
   - Comprobar: headings/fieldset/legend en HTML servido, lector/teclado y elección requerida por servidor; warning sigue coherente con 36.18.
@@ -252,49 +258,136 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: conservar elección WhatsApp/teléfono/correo, sin conversión histórica ni migración de esquema/datos propuesta; mantener destinos por canal y autenticación intacta.
   - Comprobar: lectura de lectores/escritores y coherencia documental; no afirmar pruebas funcionales ejecutadas. Decisiones, formatos y límites en `fase-36-contacto-compatible.md`.
 
-- [ ] **36.14 — Validar teléfono/WhatsApp conservando tres canales.** Después de 36.13; implementación diferida.
+- [x] **36.14 — Validar teléfono/WhatsApp conservando tres canales.** Después de 36.13; implementación diferida.
+  - Conciliada 2026-10-23: integrada por #411 (`855861a`).
   - Trabajo: parser/validación puros con política de país centralizada; sólo Venezuela activa, ampliable sin framework genérico. Teléfono admite móvil/fijo; WhatsApp no requiere comprobar cuenta.
   - Aceptar: formatos aprobados en 36.13, canonización internacional antes de persistir nuevos valores y destinos sin inferir país nuevamente; conservar correo y legado sin conversión silenciosa.
   - Comprobar: HTML servido y POST nativo, equivalencias y rechazos aprobados, persistencia y destinos `wa.me`/`tel:`/`mailto:`; preservar elección multicanal, edición/import/defaults y autenticación. TDD y mutación al implementar, no en este corte documental.
 
 ### E — Fotos y revisar
 
-- [ ] **36.15 — Miniaturas persistentes al volver.** Después de 36.1.
+- [x] **36.15 — Miniaturas persistentes al volver.** Después de 36.1.
+  - Conciliada 2026-10-23: integrada por #424 (`7621b00`) y #425 (`477e120`) con aceptación visual del fundador. Se conserva el límite: la verificación independiente de T2 no estuvo disponible.
   - Trabajo: reproducir elegir/subir/Seguir/Atrás y regreso desde revisar/recarga; contrastar borrador persistido, URL blob/presignada, expiración y objeto almacenado, sin presuponer causa.
   - Aceptar: fotos conservadas visibles en el mismo orden/portada o explicación recuperable si caducaron; no ocultar fallo con imagen ficticia.
   - Comprobar: ida/vuelta y recarga en navegador, payload persistido y URL resoluble en storage de prueba; borrador expirado y upload fallido; coordinar 18.39/18.40, no declararlas cerradas por esto.
 
-- [ ] **36.16 — Aprobar composición de revisar.** Después de 36.1; gate G2.
+- [x] **36.16 — Aprobar composición de revisar.** Después de 36.1; gate G2.
+  - Conciliada 2026-10-23: integrada por #426 (`da1fb0e`).
   - Trabajo: preparar lámina derivada del sistema para móvil, tablet y desktop; móvil sitúa `Cambiar` junto al título de sección, tablet puede mantenerlo a la derecha.
   - Aceptar: aprobación explícita con ruta/versionado de lámina, texto largo, fotos/contacto y warning; no hay autorización de dibujar boards en esta entrega documental.
   - Comprobar: política 390×844/768×1024/1440×900 más 440×956, contenedor centrado y uso de tokens; coordinar F34 sin absorber auditoría global.
 
-- [ ] **36.17 — Implementar revisar según lámina aprobada.** Después de 36.16.
+- [x] **36.17 — Implementar revisar según lámina aprobada.** Después de 36.16.
+  - Conciliada 2026-10-23: integrada por #428 (`081cfc9`).
   - Trabajo: adaptar composición, no reescribir reglas de navegación/guardado existentes; conservar vínculos a cada paso y contexto de regreso.
   - Aceptar: cuerpo legible sin columnas apretadas/solapes; `Cambiar` en posición aprobada y mensaje de cambio visible.
   - Comprobar: geometría real de cuatro medidas, descripción/zona largas; HTML y navegación sin JS, guardar vuelve a revisar conservando pasos posteriores y descartar no escribe (18.8/18.18).
 
-- [ ] **36.18 — Warning veraz y gate de cambio inverso.** Después de 36.1; G5; coordinar 36.12/36.17/F35.
+- [x] **36.18 — Warning veraz y gate de cambio inverso.** Después de 36.1; G5; coordinar 36.12/36.17/F35.
   - Trabajo: contrastar warning de revisar con regla 18.38; corregir afirmación de inmutabilidad absoluta, sin retirar prohibición inmobiliaria → dueño.
   - Aceptar: copy explica dueño → inmobiliaria y su irreversibilidad; respuesta explícita del fundador sobre sentido inverso. Si lo abre, documentar nueva razón y unidad adicional antes de modificar dominio.
   - Comprobar: HTML servido de pasos/revisar/editar coherente; casos de conservar valor, ascenso permitido y reversión rechazada; las casillas históricas de 18.38 no se desmarcan.
+  - Decisión ratificada por el fundador: «Sí, mantener el bloqueo — recomendado». Se conserva dueño
+    → inmobiliaria y se prohíbe la vuelta; no cambia el dominio ni se abre una unidad de
+    reversibilidad.
+  - Implementación local: `app/publicar/revisar/page.tsx` reutiliza
+    `PUBLISHER_TYPE_ONE_WAY_LEAD/STRESS`, ya consumidos por Quién publica; Editar conserva el mismo
+    aviso. `aviso-de-cambio.test.tsx`, «advierte antes de publicar que dueño a inmobiliaria se puede
+    corregir, nunca al revés», prueba texto servido, énfasis, ausencia de la promesa falsa y
+    posición anterior al botón. RED 1FAIL/7PASS → GREEN8; mutante del texto antiguo detectado
+    (1FAIL/7SKIP) y restaurado por bytes. Seis archivos enfocados, 136PASS, incluyen
+    pasos/editar/copia y conservar valor/ascenso/rechazo en dominio/aplicación.
+  - Entorno aislado: `rentoru-phase36-task-36-18`, rama `fix/fase-36-aviso-publicador`, base
+    `081cfc967ce3e98b3119f1f735d3eaffa38415b0`. Sin cambios de reglas, helpers compartidos,
+    seguridad, datos ni estilos; sin commit/push/PR. Verificación global `pnpm test:unit`
+    3646PASS/321archivos, tipos/lint/tokens PASS (8 warnings/2 infos previos). Inspección real: tres
+    probes fallidos (`28P01`, el primero sin código registrado); diagnóstico inicial de
+    contraseña/forma de respuesta supersedido por el rol local incorrecto: el contenedor declara
+    `f3617`, no `postgres`. Tras autorización explícita de credencial sintética solo en memoria y
+    corrección del rol, SQL confirma `default_transaction_read_only=on` y Revisar responde HTTP200
+    con el aviso nuevo, usando la sesión existente sin renovarla ni escribir. Navegador79 exit1: los
+    cuatro tamaños sin JS pasan; a390 con JS pasan texto/énfasis/posición/overflow, pero falla el
+    contador de intentos POST (1 frente a0), bloqueado por el arnés antes de enviarse. El diagnóstico
+    posterior autorizado (solo método/origen/ruta) identificó `/__nextjs_original-stack-frames`;
+    `next/dist/next-devtools/shared/stack-frame.js:81–83` confirma el POST de Next DevTools, no una
+    acción de publicación. Se corrigió esa clasificación demasiado amplia sin permitir envíos:
+    navegador80 exit0, cuatro tamaños con JS PASS, cero intentos de escritura del producto y todos
+    los POST bloqueados, incluidos los de DevTools. Se conservan los cuatro tamaños sin JS PASS
+    del79 y su fallo original; no se presenta79 como exitoso ni se afirma causa del error de consola.
+    Fotos fuera de alcance: sus bytes RAM se descartaron previamente con autorización y los probes
+    respondieron404; no se acredita storage/fotos.
+  - Parada expresa: «listo luego lo veo. cerremos ya esto.» La revisión posterior cuestionó la
+    claridad y el motivo del bloqueo inverso, pero no autorizó cambiarlo ni aceptó visualmente el
+    aviso. Se conserva el cambio local y las pruebas; faltan esa revisión humana y la evaluación
+    nativa al retomar, sin commit/push/PR/CI/integración nuevos. Ventana81/app76/proxy78 propios
+    detenidos tras identificar recursos; sin app servida. Datos, caché privada y worktree conservados.
+    Cierre operativo por pausa, no aceptación ni cierre de36.18; no reabre36.16/36.17.
+  - Aceptación posterior: «ya probe todo bien cierra los dos chrome test que abriste», tras reabrir
+    el visor autenticado84 a petición humana. Página sin cambios, SHA256 `f37617135726e76036eff55c4849c8a895cc37eb53884968729dc174d1b2afac`.
+    Se acepta el aviso observado, no se acredita CRUD/fotos ni se autoriza cambiar la regla inversa.
+    Los dos Chrome quedaron huérfanos al detener los jobs e ignoraron SIGTERM; cierre forzado solo de
+    sus perfiles de pruebas y comprobación independiente sin procesos restantes. App/proxy82/83 y
+    datos conservados: el pedido final fue cerrar navegadores. Implementación local verificada y
+    aceptada, sin commit/push/PR/CI/integración al registrar esa aceptación; ASSESS104líneas medium,
+    reviewDuefalse/under_budget, self-verification vigente, sin verificador separado ni aprobación nativa.
+  - Entrega autorizada después: «bueno hagamos commit y push». Se publica solo el cambio aprobado;
+    la pregunta sobre advertencia pegada a botones no autoriza modificar CSS. Ese espaciado no es
+    parte de36.18 ni hay una tarea F36 pendiente específica; no se reabre36.17 automáticamente.
+    Base remota revalidada en `081cfc9`, sin diferencias nuevas. Este registro es precommit/push,
+    no acredita publicación; sin autorización para crear PR ni realizar merge.
+  - Evidencia Git: implementación, prueba y decisiones en `6b4753bc5e37eab619197b8b0e92b780b547fb27`.
+    Registro de cierre previo al push autorizado; publicación remota aún no observada al escribirlo.
+  - Publicado [PR #429](https://github.com/gianelo/rentoru/pull/429) hacia `dev`, abierto y no borrador.
+    Registro en el mismo PR antes del merge; CI final no observada al escribirlo, sin integración.
 
 ### F — Fallo final y atributos
 
-- [ ] **36.19 — Diagnosticar digest 901444967 sin mutar producción.** Después de 36.1; G6 para cualquier lectura productiva.
-  - Trabajo: correlacionar fecha/build/digest y logs redactados si se autoriza; distinguir dedup, propiedad/reutilización de fotos ocultas, storage, persistencia y sesión automatizada.
+- [x] **36.19 — Diagnosticar digest 901444967 sin mutar producción.** Cierre local: no se pudo reproducir; causa no confirmada, no corregida.
+  - Trabajo previsto: correlacionar fecha/build/digest y logs redactados si se autoriza; distinguir dedup, propiedad/reutilización de fotos ocultas, storage, persistencia y sesión automatizada.
   - Aceptar: informe con causa sustentada o hipótesis aún abiertas y límites de acceso; reproducción mínima con datos propios en prueba cuando sea posible.
-  - Comprobar: mismo publicador/otro publicador y fotos nuevas/reutilizadas; no concluir dedup por screenshot. Sin autorización de producción, continuar local y dejar explícito lo no consultado.
+  - Comprobación prevista: mismo publicador/otro publicador y fotos nuevas/reutilizadas; no concluir dedup por screenshot. Sin autorización de producción, continuar local y dejar explícito lo no consultado.
+  - Disposición del fundador: «No. lo que vamos ahcer es lo dejamos asi como que no se pudo replicar. y vamos con la otra tarea recuerda correr el skill de cerrar la tarea».
+  - Evidencia local en base `58365cb`: `publish-listing.test.ts` y `process-uploaded-photo.test.ts`
+    (`src/modules/listing-publication/application/`), comando enfocado `pnpm test:unit` con ambos
+    archivos: 62 PASS, 205 ms. Caracterizan rechazos y fallos antes/después del guardado con dobles;
+    no reproducen el incidente ni acreditan SQL/Auth.js/R2/HTML reales o la matriz completa con ocultos.
+  - La primera ejecución usó por error el checkout principal antiguo; sus 62 PASS no son evidencia
+    de esta base. La ejecución válida posterior se hizo en el sibling36.19 con HEAD comprobado.
+  - Producción, con G6 autorizado: autenticación disponible y alias actual del 08/10/2026; no es
+    el build del reporte del 02/10. Dos consultas históricas acotadas fallaron sin diagnóstico
+    técnico utilizable tras el filtrado; no prueban ausencia de logs, retención ni causa del digest.
+    Se detiene la investigación por decisión humana, sin mutación productiva ni corrección.
+  - Cierre pasivo en `test/fase-36-diagnostico-digest`: código intacto, sin app servida ni nueva
+    CI/aceptación visual. No se fabricó RED/mutación para documentación; al registrar ese checkpoint,
+    el cierre estaba sin commit, push, PR ni integración. Comprobación documental: diff sin whitespace y lectura cruzada de registros.
 
-- [ ] **36.20 — Corregir causa confirmada y proteger reintento.** Después de 36.19 con causa y alcance aprobados.
+- [x] **36.20 — Corregir causa confirmada y proteger reintento.** Después de 36.19 con causa y alcance aprobados.
+  - En espera:36.19 cerró sin causa confirmada; no se inicia una corrección a ciegas ni se cierran 18.39/18.40.
+  - Cerrada 2026-10-23 por decisión del fundador, sin corrección: «tambien cerramos la 36.20 que es la de la prueba de publicacion que hasta ahora paso». Prueba manual del fundador en dev.rentoru.com: publicación normal sin fallo. No reproduce el digest `901444967` ni prueba la variante con fotos de avisos ocultos; causa sin confirmar y 18.39/18.40 no se cierran por esto. Si el fallo reaparece, guardar hora y digest y leer los logs de Vercel ese mismo día (retención limitada).
   - Trabajo: construir regresión focal antes del cambio; si coincide con 18.40, enlazar una sola unidad y preservar atomicidad ya probada de 18.39.
   - Aceptar: publicación válida alcanza estado activo una sola vez; fallo explica acción recuperable y no anuncia fracaso tras guardar con éxito; no debilita exclusión entre publicadores.
   - Comprobar: falla antes/después de persistir, reintento y original/derivadas en entorno aislado; aviso y fotos en HTML servido, hash/dedup del mismo/otro publicador. No aplicar limpieza/migración productiva por este plan.
 
-- [ ] **36.21 — Elegir control de No tiene ninguna.** Después de 36.1; gate G7.
+- [x] **36.21 — Elegir control de No tiene ninguna.** Verificado y aceptado; publicado en PR[#430](https://github.com/gianelo/rentoru/pull/430) hacia dev, sin integración humana todavía.
   - Trabajo: presentar botón secundario vs checkbox explícito, jerarquía con Seguir/Atrás y exclusión respecto de atributos seleccionados; elegir al iniciar, no ahora.
   - Aceptar: elección aprobada conserva `featuresDeclared`: declarar ninguna es respuesta, casillas vacías sin declaración siguen sin contestar; no anidar formularios.
+  - G7 resuelto al iniciar: fundador eligió «Botón secundario — recomendado». Se conserva POST propio nativo y se agrupa con Seguir/Atrás; el rol CSS que permite filas sólo alcanza Atributos, sin modificar reglas compartidas.
+  - Evidencia local: `atributos-y-zona.test.tsx` («comparte las acciones…» y «es un POST propio…»), RED/GREEN, cuatro mutantes y 67 regresiones; 3647 unitarias, tipos/lint/tokens PASS. Chromium real:16 composiciones y POST nativo/mejorado; Some/None/alternancia/Atrás/Revisar Ninguno observados.
+  - Aceptación humana explícita de ambas pestañas servidas en3005: «Sí, acepto esta versión», hashes renderer6ca025e…/CSS7e550180…. Después, por orden humana y skill de cierre, jobs120/121 detenidos y Chrome133 cerrado; ps/lsof sin perfiles21 ni listeners3005/55448. DB/datos conservados; ahora sin app servida. Unidades `055f6f7`/`cdbe1f7` publicadas en PR430 a dev (HEAD inicial remoto verificado); estado final en el mismo PR. Resultado remoto de CI aún no observado al registrar, sin merge ni bytes de fotos verificados. Seguimiento: `odd/tasks/fase-36-atributos-ninguna.md`.
   - Comprobar: servidor y HTML servido para ninguna, alguna, sin responder y alternancia; POST sin JS, regreso/revisar «Ninguno», blancos accesibles y geometría equilibrada.
+
+- [x] **36.23 — Avisos pegados a su formulario.** Reporte del fundador con captura (2026-10-23): «sale pegado a las opciones de abajo al momento de publicar. entocnes es darle ese peque∫ño espacio». Segundo reporte: «Este tambien tieneotro problema igual este al finalizar o ver el resumen de la publicacion» (advertencia de dueño a inmobiliaria en revisar).
+  - Trabajo: separar ambas advertencias del formulario que las sigue con un rol compartido, sin cambiar `.warning` (Quién publica y Editar ya quedan separados por el `gap` de su formulario).
+  - Aceptar: 16 px entre aviso y formulario en ambas pantallas, como `.notice`; los demás avisos sin cambio.
+  - Comprobar: HTML servido + regla CSS en `paso-servido.test.tsx`, mutación, suite/tipos/lint/tokens y aceptación del fundador en navegador.
+  - Aceptación del fundador en navegador (2026-10-23, `127.0.0.1:3007`, `/publicar/paso/tipo` y `/publicar/revisar`): «si las dos ventanas que abriste ya esta arreglado lo de los avisos tanto el de abajo como el el de arriba ya tienen el espacion». Sin commit, push ni integración al registrar.
+
+- [x] **36.24 — Loader detenido con movimiento reducido.** Reporte del fundador (2026-10-23): «supuestamente s un spinner loader pero no da vuelta el circulo de la R». Decisión: «vamos hacer tu recomendacion» (pulso de opacidad). Corrección: «no es mejor en este caso el pulso sea entero no solo un la barita azul».
+  - Trabajo: bajo `prefers-reduced-motion: reduce`, anillo completo sin giro y pulso de opacidad de toda la marca, en el componente global.
+  - Aceptar: con movimiento reducido la marca entera pulsa sin desplazarse ni girar; sin esa preferencia sigue girando.
+  - Comprobar: regla CSS y HTML servido en `LoadingOverlay.test.tsx`, mutación, suite/tipos/lint/tokens y aceptación del fundador.
+  - Aceptación del fundador en Chromium con movimiento reducido (2026-10-23): «exacto asi pero esteo es con movimeinto reducido supongo que quedara el otro que teniamos verdad?»; el giro sin esa preferencia queda igual, medido en Chromium. Sin commit, push ni integración al registrar.
 
 - [ ] **36.22 — Aceptación integrada de fase, no cierre automático.** Después de todas las unidades aplicables y gates resueltos.
   - Trabajo: repetir recorrido nueve pasos con correcciones integradas, actualizar matriz de 21 comentarios y checks transversales realmente observados.

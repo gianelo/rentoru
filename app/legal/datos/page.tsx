@@ -24,9 +24,9 @@ export default function DatosPage() {
       <DraftNotice />
 
       <p className={styles.text}>
-        Este texto detalla, dato por dato, qué guardamos sobre vos y para qué.{" "}
+        Este texto detalla, dato por dato, qué guardamos sobre ti y para qué.{" "}
         <AppLink href="/legal/privacidad">Política de privacidad</AppLink> explica el marco general;
-        acá está el inventario.
+        aquí está el inventario.
       </p>
 
       <h2 className={styles.heading}>Datos que procesamos</h2>
@@ -36,7 +36,7 @@ export default function DatosPage() {
           enviamos el enlace de entrada. Sirve para identificar tu cuenta.
         </li>
         <li className={styles.item}>
-          <strong>Método y valor de contacto</strong> — el que elegís mostrar al publicar. Sirve
+          <strong>Método y valor de contacto</strong> — el que eliges mostrar al publicar. Sirve
           para que quien vea tu aviso pueda escribirte.
         </li>
         <li className={styles.item}>
@@ -56,8 +56,8 @@ export default function DatosPage() {
       <h2 className={styles.heading}>Lo que no hacemos, y a quién escribirle</h2>
       <p className={styles.text}>
         Igual que en la política general: no vendemos tus datos, no armamos perfiles publicitarios
-        con ellos y no compartimos tu contacto con nadie fuera de quien vos elegís que lo vea. Para
-        cualquier pregunta sobre este tratamiento, escribí a{" "}
+        con ellos y no compartimos tu contacto con nadie fuera de quien tú eliges que lo vea. Para
+        cualquier pregunta sobre este tratamiento, escribe a{" "}
         <AppLink href="mailto:hola@rentoru.com">hola@rentoru.com</AppLink>.
       </p>
     </article>

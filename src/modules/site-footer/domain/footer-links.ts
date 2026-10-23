@@ -63,7 +63,7 @@ export const FOOTER_LINK_CATALOGUE: readonly FooterLinkDefinition[] = [
   // footer). This page EXPLAINS instead of executing.
   { label: "Cómo reportar un aviso", category: "ayuda", href: "/ayuda/como-reportar-un-aviso" },
   // tasks.md 23.7 — a Resend form, not a `mailto:`.
-  { label: "Escribinos", category: "ayuda", href: "/ayuda/escribinos" },
+  { label: "Escríbenos", category: "ayuda", href: "/ayuda/escribinos" },
   // tasks.md 23.5 — shipped as drafts, not yet ratified (see each page's
   // own "Borrador en revisión" notice).
   { label: "Términos y condiciones", category: "legal", href: "/legal/terminos" },

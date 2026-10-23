@@ -63,7 +63,7 @@ async function enviar(archivo: File, accion: "revisar" | "crear"): Promise<Resul
       estado: "rechazado",
       motivo: datos.error,
       mensaje:
-        "Tu sesión ya no permite importar. Volvé a entrar y probá de nuevo desde «Mis avisos».",
+        "Tu sesión ya no permite importar. Vuelve a entrar y prueba de nuevo desde «Mis avisos».",
     };
   }
   return datos;
@@ -85,7 +85,7 @@ export function ImportarCartera() {
       setResultado({
         estado: "rechazado",
         motivo: "red",
-        mensaje: "No pudimos subir el archivo. Revisá la conexión y probá de nuevo.",
+        mensaje: "No pudimos subir el archivo. Revisa la conexión y prueba de nuevo.",
       });
     } finally {
       setEnviando(false);
@@ -104,21 +104,21 @@ export function ImportarCartera() {
     <div className={styles.flujo}>
       <section className={styles.paso}>
         <p className={styles.pasoNumero}>Paso 1</p>
-        <h2 className={styles.tituloSeccion}>Bajá la plantilla</h2>
+        <h2 className={styles.tituloSeccion}>Descarga la plantilla</h2>
         <p className={styles.explicacion}>
           Trae las {REQUIRED_IMPORT_COLUMNS.length} columnas obligatorias con los nombres exactos y
-          una fila de ejemplo. Pegá tus datos debajo y guardá como CSV.
+          una fila de ejemplo. Pega tus datos debajo y guarda como CSV.
         </p>
         {/* Un enlace, no un botón: es lo único de esta pantalla que tiene que
             seguir funcionando con el script apagado. */}
         <AppLink className={styles.bajarPlantilla} href="/importar/plantilla">
-          Bajar plantilla CSV
+          Descargar plantilla CSV
         </AppLink>
       </section>
 
       <section className={styles.paso}>
         <p className={styles.pasoNumero}>Paso 2</p>
-        <h2 className={styles.tituloSeccion}>Subí tu archivo</h2>
+        <h2 className={styles.tituloSeccion}>Sube tu archivo</h2>
 
         <label className={styles.etiquetaArchivo} htmlFor={campoId}>
           Elegir archivo
@@ -154,7 +154,7 @@ export function ImportarCartera() {
         <noscript>
           <p className={styles.sinScript}>
             Esta pantalla necesita JavaScript para leer el archivo en tu computadora antes de
-            subirlo. Activalo y recargá; la plantilla de arriba se baja igual sin él.
+            subirlo. Actívalo y recarga; la plantilla de arriba se descarga igual sin él.
           </p>
         </noscript>
 

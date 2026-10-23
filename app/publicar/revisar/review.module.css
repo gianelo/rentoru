@@ -1,0 +1,134 @@
+/* Revisar v1: composición propia; no cambia el riel de los nueve pasos. */
+.review {
+  max-inline-size: 1100px;
+  margin-inline: auto;
+  padding: 24px 16px 48px;
+}
+.reviewBody {
+  min-inline-size: 0;
+}
+.title {
+  margin: 0 0 24px;
+  font-family: var(--disp);
+  font-size: var(--title-fs);
+  font-weight: var(--title-fw);
+  line-height: var(--title-lh);
+}
+.list {
+  margin: 0;
+}
+.row {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+  padding-block: 16px;
+  border-block-start: 1px solid var(--line);
+}
+.term {
+  font-family: var(--meta);
+  font-size: var(--meta-fs);
+  font-weight: var(--meta-fw);
+  color: var(--soft);
+}
+.value {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+  font-size: var(--ficha-body-fs);
+  line-height: var(--ficha-body-lh);
+}
+.value[data-step="descripcion"] {
+  max-inline-size: 520px;
+}
+.change {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-inline-size: var(--target-min);
+  min-block-size: var(--target-min);
+  color: var(--accent);
+  font-size: var(--control-fs);
+}
+.shell a:focus-visible,
+.shell button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.photos figure {
+  margin: 0;
+}
+.photos img {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: var(--card-photo-ratio);
+  object-fit: cover;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.photos figcaption {
+  padding-block-start: 8px;
+  color: var(--soft);
+  font-size: var(--meta-fs);
+}
+.photos span {
+  display: block;
+}
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 768px) {
+  .review {
+    padding-inline: 24px;
+  }
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .change {
+    justify-self: end;
+  }
+  .value {
+    font-size: var(--ficha-body-fs-desktop);
+    line-height: var(--ficha-body-lh-desktop);
+  }
+  .photos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+@media (min-width: 1100px) {
+  .row {
+    grid-template-columns: 160px minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 24px;
+  }
+  .term {
+    padding-block-start: 12px;
+  }
+  .change {
+    grid-column: 3;
+  }
+  .value {
+    grid-column: 2;
+    grid-row: 1;
+    padding-block-start: 8px;
+  }
+}

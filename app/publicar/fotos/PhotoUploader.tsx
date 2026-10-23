@@ -61,6 +61,7 @@ interface Photo {
   key?: string;
   error?: string;
   preview?: string;
+  previewFailed?: boolean;
   blob?: Blob;
 }
 
@@ -141,15 +142,7 @@ function refusalFor(file: File): string {
   return "✱ No pudimos leer esta foto";
 }
 
-/**
- * Las fotos que el borrador ya traía, cuando alguien vuelve al paso 8.
- *
- * **Sin miniatura, y no es un descuido.** La vista previa era un `blob:` que
- * apuntaba a memoria de la pestaña anterior: al volver ya no existe, y la
- * única forma de recuperarla sería volver a bajar de R2 la foto que ya está
- * subida — datos móviles gastados en mirar algo que ya se decidió. La fila
- * lleva el nombre y el tamaño, que es lo que hace falta para reconocerla.
- */
+/** Fotos retenidas: la miniatura se recupera mediante la sesión, no con una URL pública. */
 export interface UploadedPhoto {
   readonly key: string;
   readonly name: string;
@@ -159,7 +152,7 @@ export interface UploadedPhoto {
 export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPhoto[] }) {
   const inputId = useId();
   const [photos, setPhotos] = useState<Photo[]>(() =>
-    initial.map((photo) => ({
+    initial.map((photo, index) => ({
       id: photo.key,
       name: photo.name,
       // Ya comprimida: el original quedó en el teléfono de la sesión anterior,
@@ -169,6 +162,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       compressedBytes: photo.bytes,
       status: "ready" as PhotoStatus,
       key: photo.key,
+      preview: `/publicar/fotos/vista/${index}?foto=${encodeURIComponent(photo.key.split("/").at(-1) ?? "")}`,
     })),
   );
   const [notice, setNotice] = useState("");
@@ -198,8 +192,8 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       // should not watch six upload to learn the rest were dropped.
       setNotice(
         room === 0
-          ? `Ya tenés ${MAX_PHOTOS_PER_LISTING} fotos. Quitá alguna para agregar otra.`
-          : `Podés agregar ${room} más. Elegí las mejores.`,
+          ? `Ya tienes ${MAX_PHOTOS_PER_LISTING} fotos. Quita alguna para agregar otra.`
+          : `Puedes agregar ${room} más. Elige las mejores.`,
       );
       return;
     }
@@ -303,7 +297,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
   function discard(id: string) {
     setPhotos((current) => {
       const gone = current.find((p) => p.id === id);
-      if (gone?.preview) URL.revokeObjectURL(gone.preview);
+      if (gone?.blob && gone.preview) URL.revokeObjectURL(gone.preview);
       return current.filter((p) => p.id !== id);
     });
   }
@@ -400,14 +394,14 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
                       : `${styles.thumb} ${styles.thumbBusy}`
                 }
               >
-                {photo.preview ? (
-                  /* next/image optimises remote assets through a metered
-                     service. This src is a blob: URL for a file already on
-                     the device — nothing to fetch, resize or cache — and
-                     routing it through the optimiser would spend a paid
-                     transform on bytes that never left the phone. */
-                  // biome-ignore lint/performance/noImgElement: blob: URL, nothing to optimise
-                  <img className={styles.thumbImage} src={photo.preview} alt="" />
+                {photo.preview && !photo.previewFailed ? (
+                  // biome-ignore lint/performance/noImgElement: blob local o lectura privada sin optimizador público
+                  <img
+                    className={styles.thumbImage}
+                    src={photo.preview}
+                    alt=""
+                    onError={() => update(photo.id, { previewFailed: true })}
+                  />
                 ) : null}
                 {/* Said in words, not implied by position: a list read aloud
                     has no "first". */}
@@ -418,6 +412,19 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
 
               <div className={styles.rowBody}>
                 <div className={styles.name}>{photo.name}</div>
+                {photo.previewFailed ? (
+                  <div className={styles.rowError} role="status">
+                    No pudimos mostrar la foto. Puedes reintentar o quitarla y volver a subirla.
+                    <button
+                      type="button"
+                      className={styles.addMore}
+                      aria-label={`Reintentar miniatura: ${photo.name}`}
+                      onClick={() => update(photo.id, { previewFailed: false })}
+                    >
+                      Reintentar miniatura
+                    </button>
+                  </div>
+                ) : null}
 
                 {photo.status === "failed" ? (
                   <div className={styles.rowError}>{photo.error}</div>
@@ -474,7 +481,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       ) : null}
 
       <p className={styles.hint}>
-        Las comprimimos acá antes de subirlas, así gastás menos datos. {PHOTO_COVER_EXPLANATION}.
+        Las comprimimos aquí antes de subirlas, así gastas menos datos. {PHOTO_COVER_EXPLANATION}.
       </p>
 
       <div className={styles.trust}>

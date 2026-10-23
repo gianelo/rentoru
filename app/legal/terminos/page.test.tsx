@@ -60,4 +60,13 @@ describe("TerminosPage", () => {
   it("is indexable — the page carries no noindex directive", () => {
     expect(metadata.robots).toBeUndefined();
   });
+
+  it("F35.9: addresses the reader in neutral tuteo, not voseo", () => {
+    const markup = renderToStaticMarkup(<TerminosPage />);
+
+    expect(markup).toContain(
+      "</a>. Visita la propiedad y verifica quién es el dueño antes de entregar dinero.</p>",
+    );
+    expect(markup).not.toContain("Visitá la propiedad y verificá quién es el dueño");
+  });
 });

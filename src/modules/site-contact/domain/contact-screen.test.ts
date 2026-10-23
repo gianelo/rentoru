@@ -28,7 +28,7 @@ describe("missing-zone contact context", () => {
       returnLabel: "Volver al borrador guardado",
     });
     expect(context?.guidance).toBe(
-      "Contanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.",
+      "Cuéntanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.",
     );
     expect(resolveContactContext("zona-faltante", "revisar")).toMatchObject({
       returnMode: "revisar",
@@ -72,7 +72,7 @@ describe("contact POST outcome", () => {
   it("delivery failure has a distinct safe notice and cannot be masked by a sent flag", () => {
     expect(resolveContactScreen(undefined, undefined, "")).toEqual({
       state: "form",
-      errorNotice: "No pudimos enviar tu mensaje. Intentá de nuevo.",
+      errorNotice: "No pudimos enviar tu mensaje. Inténtalo de nuevo.",
     });
     expect(resolveContactScreen("", "", [""])).toEqual(
       resolveContactScreen(undefined, undefined, ""),
@@ -104,5 +104,21 @@ describe("resolveContactScreen", () => {
     const screen = resolveContactScreen([""], undefined);
 
     expect(screen.state).toBe("sent");
+  });
+});
+
+describe("F35.8 — neutral tuteo in contact copy", () => {
+  it("F35.8: guides the missing-zone report and both errors in neutral tuteo, not voseo", () => {
+    expect(resolveContactContext("zona-faltante", undefined)?.guidance).toBe(
+      "Cuéntanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.",
+    );
+    expect(resolveContactScreen(undefined, "")).toEqual({
+      state: "form",
+      errorNotice: "Revisa los datos e inténtalo de nuevo.",
+    });
+    expect(resolveContactScreen(undefined, undefined, "")).toEqual({
+      state: "form",
+      errorNotice: "No pudimos enviar tu mensaje. Inténtalo de nuevo.",
+    });
   });
 });

@@ -26,7 +26,7 @@ export const IMPORT_TEMPLATE_HEADER: readonly string[] = IMPORT_COLUMN_ALLOWLIST
  * accepted".
  */
 const EXAMPLE_DESCRIPTION =
-  "Inmueble amoblado, con excelente iluminacion natural, cerca de transporte publico, comercios y areas verdes. Cocina equipada y agua las 24 horas, listo para mudarse de inmediato.";
+  "Inmueble amoblado, con excelente iluminación natural, cerca de transporte público, comercios y áreas verdes. Cocina equipada y agua las 24 horas, listo para mudarse de inmediato.";
 
 /**
  * **Deliberately begins with '-', and that is the whole point.** A title

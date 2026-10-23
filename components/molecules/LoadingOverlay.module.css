@@ -71,8 +71,21 @@
   }
 }
 
+/* Reduced motion: no rotation. A still arc reads as a halted spinner, so the
+   ring becomes a full circle and the whole mark pulses its opacity, which moves nothing. */
+@keyframes pulse {
+  50% {
+    opacity: 0.4;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .mark {
+    animation: pulse calc(var(--loading-duration) * 2) ease-in-out infinite;
+  }
+
   .ring {
     animation: none;
+    border-color: var(--accent);
   }
 }

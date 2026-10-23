@@ -70,13 +70,13 @@ export function retentionNoticeFor(
     return {
       kind: "countdown",
       deadline: "Sus fotos se borran en la próxima limpieza.",
-      republish: "Renovalo ya: mientras las fotos estén, el aviso vuelve con ellas.",
+      republish: "Renuévalo ya: mientras las fotos estén, el aviso vuelve con ellas.",
     };
   }
 
   return {
     kind: "countdown",
     deadline: `Sus fotos se borran el ${longSpanishDate(purgeDueAt(expiresAt))} — ${plural(remaining)}.`,
-    republish: "Renovalo antes de esa fecha y el aviso vuelve con sus fotos.",
+    republish: "Renuévalo antes de esa fecha y el aviso vuelve con sus fotos.",
   };
 }

@@ -326,6 +326,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
 
     expect(html).toContain('name="reference"');
     expect(html).toContain('value="Frente a la panadería"');
+    expect(html).toContain("Opcional. Déjala en blanco para eliminarla.");
     expect(html).toContain('name="parkingSpots"');
     expect(html).toContain('name="propertyType"');
     // Cargado con el valor del aviso, no en blanco: un radio sin marcar haría
@@ -351,6 +352,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
     expect(campos).toMatch(/name="hasAppliances"[^>]*\/><span>Línea blanca<\/span>/);
 
     expect(campos.match(/type="checkbox"/g)).toHaveLength(5);
+    expect(campos).toContain("Marca lo que tiene. Quien busca puede filtrar por cada uno.");
   });
 
   /** **Lo declarado vuelve marcado, y lo demás vuelve DIBUJADO y sin marcar.**
@@ -502,7 +504,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
   it("una negativa sobre algo que la edición no manda se sigue diciendo", async () => {
     const html = await dibujar("photos.required");
 
-    expect(html).toContain("Subí al menos una foto");
+    expect(html).toContain("Sube al menos una foto");
     expect(html).toContain('role="alert"');
     // Y no inventa un control que esta pantalla no dibuja.
     expect(html).not.toContain('id="photos-error"');
@@ -516,7 +518,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
     const html = await dibujar("priceUsd.invalid,photos.required");
 
     expect(html.split("Solo el número, en dólares").length - 1).toBe(1);
-    expect(html).toContain("Subí al menos una foto");
+    expect(html).toContain("Sube al menos una foto");
   });
 
   /**

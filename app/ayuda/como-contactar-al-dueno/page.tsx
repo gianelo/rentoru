@@ -27,24 +27,24 @@ export default function ComoContactarPage() {
       <h1 className={styles.title}>Cómo contactar al dueño</h1>
 
       <p className={styles.text}>
-        Cada ficha muestra que el aviso tiene contacto, pero lo mantiene tapado hasta que hacés dos
+        Cada ficha muestra que el aviso tiene contacto, pero lo mantiene tapado hasta que haces dos
         cosas: entrar con tu cuenta y escribir un mensaje.
       </p>
 
-      <h2 className={styles.heading}>1. Entrás</h2>
+      <h2 className={styles.heading}>1. Entras</h2>
       <p className={styles.text}>
         Con una cuenta de Google o con un enlace que te llega por correo. No hace falta ninguna
         contraseña, y si ya habías entrado antes no te lo vuelve a pedir.
       </p>
 
-      <h2 className={styles.heading}>2. Escribís un mensaje</h2>
+      <h2 className={styles.heading}>2. Escribes un mensaje</h2>
       <p className={styles.text}>
         Antes de ver el contacto, hay que escribirle un mensaje a quien publicó. No es un trámite:
         el mensaje viaja junto con el contacto que se revela, así que quien publica recibe algo de
         verdad y no un texto genérico.
       </p>
 
-      <h2 className={styles.heading}>3. Ves el contacto y escribís por el canal que corresponda</h2>
+      <h2 className={styles.heading}>3. Ves el contacto y escribes por el canal que corresponda</h2>
       <p className={styles.text}>
         Según lo que haya dejado quien publicó, vas a poder escribirle por WhatsApp, llamarlo, o
         escribirle un correo, con tu mensaje ya cargado.
@@ -52,7 +52,7 @@ export default function ComoContactarPage() {
 
       <h2 className={styles.heading}>Antes de acordar nada</h2>
       <p className={styles.text}>
-        rentoru.com no participa en la negociación. Visitá la propiedad y verificá quién es el dueño
+        rentoru.com no participa en la negociación. Visita la propiedad y verifica quién es el dueño
         antes de entregar dinero.
       </p>
     </article>

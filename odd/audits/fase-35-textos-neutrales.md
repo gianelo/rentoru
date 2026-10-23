@@ -27,6 +27,8 @@ No se enumeran todos los literales ni se sustituye la auditoría de estados futu
 
 ### 35.4 — publicación
 
+Estado f35-a: 35.4 cerrada localmente con aceptación del fundador (versión servida `9f2fb91`), PR a `dev` sin merge. Pasos, mapa, zona, revisión, 19 negativas, aviso de una sola dirección, fotos y última foto en tuteo. Matriz SSR de nueve pasos y de 18 códigos de negativa, y DOM de fotos; suite 3709/3709. Pendiente: disposición semántica de `listo/page.tsx`. Detalle en `../tasks/fase-35-publicacion-neutra.md`, «Cierre 35.4».
+
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
 | `app/publicar/step-copy.ts:11–17`; `app/publicar/violation-copy.ts:12–34` (Records tipados) | HTML, publicador; nueve pasos, validación, revisión | `app/publicar/PublishStep.tsx`; `app/publicar/paso/[paso]/page.tsx`; `app/publicar/revisar/page.tsx` | `app/publicar/paso-servido.test.tsx:70`: «dice los caracteres escritos, en puntos de código». No cubre por sí sola nueve pasos; pendiente matriz completa |
@@ -36,34 +38,34 @@ No se enumeran todos los literales ni se sustituye la auditoría de estados futu
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `src/modules/listing-publication/domain/publisher-listing-board.ts`; `src/modules/listing-lifecycle/domain/retention-notice.ts` | HTML, publicador; activo, vencido, sin fotos, retención | `app/mis-avisos/page.tsx`; `app/mis-avisos/SubirFoto.tsx` | `app/mis-avisos/mis-avisos-contract.test.tsx:302`: «un aviso vencido sin fotos sirve la otra promesa, y no la del conteo». Pendiente estados y carga dinámica |
-| Catálogos step/violation; `app/renovar/[token]/route.ts:68–123`; `app/importar/import-copy.ts` | HTML, publicador; editar, activar, renovar y token inválido | `app/mis-avisos/[id]/editar/page.tsx`; `app/renovar/[token]/route.ts`; `app/mis-avisos/actions.ts` | `app/mis-avisos/[id]/editar/editar-servido.test.tsx:417`: «traduce los códigos que vuelven en la URL al castellano de publicar». Renovación/activación pendiente; conservar plazos |
+| `src/modules/listing-publication/domain/publisher-listing-board.ts`; `src/modules/listing-lifecycle/domain/retention-notice.ts` | HTML, publicador; activo, vencido, sin fotos, retención | `app/mis-avisos/page.tsx`; `app/mis-avisos/SubirFoto.tsx` | **35.5 verificada localmente:** vacío, retención (conteo, limpieza atrasada, purgada), éxito/error cliente de `SubirFoto` y noscript neutros; «F35.5: con limpieza atrasada sirve la promesa neutra sin inventar fecha» y «sirve el estado cliente neutro, éxito=%s». Plazos intactos. Negativa de activación `externalReference.required` pertenece a 35.6. Detalle en [gestión del publicador](../tasks/fase-35-gestion-publicador-neutra.md) |
+| Catálogos step/violation; `app/renovar/[token]/route.ts:68–123`; `app/importar/import-copy.ts` | HTML, publicador; editar, activar, renovar y token inválido | `app/mis-avisos/[id]/editar/page.tsx`; `app/renovar/[token]/route.ts`; `app/mis-avisos/actions.ts` | `app/mis-avisos/[id]/editar/editar-servido.test.tsx:417`: «traduce los códigos que vuelven en la URL al castellano de publicar». **35.5:** ayudas propias de editar y renovación GET/POST neutras, «%s conserva negativa y sirve tuteo»; estados HTTP, escape y fecha UTC conservados. `PUBLISHER_TYPE_ONE_WAY_*` y `lastPhoto` pertenecen a 35.4 (f35-a) |
 
 ### 35.6 — importación
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `app/importar/import-copy.ts`; `src/modules/broker-bulk-import/domain/resolve-import-locations.ts` | Cliente/HTML, inmobiliaria; filas válidas, errores y resumen | `app/api/bulk-import/route.ts`; `app/importar/ImportarCartera.tsx`; `app/importar/VistaPrevia.tsx` | `app/importar/importar-contract.test.tsx:104`: «cuenta las dos mitades y nombra cada fila con problema y su razón». Pendiente fetch/confirmación; excluir columnas CSV, códigos y valores del usuario |
+| `app/importar/import-copy.ts`; `src/modules/broker-bulk-import/domain/resolve-import-locations.ts` | Cliente/HTML, inmobiliaria; filas válidas, errores y resumen | `app/api/bulk-import/route.ts`; `app/importar/ImportarCartera.tsx`; `app/importar/VistaPrevia.tsx` | `app/importar/importar-contract.test.tsx:104`: «cuenta las dos mitades y nombra cada fila con problema y su razón». **35.6 cerrada localmente:** tuteo en carga, vista previa, rechazos (cinco excepciones traducidas), resolución de zona, plantilla y razón compartida «reconoces»; cliente real «F35.6: revisa filas mixtas con razón real, confirma y conserva resumen y duplicados». Columnas CSV, códigos y valores del usuario intactos; evidencia en [importación](../tasks/fase-35-importacion-neutra.md) |
 
 ### 35.7 — ficha, confianza y contacto
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `src/modules/listing-trust/domain/report-reason.ts`; `src/modules/listing-trust/domain/report-screen.ts`; `src/modules/contact-reveal/domain/reveal-message.ts` | HTML, inquilino; bloqueo, reporte y feedback | `app/alquiler/[ciudad]/[zona]/[slug]/page.tsx`; `components/molecules/ContactBlock.tsx` | `app/alquiler/[ciudad]/[zona]/[slug]/ficha-servida.test.tsx`: salida servida existente; pendiente seleccionar/ampliar casos afectados |
-| `src/modules/contact-reveal/domain/revealable-contact.ts:237–249`; `components/molecules/ContactBlock.tsx:113` | WhatsApp/cliente, inquilino→publicador; plantilla o mensaje escrito | `components/molecules/ContactBlock.tsx`; `components/client/CopyContact.tsx` | `components/molecules/ContactBlock.test.tsx:297`: «lleva el mensaje que escribió el inquilino, no la plantilla». Conservar texto usuario; pendiente decodificar enlace final y portapapeles |
-| `app/alquiler/[ciudad]/[zona]/[slug]/foto/[n]/page.tsx`; `app/alquiler/[ciudad]/[zona]/[slug]/foto/[n]/PhotoViewerKeys.tsx` | HTML/cliente, visitante; visor, navegación y nombres accesibles | Ruta foto y mejora por teclado | Pendiente prueba de salida afectada y Chromium; conservar enlaces nativos, no rediseñar visor |
+| `src/modules/listing-trust/domain/report-reason.ts`; `src/modules/listing-trust/domain/report-screen.ts`; `src/modules/contact-reveal/domain/reveal-message.ts` | HTML, inquilino; bloqueo, reporte y feedback | `app/alquiler/[ciudad]/[zona]/[slug]/page.tsx`; `components/molecules/ContactBlock.tsx` | **35.7 cerrada**: ayuda/advertencia/error de contacto e introducción/selector/error de reporte neutralizados. `ficha-servida.test.tsx` («F35.7: serves neutral safety advice with session=%s»), `reportar/reportar.test.ts` y `reportar-aviso.spec.ts` Chromium/crawlability 10/10; seis mutaciones restauradas. Detalle en [ficha y contacto](../tasks/fase-35-ficha-contacto-neutro.md) |
+| `src/modules/contact-reveal/domain/revealable-contact.ts:237–249`; `components/molecules/ContactBlock.tsx:113` | WhatsApp/cliente, inquilino→publicador; plantilla o mensaje escrito | `components/molecules/ContactBlock.tsx`; `components/client/CopyContact.tsx` | **35.7**: plantilla ya neutra, conservada. «F35.7: decodes the generated WhatsApp fallback without changing or exposing the title» decodifica el `wa.me` servido; navegador real JS/sin JS decodifica el mensaje del usuario (voseo, espacios, HTML, emoji) idéntico y verifica «Copiado» y portapapeles con JS |
+| `app/alquiler/[ciudad]/[zona]/[slug]/foto/[n]/page.tsx`; `app/alquiler/[ciudad]/[zona]/[slug]/foto/[n]/PhotoViewerKeys.tsx` | HTML/cliente, visitante; visor, navegación y nombres accesibles | **35.7**: copia ya neutra («Foto anterior/siguiente», «Foto N de T», «Cerrar el visor y volver al aviso»), sin cambios; cubierta por `PhotoStripNavigation.test.tsx` y `ficha-diagnostico.spec.ts` existentes |
 
 ### 35.8 — ayuda y contacto del sitio
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `app/ayuda/`; `src/modules/site-contact/domain/contact-screen.ts` | HTML, visitante; cinco páginas, formulario, error y acuse | `app/ayuda/escribinos/page.tsx` y artículos | `app/ayuda/escribinos/page.test.tsx:75`: «dibuja el acuse y ningún formulario cuando llega `?enviado`». Pendiente revisar artículos/errores; conservar ruta escribinos |
+| `app/ayuda/`; `src/modules/site-contact/domain/contact-screen.ts` | HTML, visitante; cinco páginas, formulario, error y acuse | `app/ayuda/escribinos/page.tsx` y artículos | `app/ayuda/escribinos/page.test.tsx:75`: «dibuja el acuse y ningún formulario cuando llega `?enviado`». **35.8**: artículos, errores, acuse y etiqueta «Escríbenos» neutralizados; ruta escribinos conservada; correo al operador asignado a 35.10 |
 
 ### 35.9 — legales
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `app/legal/`; `app/legal/draft-notice.tsx` | HTML, visitante; cinco páginas y aviso de borrador | `app/legal/terminos/page.tsx`, privacidad, cookies, normas y datos | `app/legal/terminos/page.test.tsx:12`: «carries the unratified-draft notice». Sólo estilo; cotejo de significado pendiente. `DraftNotice` y ratificación pertenecen a F33 |
+| `app/legal/`; `app/legal/draft-notice.tsx` | HTML, visitante; cinco páginas y aviso de borrador | `app/legal/terminos/page.tsx`, privacidad, cookies, normas y datos | `app/legal/terminos/page.test.tsx:12`: «carries the unratified-draft notice». **35.9 verificada localmente:** 17 literales de voseo en tuteo en las cinco páginas, cotejados sin cambiar significado, plazos ni obligaciones; «F35.9: addresses the reader in neutral tuteo, not voseo» por página. `DraftNotice` intacto. Seguimiento F33: «revelaste» frente a «quién vio» y la afirmación de «dos cookies». Detalle en [estilo legal](../tasks/fase-35-legales-estilo.md) |
 
 ### 35.10 — correo transaccional e interno
 

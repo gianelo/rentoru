@@ -101,11 +101,12 @@ describe("la descripción viva en el PublishStep existente", () => {
     const control = input();
     const saved = JSON.stringify(props.draft);
     control.focus();
-    expectLive("a".repeat(119), 119, "te faltan 1 caracteres", 99);
+    expectLive("a".repeat(119), 119, "te falta 1 carácter", 99);
     for (const [value, count, guide, progress, inputType] of [
       ["a".repeat(120), 120, "ya alcanza", 100, "insertText"],
       ["🏠".repeat(120), 120, "ya alcanza", 100, "insertFromPaste"],
-      ["a".repeat(119), 119, "te faltan 1 caracteres", 99, "deleteContentBackward"],
+      ["🏠".repeat(119), 119, "te falta 1 carácter", 99, "deleteContentBackward"],
+      ["a".repeat(118), 118, "te faltan 2 caracteres", 98, "deleteContentBackward"],
       ["", 0, "te faltan 120 caracteres", 0, "deleteContentBackward"],
       ["a".repeat(1201), 1201, "ya alcanza", 100, "insertFromPaste"],
     ] as const) {

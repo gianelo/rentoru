@@ -36,24 +36,24 @@ export default function ComoReportarPage() {
       <h1 className={styles.title}>Cómo reportar un aviso</h1>
 
       <p className={styles.text}>
-        Reportar es por aviso, así que no se hace desde acá: se hace desde la propia ficha del aviso
-        que querés reportar.
+        Reportar es por aviso, así que no se hace desde aquí: se hace desde la propia ficha del
+        aviso que quieres reportar.
       </p>
 
-      <h2 className={styles.heading}>1. Abrí el aviso</h2>
+      <h2 className={styles.heading}>1. Abre el aviso</h2>
       <p className={styles.text}>
-        Entrá a la ficha del aviso que te parece sospechoso o que no corresponde. Al final de la
+        Entra a la ficha del aviso que te parece sospechoso o que no corresponde. Al final de la
         ficha, junto al ID y a la fecha de vencimiento, hay un enlace:{" "}
         <strong>«Reportar este aviso»</strong>.
       </p>
 
-      <h2 className={styles.heading}>2. Entrás con tu cuenta</h2>
+      <h2 className={styles.heading}>2. Entras con tu cuenta</h2>
       <p className={styles.text}>
         Reportar pide entrar con tu cuenta, con Google o con un enlace por correo. Si no habías
         entrado, te lo pide antes de contar el reporte, y después te devuelve a esta misma pantalla.
       </p>
 
-      <h2 className={styles.heading}>3. Enviás el reporte</h2>
+      <h2 className={styles.heading}>3. Envías el reporte</h2>
       <p className={styles.text}>
         Un botón, sin escribir nada más. Cada cuenta cuenta una vez por cuenta para el mismo aviso:
         reportarlo de nuevo no suma un segundo reporte.
@@ -69,8 +69,8 @@ export default function ComoReportarPage() {
 
       <h2 className={styles.heading}>¿Tu situación no es sobre un aviso puntual?</h2>
       <p className={styles.text}>
-        Para cualquier otra cosa, escribinos desde{" "}
-        <AppLink href="/ayuda/escribinos">Escribinos</AppLink>.
+        Para cualquier otra cosa, escríbenos desde{" "}
+        <AppLink href="/ayuda/escribinos">Escríbenos</AppLink>.
       </p>
     </article>
   );

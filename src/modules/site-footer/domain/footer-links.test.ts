@@ -59,7 +59,7 @@ describe("resolveFooterLinks", () => {
         category: "ayuda",
         href: "/ayuda/como-reportar-un-aviso",
       },
-      { label: "Escribinos", category: "ayuda", href: "/ayuda/escribinos" },
+      { label: "Escríbenos", category: "ayuda", href: "/ayuda/escribinos" },
       { label: "Términos y condiciones", category: "legal", href: "/legal/terminos" },
       { label: "Política de privacidad", category: "legal", href: "/legal/privacidad" },
       { label: "Uso de cookies", category: "legal", href: "/legal/cookies" },
@@ -91,5 +91,13 @@ describe("groupResolvedFooterLinks", () => {
     expect(groups.map((group) => group.category)).toEqual(["ayuda", "legal"]);
     expect(groups[0]?.links.map((link) => link.label)).toEqual(["Preguntas frecuentes"]);
     expect(groups[1]?.links.map((link) => link.label)).toEqual(["Términos y condiciones"]);
+  });
+});
+
+describe("F35.8 — footer label", () => {
+  it("F35.8: labels the contact screen «Escríbenos» and keeps its /ayuda/escribinos destination", () => {
+    const contact = FOOTER_LINK_CATALOGUE.find((link) => link.href === "/ayuda/escribinos");
+    expect(contact?.label).toBe("Escríbenos");
+    expect(FOOTER_LINK_CATALOGUE.some((link) => link.label === "Escribinos")).toBe(false);
   });
 });

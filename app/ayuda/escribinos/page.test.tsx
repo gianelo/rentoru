@@ -65,13 +65,13 @@ describe("EscribinosPage — la pantalla del formulario", () => {
   it("no dibuja ningún aviso de error en la carga normal", async () => {
     const html = await servida();
 
-    expect(html).not.toContain("Revisá los datos");
+    expect(html).not.toContain("Revisa los datos");
   });
 
   it("orders the editorial category, heading, introduction and native form", async () => {
     const html = await servida();
-    const category = html.indexOf("Ayuda / Escribinos");
-    const title = html.indexOf(">Escribinos</h1>");
+    const category = html.indexOf("Ayuda / Escríbenos");
+    const title = html.indexOf(">Escríbenos</h1>");
     const intro = html.indexOf("No publicamos ninguna dirección");
     const form = html.indexOf("<form");
     expect(category).toBeGreaterThanOrEqual(0);
@@ -91,9 +91,9 @@ describe("EscribinosPage — el acuse, después de mandar", () => {
 
     expect(html).not.toContain("<form");
     expect(html).toContain("Recibimos tu mensaje");
-    expect(html.indexOf("Ayuda / Escribinos")).toBeLessThan(html.indexOf(">Escribinos</h1>"));
-    expect(html.indexOf(">Escribinos</h1>")).toBeLessThan(html.indexOf("Recibimos tu mensaje"));
-    expect(html).not.toContain("Revisá los datos");
+    expect(html.indexOf("Ayuda / Escríbenos")).toBeLessThan(html.indexOf(">Escríbenos</h1>"));
+    expect(html.indexOf(">Escríbenos</h1>")).toBeLessThan(html.indexOf("Recibimos tu mensaje"));
+    expect(html).not.toContain("Revisa los datos");
   });
 });
 
@@ -102,10 +102,10 @@ describe("EscribinosPage — el rechazo del servidor", () => {
     const html = await servida({ error: "" });
 
     expect(html).toContain("<form");
-    expect(html).toContain("Revisá los datos");
-    expect(html.indexOf("Ayuda / Escribinos")).toBeLessThan(html.indexOf(">Escribinos</h1>"));
-    expect(html.indexOf(">Escribinos</h1>")).toBeLessThan(html.indexOf("Revisá los datos"));
-    expect(html.indexOf("Revisá los datos")).toBeLessThan(html.indexOf("<form"));
+    expect(html).toContain("Revisa los datos");
+    expect(html.indexOf("Ayuda / Escríbenos")).toBeLessThan(html.indexOf(">Escríbenos</h1>"));
+    expect(html.indexOf(">Escríbenos</h1>")).toBeLessThan(html.indexOf("Revisa los datos"));
+    expect(html.indexOf("Revisa los datos")).toBeLessThan(html.indexOf("<form"));
     expect(html).not.toContain("Recibimos tu mensaje");
   });
 });
@@ -115,7 +115,7 @@ async function served(query: Record<string, string | string[] | undefined> = {})
 }
 
 const GUIDANCE =
-  "Contanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.";
+  "Cuéntanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.";
 
 function expectFreeForm(html: string) {
   expect(html).toContain('action="/ayuda/escribinos"');
@@ -149,7 +149,7 @@ describe("Escribinos served HTML", () => {
       "Los cambios que no hayas enviado en publicación no se guardan al abrir este formulario.",
     );
     expect(await served({ motivo: "zona-faltante", error: "" })).toContain(
-      "Revisá los datos e intentá de nuevo.",
+      "Revisa los datos e inténtalo de nuevo.",
     );
     expectFreeForm(html);
   });
@@ -170,11 +170,11 @@ describe("Escribinos served HTML", () => {
   it("preserves the general form and all existing feedback", async () => {
     const html = await served();
     expectFreeForm(html);
-    expect(html).toContain("contanos qué necesitás");
+    expect(html).toContain("cuéntanos qué necesitas");
     expect(html).not.toContain(GUIDANCE);
     expect(html).not.toContain('name="motivo"');
     expect(html).not.toContain("/publicar/paso/");
-    expect(await served({ error: "" })).toContain("Revisá los datos e intentá de nuevo.");
+    expect(await served({ error: "" })).toContain("Revisa los datos e inténtalo de nuevo.");
     const sent = await served({ enviado: "", error: "" });
     expect(sent).toContain("Recibimos tu mensaje.");
     expect(sent).not.toContain("<form");
@@ -207,6 +207,36 @@ describe("Escribinos served HTML", () => {
       expect(html).not.toContain("outside.invalid");
       expect(html).not.toContain("/publicar/paso/precio");
       expect(html).not.toContain("?volver=revisar");
+    }
+  });
+});
+
+describe("EscribinosPage — F35.8", () => {
+  it("F35.8: names the screen «Escríbenos» and speaks in neutral tuteo, keeping the /ayuda/escribinos route", async () => {
+    const form = await servida();
+
+    expect(metadata.title).toBe("Escríbenos — Rentoru");
+    expect(metadata.description).toBe(
+      "Escríbenos un mensaje desde rentoru.com y te contestamos por correo.",
+    );
+    expect(metadata.alternates?.canonical).toBe("/ayuda/escribinos");
+    expect(form).toContain(">Ayuda / Escríbenos</p>");
+    expect(form).toMatch(/<h1[^>]*>Escríbenos<\/h1>/);
+    expect(form).toContain(
+      "No publicamos ninguna dirección de correo aquí: cuéntanos qué necesitas y te escribimos\n            nosotros a la tuya.".replace(
+        /\n\s+/g,
+        " ",
+      ),
+    );
+    expect(form).toContain('<label for="sitioWeb">Deja esto vacío</label>');
+
+    const sent = await servida({ enviado: "" });
+    expect(sent).toContain("Te contestamos por correo, al mismo que dejaste aquí.");
+
+    for (const html of [form, sent]) {
+      for (const voseo of ["Escribinos", "acá", "contanos", "necesitás", "Dejá"]) {
+        expect(html).not.toContain(voseo);
+      }
     }
   });
 });

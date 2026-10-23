@@ -193,7 +193,7 @@ export function resolveImportRowLocation(
       zoneId: "",
       errorMessages: [
         `«${zoneInput}» coincide con más de un lugar en ${city.name}: ${matches}. ` +
-          `Escribí el nombre de un lugar más específico dentro de ${zoneInput} ` +
+          `Escribe el nombre de un lugar más específico dentro de ${zoneInput} ` +
           "(una parroquia, urbanización o barrio) para indicar cuál.",
       ],
     };

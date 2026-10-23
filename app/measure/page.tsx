@@ -806,7 +806,7 @@ const FOOTER_LINK_GROUPS_HARNESS: readonly FooterLinkGroup[] = [
       { label: "Cómo publicar un aviso", category: "ayuda", href: "/ayuda/como-publicar" },
       { label: "Cómo contactar al dueño", category: "ayuda", href: "/ayuda/como-contactar" },
       { label: "Reportar un aviso", category: "ayuda", href: "/ayuda/reportar" },
-      { label: "Escribinos", category: "ayuda", href: "/ayuda/escribinos" },
+      { label: "Escríbenos", category: "ayuda", href: "/ayuda/escribinos" },
     ],
   },
   {

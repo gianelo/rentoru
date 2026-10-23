@@ -20,7 +20,7 @@ export function PublicationZoneSearchControl({
   return (
     <form method="get" className={styles.search} action={action}>
       <label className={styles.srOnly} htmlFor="q">
-        Buscá tu zona
+        Busca tu zona
       </label>
       <div className={styles.searchField}>
         <input
@@ -29,7 +29,7 @@ export function PublicationZoneSearchControl({
           type="search"
           className={`${styles.control} ${loading ? styles.searchBusy : ""}`}
           defaultValue={query ?? ""}
-          placeholder="Buscá tu zona"
+          placeholder="Busca tu zona"
           onChange={onChange}
           aria-busy={loading || undefined}
         />

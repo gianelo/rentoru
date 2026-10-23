@@ -263,6 +263,19 @@ describe("jerarquía de quién publica (36.12)", () => {
   );
 });
 
+/** 35.4 — el riel recibe el resumen de `stepSummary` y concuerda en número. */
+describe("el riel resume los atributos en singular y en plural (35.4)", () => {
+  it.each([
+    [{ hasPowerPlant: true }, ">1 atributo<"],
+    [{ hasPowerPlant: true, hasSecurity: true }, ">2 atributos<"],
+  ])("con %o dice %s", async (atributos, resumen) => {
+    const base = borradorCompleto();
+    borrador = { ...base, listing: { ...base.listing, ...atributos } };
+
+    expect(await servido("quien")).toContain(resumen);
+  });
+});
+
 describe("cada paso lee su negativa al lado del control que la produjo (18.24)", () => {
   /**
    * **El par de todo lo que sigue, y por eso va primero.** Cada aserción de
@@ -301,7 +314,7 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
     const campo = conjunto(await servido("tipo"), "Tipo de propiedad");
 
     expect(campo).toContain('id="propertyType-error"');
-    antesDe(campo, "Decinos qué vas a alquilar.", 'name="propertyType"');
+    antesDe(campo, "Dinos qué vas a alquilar.", 'name="propertyType"');
     // El par: las cinco opciones se siguen dibujando. Un fieldset que sólo
     // dibujara el mensaje pasaría la aserción de orden.
     expect(campo.match(/type="radio"/g)).toHaveLength(5);
@@ -407,7 +420,7 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
 
     const html = await servido("fotos");
 
-    expect(html).toContain("Subí al menos una foto en el paso 2.");
+    expect(html).toContain("Sube al menos una foto en el paso 2.");
     antesDe(html, 'id="photos-error"', 'id="subidor-de-fotos"');
   });
 

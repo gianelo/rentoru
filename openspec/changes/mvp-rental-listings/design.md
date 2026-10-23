@@ -253,6 +253,12 @@ Probe evidence: RED4 → focused GREEN12 with the existing query-observer tests;
 
 **Crawlability is tested with scripting disabled, not asserted by inspection.** D11 makes organic search the distribution channel, and "renders without JavaScript" is the kind of property that silently breaks the first time someone reaches for a client component. If it is not executed as a test, it is not a guarantee.
 
+### Preview-provider test double
+
+`scripts/wait-for-preview.test.ts` caches synthetic provider JSON during setup and serves it through a POSIX-shell `gh` double. Starting Node on every simulated poll added process overhead despite the fake `sleep`. The production resolver, real JSON/URL validation, 40 attempts, 39 simulated sleeps and default five-second test limits remain unchanged.
+
+`serves fake deployment responses without starting Node for each poll` runs the generated provider with a Node-denying executable and checks its exit, exact JSON/stdout/stderr and absence of Node calls. RED observed exit77; an ignored-Node-call mutation also failed the marker assertion, was restored, and returned GREEN. All 23 focused tests passed, preserving the previous 22 cases and their output/counter assertions; the local full unit suite passed 3643 tests across 321 files. This does not erase earlier recorded timeouts or establish their exact scheduling cause. Initial type validation caught a missing `NODE_ENV` in the new test's subprocess environment; it was made explicit and the regression test passed again. Typecheck, lint (eight warnings and two infos in untouched files), token gate and ShellCheck of the generated shell doubles passed. An initial lint run scanned generated negative fixtures under unignored `.tmp`; those task-owned artifacts were preserved in the existing ignored `test-results` directory, without modifying guards, lint configuration or fixture contents. No application, database or browser behavior changes; build/browser acceptance are inapplicable to this test-only unit. 36.17 still needs its own remaining checks and human acceptance.
+
 ### Coverage policy
 
 No global percentage target. A repository-wide number rewards testing whatever is cheapest to cover, which is rarely what carries risk.
@@ -264,6 +270,10 @@ Instead: a **90% floor on `src/modules/*/domain/` and `src/modules/*/application
 Pull requests targeting `dev`, `staging` or `main` run lint, types, tokens, unit/coverage, integration on ephemeral PostgreSQL 18 and a production build once, without waiting for Vercel. Their fake build credentials never point at a live database. Required GitHub checks must be configured separately; workflow presence alone does not block merge.
 
 Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability and budgets. Browser suites use only the job-owned database; Lighthouse measures the matching live deployment without creating application data. The resolver binds the newest Preview deployment to the pushed SHA, accepts the expected branch or SHA as the provider's ref, requires its latest status to succeed and fails on timeout/API errors instead of substituting a stable domain or local success. Vercel may publish SHA-only refs, which do not independently attest the source branch.
+
+The push `e2e` job is a `fail-fast: false` matrix of three parallel legs, each with its own PostgreSQL 18 container, migrations and deterministic seed: `publication` (36.3), `reads` (general E2E + crawlability, then 30.2–30.4) and `auth` (30.4b2–30.7, then 29.2 pagination last because it appends rows). No leg sees another's writes, so cross-block ordering no longer rests on a shared database. The optional dev critical profile still changes only the general read step.
+
+Concurrency keeps one group per workflow and ref; a newer run cancels a stale one only for pull requests and `dev`, so a started `staging` run always finishes; GitHub keeps one pending run per group, so a queued intermediate `staging` push can be superseded while the newest one still runs. CI never deploys (Vercel migrates in `vercel-build`), so cancelling CI cannot cancel a migrating deployment. The repository is public; heavy suites stay on pushes for proportionality and speed, and F2's private-repo minutes row below no longer constrains that split.
 
 | Gate | Command | Needs |
 |---|---|---|
@@ -391,6 +401,37 @@ Two reasons, and the second is a hard product ceiling:
 **Storage.** Originals are discarded after hashing and normalization. A phone photo is 3–8 MB; six per listing is roughly 30 MB, which against R2's 10 GB free tier caps the catalog at **~330 listings**. Storing only derivatives (a card thumbnail and a ~200 KB detail image per photo) puts the same tier at **~7,000 listings** — an order of magnitude more, for free. Nothing needs the original: the dHash is computed at upload and persisted as 64 bits, and no view renders above the detail size.
 
 **The `compacto` structure (D14) shrinks the thumbnail derivative.** The row thumbnail is 44 × 34 CSS px on mobile and 64 × 48 on desktop, so one derivative at **128 × 96** covers both at 2× device pixel ratio. The earlier figure was sized for a 96 × 72 row (192 × 144 at 2×) — 2.25× the pixels. The consequence is that the search-results byte budget stops being tight and the storage ceiling moves further out. This is the clearest case of a visual choice paying for itself in the performance budget rather than costing against it, and it is the real return on `compacto` — see the density note in D14, which explains why the return does *not* show up as more listings per screen.
+
+### D12a — Lectura privada de fotos retenidas (36.15, T1; S2–S3/S7)
+
+La recuperación reutiliza `readPublicationDraft`: `store.load(publisherId, now)` excluye
+borradores vencidos y la normalización no escribe. `readDraftPhoto` recibe identidad
+confiable del futuro adaptador de sesión y un índice entero exacto del orden guardado;
+verifica la clave con `tokenFromOwnedKey` antes de `PhotoStoragePort.read`.
+Devuelve sólo bytes admitidos por `detectContentType`/`inspectUploadedPhoto` y su MIME,
+sin claves ni URLs públicas de `incoming`, sin renovar, borrar, derivar o promover.
+La ausencia/selección/propiedad/bytes inválidos dan `notFound`; errores opacos de lectura
+dan `unavailable` (el puerto no distingue objeto ausente de servicio inaccesible).
+`read-draft-photo.test.ts` protege autorización, borde de vencimiento, orden y admisión.
+Este núcleo no restaura aún miniaturas: ruta autenticada, cabeceras privadas, explicación
+recuperable y prueba de bytes/navegación quedan para T2/T3; no implica entrega ni cierre.
+
+### D12b — Miniaturas autenticadas al regresar (36.15, T2; S2–S3/S7)
+
+`/publicar/fotos/vista/[indice]` reutiliza la sesión confiable y `readDraftPhoto`:
+bytes/MIME admitidos o cuerpo vacío 401/404/503, siempre `private, no-store` y
+`nosniff`. No acepta propietario, clave ni URL del request como autorización.
+`draft-photo-preview` restringe la misma lectura del borrador por identidad de foto;
+una URL posicional anterior al guardado/reordenamiento no muestra otra ocupante.
+`PhotoUploader` conserva esa URL al mover filas, orden/portada y campos nativos;
+el error de imagen conserva la foto y ofrece reintentar o quitar/volver a subir,
+sin imagen ficticia. Sólo revoca previews blob creadas localmente.
+Pruebas: `route.test.ts` cubre respuestas/autorización/propiedad/admisión sin escritura;
+`fotos-servido.test.tsx` atraviesa StepPage/PublishStep y protege imágenes/orden/portada;
+`PhotoUploader.dismiss.test.tsx` protege reordenar, fallo, reintento y retirada.
+Verificación local T2: 39 pruebas enfocadas, tipos y Biome; mutaciones de sesión y
+miniaturas detectadas/restauradas. No es prueba de DB/storage real, decodificación,
+navegación ni aceptación visual (T3/T4); revisión nativa T1 sigue diferida, sin aprobación.
 
 ### D13 — Spartan density over visual identity
 
@@ -610,7 +651,7 @@ rules:
 | Cloudflare R2 Free | Egress | Free for all storage classes, always | Matches D2/D12's "$0 egress" — no delta |
 | Cloudflare R2 Free | Requests | 1M Class A ops/month, 10M Class B ops/month | New information — no prior claim to compare against |
 | Resend Free | Send caps | 3,000 emails/month, 100 emails/day | Matches design table's "3k/mo, 100/day" — no delta |
-| GitHub Actions (Free plan, private repo) | Minutes | 2,000 minutes/month (Linux-minute equivalent; Windows runners bill 2x, macOS 10x) | New confirmation of the number the CI push/PR-only split (design.md, Continuous Integration) was already designed against — validates that split as necessary, not merely cautious |
+| GitHub Actions (Free plan, private repo) | Minutes | 2,000 minutes/month (Linux-minute equivalent; Windows runners bill 2x, macOS 10x) | Historical: the repository is now public, so this quota no longer applies; the push/PR split stays for proportionality and speed (Continuous Integration) |
 
 No provider tier is tighter than this design assumed, with the exception of Neon storage, which the design never quantified in the first place. The most actionable consequence: the existing open question "Retention for `contact_reveal_event`" and "Draft lifetime" should be revisited before the 0.5 GB ceiling, not the 10 GB R2 ceiling, becomes the operative constraint on how long the MVP can run unattended.
 
@@ -640,7 +681,45 @@ Formatos aprobados: `0412 123 4567`, `4121234567`, `+58 412 1234567`, `0058 412 
 
 El [comentario 21](https://github.com/gianelo/rentoru/issues/289#issuecomment-5957005019) descarta tamaños de capturas como autoridad; rigen D30 y el sistema responsive vigente, coordinando la discrepancia de 390×840 con F34. Revisar requiere lámina aprobada antes de implementación. El warning actual de inmutabilidad absoluta contradice la regla existente de 18.38: dueño → inmobiliaria sí; la dirección inversa sigue cerrada hasta decisión explícita, no queda autorizada por el comentario 18.
 
+36.18 ratifica explícitamente con el fundador «Sí, mantener el bloqueo — recomendado»: dueño →
+inmobiliaria sí; inmobiliaria → dueño no. Revisar debe reutilizar la advertencia
+`PUBLISHER_TYPE_ONE_WAY_*` existente en Quién publica/Editar, sin cambiar la regla de 18.38 ni sus
+consumidores compartidos.
+La revisión posterior cuestionó la claridad y la razón de esa asimetría, sin autorizar cambiarla.
+El fundador aplazó la revisión: «listo luego lo veo. cerremos ya esto.» En esa pausa no había aceptación
+visual ni nueva decisión que permitiera inmobiliaria → dueño; se conservó el cambio local sin publicar.
+Posteriormente aceptó el aviso servido sin cambios: «ya probe todo bien cierra los dos chrome test que
+abriste». Se mantiene la regla vigente; esta aceptación no autoriza cambios de dominio ni publicación.
+
 Copy/jerarquía, loader contextual, país/formato y botón vs checkbox quedan como gates al iniciar sus unidades. El digest `901444967` no prueba deduplicación ni fallo de sesión: cualquier consulta productiva requiere autorización read-only separada, sin mutación. Plan y criterios completos: `odd/tasks/fase-36-cierre-publicacion.md`; esta adenda confirma alcance, no implementación ni nuevas decisiones numeradas.
+
+### Digest901444967 — cierre de diagnóstico36.19
+
+El fundador dispone cerrar36.19 como «no se pudo replicar»: no se confirmó una causa ni se corrigió
+el fallo. Los 62 casos locales con dobles no identifican el incidente; el acceso productivo autorizado
+funcionó, pero las consultas históricas fallaron sin diagnóstico utilizable. No se atribuye el digest
+a deduplicación, sesión, storage o persistencia, ni se afirma ausencia de logs o retención vencida.
+36.20 conserva su requisito de causa y alcance aprobados; no se cierran 18.39/18.40 por este resultado.
+Actualización 2026-10-23: el fundador cierra 36.20 sin corrección tras publicar sin fallo en dev; el incidente
+sigue sin reproducir y sin causa confirmada.
+Evidencia y límites completos: `odd/tasks/fase-36-cierre-publicacion.md`,36.19; cierre documental local,
+sin cambios funcionales ni publicación/integración; en aquel checkpoint todavía sin commit.
+
+### Atributos36.21 — decisión G7 y estado local
+
+El fundador eligió «Botón secundario — recomendado»: declarar ninguna sustituye la selección y continúa;
+no se convierte en checkbox ni se infiere una respuesta de casillas vacías no enviadas.
+El botón comparte acciones con Seguir/Atrás, pero `form` lo asocia a su POST externo propio;
+se conservan `featuresDeclared`, los campos de retorno y la operación nativa sin formularios anidados.
+El rol CSS de Atributos permite empaquetar cuatro acciones al volver desde Revisar, sin cambiar
+selectores compartidos, tokens, parser ni reglas de publicador. RED/GREEN/mutaciones y HTML servido
+protegen vínculo y alcance;16 composiciones y flujos reales ambos modos pasan con DB propia.
+El fundador acepta explícitamente «Sí, acepto esta versión» sobre6ca025e…/7e550180… en3005;
+es aceptación visual local, no entrega ni permiso de push/PR. Después ordena cerrar jobs y Chrome:
+servicios y navegador propios detenidos, ausencia física comprobada, DB conservada y app ya no servida.
+Unidades `055f6f7`/`cdbe1f7` publicadas en PR[#430](https://github.com/gianelo/rentoru/pull/430) a dev;
+estado final en el mismo PR, sin integración ni resultado remoto de CI acreditado al registrar.
+Evidencia, fallos y límites: `odd/tasks/fase-36-atributos-ninguna.md`.
 
 ### Photo copy — bounded G3/F35 coordination (F36.10)
 
@@ -694,6 +773,10 @@ Readback estructural por padre/verificador; P2 queda pausada, sin inicio automá
 P2 requerirá RED/GREEN sobre HTML del caller, mutación restaurada, nombre accesible,
 labels, teclado/foco, ausencia de default y aceptación visual humana; 36.12 sigue sin cerrar.
 
+### Revisar — composición aprobada F36.16
+
+El fundador aprobó la lámina `design/pantallas/Rentoru - Revisar - Responsive-v1.html` y su CSS v1: «si me gusta alli vi las 3 medidas con el inspecionadro». Derivada del sistema, móvil sitúa Cambiar junto al título; tablet apila valores a ancho completo y escritorio distribuye etiqueta, valor y Cambiar en el contenedor centrado1100px. Evidencia y versión aceptada: `odd/tasks/fase-36-revisar-lamina.md` L15–L20; cuatro medidas del agente PASS y aceptación humana separadas. Aprobación local, sin implementación36.17 ni integración acreditada; warning sin cambio, reservado a36.18. No amplía tokens ni auditoría F34.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.
@@ -711,3 +794,22 @@ labels, teclado/foco, ausencia de default y aceptación visual humana; 36.12 sig
 - [ ] **Optional CSV columns.** Whether `habitaciones`, `banos`, and `metros2` are accepted depends on whether those fields exist on `listing`; confirm against the schema when the publication module is written rather than inventing columns the model cannot store.
 - [ ] **Draft lifetime.** An imported draft that never receives photos lives forever today. Decide whether drafts expire, and whether the broker is reminded — otherwise the table accumulates dead rows against the Neon free-tier ceiling.
 - [x] **Palette and visual tone (D14).** **RESOLVED: `compacto` + `menta`.** The design system of record is `design/reference/sistema/SISTEMA.md`, with tokens at `design/reference/sistema/tokens.css` and six worked surfaces at `design/reference/sistema/pantallas-compacto-menta.html`. PR1b is unblocked. See D16 for the token contract that carries the system to the sixteen surfaces the reference does not draw.
+
+### Publicar · Listo — fase 37
+
+La confirmación posterior a publicar deja de ser un texto provisional. La ficha ya existe, así que «Listo» enlaza al aviso y muestra su resumen. Tres decisiones de diseño técnico, con su razón:
+
+- **Lectura propia por id, no la lista completa.** `PublisherListingsPort` lee todos los avisos del publicador; «Listo» necesita uno. Se agrega un puerto de lectura al lado (AGENTS.md §3) que sólo devuelve un aviso del propio publicador y activo; cualquier otro caso devuelve nada, porque el `id` viaja en la URL y cualquiera puede escribir otro.
+- **La portada no espera a nadie.** Las derivadas se generan dentro de `publishListing`, antes del redirect; la pantalla usa la misma derivada pública que la ficha.
+- **Compartir falla cerrado.** El enlace de WhatsApp necesita la URL absoluta; sin `SITE_URL` el bloque no se dibuja, en vez de compartir un enlace relativo que no abre nada.
+
+Plan y gates: `odd/tasks/fase-37-publicar-listo.md`.
+
+### Correos — fase 38
+
+Los cinco correos comparten hoy un renderizador copiado cuatro veces, con un color (`#101010`) que no pertenece al sistema. Dos decisiones con su razón:
+
+- **Un solo renderizador que recibe bloques ya decididos.** Cada dominio sigue decidiendo qué dice su correo; el renderizador sólo sabe dibujar párrafos y una acción. Así el diseño cambia en un lugar y ninguna regla de producto se muda a la presentación (AGENTS.md §1).
+- **Valores del sistema resueltos, con una prueba que los ata a `tokens.css`.** Los clientes de correo no entienden variables CSS, así que el correo necesita literales; una tabla única y comprobada evita que esos literales se desvíen del sistema en silencio, que es justo lo que pasó con `#101010`.
+
+Plan y gates: `odd/tasks/fase-38-correos.md`.
