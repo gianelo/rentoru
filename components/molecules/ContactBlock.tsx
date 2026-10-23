@@ -205,7 +205,7 @@ export function ContactBlock({
                   name="message"
                   label="Tu mensaje para quien publica"
                   error={error ?? undefined}
-                  help="Escribí con tus palabras qué querés consultar. El ejemplo no se envía."
+                  help="Escribe con tus palabras qué quieres consultar. El ejemplo no se envía."
                   required
                 >
                   {(attrs) => (
@@ -279,7 +279,7 @@ export function ContactBlock({
       {/* Acompaña al contacto y no va al pie (F30): quien está por escribir es
           quien tiene que leerla, no quien ya se fue de la página. */}
       <p className={styles.warning}>
-        Rentoru no participa en la negociación. Visitá la propiedad y verificá quién es el dueño
+        Rentoru no participa en la negociación. Visita la propiedad y verifica quién es el dueño
         antes de entregar dinero.
       </p>
     </section>

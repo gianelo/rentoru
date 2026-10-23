@@ -7,7 +7,7 @@ export const REPORT_REASON_OPTIONS = [
 ] as const;
 
 export const REPORT_REASON_ERROR_MARKER = "motivo";
-export const REPORT_REASON_ERROR_TEXT = "✱ Elegí un motivo para enviar el reporte.";
+export const REPORT_REASON_ERROR_TEXT = "✱ Elige un motivo para enviar el reporte.";
 
 export function reportReasonFeedback(marker: unknown): string | undefined {
   return marker === REPORT_REASON_ERROR_MARKER ? REPORT_REASON_ERROR_TEXT : undefined;
