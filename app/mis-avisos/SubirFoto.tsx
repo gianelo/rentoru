@@ -69,6 +69,7 @@ export function SubirFoto({
   firmar,
   adjuntar,
   exito,
+  chooserLabel = "Subir fotos",
 }: {
   readonly listingId: string;
   readonly photoCount: number;
@@ -86,6 +87,8 @@ export function SubirFoto({
   }) => Promise<unknown>;
   /** Qué se dice cuando llegó: lo que sigue no es lo mismo en los dos sujetos. */
   readonly exito: string;
+  /** Presentation only; imported drafts retain the existing default. */
+  readonly chooserLabel?: string;
 }) {
   const inputId = useId();
   const [estado, setEstado] = useState<Estado>("listo");
@@ -125,7 +128,7 @@ export function SubirFoto({
       setMensaje(exito);
     } catch {
       setEstado("fallo");
-      setMensaje("✱ No pudimos subir esta foto. Probá de nuevo.");
+      setMensaje("✱ No pudimos subir esta foto. Inténtalo de nuevo.");
     }
   }
 
@@ -154,7 +157,7 @@ export function SubirFoto({
           ? estado === "comprimiendo"
             ? "Comprimiendo en tu teléfono…"
             : "Subiendo…"
-          : "Subir fotos"}
+          : chooserLabel}
       </label>
 
       {mensaje === "" ? null : (
@@ -167,8 +170,8 @@ export function SubirFoto({
           pantalla de importar (9.26). */}
       <noscript>
         <p className={styles.fotoError}>
-          Subir fotos necesita JavaScript: las comprimimos en tu teléfono antes de mandarlas, así
-          gastás muchos menos datos.
+          Subir fotos necesita JavaScript: las comprimimos en tu teléfono antes de enviarlas, así
+          consumes muchos menos datos.
         </p>
       </noscript>
     </div>

@@ -258,7 +258,7 @@ describe("cada grupo cerrado muestra lo elegido", () => {
 
   it("cada grupo lleva su pregunta y su título, tal como los dibuja la lámina 7b", () => {
     expect(step(CARACAS, "precio").title).toBe("Precio");
-    expect(step(CARACAS, "precio").question).toBe("¿Cuánto podés pagar al mes?");
+    expect(step(CARACAS, "precio").question).toBe("¿Cuánto puedes pagar al mes?");
     expect(step(CARACAS, "habitaciones").title).toBe("Habitaciones");
     expect(step(CARACAS, "habitaciones").question).toBe("¿Cuántas habitaciones?");
     expect(step(CARACAS, "publica").title).toBe("Quién publica");

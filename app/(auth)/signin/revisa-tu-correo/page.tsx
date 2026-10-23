@@ -19,7 +19,7 @@ import { TICKET_COOKIE } from "../enlace";
 import styles from "./espera.module.css";
 
 export const metadata: Metadata = {
-  title: "Revisá tu correo — Rentoru",
+  title: "Revisa tu correo — Rentoru",
   // 26.12 — relativa: `metadataBase` le pone la base una sola vez.
   alternates: { canonical: "/signin/revisa-tu-correo" },
 };

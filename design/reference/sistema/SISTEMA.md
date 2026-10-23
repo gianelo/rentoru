@@ -153,6 +153,29 @@ Escala: `4 · 8 · 12 · 16 · 24 · 32 · 48`. Nada fuera de esa escala.
 - **El velo de los modales** (`--scrim`, tarea 14.46). Un modal se dibuja sobre lo que había, y sin un token de velo la única salida que dejaba `lint:tokens` era tapar el viewport con `var(--surface)`: un token, gate en verde, y una hoja opaca donde la 14.33 dice modal. Lo usan la puerta de entrar y el panel de filtros, y **tiene par claro/oscuro** — a diferencia de `--viewer-scrim`, que vive fuera del tema a propósito. La razón está medida y no es de gusto: el velo de `menta` (`rgba(30,32,34,.55)`, el que dibuja la lámina 9b) separa el fondo velado de la lámina **3,98:1** contra 1,10:1 sin velo, y ese mismo velo en `oscuro` da **1,13:1 contra el 1,15:1 que el tema ya tenía sin nada** — oscurecer un fondo ya oscuro no separa, empeora. La cuenta la hace `components/design-contract.test.tsx` contra `src/styles/tokens.css`, y el color que sale del compositor lo mide `tests/measure/layout.spec.ts` en un navegador.
 - Altura mínima de control: **44px en las dos pantallas**. Era 36 en escritorio; **decidido por el fundador el 2026-08-27** (tarea 16.24) porque de los tres candidatos —36, los 40 de su especificación y 44— **sólo 44 alcanza WCAG 2.2 SC 2.5.5 (AAA)**. Los botones de acción miden 46 (`--action-h`), que es un valor propio y no una variante de éste.
 
+### Menú de fotos — superficie visible F36.11
+
+Decisión aprobada del fundador: desde **768px**, círculo visible de **30px**
+centrado dentro del `<summary>` existente de **44×44px**; la caja completa sigue
+pulsable y con foco visible. Por debajo de 768px, móvil sin cambios. Se mantienen
+el glifo `⋯`, las acciones y el menú abierto (geometría, Escape y cierre exterior).
+La lámina [Publicar Desktop](../../pantallas/Rentoru%20-%20Publicar%20-%20Desktop.dc.html)
+dibuja los 30px visibles; no sustituye el mínimo táctil aprobado de 44px.
+Registrar en P2 un token semántico propio para el diámetro visible, independiente
+de `--target-min` y `--target-min-desktop`; usar `--rs` para el círculo.
+[Baseline y razón](../../../openspec/changes/mvp-rental-listings/design.md#menú-de-fotos-compacto--decisión-acotada-f3611-p1):
+P1 documenta la decisión, no su implementación ni una aceptación de navegador.
+
+### Indicador de carga — base aprobada F36.3
+
+Tarjeta `--surface` centrada a pantalla completa sobre velo gris `--scrim`, con ancho máximo `--door-w`, radio `--r` y sombra `--door-shadow`; padding 32px/24px, grid centrada con gap 16px y margen exterior de 16px. El indicador circular sobre `--tint` reutiliza `--wait-mark-size` (56px) y `--wait-mark-fs` (22px): **R de texto fija y decorativa** en `--mono` e interlínea 1, no un logotipo ni un monograma nuevo de marca; aro de `--line` con segmento `--accent`. La etiqueta usa el par de cuerpo `--ficha-body-fs`/`--ficha-body-lh`, con variante de escritorio desde 768px y margen cero.
+
+Roles nuevos: `--loading-ring-width: 3px` para el trazo, `--loading-duration: 1.2s` para rotación lineal continua y `--loading-layer: 1000` para la capa. Sólo gira el aro; movimiento reducido lo detiene. Sin animación de entrada. Etiqueta significativa en estado polite y salida visible mediante enlace nativo, suministradas por el caller.
+
+En el buscador de zona de Publicar, el aro inline usa `--loading-inline-size: 1em`, el mismo trazo, duración, colores y radio `--rs`, sin R ni tarjeta. Ocupa el extremo del input con espacio reservado y sin capturar eventos; sólo durante la búsqueda oculta la × nativa. Estado polite «Buscando zonas…», sin giro con movimiento reducido y sin indicador inicial en el HTML de servidor.
+
+Esta base reutilizable no es un diálogo ni activa carga de publicación: activación, plazo y gestión de foco quedan pendientes de integración. La salida nativa útil se conserva: añade altura respecto de la demo aprobada, sin prometer una altura de tarjeta idéntica.
+
 ## Jerarquía de botones
 
 Tres niveles, y no deben mezclarse:
@@ -286,6 +309,8 @@ El color aparece solo en los dos estados que piden algo. Activa y vencida son ne
 
 **La barra que la contiene** es una sola con puntos de quiebre, nunca dos implementaciones: `--nav-h` 60px en móvil y `--nav-h-desktop` 68px, en grid `250px 1fr 250px` a 1280 con la pastilla en la columna del centro y las acciones contra el borde. En la ficha a 1280 la marca **no cede**: el `←` toma un tercer slot y la marca se corre al centro; a 360 sí cede, porque no caben tres. Las dos láminas tienen razón y describen anchos distintos (14.40, resuelto por el fundador el 2026-08-25).
 
+**Corrección 36.4 — ancho responsive de la búsqueda pública:** móvil fluido al ancho disponible (358px a 390); desktop con máximo `--nav-search-max` de 420px, conforme a las láminas 14i y Lista. El wrapper `<search>` ocupa ese ancho, no el intrínseco del texto. Entre 768 y 1099, sólo la barra con pastilla visible usa tres columnas fluidas simétricas en vez de reservar 250px por bookend: a 768 la pastilla pasa de 196 a 232px (+18,4%), centrada respecto del viewport, con marca y ambas acciones sin solapes. Desde 1100 conserva el contenedor de 1100 y la grilla anterior. Las acciones de estas barras adoptan `--target-min-desktop` (44px), por aprobación explícita; mobile-only, barras sin pastilla y dock móvil conservan su geometría. Evidencia servida con/sin JS: `tests/measure/nav-search-width.spec.ts`, fixture aislada `/measure/nav` (sin DB; cerrada salvo flag estricto del arnés).
+
 **Publicar depende de la sesión** (14.38, resuelto por el fundador el 2026-08-25): sin sesión queda afuera y en acento, que es cuando hay que provocar; con sesión se muda a la primera fila del menú de cuenta.
 
 **Corrección 28.6 — dock A móvil:** debajo de 768px, cuando hay pastilla, la barra superior mide 60px y contiene sólo la SearchPill existente; abajo flota un dock unificado de 64px, a 16px de los costados y 12px del borde inferior, con tres destinos de igual área táctil. Publicar lleva relleno `--accent` en una pieza de 96×44; Inicio no se tiñe como estado activo. Sin sesión el tercero es Entrar; con sesión es Mi cuenta. Cada destino tiene icono y rótulo visible, enlaces reales servidos sin JS. En 768px y más se conserva la barra anterior; sin pastilla se conserva la barra anterior como fallback. La puerta de contacto y el panel de filtros se superponen al dock (z-index 30 y 3 respectivamente); el dock queda por debajo de ambos. La geometría propia usa `--nav-dock-*` y el rótulo `--nav-dock-label-fs` en los tokens de producción. Ocultamiento al desplazar y medición de colisiones corresponden a T2b2/T2c.
@@ -364,7 +389,7 @@ Los mockups no usan texto de relleno. Cualquier dato nuevo debe seguir este regi
 - **Títulos como los escribe la gente:** "Apartamento 2 habitaciones con puesto de estacionamiento" · "Apto amoblado cerca del metro, edificio con vigilancia" · "Estudio en Altamira, ideal para una persona" · "Apartamento amplio en La Castellana, 3 habitaciones"
 - **Detalles que importan en este mercado:** planta eléctrica, vigilancia 24 horas, agua regular, puesto de estacionamiento, línea blanca incluida, depósito de dos meses
 
-Idioma: español de Venezuela, neutro y directo, sin regionalismos marcados. Voseo en instrucciones ("Contanos", "Revisá", "Verificá"), consistente en toda la interfaz.
+Idioma: español neutro, profesional y directo, con tuteo consistente en los textos de producto, sin voseo ni regionalismos marcados. Decisión del fundador (2026-10-02, Fase 35): esta política reemplaza la instrucción anterior de voseo. Se conservan los términos propios del producto venezolano; no se reescriben textos de usuarios, URLs ni identificadores. Los textos de las láminas quedan como referencias históricas, no como autoridad para el voseo. Alcance y auditoría pendiente: `odd/tasks/fase-35-textos-neutrales.md`.
 
 ## Cambiar de estilo después, sin rehacer nada
 

@@ -61,8 +61,8 @@ export default function PreguntasFrecuentesPage() {
 
       <h2 className={styles.heading}>¿rentoru.com interviene en el contrato o en el pago?</h2>
       <p className={styles.text}>
-        No. rentoru.com no participa en la negociación entre las partes. Visitá la propiedad y
-        verificá quién es el dueño antes de entregar dinero.
+        No. rentoru.com no participa en la negociación entre las partes. Visita la propiedad y
+        verifica quién es el dueño antes de entregar dinero.
       </p>
 
       <h2 className={styles.heading}>¿Puedo editar mi aviso después de publicarlo?</h2>

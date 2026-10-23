@@ -1,5 +1,10 @@
+// @vitest-environment happy-dom
+import { readFileSync } from "node:fs";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { SuggestionVocabulary } from "@/modules/listing-catalogue/domain/suggest-filters";
 import {
   currentStepId,
   draftListingOf,
@@ -9,6 +14,7 @@ import {
   validatePublishableListing,
 } from "@/modules/listing-publication/domain/publishable-listing";
 import type { StoredDraft } from "../../draft";
+import stepStyles from "../../publish-steps.module.css";
 import { STEP_COPY } from "../../step-copy";
 
 /**
@@ -19,7 +25,7 @@ import { STEP_COPY } from "../../step-copy";
  * botón contextual los cerró la 18.24 el 2026-08-31, y estos dos seguían sin
  * una sola aserción sobre un archivo de 723 líneas.
  *
- * **Es caracterización, y decirlo importa.** Las dos piezas ya están servidas,
+ * **La cobertura original es caracterización, y decirlo importa.** Las dos piezas ya están servidas,
  * así que estas pruebas no pudieron verse rojas antes de existir: no hay RED
  * que fingir. Lo que les da filo son las mutaciones corridas contra cada
  * aserción —con este archivo y sin él—, anotadas en el cuerpo del PR.
@@ -45,19 +51,21 @@ const { redirect, notFound, lookup } = vi.hoisted(() => ({
     throw new Error("NEXT_NOT_FOUND");
   }),
   /**
-   * El puerto devuelve el vocabulario ANCHO —`ILIKE` a 60 filas— y quién de
+   * El puerto devuelve el vocabulario ANCHO —candidatos por `ILIKE`— y quién de
    * esas filas se ofrece lo decide `searchPublicationZones`, que es puro y ya
    * está cubierto. Por eso el doble no filtra: devolver acá lo ya filtrado
    * escondería el reparto de trabajo que este paso realmente hace.
    */
-  lookup: vi.fn(async () => ({
-    cities: [{ id: "dc", name: "Distrito Capital" }],
-    zones: [
-      { id: "altamira", name: "Altamira", cityId: "dc", parentName: "Municipio Chacao" },
-      { id: "chacao", name: "Chacao", cityId: "dc", parentName: "Municipio Chacao" },
-    ],
-    aliases: [],
-  })),
+  lookup: vi.fn(
+    async (): Promise<SuggestionVocabulary> => ({
+      cities: [{ id: "dc", name: "Distrito Capital" }],
+      zones: [
+        { id: "altamira", name: "Altamira", cityId: "dc", parentName: "Municipio Chacao" },
+        { id: "chacao", name: "Chacao", cityId: "dc", parentName: "Municipio Chacao" },
+      ],
+      aliases: [],
+    }),
+  ),
 }));
 
 vi.mock("next/navigation", () => ({ redirect, notFound }));
@@ -77,6 +85,85 @@ vi.mock("../../publication-context", () => ({
 }));
 
 import StepPage from "./page";
+
+it("caller real conecta tecleo con radios dentro del POST sin remonte de referencia", async () => {
+  vi.useFakeTimers();
+  vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+  let finish!: (response: unknown) => void;
+  const pending = new Promise((resolve) => {
+    finish = resolve;
+  });
+  const fetchZones = vi.fn().mockReturnValue(pending);
+  const response = {
+    ok: true,
+    json: async () => [
+      {
+        zoneId: "nueva",
+        cityId: "mc",
+        label: "Zona sin avisos de nombre largo",
+        scope: "Maracaibo",
+      },
+    ],
+  };
+  vi.stubGlobal("fetch", fetchZones);
+  const container = document.createElement("div");
+  document.body.append(container);
+  const root = createRoot(container);
+  try {
+    const page = await StepPage({
+      params: Promise.resolve({ paso: "zona" }),
+      searchParams: Promise.resolve({}),
+    });
+    await act(async () => root.render(page));
+    function required<T>(value: T | null | undefined): T {
+      if (value === null || value === undefined) throw new Error("missing caller control");
+      return value;
+    }
+    const reference = required(container.querySelector<HTMLInputElement>("#reference"));
+    reference.value = "Referencia editada";
+    const search = required(container.querySelector<HTMLInputElement>("#q"));
+    search.focus();
+    act(() => {
+      required(Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set).call(
+        search,
+        "zona",
+      );
+      search.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("Buscando zonas…");
+    expect(search.getAttribute("aria-busy")).toBe("true");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("Buscando zonas…");
+    await act(async () => finish(response));
+    expect(container.querySelector('[role="status"]')?.textContent).toBe("");
+    expect(search.getAttribute("aria-busy")).toBeNull();
+    const post = required(reference.form);
+    const step = required(
+      container.querySelector<HTMLInputElement>('input[name="step"][value="zona"]'),
+    );
+    expect(step.form).toBe(post);
+    expect(post.querySelector<HTMLButtonElement>('button[type="submit"]')?.form).toBe(post);
+    expect(new FormData(post).get("step")).toBe("zona");
+    expect(search.form).not.toBe(post);
+    expect(post.textContent).toContain("Zona sin avisos de nombre largo");
+    expect(post.textContent).toContain("Maracaibo");
+    const radio = required(post.querySelector<HTMLInputElement>('input[value="nueva"]'));
+    expect(radio).not.toBeNull();
+    act(() => radio.click());
+    expect(new FormData(post).getAll("zoneId")).toEqual(["nueva"]);
+    expect(new FormData(post).get("reference")).toBe("Referencia editada");
+    expect(container.querySelector("#reference")).toBe(reference);
+    expect(document.activeElement).toBe(search);
+    expect(fetchZones).toHaveBeenCalledTimes(1);
+  } finally {
+    act(() => root.unmount());
+    container.remove();
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  }
+});
 
 const ZONES: readonly CuratedZone[] = [{ id: "altamira", cityId: "dc" }];
 
@@ -237,28 +324,106 @@ describe("los cinco atributos del paso 5 (18.24)", () => {
     expect(STEP_COPY.atributos.railLabel).toBe("Qué tiene");
   });
 
-  /**
-   * **La otra mitad del paso 5, y sin ella «Ninguno» es inalcanzable sin
-   * JavaScript**: nada destilda cinco casillas al enviar, así que declarar que
-   * no hay ninguna necesita su propio POST. Va FUERA del formulario de las
-   * casillas porque un formulario dentro de otro no es HTML válido, y con el
-   * script apagado un navegador lo desanida donde quiere.
-   */
+  it("«No tiene ninguna» comparte las acciones y el estilo secundario de Atrás (36.21)", async () => {
+    const page = document.createElement("div");
+    page.innerHTML = await servido("atributos");
+    const buttons = [...page.querySelectorAll<HTMLButtonElement>("button")];
+    const none = buttons.find((button) => button.textContent === "No tiene ninguna");
+    const next = buttons.find((button) => button.textContent === "Seguir");
+    const back = [...page.querySelectorAll("a")].find((link) => link.textContent === "Atrás");
+
+    expect(none).toBeDefined();
+    expect(next).toBeDefined();
+    expect(back).toBeDefined();
+    expect(none?.parentElement).toBe(next?.parentElement);
+    expect(none?.parentElement).toBe(back?.parentElement);
+    expect(none?.className).toBe(back?.className);
+    const attributeActions = stepStyles.attributeActions;
+    if (!attributeActions) throw new Error("Falta el rol CSS de acciones de atributos");
+    expect(none?.parentElement?.classList.contains(attributeActions)).toBe(true);
+    expect(readFileSync("app/publicar/publish-steps.module.css", "utf8")).toMatch(
+      /\.attributeActions\s*\{\s*flex-wrap:\s*wrap;/,
+    );
+  });
+
+  /** El propietario nativo del botón, no su posición visual, decide qué se envía. */
   it("«No tiene ninguna» es un POST propio y sólo existe en el paso 5", async () => {
     const html = await servido("atributos");
-    const cierreDelFormulario = html.indexOf("</form>");
-    const segundoBoton = html.indexOf("No tiene ninguna");
-
-    expect(segundoBoton).toBeGreaterThan(cierreDelFormulario);
-    expect(html.slice(cierreDelFormulario, segundoBoton)).toContain(
-      '<input type="hidden" name="step" value="atributos"/>',
-    );
-
-    await expect(servido("tamano")).resolves.not.toContain("No tiene ninguna");
+    const page = document.createElement("div");
+    page.innerHTML = html;
+    document.body.append(page);
+    try {
+      const none = [...page.querySelectorAll<HTMLButtonElement>("button")].find(
+        (button) => button.textContent === "No tiene ninguna",
+      );
+      const field = page.querySelector<HTMLInputElement>('input[name="hasPowerPlant"]');
+      expect(field).toBeInstanceOf(HTMLInputElement);
+      // HappyDOM prioriza el ancestro sobre `form`; Chromium comprueba la asociación real.
+      // Acá se protege el vínculo servido y su payload, también con las cinco casillas marcadas.
+      const formId = none?.getAttribute("form");
+      const own = formId
+        ? page.querySelector<HTMLFormElement>(`form[id="${formId}"]`)
+        : none?.closest("form");
+      expect(own).toBeInstanceOf(HTMLFormElement);
+      expect(own).not.toBe(field?.form);
+      for (const checkbox of page.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
+        checkbox.checked = true;
+      }
+      const data = new FormData(own as HTMLFormElement);
+      expect(data.get("step")).toBe("atributos");
+      for (const name of [
+        "hasPowerPlant",
+        "hasRegularWater",
+        "isFurnished",
+        "hasSecurity",
+        "hasAppliances",
+      ]) {
+        expect(data.has(name)).toBe(false);
+      }
+      expect(html.slice(0, html.indexOf("</form>")).match(/<form\b/g)).toHaveLength(1);
+      expect(page.querySelectorAll("form")).toHaveLength(2);
+      const otherStep = await servido("tamano");
+      expect(otherStep).not.toContain("No tiene ninguna");
+      expect(otherStep).not.toContain(stepStyles.attributeActions);
+    } finally {
+      page.remove();
+    }
   });
 });
 
 describe("el buscador de zona del paso 2 (18.24)", () => {
+  it("el GET sirve alias y homónimos del catálogo con radios etiquetados y alcance", async () => {
+    lookup.mockResolvedValueOnce({
+      cities: [
+        { id: "dc", name: "Distrito Capital" },
+        { id: "mc", name: "Maracaibo" },
+      ],
+      zones: [
+        { id: "bella-dc", name: "Bella Vista", cityId: "dc", parentName: "Libertador" },
+        { id: "bella-mc", name: "Bella Vista", cityId: "mc", parentName: "Coquivacoa" },
+        { id: "centro", name: "Centro", cityId: "dc", parentName: "Libertador" },
+      ],
+      aliases: [
+        { zoneId: "centro", alias: "Bella Vista" },
+        { zoneId: "centro", alias: "Bella" },
+      ],
+    });
+    const html = await servido("zona", "Bella");
+    const formulario = html.slice(html.indexOf('name="step" value="zona"'));
+
+    expect(control(buscador(html), "q")).toContain('value="Bella"');
+    expect(formulario).toMatch(/<label[^>]*><input[^>]*name="zoneId"[^>]*value="centro"\/>/);
+    expect(formulario).toContain("<span>Centro<span");
+    expect(formulario).toContain("Libertador · Distrito Capital");
+    expect(formulario).toContain("Coquivacoa · Maracaibo");
+    expect(formulario.match(/value="centro"/g)).toHaveLength(1);
+    expect(formulario.indexOf('value="centro"')).toBeLessThan(
+      formulario.indexOf('value="bella-dc"'),
+    );
+    expect(formulario).toMatch(/name="zoneId" checked="" value="altamira"/);
+    // Sin conteos de avisos en el puerto: las zonas sin avisos siguen elegibles.
+    expect(formulario).toContain('value="bella-mc"');
+  });
   /**
    * **Buscar es un GET hermano, no un formulario anidado.** Se comprueba que
    * CIERRA antes de que empiece el que guarda —comparando posiciones y no la
@@ -300,6 +465,8 @@ describe("el buscador de zona del paso 2 (18.24)", () => {
     const html = await servido("zona", "alta");
     const formulario = html.slice(html.indexOf('name="step" value="zona"'));
 
+    expect(html).not.toContain('aria-busy="true"');
+    expect(html).not.toContain("Buscando zonas…");
     expect(formulario).toMatch(/<input[^>]*type="radio"[^>]*name="zoneId"[^>]*value="altamira"/);
     expect(formulario).toContain("Municipio Chacao · Distrito Capital");
     expect(lookup).toHaveBeenCalledWith("alta");

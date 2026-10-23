@@ -33,13 +33,13 @@ export default function CookiesPage() {
       <ul className={styles.list}>
         <li className={styles.item}>
           <strong>Cookie de sesión</strong> (<code>authjs.session-token</code>, o su variante{" "}
-          <code>__Secure-</code> cuando el sitio corre por HTTPS). La escribe Auth.js cuando entrás
+          <code>__Secure-</code> cuando el sitio corre por HTTPS). La escribe Auth.js cuando entras
           con Google o con el enlace por correo; es <code>httpOnly</code> y dura mientras tu sesión
-          esté activa. Sin ella no podés publicar un aviso ni ver el contacto de un dueño.
+          esté activa. Sin ella no puedes publicar un aviso ni ver el contacto de un dueño.
         </li>
         <li className={styles.item}>
           <strong>Comprobante del enlace de entrada</strong> (<code>rentas_enlace</code>). Se
-          escribe sólo cuando pedís que te enviemos un enlace por correo, es <code>httpOnly</code>,
+          escribe sólo cuando pides que te enviemos un enlace por correo, es <code>httpOnly</code>,
           dura 15 minutos y sólo se lee en la pantalla de espera de <code>/signin</code>.
         </li>
       </ul>
@@ -50,7 +50,7 @@ export default function CookiesPage() {
         comportamiento. No hay ningún script de ese tipo en el sitio.
       </p>
 
-      <h2 className={styles.heading}>¿Podés navegar sin ellas?</h2>
+      <h2 className={styles.heading}>¿Puedes navegar sin ellas?</h2>
       <p className={styles.text}>
         Sí. Buscar avisos y ver una ficha funcionan igual sin ninguna cookie. Lo único que necesita
         la cookie de sesión es entrar para publicar o para ver el contacto de un aviso.

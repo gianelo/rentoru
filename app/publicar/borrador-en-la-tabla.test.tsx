@@ -55,7 +55,7 @@ vi.mock("@/modules/listing-publication/infrastructure/drizzle-zone-vocabulary", 
 }));
 vi.mock("@/modules/listing-publication/infrastructure/drizzle-listing-repository", () => ({
   DrizzleZoneCatalogue: class {
-    listZonesForCity = async () => [];
+    listZonesForCity = async () => [{ id: "altamira", cityId: "dc" }];
   },
 }));
 vi.mock("@/modules/listing-publication/application/publish-listing", async () => {
@@ -153,6 +153,47 @@ describe("de dónde sale el borrador que se dibuja", () => {
 });
 
 describe("escribir el borrador no deja una cookie detrás", () => {
+  it.each([
+    ["0412 123 4567", "+584121234567", "revisar"],
+    ["4121234567", "+584121234567", "revisar"],
+    ["+58 412 1234567", "+584121234567", "revisar"],
+    ["0058 412 1234567", "+584121234567", "revisar"],
+    ["584121234567", "+584121234567", "revisar"],
+    ["0212 1234567", "+582121234567", "revisar", "telefono"],
+    ["correo@ejemplo.com", "correo@ejemplo.com", "revisar", "email"],
+    ["+58 0412 1234567", "+58 0412 1234567", "paso/quien"],
+  ])(
+    "guardar y recargar contacto %s sirve %s",
+    async (input, expected, destination, method = "whatsapp") => {
+      const base = completo("Apartamento luminoso");
+      load.mockResolvedValue({
+        ...base,
+        featuresDeclared: true,
+        listing: { ...base.listing, cityId: "dc", zoneId: "altamira" },
+      });
+      save.mockImplementationOnce(async (...args: unknown[]) => {
+        load.mockResolvedValue(args[1]);
+      });
+      const form = new FormData();
+      form.set("step", "quien");
+      form.set("publisherType", "owner");
+      form.set("contactMethod", method);
+      form.set("contactValue", input);
+      await expect(submitStep(form)).rejects.toThrow(`NEXT_REDIRECT:/publicar/${destination}`);
+      const html = renderToStaticMarkup(
+        await StepPage({
+          params: Promise.resolve({ paso: "quien" }),
+          searchParams: Promise.resolve({}),
+        }),
+      );
+      expect(html).toContain(`value="${expected}"`);
+      expect(html).toContain(`name="contactMethod" checked="" value="${method}"`);
+      expect(html.includes('id="contact-error"')).toBe(destination === "paso/quien");
+      expect(save).toHaveBeenCalledTimes(1);
+      expectSinCookies();
+    },
+  );
+
   function formDelTitulo(): FormData {
     const form = new FormData();
     form.set("step", "titulo");

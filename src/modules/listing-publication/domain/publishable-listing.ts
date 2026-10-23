@@ -1,3 +1,5 @@
+import { canonicalVenezuelanPhone } from "./venezuelan-phone";
+
 /**
  * Minimum publishable content, as the listing-publication spec defines it,
  * expressed as a pure function over a draft.
@@ -225,21 +227,18 @@ const PROPERTY_TYPES: readonly string[] = ["apartamento", "casa", "quinta", "ane
  * afterwards the cost lands on a tenant who reveals a contact that goes
  * nowhere, and they have no way to tell that from being ignored.
  */
-function looksLikeEmail(value: string): boolean {
+export function looksLikeEmail(value: string): boolean {
   // Deliberately loose. The strict grammar for an address is famously
   // unimplementable, and every over-tight regex rejects somebody's real one.
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value);
 }
 
-/**
- * Venezuelan numbers are 11 digits (0412…) or 12 with the country code
- * (58412…). Separators are stripped before counting, because "0412 123 4567"
- * and "0412-1234567" are the same number written the way people write it, and
- * refusing one of them teaches publishers to distrust the form.
- */
-function looksLikePhone(value: string): boolean {
-  const digits = value.replace(/[\s()+.-]/g, "");
-  return /^\d{10,13}$/.test(digits);
+/** Numeric channels share the country policy; WhatsApp admits mobile prefixes only. */
+function looksLikePhone(value: string, method: ContactMethod): boolean {
+  return (
+    (method === "whatsapp" || method === "telefono") &&
+    canonicalVenezuelanPhone(value, method) !== undefined
+  );
 }
 
 function isBlank(value: string | undefined): boolean {
@@ -466,7 +465,9 @@ export function validatePublishableListing(
   } else if (draft.contactMethod === "email") {
     if (!looksLikeEmail(draft.contactValue as string)) violations.push("contactValue.invalid");
   } else if (draft.contactMethod !== undefined) {
-    if (!looksLikePhone(draft.contactValue as string)) violations.push("contactValue.invalid");
+    if (!looksLikePhone(draft.contactValue as string, draft.contactMethod)) {
+      violations.push("contactValue.invalid");
+    }
   }
 
   if (stage === "activation") {

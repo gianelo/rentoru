@@ -38,6 +38,7 @@ import { FieldError } from "../../../publicar/FieldError";
 import {
   coverChangedNotice,
   PHOTO_ACTION_COPY,
+  PHOTO_COVER_EXPLANATION,
   photoActionLabel,
   photoRemovalRefusalMessage,
 } from "../../../publicar/photo-action-copy";
@@ -280,11 +281,8 @@ export default async function EditarAvisoPage({
                 Fotos
               </h2>
               <p className={styles.help}>
-                {fotos.length} de {MAX_PHOTOS_PER_LISTING}. La primera es la portada
-                {PHOTO_ACTION_COPY.makeCover.hint === undefined
-                  ? "."
-                  : `: ${PHOTO_ACTION_COPY.makeCover.hint}.`}{" "}
-                Se guardan al tocarlas, sin esperar a «Guardar cambios».
+                {fotos.length} de {MAX_PHOTOS_PER_LISTING}. {PHOTO_COVER_EXPLANATION}. Se guardan al
+                tocarlas, sin esperar a «Guardar cambios».
               </p>
 
               {/* La negativa vuelve como código, y la copia la decide la tabla
@@ -377,10 +375,6 @@ export default async function EditarAvisoPage({
                 ))}
               </ul>
 
-              {/* Visible y no en un `title`: la especificación la marca como no
-                  decorativa, y en un teléfono un `title` no aparece nunca. */}
-              <p className={styles.help}>{PHOTO_ACTION_COPY.remove.hint}</p>
-
               {/* El MISMO componente que sube una foto a un borrador importado:
                   cambia la puerta del servidor, no la secuencia. */}
               <SubirFoto
@@ -389,6 +383,7 @@ export default async function EditarAvisoPage({
                 firmar={pedirDestinoDeFotoDelAviso}
                 adjuntar={adjuntarFotoAlAviso}
                 exito="Foto agregada a tu aviso."
+                chooserLabel="Elegir fotos"
               />
             </section>
 
@@ -524,7 +519,7 @@ export default async function EditarAvisoPage({
                 {/* Y se dice que se puede vaciar: es el único campo del aviso
                     donde borrar el contenido es una corrección válida, y sin la
                     frase nadie sabría que dejarlo en blanco la saca. */}
-                <p className={styles.help}>Opcional. Dejala en blanco para sacarla.</p>
+                <p className={styles.help}>Opcional. Déjala en blanco para eliminarla.</p>
               </div>
 
               {/*
@@ -556,7 +551,7 @@ export default async function EditarAvisoPage({
                     (`search-criteria.ts`): destildar saca el aviso de esa
                     búsqueda, no lo mete en la contraria. */}
                 <p className={styles.help}>
-                  Marcá lo que tiene. Quien busca puede filtrar por cada uno.
+                  Marca lo que tiene. Quien busca puede filtrar por cada uno.
                 </p>
               </fieldset>
 

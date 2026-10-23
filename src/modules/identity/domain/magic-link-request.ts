@@ -340,7 +340,7 @@ export function magicLinkWaitFor(input: {
   const { ticket, nowMs } = input;
 
   return {
-    title: "Revisá tu correo",
+    title: "Revisa tu correo",
     leadBefore: "Le mandamos un enlace a ",
     address: ticket.address,
     // **«Tocalo» (8c) contra «Hacé clic» (9c)**: cada una es falsa en el otro
@@ -348,11 +348,11 @@ export function magicLinkWaitFor(input: {
     // ancho sin duplicarse. Se aplica la regla que la 22.26 dejó dicha en voz
     // alta — la redacción que sigue siendo cierta en los dos — y ninguna de
     // las dos dibujadas lo es. Queda anotado en la 22.27.
-    leadAfter: ". Abrilo y entrás sin escribir nada más.",
+    leadAfter: ". Ábrelo y entras sin escribir nada más.",
     troublesTitle: "Si no llega",
     troubles: [
       "Puede tardar hasta dos minutos.",
-      "Mirá en correo no deseado.",
+      "Mira en correo no deseado.",
       `El enlace sirve una sola vez y vence en ${MAGIC_LINK_MAX_AGE_SECONDS / 60} minutos.`,
     ],
     resend: resendStateFor({ sentAtMs: ticket.sentAtMs, nowMs }),
@@ -360,7 +360,7 @@ export function magicLinkWaitFor(input: {
     // dispositivo y esta pestaña no la tiene. Prometerle que ya está adentro
     // sería la casilla que miente, sólo que dicha en pantalla.
     signedInNotice:
-      "Abriste el enlace en otro dispositivo. Podés seguir ahí: acá ya no hace falta esperar.",
+      "Abriste el enlace en otro dispositivo. Puedes seguir ahí: aquí ya no hace falta esperar.",
     poll: pollWindowFor({ ticket, nowMs }),
     googleLabel: "Mejor entro con Google",
     // Conserva el destino: cambiar de correo no puede costar la vuelta al

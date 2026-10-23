@@ -8,9 +8,9 @@ import type {
  * `Rentoru - Publicar - Mobile.dc.html`).
  *
  * **Vive acá y no adentro del JSX**, como `step-copy.ts` y
- * `violation-copy.ts`: dos de estas frases la especificación las marca como
- * NO decorativas, y una frase interpolada en un atributo es una frase que
- * nadie encuentra al revisarla. Acá tiene prueba propia y sale literal.
+ * `violation-copy.ts`: la copia compartida tiene prueba propia y sale literal.
+ * F36.10 supersede las ayudas históricas de teléfono y portada del menú;
+ * la explicación de portada se muestra una sola vez por superficie.
  *
  * El `Record` sobre `DraftPhotoAction` es el mismo seguro que
  * `PUBLISH_VIOLATION_COPY` usa: si el dominio agrega una acción, este archivo
@@ -20,27 +20,20 @@ import type {
 export interface PhotoActionCopy {
   /** El renglón del menú, entero: «Quitar del aviso», no «Quitar … del aviso». */
   readonly label: string;
-  /**
-   * La aclaración debajo del renglón, y **sólo dos acciones la llevan**. La
-   * especificación dice por qué: sin «no borra la foto de tu teléfono» un
-   * dueño duda antes de tocar, y «portada» sola no significa nada. Van
-   * visibles, no en un `title` que en un teléfono no aparece nunca.
-   */
+  /** Aclaración opcional visible, no escondida en un `title`. */
   readonly hint?: string;
 }
 
 export const PHOTO_ACTION_COPY: Record<DraftPhotoAction, PhotoActionCopy> = {
   moveUp: { label: "Mover arriba" },
   moveDown: { label: "Mover abajo" },
-  makeCover: { label: "Hacer portada", hint: "se ve en la lista y arriba del aviso" },
-  remove: { label: "Quitar del aviso", hint: "no borra la foto de tu teléfono" },
+  makeCover: { label: "Hacer portada" },
+  remove: { label: "Quitar del aviso" },
 };
 
-/**
- * El nombre accesible del botón: **nombra la foto y dice la consecuencia**, el
- * estándar que «Hacer portada» ya cumplía, ahora en las cuatro. La aclaración
- * se repite aunque esté visible porque el botón se lee solo.
- */
+export const PHOTO_COVER_EXPLANATION = "Es la foto principal de tu aviso";
+
+/** El nombre accesible conserva la acción y la identidad de la foto. */
 export function photoActionLabel(action: DraftPhotoAction, photoName: string): string {
   const { label, hint } = PHOTO_ACTION_COPY[action];
   const named = `${label}: ${photoName}`;
@@ -58,7 +51,7 @@ export function photoActionLabel(action: DraftPhotoAction, photoName: string): s
  * se puede decir de un estado que no se entiende.
  */
 export const PHOTO_REMOVAL_REFUSAL_COPY: Record<PhotoRemovalRefusal, string> = {
-  lastPhoto: "Es la única foto y sin fotos no se puede publicar. Agregá otra y después quitá ésta.",
+  lastPhoto: "Es la única foto y sin fotos no se puede publicar. Agrega otra y después quita esta.",
   notFound: "Esa foto ya no está en la lista.",
 };
 

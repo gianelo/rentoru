@@ -45,7 +45,7 @@ export function VistaPrevia({
 
   return (
     <section className={styles.previa}>
-      <h2 className={styles.tituloSeccion}>Revisá antes de crear</h2>
+      <h2 className={styles.tituloSeccion}>Revisa antes de crear</h2>
       <p className={styles.archivo}>
         {archivo} · {preview.totalFilas} filas
       </p>
@@ -57,8 +57,8 @@ export function VistaPrevia({
 
       <p className={styles.explicacion}>
         {hayQueCrear
-          ? `Podés crear las ${preview.listas} ahora y las ${conProblema} con problema quedan afuera, o corregir el archivo y volver a subirlo completo.`
-          : "Ninguna fila quedó lista para crear. Corregí los problemas de abajo y volvé a subir el archivo completo."}
+          ? `Puedes crear las ${preview.listas} ahora y las ${conProblema} con problema quedan fuera, o corregir el archivo y volver a subirlo completo.`
+          : "Ninguna fila quedó lista para crear. Corrige los problemas de abajo y vuelve a subir el archivo completo."}
       </p>
 
       {conProblema > 0 ? (

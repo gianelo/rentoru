@@ -30,7 +30,7 @@ export interface StepCopy {
   readonly question: string;
   /**
    * Debajo del titular, y solo cuando el control NO lo dice ya. La regla
-   * transversal 3 es explicita: el campo dice "Buscá tu zona", asi que un
+   * transversal 3 es explicita: el campo dice "Busca tu zona", asi que un
    * subtitulo que repita "escribi las primeras letras" sobra.
    */
   readonly help?: string;
@@ -42,33 +42,33 @@ export const STEP_COPY: Record<PublishStepId, StepCopy> = {
   precio: {
     number: 3,
     railLabel: "Precio",
-    question: "¿Cuánto pedís al mes?",
+    question: "¿Cuánto pides al mes?",
     help: "En dólares, sin centavos.",
   },
   tamano: {
     number: 4,
     railLabel: "Tamaño",
     question: "¿Cómo es de grande?",
-    help: "Un estudio cuenta como 1 habitación. Si no tiene estacionamiento, dejalo en 0.",
+    help: "Un estudio cuenta como 1 habitación. Si no tiene estacionamiento, déjalo en 0.",
   },
   atributos: {
     number: 5,
     railLabel: "Qué tiene",
     question: "¿Qué tiene?",
-    help: "Marcá lo que tenga. Lo que dejes sin marcar no se menciona en el aviso.",
+    help: "Marca lo que tenga. Lo que dejes sin marcar no se menciona en el aviso.",
   },
   titulo: {
     number: 6,
     railLabel: "Título",
-    question: "Ponele un título",
+    question: "Ponle un título",
     help: "Lo más importante primero. Es lo que se lee en la lista.",
   },
   descripcion: {
     number: 7,
     railLabel: "Descripción",
-    question: "Contá lo que no se ve en las fotos",
+    question: "Cuenta lo que no se ve en las fotos",
   },
-  fotos: { number: 8, railLabel: "Fotos", question: "Subí las fotos", help: "Entre 1 y 6." },
+  fotos: { number: 8, railLabel: "Fotos", question: "Sube las fotos", help: "Entre 1 y 6." },
   quien: { number: 9, railLabel: "Quién publica", question: "¿Quién publica?" },
 };
 
@@ -102,7 +102,14 @@ export const DISCARD_CHANGE_LABEL = "Descartar el cambio";
  * no esta hecho: la lista la arma `jumpableStepsFrom`, y una etiqueta que
  * prometa menos de lo que la lista trae es una etiqueta que miente.
  */
-export const STEP_MAP_TRIGGER_LABEL = "Ver los pasos a los que podés volver";
+export const STEP_MAP_TRIGGER_LABEL = "Ver los pasos a los que puedes volver";
+
+/**
+ * Nombre accesible y placeholder del buscador de zona. Vive aca, y no escrito en
+ * el componente, para que las pruebas de `tests/measure/` lo importen: cuando el
+ * texto cambia, una copia a mano en la prueba se queda atras sin que nadie lo vea.
+ */
+export const ZONE_SEARCH_LABEL = "Busca tu zona";
 
 /**
  * Reusado por la pantalla de editar desde la 18.27, que ahora ofrece el tipo:
@@ -190,7 +197,9 @@ export function stepSummary(
       const declared = declaredFeatures(draft);
       // "0 atributos" se lee como un paso que fallo. Quien contesto "No tiene
       // ninguna" contesto, y el riel tiene que decirlo asi.
-      return declared === 0 ? "Ninguno" : `${declared} atributos`;
+      return declared === 0
+        ? "Ninguno"
+        : `${declared} ${declared === 1 ? "atributo" : "atributos"}`;
     }
 
     case "titulo":

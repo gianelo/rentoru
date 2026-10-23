@@ -10,7 +10,7 @@ import type { PublicationDatabase } from "./drizzle-listing-repository";
  *
  * El reparto de trabajo con el dominio es la decision de este archivo: **SQL
  * estrecha, el dominio decide.** `ILIKE` sobre el nombre y sobre el alias
- * reduce miles de filas a decenas; cual de esas decenas se ofrece, en que
+ * reduce el catálogo finito a candidatos; cuál de ellos se ofrece, en qué
  * orden y con que etiqueta lo resuelve `searchPublicationZones`, que es puro y
  * esta cubierto. Poner el criterio en el `WHERE` lo sacaria del alcance del
  * piso de cobertura y lo volveria imposible de probar sin una base.
@@ -19,9 +19,6 @@ import type { PublicationDatabase } from "./drizzle-listing-repository";
  * pasa un cliente Neon y la prueba de integracion uno de `node-postgres`
  * apuntado a un contenedor real, y **los dos corren este mismo codigo**.
  */
-
-/** Ancho suficiente para que el dominio tenga de donde elegir sus ocho. */
-const LOOKUP_LIMIT = 60;
 
 /**
  * `%` y `_` son comodines de `LIKE`. Sin escaparlos, escribir "100%" en el
@@ -78,8 +75,10 @@ export class DrizzleZoneVocabulary implements ZoneVocabularyPort {
       .from(zones)
       .leftJoin(parent, eq(zones.parentId, parent.id))
       .where(or(...nameMatches))
-      .orderBy(asc(zones.name))
-      .limit(LOOKUP_LIMIT);
+      // No truncar antes del dominio: un OR amplio puede dejar la zona
+      // exacta después de 60 nombres. El catálogo tiene 5796 zonas, no es
+      // un índice abierto; sólo el dominio limita las ocho sugerencias.
+      .orderBy(asc(zones.name));
 
     const aliasRows =
       words.length === 0
@@ -88,8 +87,7 @@ export class DrizzleZoneVocabulary implements ZoneVocabularyPort {
             .select({ zoneId: zoneAliases.zoneId, alias: zoneAliases.alias })
             .from(zoneAliases)
             .where(or(...words.map((word) => ilike(zoneAliases.alias, `%${escapeLike(word)}%`))))
-            .orderBy(asc(zoneAliases.alias))
-            .limit(LOOKUP_LIMIT);
+            .orderBy(asc(zoneAliases.alias));
 
     // Las zonas que un alias trajo y el nombre no: sin ellas, encontrar por
     // alias devolveria una sugerencia que el dominio descarta despues por no
@@ -117,12 +115,11 @@ export class DrizzleZoneVocabulary implements ZoneVocabularyPort {
             // literal". Buscar por un toponimo que solo vive en `zone_alias`
             // —«Bella Vista», el caso para el que esa tabla existe— reventaba la
             // pantalla entera del paso 2, y ningun doble podia verlo.
-            .where(inArray(zones.id, missing))
-            .limit(LOOKUP_LIMIT);
+            .where(inArray(zones.id, missing));
 
     return {
-      // Las dos ciudades del producto. Son dos filas: pedirlas acotadas
-      // costaria mas codigo del que ahorra.
+      // Las cinco áreas del catálogo: pedirlas acotadas costaría más
+      // código del que ahorra.
       cities: await this.db
         .select({ id: cities.id, name: cities.name })
         .from(cities)

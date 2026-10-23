@@ -29,6 +29,7 @@ import {
 import { DrizzleActiveZones } from "@/modules/listing-discovery/infrastructure/drizzle-active-zones";
 import { DrizzleHomeCollections } from "@/modules/listing-discovery/infrastructure/drizzle-home-collections";
 import { DrizzleListingPhotos } from "@/modules/listing-discovery/infrastructure/drizzle-listing-photos";
+import { createHomeSsrTiming } from "@/modules/listing-discovery/infrastructure/home-ssr-timing";
 import { readPhotoPublicBaseUrl } from "@/modules/listing-discovery/infrastructure/photo-public-base-url";
 import { db } from "@/shared/db/client";
 import { Container } from "../components/layout/Container";
@@ -115,6 +116,7 @@ interface InicioProps {
  * con `scroll-snap` del navegador y no con un carrusel embarcado.
  */
 export default async function InicioPage({ searchParams }: InicioProps) {
+  const timing = createHomeSsrTiming();
   const query = await searchParams;
 
   // **El buscador, y el mecanismo entero pasa acá — en el servidor.** El
@@ -129,7 +131,9 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   const typed = (query[HOME_SEARCH_PARAM] ?? "").trim();
   let searched: SearchDestination | null = null;
   if (typed !== "") {
-    const vocabulary = await new DrizzleSearchVocabulary(db).lookup(typed);
+    const vocabulary = await timing.measure("vocabulary", () =>
+      new DrizzleSearchVocabulary(db).lookup(typed),
+    );
     searched = resolveSearchDestination(typed, vocabulary);
     // `redirect` lanza; tiene que quedar fuera de cualquier `try`.
     if (searched.kind === "route") redirect(searched.href);
@@ -147,8 +151,8 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // hay ninguna elegida, y las dos del producto conviven en la misma lista con
   // su ámbito puesto por el dominio.
   const [cities, activeZones] = await Promise.all([
-    new DrizzleCatalogue(db).listCities(),
-    new DrizzleActiveZones(db).listActiveZones(),
+    timing.measure("cities", () => new DrizzleCatalogue(db).listCities()),
+    timing.measure("activeZones", () => new DrizzleActiveZones(db).listActiveZones()),
   ]);
 
   // Qué ciudad nombra `?ciudad=maracaibo` lo traduce el dominio, contra el
@@ -162,10 +166,12 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   // ciudad y no una consecuencia de que la tira de la otra haya desaparecido.
   const specs = homeCollections(cities, selectedCity?.id ?? null);
 
-  const collections = await new DrizzleHomeCollections(db).collectionsFor([
-    ...specs,
-    ...homeAvailabilitySpecs(cities, specs),
-  ]);
+  const collections = await timing.measure("collections", () =>
+    new DrizzleHomeCollections(db).collectionsFor([
+      ...specs,
+      ...homeAvailabilitySpecs(cities, specs),
+    ]),
+  );
 
   // **UNA llamada para todas las portadas de todas las tiras.** Pedirlas por
   // tira serían cuatro viajes, y por aviso hasta veinte — el N+1 clásico
@@ -177,7 +183,9 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   const listingIds = [
     ...new Set(specs.flatMap((spec) => collections.get(spec.key)?.rows.map((row) => row.id) ?? [])),
   ];
-  const covers = await new DrizzleListingPhotos(db).coversFor(listingIds);
+  const covers = await timing.measure("covers", () =>
+    new DrizzleListingPhotos(db).coversFor(listingIds),
+  );
 
   const home = buildHome(specs, collections, covers, readPhotoPublicBaseUrl());
   const landing = homeLanding(home, selectedCity, cities);
@@ -197,12 +205,15 @@ export default async function InicioPage({ searchParams }: InicioProps) {
   //
   // No cambia el modo de render: esta página ya se sirve por petición
   // (`dynamic = "force-dynamic"`, arriba, con su propia razón escrita).
-  const session = await nextAuthSessionPort.getSession();
+  const session = await timing.measure("session", () => nextAuthSessionPort.getSession());
   // **El viaje que la 14.56 agrega, y sólo para quien tiene sesión**: si esta
   // cuenta publicó algo se le pregunta a `listing` con un `EXISTS`. Sin cookie
   // no hay sesión y no hay consulta, que es casi todo el tráfico de esta
   // pantalla.
-  const account = resolveNavAccount(session, await readNavAccountFlags(session));
+  const account = resolveNavAccount(
+    session,
+    await timing.measure("navFlags", () => readNavAccountFlags(session)),
+  );
   const publish = resolveNavPublish(account, homeCanPublish(cities));
 
   // La pastilla del inicio es el estado "vacía" (14i): sin zona elegida el
@@ -230,6 +241,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
     suggestions: boundedVocabularyOf(cities, activeZones),
   };
 
+  timing.finish();
   return (
     <>
       {/* **La misma barra que el resto del producto** (14a/14i), en lugar del
@@ -312,7 +324,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
         ) : (
           <div className={styles.strips}>
             <h1 className={styles.srOnly}>Alquileres de larga estancia en Venezuela</h1>
-            {home.strips.map((strip) => (
+            {home.strips.map((strip, index) => (
               <ListingStrip
                 key={strip.key}
                 stripKey={strip.key}
@@ -320,6 +332,7 @@ export default async function InicioPage({ searchParams }: InicioProps) {
                 subtitle={strip.subtitle}
                 cards={strip.cards}
                 seeAll={strip.seeAll}
+                prioritizeFirstPhoto={index === 0}
               />
             ))}
           </div>

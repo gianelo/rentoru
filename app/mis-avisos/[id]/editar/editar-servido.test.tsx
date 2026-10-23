@@ -64,8 +64,24 @@ vi.mock("@/modules/listing-publication/application/edit-listing", async (origina
 // La acción arrastra `next/headers` y la base entera; acá se mira que el
 // formulario salga del servidor, no lo que hace al recibirlo.
 vi.mock("../../actions", () => ({
-  guardarEdicion: vi.fn(),
-  quitarFotoDelAviso: vi.fn(),
+  guardarEdicion: Object.assign(vi.fn(), {
+    $$FORM_ACTION: () => ({
+      name: "$ACTION_ID_edit-test",
+      method: "post",
+      action: "/mis-avisos/aviso-1/editar",
+      encType: "multipart/form-data",
+      data: null,
+    }),
+  }),
+  quitarFotoDelAviso: Object.assign(vi.fn(), {
+    $$FORM_ACTION: () => ({
+      name: "$ACTION_ID_remove-photo-test",
+      method: "post",
+      action: "/mis-avisos/aviso-1/editar",
+      encType: "multipart/form-data",
+      data: null,
+    }),
+  }),
   pedirDestinoDeFotoDelAviso: vi.fn(),
   adjuntarFotoAlAviso: vi.fn(),
 }));
@@ -310,6 +326,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
 
     expect(html).toContain('name="reference"');
     expect(html).toContain('value="Frente a la panadería"');
+    expect(html).toContain("Opcional. Déjala en blanco para eliminarla.");
     expect(html).toContain('name="parkingSpots"');
     expect(html).toContain('name="propertyType"');
     // Cargado con el valor del aviso, no en blanco: un radio sin marcar haría
@@ -335,6 +352,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
     expect(campos).toMatch(/name="hasAppliances"[^>]*\/><span>Línea blanca<\/span>/);
 
     expect(campos.match(/type="checkbox"/g)).toHaveLength(5);
+    expect(campos).toContain("Marca lo que tiene. Quien busca puede filtrar por cada uno.");
   });
 
   /** **Lo declarado vuelve marcado, y lo demás vuelve DIBUJADO y sin marcar.**
@@ -486,7 +504,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
   it("una negativa sobre algo que la edición no manda se sigue diciendo", async () => {
     const html = await dibujar("photos.required");
 
-    expect(html).toContain("Subí al menos una foto");
+    expect(html).toContain("Sube al menos una foto");
     expect(html).toContain('role="alert"');
     // Y no inventa un control que esta pantalla no dibuja.
     expect(html).not.toContain('id="photos-error"');
@@ -500,7 +518,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
     const html = await dibujar("priceUsd.invalid,photos.required");
 
     expect(html.split("Solo el número, en dólares").length - 1).toBe(1);
-    expect(html).toContain("Subí al menos una foto");
+    expect(html).toContain("Sube al menos una foto");
   });
 
   /**
@@ -600,8 +618,18 @@ describe("/mis-avisos/[id]/editar — las fotos (18.21)", () => {
     expect(html).toContain("Foto 3");
   });
 
-  it("dice que quitar no borra la foto del teléfono, que la especificación marca como no decorativa", async () => {
-    expect(await dibujar()).toContain(PHOTO_ACTION_COPY.remove.hint as string);
+  it.each([{}, { foto: "lastPhoto" }])("sirve la copia aprobada de fotos con %j", async (query) => {
+    const html = await conParametros(query);
+    const input = html.match(/<input\b[^>]*\btype="file"[^>]*>/)?.[0];
+    const inputId = input?.match(/\bid="([^"]+)"/)?.[1];
+    expect(input).toContain('accept="image/jpeg,image/png,image/webp"');
+    expect(html).toMatch(new RegExp(`for="${inputId}"[^>]*>Elegir fotos</label>`));
+    expect(html.split("Es la foto principal de tu aviso")).toHaveLength(2);
+    expect(html).not.toMatch(/no borra la foto de tu teléfono/i);
+    expect(html).not.toContain("se ve en la lista y arriba del aviso");
+    expect(html).toContain('aria-label="Quitar del aviso: Foto 2"');
+    expect(html).toContain('name="photoId" value="foto-b"');
+    expect(html).toContain('method="post"');
   });
 
   it("cuando quitar se negó, dice por qué y ofrece la salida", async () => {

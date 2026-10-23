@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { searchPublicationZones } from "@/modules/listing-publication/application/search-publication-zones";
 import {
   isStepComplete,
   isStepNavigable,
@@ -12,7 +13,6 @@ import {
   progressPercent,
   stepViolations,
 } from "@/modules/listing-publication/domain/publication-steps";
-import { searchPublicationZones } from "@/modules/listing-publication/domain/zone-search";
 import { DrizzleZoneVocabulary } from "@/modules/listing-publication/infrastructure/drizzle-zone-vocabulary";
 import { buildPriceStepHistogramView } from "@/modules/listing-search/domain/price-histogram-step";
 import { DrizzleZonePriceTally } from "@/modules/listing-search/infrastructure/drizzle-zone-price-tally";
@@ -81,7 +81,7 @@ export default async function StepPage({ params, searchParams }: StepPageProps) 
   // exactamente lo que el puerto acotado existe para no hacer.
   const zoneResults =
     stepId === "zona" && q
-      ? searchPublicationZones(q, await new DrizzleZoneVocabulary(db).lookup(q))
+      ? await searchPublicationZones(q, new DrizzleZoneVocabulary(db))
       : undefined;
 
   // **El paso 3 es el segundo que consulta, y por la misma razón que el 2: sólo

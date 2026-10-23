@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="menta" data-layout="compacto">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Revisar · lámina responsive v1 — Rentoru</title>
+    <link rel="stylesheet" href="../../src/styles/tokens.css">
+    <link rel="stylesheet" href="revisar-responsive-v1.css">
+  </head>
+  <body>
+    <aside class="design-note container" aria-label="Contexto de la lámina">
+      <p><strong>F36.16 · Revisar · v1 · propuesta sin aprobar</strong></p>
+      <p>Referencia estática: 390×844, 440×956, 768×1024 y 1440×900.
+        Todos los datos, fotos y contacto son muestras de diseño, no un aviso real.</p>
+    </aside>
+    <div class="specimen">
+      <header class="bar">
+        <div class="bar-inner container">
+          <a class="brand" href="#design-notes" aria-label="Rentoru (muestra)">Rentoru</a>
+          <span class="saved">Guardado</span>
+          <a class="exit" href="#design-notes" aria-label="Salir de publicar (muestra)">×</a>
+        </div>
+      </header>
+      <main class="container review" aria-labelledby="review-title">
+        <h1 id="review-title">Revisa tu aviso</h1>
+        <div class="review-list">
+          <section class="review-row" aria-labelledby="tipo">
+            <h2 id="tipo">Tipo y zona</h2>
+            <a class="change" href="#design-notes" aria-label="Cambiar tipo y zona (muestra)">Cambiar</a>
+            <p class="value">Apartamento · Los Palos Grandes, Municipio Chacao · Distrito Capital</p>
+          </section>
+          <section class="review-row" aria-labelledby="precio">
+            <h2 id="precio">Precio</h2>
+            <a class="change" href="#design-notes" aria-label="Cambiar precio (muestra)">Cambiar</a>
+            <p class="value price">$450 <span>al mes</span></p>
+          </section>
+          <section class="review-row" aria-labelledby="tamano">
+            <h2 id="tamano">Tamaño</h2>
+            <a class="change" href="#design-notes" aria-label="Cambiar tamaño (muestra)">Cambiar</a>
+            <p class="value">2 hab · 2 baños · 78 m² · 1 puesto</p>
+          </section>
+          <section class="review-row" aria-labelledby="atributos">
+            <h2 id="atributos">Tiene</h2>
+            <a class="change" href="#design-notes" aria-label="Cambiar atributos (muestra)">Cambiar</a>
+            <p class="value">Planta eléctrica · Agua regular · Vigilancia 24 h · Línea blanca</p>
+          </section>
+          <section class="review-row" aria-labelledby="descripcion">
+            <h2 id="descripcion">Descripción</h2>
+            <a class="change" href="#design-notes" aria-label="Cambiar descripción (muestra)">Cambiar</a>
+            <div class="value description">
+              <p>Apartamento de dos habitaciones con puesto de estacionamiento en Los Palos Grandes.
+                Sala comedor con ventanas amplias y cocina separada con línea blanca incluida.
+                La habitación principal tiene baño y espacio para un escritorio.</p>
+              <p>Edificio con ascensor, vigilancia 24 horas y planta eléctrica para las áreas comunes.
+                Agua regular y tanque de reserva. Cerca de comercios y transporte público.
+                La sala y ambas habitaciones reciben luz natural durante la mañana.</p>
+            </div>
+          </section>
+          <section class="review-row" aria-labelledby="fotos">
+            <h2 id="fotos">Fotos</h2>
+            <a class="change" href="#design-notes" aria-label="Cambiar fotos (muestra)">Cambiar</a>
+            <div class="value photo-content">
+              <p class="photo-summary">3 fotos · 449 KB</p>
+              <ol class="photos" aria-label="Orden de fotos de muestra">
+                <li>
+                  <figure>
+                    <div class="photo" role="img" aria-label="Marcador de foto de muestra: sala comedor"></div>
+                    <figcaption><strong>1 · Portada</strong><span>Sala comedor · muestra</span></figcaption>
+                  </figure>
+                </li>
+                <li>
+                  <figure>
+                    <div class="photo" role="img" aria-label="Marcador de foto de muestra: habitación principal"></div>
+                    <figcaption><strong>2</strong><span>Habitación principal · muestra</span></figcaption>
+                  </figure>
+                </li>
+                <li>
+                  <figure>
+                    <div class="photo" role="img" aria-label="Marcador de foto de muestra: cocina"></div>
+                    <figcaption><strong>3</strong><span>Cocina · muestra</span></figcaption>
+                  </figure>
+                </li>
+              </ol>
+            </div>
+          </section>
+          <section class="review-row" aria-labelledby="quien">
+            <h2 id="quien">Publicas como</h2>
+            <a class="change" href="#design-notes" aria-label="Cambiar quién publica (muestra)">Cambiar</a>
+            <p class="value contact"><span class="owner">Dueño</span> · Correo
+              <span class="contact-value">muestra@example.invalid</span></p>
+          </section>
+        </div>
+        <p class="warning">Después de publicar podés editar todo,
+          <strong>menos si publicás como dueño o inmobiliaria</strong>.</p>
+        <div class="actions">
+          <a class="primary" href="#design-notes">Publicar aviso</a>
+          <a class="secondary" href="#design-notes">Volver al formulario</a>
+        </div>
+      </main>
+    </div>
+    <aside class="design-note container" id="design-notes" tabindex="-1" aria-label="Notas fuera del diseño">
+      <p><strong>Fuera de la interfaz · no publica ni guarda.</strong>
+        Los enlaces de esta lámina llevan a esta nota; no simulan pasos ni autenticación.</p>
+      <p>Derivada de SISTEMA.md y Publicar Mobile 12d / Desktop 13b, con tokens de producción.
+        Móvil: Cambiar junto al título; tablet: una columna amplia; escritorio: filas de ancho completo,
+        descripción de lectura acotada y fotos en orden. Sin riel de pasos.</p>
+      <p>Warning conservado literalmente del caller actual, incluido su voseo.
+        Su contradicción conocida con dueño → inmobiliaria queda para 36.18.
+        Esta propuesta no resuelve esa regla ni implementa 36.17. Aprobación humana pendiente.</p>
+    </aside>
+  </body>
+</html>

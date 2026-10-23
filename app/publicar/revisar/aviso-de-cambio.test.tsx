@@ -47,7 +47,8 @@ vi.mock("../publication-context", () => ({
   }),
 }));
 
-import ReviewPage from "./page";
+import stepStyles from "../publish-steps.module.css";
+import ReviewPage, { metadata } from "./page";
 
 /** Los nueve pasos contestados: sin eso la pantalla redirige y no dibuja nada. */
 const DRAFT: StoredDraft = {
@@ -71,7 +72,9 @@ const DRAFT: StoredDraft = {
     contactMethod: "whatsapp",
     contactValue: "04125550134",
   },
-  photos: [{ key: "u/1.webp", name: "Sala", bytes: 168_000 }],
+  photos: [
+    { key: "incoming/publicador-1/11111111111111111111111111111111", name: "Sala", bytes: 168_000 },
+  ],
   featuresDeclared: true,
   violations: [],
 };
@@ -109,9 +112,47 @@ describe("la pantalla de revisar dice qué cambió", () => {
   it("no dice nada cuando no se volvió desde ningún paso", async () => {
     const html = await served({});
 
-    expect(html).toContain("Revisá tu aviso");
+    expect(html).toMatch(/<h1 class="[^"]*">Revisa tu aviso<\/h1>/);
+    expect(metadata.title).toBe("Revisa tu aviso — Rentoru");
+    expect(html).toMatch(/<dt class="[^"]*">Publicas como<\/dt>/);
     expect(html).not.toContain("Cambiaste");
     expect(html).not.toContain("El resto del aviso");
+  });
+
+  it("sirve la composición propia de revisar y conserva sus siete destinos nativos", async () => {
+    const html = await served({ campo: "rooms", antes: "2", ahora: "3" });
+
+    expect(html).toMatch(/<main class="[^"]*review/);
+    for (const step of ["tipo", "precio", "tamano", "atributos", "descripcion", "fotos", "quien"]) {
+      expect(html).toContain(`href="/publicar/paso/${step}?volver=revisar"`);
+    }
+    expect(html).toContain("Cambiaste habitaciones de 2 a 3.");
+    // React19 no serializa el POST de una Server Action simulada; se comprueba en Next real.
+    expect(html).toContain('type="submit"');
+    expect(html).toContain('href="/publicar/paso/tipo"');
+    expect(html).toMatch(/<p class="[^"]*warning[^"]*">/);
+  });
+
+  it("advierte antes de publicar que dueño a inmobiliaria se puede corregir, nunca al revés", async () => {
+    const html = await served({});
+
+    expect(html).toContain(
+      "Aparece siempre en tu aviso. Después puedes corregirlo de dueño a inmobiliaria, " +
+        "<strong>nunca al revés</strong>.",
+    );
+    expect(html).not.toContain("menos si publicás como dueño o inmobiliaria");
+    expect(html).not.toContain("Después de publicar podés editar todo");
+    expect(html.indexOf("nunca al revés")).toBeLessThan(html.indexOf('type="submit"'));
+  });
+
+  it("sirve las fotos guardadas mediante la vista privada, con nombre y portada", async () => {
+    const html = await served({});
+
+    expect(html).toContain('src="/publicar/fotos/vista/0?foto=11111111111111111111111111111111"');
+    expect(html).toContain('alt="Sala"');
+    expect(html).toContain("1 · Portada");
+    expect(html).not.toMatch(/<img[^>]+src="(?:blob:|data:|https?:)/);
+    expect(html).toContain("1 foto · 164 KB");
   });
 
   it("calla cuando la URL anuncia un cambio entre dos valores iguales", async () => {
@@ -128,5 +169,21 @@ describe("la pantalla de revisar dice qué cambió", () => {
 
     expect(html).not.toContain("Cambiaste");
     expect(html).not.toContain("undefined");
+  });
+});
+
+/**
+ * 36.23 — la advertencia de dueño a inmobiliaria salía pegada a «Publicar
+ * aviso». Lleva el mismo rol que el aviso de borrador vencido: separa una
+ * advertencia del formulario que la sigue, sin tocar `.warning`.
+ */
+describe("la advertencia de revisar no se pega a las acciones", () => {
+  it("lleva el rol que la separa del formulario que la sigue", async () => {
+    const html = await served({});
+    const role = stepStyles.warningBeforeForm;
+    if (!role) throw new Error("Falta el rol CSS que separa la advertencia del formulario");
+    const aviso = html.match(/<p class="([^"]*)">[^<]*<strong>[^<]*<\/strong>\.<\/p>(<form)/);
+    expect(aviso?.[1]?.split(" ")).toEqual([stepStyles.warning, role]);
+    expect(aviso?.[2]).toBe("<form");
   });
 });

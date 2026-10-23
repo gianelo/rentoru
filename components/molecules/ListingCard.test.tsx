@@ -138,7 +138,9 @@ describe("ListingCard — la portada", () => {
    * Lo que no se ve todavía no se paga.
    */
   it("difiere la descarga de la foto", () => {
-    expect(render()).toContain('loading="lazy"');
+    const markup = render();
+    expect(markup).toContain('loading="lazy"');
+    expect(markup).not.toMatch(/\bfetchpriority=/i);
   });
 
   it("lleva el texto alternativo que le dieron, sin recomponerlo", () => {

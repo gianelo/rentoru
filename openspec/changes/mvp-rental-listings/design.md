@@ -243,7 +243,21 @@ Ports as interfaces make the domain and application layers fully testable with z
 
 **Integration tests must use real Postgres, not an emulator**, because `bit_count` semantics and composite-FK enforcement are precisely what is under test. The same reasoning now extends to bulk import: its idempotency guarantee is a unique index, not application code, so a fake would verify the fake.
 
+With `CI=true`, the bulk-import confirmation file requests one estimated plan in `afterAll`, before fixture cleanup and outside the unchanged five-second test cases. Its Drizzle logger accepts only the exact observed parameter-free `listZones()` SELECT; absent/mismatched SQL emits `query_not_observed`. `EXPLAIN (FORMAT JSON)` plans that SELECT without executing it: no `ANALYZE` or `BUFFERS`. `[import-plan]` marks `mode=estimated`, preserves fixed-allowlist operator types and numeric/null row estimates, and keeps actual execution times, rows, loops, buffers and JIT fields `null` for compatibility. `driver_explain_ms` measures only the planning request round trip, not SQL execution. The snapshot is after the tests and need not match an earlier plan. Predicates, arbitrary identifiers, index names, SQL, parameters, raw plans, row data and exception text are never logged. Errors emit unavailable or remain silent without replacing test outcomes. The five-second outer deadline and per-query `query_timeout=5000` remain; existing test/hook limits are unchanged.
+
+S8 adds `aroundZonesRead(first|second, action)` to both CI duplicate-confirmation catalogue `listZones` reads. `[import-plan]` emits `snapshot_start`, numeric/null `state`, unverified `candidate_plan` (or phase-specific `unavailable`), then `snapshot_end` before the actual read trace. Its subsequent `association` accepts only fresh exact SQL with zero parameters; unknown is not a match. State covers public.zone counts/estimates/pages, lagging analyze counters/epochs, snapshot PID/version, work_mem bytes and 0/1 planner/JIT flags. No raw SQL, settings strings, data or error text is emitted; SQLSTATE is restricted to 57014/42P01/42501, otherwise unknown.
+
+The snapshot PID identifies only its single metadata SELECT; EXPLAIN/original backend remain unknown. Temporal SQL association is not the actual executed server plan. These awaited reads consume the unchanged five-second test budget and can warm caches/influence outcomes; a later PASS is not a fix. Per-query deadlines stop waiting, not cancellation. Legacy afterAll output remains unchanged. A real PostgreSQL read-only smoke and the first/second GitHub logs were verified in PR420 (merge `435b936`, PR CI39031240685; postmerge push gates39032550741). Instrumentation alone did not correct the historical latency.
+
+Probe evidence: RED4 → focused GREEN12 with the existing query-observer tests; removing the parameter guard caused the intended test to fail, then was restored. The real confirmation caller passed 4/4 on the owned PostgreSQL 18 and emitted exactly one parsed plan summary. The later full integration run passed 407 tests but two suites refused the noncanonical diagnostic DSN before collection; those guards were not relaxed. Full unit coverage exited 1 with 3419 passing tests and three unchanged preview-resolver timeouts, without concurrent build/measure; no retry or cause claim. Types, lint, tokens and diff checks passed. These local results do not establish CI timing or a globally green suite. Independent static S1–S3 inspection found no demonstrated severe candidate defect; its sole runtime attempt failed before collection because the scratch could not resolve `@vitest/utils`: zero tests executed, no PASS. That inspection preceded the deadline addition and node-summary projection. The projection observed RED2 → GREEN13, but CI38924430876 returned unavailable, not nodes. The subsequent plain-EXPLAIN correction observed RED2 → GREEN13 with a realistic report lacking execution timings, plus types/format/diff PASS; it does not execute the SELECT or mix estimates with actual measurements. No additional database query, full suite or independent verifier was run for that correction. Its focused RED/GREEN now covers pool acquisition that never completes (13 focused tests passed); one real PostgreSQL lock check returned unavailable after 5003 ms, released the lock, reused the pool and preserved stored counts. The normal real-adapter path also emitted its plan. No full-suite or independent-runtime retry was performed.
+
 **Crawlability is tested with scripting disabled, not asserted by inspection.** D11 makes organic search the distribution channel, and "renders without JavaScript" is the kind of property that silently breaks the first time someone reaches for a client component. If it is not executed as a test, it is not a guarantee.
+
+### Preview-provider test double
+
+`scripts/wait-for-preview.test.ts` caches synthetic provider JSON during setup and serves it through a POSIX-shell `gh` double. Starting Node on every simulated poll added process overhead despite the fake `sleep`. The production resolver, real JSON/URL validation, 40 attempts, 39 simulated sleeps and default five-second test limits remain unchanged.
+
+`serves fake deployment responses without starting Node for each poll` runs the generated provider with a Node-denying executable and checks its exit, exact JSON/stdout/stderr and absence of Node calls. RED observed exit77; an ignored-Node-call mutation also failed the marker assertion, was restored, and returned GREEN. All 23 focused tests passed, preserving the previous 22 cases and their output/counter assertions; the local full unit suite passed 3643 tests across 321 files. This does not erase earlier recorded timeouts or establish their exact scheduling cause. Initial type validation caught a missing `NODE_ENV` in the new test's subprocess environment; it was made explicit and the regression test passed again. Typecheck, lint (eight warnings and two infos in untouched files), token gate and ShellCheck of the generated shell doubles passed. An initial lint run scanned generated negative fixtures under unignored `.tmp`; those task-owned artifacts were preserved in the existing ignored `test-results` directory, without modifying guards, lint configuration or fixture contents. No application, database or browser behavior changes; build/browser acceptance are inapplicable to this test-only unit. 36.17 still needs its own remaining checks and human acceptance.
 
 ### Coverage policy
 
@@ -253,7 +267,13 @@ Instead: a **90% floor on `src/modules/*/domain/` and `src/modules/*/application
 
 ## Continuous Integration
 
-No pipeline exists today. These gates run on every pull request and block merge:
+Pull requests targeting `dev`, `staging` or `main` run lint, types, tokens, unit/coverage, integration on ephemeral PostgreSQL 18 and a production build once, without waiting for Vercel. Their fake build credentials never point at a live database. Required GitHub checks must be configured separately; workflow presence alone does not block merge.
+
+Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability and budgets. Browser suites use only the job-owned database; Lighthouse measures the matching live deployment without creating application data. The resolver binds the newest Preview deployment to the pushed SHA, accepts the expected branch or SHA as the provider's ref, requires its latest status to succeed and fails on timeout/API errors instead of substituting a stable domain or local success. Vercel may publish SHA-only refs, which do not independently attest the source branch.
+
+The push `e2e` job is a `fail-fast: false` matrix of three parallel legs, each with its own PostgreSQL 18 container, migrations and deterministic seed: `publication` (36.3), `reads` (general E2E + crawlability, then 30.2–30.4) and `auth` (30.4b2–30.7, then 29.2 pagination last because it appends rows). No leg sees another's writes, so cross-block ordering no longer rests on a shared database. The optional dev critical profile still changes only the general read step.
+
+Concurrency keeps one group per workflow and ref; a newer run cancels a stale one only for pull requests and `dev`, so a started `staging` run always finishes; GitHub keeps one pending run per group, so a queued intermediate `staging` push can be superseded while the newest one still runs. CI never deploys (Vercel migrates in `vercel-build`), so cancelling CI cannot cancel a migrating deployment. The repository is public; heavy suites stay on pushes for proportionality and speed, and F2's private-repo minutes row below no longer constrains that split.
 
 | Gate | Command | Needs |
 |---|---|---|
@@ -265,8 +285,63 @@ No pipeline exists today. These gates run on every pull request and block merge:
 | Build | `pnpm build` | — |
 | Bundle budget | `pnpm budget:bundle` | build output |
 | Token contract (D16) | `pnpm lint:tokens` | — |
-| E2E + crawlability | `pnpm test:e2e` | preview deployment URL |
+| E2E + crawlability | `pnpm test:e2e` | local production app + job-owned PostgreSQL |
 | Lighthouse budget | `pnpm budget:lighthouse` | preview deployment URL |
+
+### Shared catalogue fixture statistics
+
+The confirmation integration fixture runs `ANALYZE public.zone` after its city/zone
+inserts. Earlier tests can empty and reseed the shared catalogue, leaving an empty
+table estimate despite thousands of rows. Refreshing statistics at this fixture's
+completion isolates its reads from that inherited state; production SQL, seeding,
+business assertions and the five-second test limit stay unchanged.
+
+`refreshes zone fixture statistics` checks actual cardinality and `pg_class` through
+PostgreSQL: nonempty data, positive pages/estimate, and a 5% cardinality allowance
+(at least one row) for approximate statistics. This is not a latency allowance or
+a required planner choice. Controlled RED/GREEN and removal of the maintenance
+protect this boundary; neither reconstructs the historical autoanalyze interleaving.
+
+### Opt-in home data timing (preview dev only)
+
+`HOME_SSR_TIMING_DIAGNOSTICS=1` emits `home-ssr-timing/v1` only when Vercel
+runtime metadata also says `VERCEL_ENV=preview` and `VERCEL_GIT_COMMIT_REF=dev`.
+Missing metadata, Production, staging and other values remain silent. Enable only
+as a Preview/dev override; removing the flag disables it without changing data.
+One completed home preparation emits closed phase labels and finite ms/null,
+never arguments, results, errors, URLs, SQL, IDs or session/environment contents.
+`dataPreparationMs` excludes edge/startup, root layout and React/HTML rendering;
+parallel phase times overlap and must not be summed. Redirects/errors retain their
+behavior without claiming completed preparation. Queries, order and HTML stay
+unchanged; clock/sink failures cannot replace the application's result or error.
+
+### E2E profiles: selection is not the complete CI sequence
+
+`pnpm test:e2e:smoke:read` selects anonymous home, search and publication-access checks from `publish-access` and `busqueda-inicio`. `pnpm test:e2e:critical:read` adds `camino-de-lectura-sin-javascript`, `filtros-sin-javascript`, `sugerencias-sin-javascript` and `aviso-malformado-sin-javascript`: results/detail navigation, filters, suggestions and invalid routes. Both explicitly select the existing `chromium` and JavaScript-disabled `crawlability` projects; per-test skips still apply. Neither includes the separate `measure` harness.
+
+Append `--list` to either command to inspect the actual selection without launching browsers, servers or database fixtures. Running the tests requires the existing local app/proxy and deterministic catalogue on a separately owned disposable PostgreSQL database. Do not seed or run mutating fixtures against manual Dev/Staging/Production data. Missing catalogue can cause existing tests to skip: collection alone is not a functional PASS.
+
+The accepted destination policy is critical public reads **plus isolated publication and authenticated contact checks in dev**, with exhaustive checks in staging and unchanged basic PR gates. The `:read` commands cover only its public-read portion. This first slice defines selectors; it does not change current workflow triggers, gate conditions, retries, assertions or coverage.
+
+| Tier | Composition | Current execution |
+|---|---|---|
+| Smoke public reads | `pnpm test:e2e:smoke:read` | Explicit command, not wired into CI yet |
+| Critical public reads | `pnpm test:e2e:critical:read` | Explicit command, not the entire critical tier |
+| Critical writes/authentication | Existing exclusive publication, logout, contact revelation, report and door blocks | Remain isolated and mandatory in current CI |
+| Complete E2E | Exclusive publication first; general specs with existing exclusions; listing diagnostics/routes; isolated authenticated/door blocks; seeded pagination last | Existing ordered `e2e` job on dev/staging |
+| Other complete gates | `measure`, bundle/row budgets and SHA-bound Lighthouse | Existing separate jobs on dev/staging |
+
+`pnpm test:e2e` remains the general Playwright command, **not an alias for the complete ordered CI sequence**. Two opt-in fixtures remain excluded by the default configuration. Do not replace the full pipeline with a bare Playwright invocation or `pnpm verify` (which can recreate a DB and stop processes). Before retiring current dev jobs, validate the staging replacement and the before/after guarantees, including the existing Notion13 dependencies; no profile definition alone permits skipping a gate.
+
+### Prepared CI transition: full by default, staging always full
+
+The optional, nonsecret repository variable `CI_DEV_PROFILE=critical` prepares a controlled switch for dev only. An unset or unrecognized value preserves complete dev execution. GitHub string comparisons are case-insensitive. Staging always keeps the complete E2E sequence, measure and budgets regardless of that variable; PR gates are unchanged.
+
+Critical dev selects `test:e2e:critical:read` instead of the exhaustive general read loop. Exclusive publication, served listing/route diagnostics, authenticated logout/contact/report/door checks and seeded pagination still run in their original order against job-owned PostgreSQL, without preview access. General read failures still fail the step. Only dev's measure, preview resolver and budget jobs are deferred to staging in that mode.
+
+**Do not enable this variable yet.** First integrate the prepared configuration, validate an intermediate staging candidate (the product phase need not be finished), and satisfy the existing replacement/promotion dependencies09/12/13. Setting the variable is a separate explicit operator action, not something this workflow or implementation performs. Returning it to `full` or removing it restores the previous complete dev schedule; it does not undo application data or migrations. Main promotion remains a separate normal dev→main PR for the validated content.
+
+`ci-profiles.test.ts` checks the branch/profile matrix and executes the actual general-step shell with a disposable fake `pnpm`, verifying exact selected commands, stdout/stderr and failure exit codes without browsers, servers or databases. This proves dispatch, not an executed staging deployment or functional browser PASS.
 
 **A budget nobody measures automatically is a wish.** `budget:bundle` reads the build output and fails when read-path first-load JS exceeds 130 KB — fast, needs no deployment, and catches the most common regression (someone converts a server component to a client component). `budget:lighthouse` runs against the preview deployment and fails on LCP over 2.5 s on a throttled 3G profile, search transfer over 230 KB, or detail transfer over 500 KB. Image derivative budgets are already asserted at generation time in unit tests, so they need no separate gate.
 
@@ -276,7 +351,12 @@ No pipeline exists today. These gates run on every pull request and block merge:
 
 **`lint:tokens` is the enforcement half of D16.** It fails when a component stylesheet contains a colour literal, a corner radius, a thumbnail dimension, or a type size written as a value rather than a custom property. It costs no deployment and runs in milliseconds. Without it, D16 is a convention — and a convention that every future component must remember is precisely what this codebase's guiding principle rejects.
 
-**CI minutes are a metered resource here.** The repository is private, so Actions minutes come out of a monthly quota rather than being free as they would be on a public repository. Accordingly: lint, types, unit, coverage, the token contract and integration run on every push; E2E, crawlability and both budget gates run **on pull requests only**, since they require a deployment and are the expensive half. This is the same free-tier discipline applied to Neon, R2 and Resend — see F2, which must now re-verify the Actions quota as well.
+**Deployment scope is explicit.** `vercel.json` allows automatic Git deployments only for `dev`, `staging` and `main`; it does not revoke manual/CLI deployment privileges. Preview branch variables isolate Dev and Staging; Production belongs to `main`. Feature PRs require neither a deployment nor live DB credentials. These repository rules take effect only after integration into the relevant refs; old feature refs may retain their previous deployment configuration.
+
+Deployment verification requires the automation bypass credential and a reachable HTTP 200 page; missing prerequisites fail rather than reporting unmeasured Lighthouse as green. The deployment URL comes from GitHub's matching deployment record, not `dev.rentoru.com`/`staging.rentoru.com`. GitHub/Vercel metadata is the identity authority; this is not an independent attestation of the running application's SHA.
+
+`measure` retains CI traces only for unexpectedly failed cases and uploads only `test-results/**/trace.zip` for three days, without changing timeouts, retries or assertions. DOM/network snapshots remain enabled; screenshots, sources and extra attachments are disabled. These ZIPs are unsanitized: the local harness uses fixtures/fake DB wiring but may request public external images and set synthetic cookies. Never reuse this upload policy for authenticated remote E2E or real user sessions. A failure before trace finalization may leave no ZIP; that warning does not turn the failed measure step green.
+After Chromium installation, `node --test scripts/measure-trace.test.cjs` checks the actual runner/config using synthetic manual browser contexts without Next, navigation or DB: an unexpected failure must retain browser events, while a passing case must discard its trace.
 
 ### D9 — Bulk import is a loader, not a second publication path
 
@@ -321,6 +401,37 @@ Two reasons, and the second is a hard product ceiling:
 **Storage.** Originals are discarded after hashing and normalization. A phone photo is 3–8 MB; six per listing is roughly 30 MB, which against R2's 10 GB free tier caps the catalog at **~330 listings**. Storing only derivatives (a card thumbnail and a ~200 KB detail image per photo) puts the same tier at **~7,000 listings** — an order of magnitude more, for free. Nothing needs the original: the dHash is computed at upload and persisted as 64 bits, and no view renders above the detail size.
 
 **The `compacto` structure (D14) shrinks the thumbnail derivative.** The row thumbnail is 44 × 34 CSS px on mobile and 64 × 48 on desktop, so one derivative at **128 × 96** covers both at 2× device pixel ratio. The earlier figure was sized for a 96 × 72 row (192 × 144 at 2×) — 2.25× the pixels. The consequence is that the search-results byte budget stops being tight and the storage ceiling moves further out. This is the clearest case of a visual choice paying for itself in the performance budget rather than costing against it, and it is the real return on `compacto` — see the density note in D14, which explains why the return does *not* show up as more listings per screen.
+
+### D12a — Lectura privada de fotos retenidas (36.15, T1; S2–S3/S7)
+
+La recuperación reutiliza `readPublicationDraft`: `store.load(publisherId, now)` excluye
+borradores vencidos y la normalización no escribe. `readDraftPhoto` recibe identidad
+confiable del futuro adaptador de sesión y un índice entero exacto del orden guardado;
+verifica la clave con `tokenFromOwnedKey` antes de `PhotoStoragePort.read`.
+Devuelve sólo bytes admitidos por `detectContentType`/`inspectUploadedPhoto` y su MIME,
+sin claves ni URLs públicas de `incoming`, sin renovar, borrar, derivar o promover.
+La ausencia/selección/propiedad/bytes inválidos dan `notFound`; errores opacos de lectura
+dan `unavailable` (el puerto no distingue objeto ausente de servicio inaccesible).
+`read-draft-photo.test.ts` protege autorización, borde de vencimiento, orden y admisión.
+Este núcleo no restaura aún miniaturas: ruta autenticada, cabeceras privadas, explicación
+recuperable y prueba de bytes/navegación quedan para T2/T3; no implica entrega ni cierre.
+
+### D12b — Miniaturas autenticadas al regresar (36.15, T2; S2–S3/S7)
+
+`/publicar/fotos/vista/[indice]` reutiliza la sesión confiable y `readDraftPhoto`:
+bytes/MIME admitidos o cuerpo vacío 401/404/503, siempre `private, no-store` y
+`nosniff`. No acepta propietario, clave ni URL del request como autorización.
+`draft-photo-preview` restringe la misma lectura del borrador por identidad de foto;
+una URL posicional anterior al guardado/reordenamiento no muestra otra ocupante.
+`PhotoUploader` conserva esa URL al mover filas, orden/portada y campos nativos;
+el error de imagen conserva la foto y ofrece reintentar o quitar/volver a subir,
+sin imagen ficticia. Sólo revoca previews blob creadas localmente.
+Pruebas: `route.test.ts` cubre respuestas/autorización/propiedad/admisión sin escritura;
+`fotos-servido.test.tsx` atraviesa StepPage/PublishStep y protege imágenes/orden/portada;
+`PhotoUploader.dismiss.test.tsx` protege reordenar, fallo, reintento y retirada.
+Verificación local T2: 39 pruebas enfocadas, tipos y Biome; mutaciones de sesión y
+miniaturas detectadas/restauradas. No es prueba de DB/storage real, decodificación,
+navegación ni aceptación visual (T3/T4); revisión nativa T1 sigue diferida, sin aprobación.
 
 ### D13 — Spartan density over visual identity
 
@@ -438,6 +549,30 @@ Hard numbers, verified on the preview deployment before each user-facing PR merg
 | JavaScript on the read path | ≤ 130 KB (was 30 — see the revision note below) |
 | LCP on a throttled 3G profile | ≤ 2.5 s |
 
+The homepage marks only the first cover of its first rendered collection as `loading="eager"` with `fetchPriority="high"`. Empty collections and unavailable covers have already been omitted by the domain. Every other cover, including other `ListingStrip`/`ListingCard` consumers, keeps lazy loading without a priority override. This native HTML hint adds no client JavaScript and preserves `<picture>` variants. `app/inicio-servido.test.tsx` asserts the page body for a populated, empty or coverless recent collection; component tests protect the default. The request-start delay in CI motivated this change, but its LCP effect must be measured on the exact deployment; the 2.5 s limit is unchanged.
+
+Local implementation evidence, not CI or LCP proof: homepage-body RED3 → focused GREEN62; disabling the page's priority handoff made all three new cases fail, then the handoff was restored. Layout `measure` passed 218/218; types, lint and tokens passed. The full coverage command exited 1 with 3415 passing tests and two 5000 ms timeouts in the unchanged `scripts/wait-for-preview.test.ts`; their cause remains unproven. Independent source inspection found consistent wiring/defaults, but its isolated Corepack bootstrap required a blocked download: zero tests executed, no retry/install. Full-suite and independent runtime proof remain incomplete; no performance improvement or publication is claimed.
+
+The explicitly authorized isolated resolver diagnostic executed its five no-match cases once with the installed Vitest entry point and one worker: exit 0, five passed, seventeen filtered out, 13.50 s wall time. The previously timed-out empty/staging cases took 3178/2534 ms against the unchanged 5000 ms limit. Their exit/error/output and 39 simulated waits remained asserted. This did not reproduce the failures in isolation; it does not establish contention as their cause, replace the failed full-suite result or supply the missing independent runtime proof.
+
+CI preserves a sanitized diagnostic even when Lighthouse assertions fail. `node scripts/lighthouse-summary.mjs` reads only `.lighthouseci/lhr-<digits>.json` and writes `.lighthouseci/diagnostic.json`; only this exact file is uploaded, retained for seven days and named with the commit SHA/run attempt. Raw reports, HTML, request details, URLs, cookies and screenshots are never uploaded.
+The summary contains allowlisted numeric metrics, the legacy Lighthouse LCP phase timings and an enumerated element tag/rectangle. Missing phases stay `null`; observed timings are not mixed with the scored/simulated breakdown. This is diagnostic evidence, not an optimization or a threshold change.
+
+**T5 / S6 — safe budget stdout.** The single authorized staging budget rerun passed on the unchanged SHA; this establishes variation, not a fix, original cause or stability. The exporter now optionally reads `.lighthouseci/assertion-results.json` and emits one JSON line per sorted report **after** successfully writing the unchanged `lighthouse-diagnostic/v1` artifact. Invocation remains `node scripts/lighthouse-summary.mjs`, with no arguments or environment inputs; invalid/missing reports retain exit 1, empty stdout and the fixed sanitized stderr. Valid reports retain exit 0 and empty stderr, even without usable assertions.
+
+Stdout schema `lighthouse-budget-log/v1`:
+- `ordinal`: one-based report order, never a filename, URL or fingerprint.
+- `configuredThrottlingMethod`: `simulate`, `devtools`, `provided` or `unknown`; configuration, not an independently observed method.
+- `scoredLcpMs`, `pageBytes`, `scoredLcpPhasesMs`: existing scored metrics/four phases; unavailable values stay null.
+- `observedLargestContentfulPaintMs`: explicitly separate observed metric, not budget-tested. The legacy mixed timings object is not relabeled as observed.
+- `assertionScope`: `url-aggregate`; `constraints`: null when unavailable, otherwise sanitized distinct `{metric, unit, limit, actual, delta, producerPassed, level}` records. Units are `ms` or `bytes`; signed delta is producer actual minus limit, never a recomputed pass decision.
+
+Only exact nonempty private `finalUrl` matches contribute. Accepted producer records require known LCP/byte audit IDs, `maxNumericValue`, `<=`, finite nonnegative actual/expected, boolean passed and `error`/`warn`/`off` level. All distinct matching constraints survive; identical sanitized tuples collapse. URL-aggregate actual may differ from the report's scored metric. Missing/malformed/empty/unmatched assertion results never fabricate limits or PASS. Nonfinite deltas serialize as null (accepted nonnegative finite operands already bound their difference).
+
+`ci.assert.includePassedAssertions=true` retains producer passing results; thresholds, matrix, run count and throttling remain unchanged. New exporter output contains no raw records/errors, URLs, DOM, headers, cookies or request identities. This does not sanitize upstream LHCI logs: including passed assertions expands its normal output. No workflow/context fields, resource/cache claims or performance changes are introduced.
+
+Proof is the public CLI in `scripts/lighthouse-summary.test.ts`: exact stdout/stderr/exit/artifact checks, producer constraints, final-vs-requested URL selection, hostile sentinels, invalid records, method labels and original artifact/error/workflow behavior. Log-only work has no meaningful served-HTML/browser acceptance; real child-process CLI execution is the functional caller. S1–S5 policy is unchanged; complete staging validation, original diagnosis and dev-profile activation remain separate pending work. Publication and integration remain parent-owned.
+
 **Revision, 2026-08-16 — two of these numbers were unreachable and are now measured rather than assumed.**
 
 Building the budget gates surfaced it immediately: **Next.js 15 App Router plus React 19 ship ~102 KB gzip of shared framework runtime on every route, before a single line of this application's code exists.** Verified against Next's own build output, not estimated. The original 30 KB was set by analogy and never checked against the framework floor — the same failure as the review forecast that omitted the cost of proof, and caught the same way: by building the thing that measures.
@@ -516,7 +651,7 @@ rules:
 | Cloudflare R2 Free | Egress | Free for all storage classes, always | Matches D2/D12's "$0 egress" — no delta |
 | Cloudflare R2 Free | Requests | 1M Class A ops/month, 10M Class B ops/month | New information — no prior claim to compare against |
 | Resend Free | Send caps | 3,000 emails/month, 100 emails/day | Matches design table's "3k/mo, 100/day" — no delta |
-| GitHub Actions (Free plan, private repo) | Minutes | 2,000 minutes/month (Linux-minute equivalent; Windows runners bill 2x, macOS 10x) | New confirmation of the number the CI push/PR-only split (design.md, Continuous Integration) was already designed against — validates that split as necessary, not merely cautious |
+| GitHub Actions (Free plan, private repo) | Minutes | 2,000 minutes/month (Linux-minute equivalent; Windows runners bill 2x, macOS 10x) | Historical: the repository is now public, so this quota no longer applies; the push/PR split stays for proportionality and speed (Continuous Integration) |
 
 No provider tier is tighter than this design assumed, with the exception of Neon storage, which the design never quantified in the first place. The most actionable consequence: the existing open question "Retention for `contact_reveal_event`" and "Draft lifetime" should be revisited before the 0.5 GB ceiling, not the 10 GB R2 ceiling, becomes the operative constraint on how long the MVP can run unattended.
 
@@ -538,6 +673,110 @@ El reporte pide un motivo obligatorio entre «posible estafa», «datos incorrec
 
 Medidas canónicas compartidas: móvil 390×844, tablet 768×1024 y escritorio 1440×900; todo ancho inferior a 768 usa composición móvil, incluido 440×956. Las pruebas previas a 390×840 permanecen como evidencia histórica. **Esta fase sólo corrige y acepta la ficha**: una auditoría separada debe verificar las otras pantallas antes de afirmar cumplimiento transversal. Las capturas del issue son hipótesis a contrastar con dev, no resultados actuales. Plan, imágenes y trazabilidad: `odd/tasks/fase-30-cierre-ficha.md`; la Fase 29 ya está integrada en `dev` y `main`; #287 permanece abierto y #288 sigue abierto.
 
+## Fase 36 — Supersesiones y gates de publicación (#289)
+
+La premisa de sólo WhatsApp del [comentario 13](https://github.com/gianelo/rentoru/issues/289#issuecomment-5956647895) queda superada por la corrección del fundador en 36.13: «el whatsapp no es obligatorio es una opcion mas» y «debe haber 1 contacto cualquier de los 3». Se exige un contacto elegido entre WhatsApp, teléfono y correo, conservando `wa.me`, `tel:` y `mailto:`. Teléfono y WhatsApp admiten sólo Venezuela; teléfono incluye móviles y fijos. Se valida formato, no titularidad, asignación real ni existencia de cuenta WhatsApp. No cambia autenticación por correo, ni se convierten contactos históricos. El inventario conserva alta, borradores, legado, edición, importación y defaults sin migración de esquema/datos propuesta.
+
+Formatos aprobados: `0412 123 4567`, `4121234567`, `+58 412 1234567`, `0058 412 1234567` y `584121234567` equivalen a `+584121234567`; espacios, guiones y paréntesis alrededor del prefijo son admitidos. Extensiones, letras, países distintos y `+58 0412…` se rechazan, sin reparación silenciosa. `wa.me` recibe dígitos internacionales sin `+`; `tel:` conserva `+58`. 36.14 implementará la política centralizada de país en dominio, sólo Venezuela activa y ampliable sin framework genérico. Al iniciar 36.14 el fundador exige validación vigente siempre, también al editar o activar contactos sin cambios porque aún no hay clientes, y WhatsApp sólo móvil; teléfono conserva móviles y fijos. No se convierten datos almacenados: un formato inválido bloquea la operación hasta su corrección explícita. Implementación por cortes en `odd/tasks/fase-36-validacion-contacto.md`, aún sin completar. Fuentes, límites y tratamiento por superficie: `odd/tasks/fase-36-contacto-compatible.md`.
+
+El [comentario 21](https://github.com/gianelo/rentoru/issues/289#issuecomment-5957005019) descarta tamaños de capturas como autoridad; rigen D30 y el sistema responsive vigente, coordinando la discrepancia de 390×840 con F34. Revisar requiere lámina aprobada antes de implementación. El warning actual de inmutabilidad absoluta contradice la regla existente de 18.38: dueño → inmobiliaria sí; la dirección inversa sigue cerrada hasta decisión explícita, no queda autorizada por el comentario 18.
+
+36.18 ratifica explícitamente con el fundador «Sí, mantener el bloqueo — recomendado»: dueño →
+inmobiliaria sí; inmobiliaria → dueño no. Revisar debe reutilizar la advertencia
+`PUBLISHER_TYPE_ONE_WAY_*` existente en Quién publica/Editar, sin cambiar la regla de 18.38 ni sus
+consumidores compartidos.
+La revisión posterior cuestionó la claridad y la razón de esa asimetría, sin autorizar cambiarla.
+El fundador aplazó la revisión: «listo luego lo veo. cerremos ya esto.» En esa pausa no había aceptación
+visual ni nueva decisión que permitiera inmobiliaria → dueño; se conservó el cambio local sin publicar.
+Posteriormente aceptó el aviso servido sin cambios: «ya probe todo bien cierra los dos chrome test que
+abriste». Se mantiene la regla vigente; esta aceptación no autoriza cambios de dominio ni publicación.
+
+Copy/jerarquía, loader contextual, país/formato y botón vs checkbox quedan como gates al iniciar sus unidades. El digest `901444967` no prueba deduplicación ni fallo de sesión: cualquier consulta productiva requiere autorización read-only separada, sin mutación. Plan y criterios completos: `odd/tasks/fase-36-cierre-publicacion.md`; esta adenda confirma alcance, no implementación ni nuevas decisiones numeradas.
+
+### Digest901444967 — cierre de diagnóstico36.19
+
+El fundador dispone cerrar36.19 como «no se pudo replicar»: no se confirmó una causa ni se corrigió
+el fallo. Los 62 casos locales con dobles no identifican el incidente; el acceso productivo autorizado
+funcionó, pero las consultas históricas fallaron sin diagnóstico utilizable. No se atribuye el digest
+a deduplicación, sesión, storage o persistencia, ni se afirma ausencia de logs o retención vencida.
+36.20 conserva su requisito de causa y alcance aprobados; no se cierran 18.39/18.40 por este resultado.
+Actualización 2026-10-23: el fundador cierra 36.20 sin corrección tras publicar sin fallo en dev; el incidente
+sigue sin reproducir y sin causa confirmada.
+Evidencia y límites completos: `odd/tasks/fase-36-cierre-publicacion.md`,36.19; cierre documental local,
+sin cambios funcionales ni publicación/integración; en aquel checkpoint todavía sin commit.
+
+### Atributos36.21 — decisión G7 y estado local
+
+El fundador eligió «Botón secundario — recomendado»: declarar ninguna sustituye la selección y continúa;
+no se convierte en checkbox ni se infiere una respuesta de casillas vacías no enviadas.
+El botón comparte acciones con Seguir/Atrás, pero `form` lo asocia a su POST externo propio;
+se conservan `featuresDeclared`, los campos de retorno y la operación nativa sin formularios anidados.
+El rol CSS de Atributos permite empaquetar cuatro acciones al volver desde Revisar, sin cambiar
+selectores compartidos, tokens, parser ni reglas de publicador. RED/GREEN/mutaciones y HTML servido
+protegen vínculo y alcance;16 composiciones y flujos reales ambos modos pasan con DB propia.
+El fundador acepta explícitamente «Sí, acepto esta versión» sobre6ca025e…/7e550180… en3005;
+es aceptación visual local, no entrega ni permiso de push/PR. Después ordena cerrar jobs y Chrome:
+servicios y navegador propios detenidos, ausencia física comprobada, DB conservada y app ya no servida.
+Unidades `055f6f7`/`cdbe1f7` publicadas en PR[#430](https://github.com/gianelo/rentoru/pull/430) a dev;
+estado final en el mismo PR, sin integración ni resultado remoto de CI acreditado al registrar.
+Evidencia, fallos y límites: `odd/tasks/fase-36-atributos-ninguna.md`.
+
+### Photo copy — bounded G3/F35 coordination (F36.10)
+
+Founder approved «Elegir fotos» and «Es la foto principal de tu aviso» for publication and editing. The cover explanation appears once per surface; the historical phone-deletion help is removed, while «Quitar del aviso», «Hacer portada», photo identities and native POST remain intact. Editing supplies presentation copy to the shared uploader; imported drafts retain its «Subir fotos» default. This supersedes only those historical 18.15 literals, not compression copy, photo rules, menu sizing (36.11) or the remaining F35.4 audit. Browser acceptance remains T2 in `odd/tasks/fase-36-fotos-textos.md`.
+
+### Menú de fotos compacto — decisión acotada (F36.11, P1)
+
+El fundador aprobó dos porciones: registrar el diseño y después implementarlo.
+Desde el breakpoint existente de **768px**, el disparador tendrá un círculo visible
+de **30px** dentro del mismo `<summary>` pulsable de **44×44px**; por debajo,
+móvil sin cambios. Se conservan el glifo `⋯`, el foco visible, las acciones y
+la geometría/comportamiento del menú abierto, incluido Escape y cierre exterior.
+La razón es reducir el peso visual sobre la foto sin exigir más precisión al pulsar.
+Referencia: [Publicar Desktop](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Desktop.dc.html)
+(líneas 335–336); la decisión posterior conserva el target accesible del sistema.
+
+Baseline inspeccionado en `f8bf20a07826b26afa8dacaf9674c2af6fe22d38`, no en el WIP anterior:
+`app/publicar/fotos/photo-uploader.module.css:229–260,357–437` define el summary
+44×44 con radio `--r` y pinta fondo/borde en toda esa caja desde 768px;
+`src/styles/tokens.css:43,66` fija ambos targets en 44px. El caller real es
+`app/publicar/PublishStep.tsx:567–572`, con `draft.photos`; el summary nativo y
+el glifo están en `app/publicar/fotos/PhotoUploader.tsx:550–559`.
+El rol visible requiere un token semántico propio, no reducir ni reutilizar el target:
+ver [autoridad visual](../../../design/reference/sistema/SISTEMA.md#menú-de-fotos--superficie-visible-f3611).
+P1 sólo documenta: sin app servida ni aceptación manual actual; implementación,
+RED/GREEN, mutación y evidencia servida quedan para P2. No cierra 36.1 ni 36.11.
+
+### Jerarquía de Quién publica — decisión acotada (F36.12, P1)
+
+El fundador aprobó mostrar «¿Quién publica?» una sola vez visualmente, como H1.
+El `fieldset` conserva su `legend` nativo con ese texto, accesible pero oculto
+visualmente mediante `styles.srOnly`; no se elimina ni se usa `aria-hidden`.
+Los labels «Soy el dueño» e «Inmobiliaria o corredor» permanecen intactos.
+Sin selección por defecto para un borrador sin respuesta; se conserva la ya guardada.
+La razón es quitar la pregunta duplicada sin perder el nombre accesible del grupo
+ni convertir una omisión en una declaración de dueño.
+Referencias: [Publicar Mobile](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Mobile.dc.html#12c)
+(líneas 246–249) y [Publicar Desktop](../../../design/pantallas/Rentoru%20-%20Publicar%20-%20Desktop.dc.html#13a)
+(líneas 368–371): un titular seguido de opciones; su dueño ilustrado no autoriza default.
+Esta decisión conjunta resuelve sólo esta jerarquía de F35.4, no su auditoría restante.
+No cambia contacto, reglas de negocio, estilos globales ni revisar (36.18).
+
+Baseline inspeccionado: `e6a3c650d0cb853e75a46382320eaa3dbfb0d900` (dev, merge #409).
+El caller `/publicar/paso/quien`, en `app/publicar/paso/[paso]/page.tsx`, renderiza
+`app/publicar/PublishStep.tsx`: H1 en línea 222 y legend visible en 579;
+`app/publicar/step-copy.ts` define la pregunta de `quien`.
+`app/publicar/publish-steps.module.css:23–25` ya compone `srOnly` desde
+`src/styles/a11y.module.css`; no hace falta una utilidad ni CSS global nuevos.
+P1 sólo registra la decisión: sin cambio de comportamiento, app servida ni RED significativo.
+Readback estructural por padre/verificador; P2 queda pausada, sin inicio automático.
+P2 requerirá RED/GREEN sobre HTML del caller, mutación restaurada, nombre accesible,
+labels, teclado/foco, ausencia de default y aceptación visual humana; 36.12 sigue sin cerrar.
+
+### Revisar — composición aprobada F36.16
+
+El fundador aprobó la lámina `design/pantallas/Rentoru - Revisar - Responsive-v1.html` y su CSS v1: «si me gusta alli vi las 3 medidas con el inspecionadro». Derivada del sistema, móvil sitúa Cambiar junto al título; tablet apila valores a ancho completo y escritorio distribuye etiqueta, valor y Cambiar en el contenedor centrado1100px. Evidencia y versión aceptada: `odd/tasks/fase-36-revisar-lamina.md` L15–L20; cuatro medidas del agente PASS y aceptación humana separadas. Aprobación local, sin implementación36.17 ni integración acreditada; warning sin cambio, reservado a36.18. No amplía tokens ni auditoría F34.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.
@@ -555,3 +794,22 @@ Medidas canónicas compartidas: móvil 390×844, tablet 768×1024 y escritorio 1
 - [ ] **Optional CSV columns.** Whether `habitaciones`, `banos`, and `metros2` are accepted depends on whether those fields exist on `listing`; confirm against the schema when the publication module is written rather than inventing columns the model cannot store.
 - [ ] **Draft lifetime.** An imported draft that never receives photos lives forever today. Decide whether drafts expire, and whether the broker is reminded — otherwise the table accumulates dead rows against the Neon free-tier ceiling.
 - [x] **Palette and visual tone (D14).** **RESOLVED: `compacto` + `menta`.** The design system of record is `design/reference/sistema/SISTEMA.md`, with tokens at `design/reference/sistema/tokens.css` and six worked surfaces at `design/reference/sistema/pantallas-compacto-menta.html`. PR1b is unblocked. See D16 for the token contract that carries the system to the sixteen surfaces the reference does not draw.
+
+### Publicar · Listo — fase 37
+
+La confirmación posterior a publicar deja de ser un texto provisional. La ficha ya existe, así que «Listo» enlaza al aviso y muestra su resumen. Tres decisiones de diseño técnico, con su razón:
+
+- **Lectura propia por id, no la lista completa.** `PublisherListingsPort` lee todos los avisos del publicador; «Listo» necesita uno. Se agrega un puerto de lectura al lado (AGENTS.md §3) que sólo devuelve un aviso del propio publicador y activo; cualquier otro caso devuelve nada, porque el `id` viaja en la URL y cualquiera puede escribir otro.
+- **La portada no espera a nadie.** Las derivadas se generan dentro de `publishListing`, antes del redirect; la pantalla usa la misma derivada pública que la ficha.
+- **Compartir falla cerrado.** El enlace de WhatsApp necesita la URL absoluta; sin `SITE_URL` el bloque no se dibuja, en vez de compartir un enlace relativo que no abre nada.
+
+Plan y gates: `odd/tasks/fase-37-publicar-listo.md`.
+
+### Correos — fase 38
+
+Los cinco correos comparten hoy un renderizador copiado cuatro veces, con un color (`#101010`) que no pertenece al sistema. Dos decisiones con su razón:
+
+- **Un solo renderizador que recibe bloques ya decididos.** Cada dominio sigue decidiendo qué dice su correo; el renderizador sólo sabe dibujar párrafos y una acción. Así el diseño cambia en un lugar y ninguna regla de producto se muda a la presentación (AGENTS.md §1).
+- **Valores del sistema resueltos, con una prueba que los ata a `tokens.css`.** Los clientes de correo no entienden variables CSS, así que el correo necesita literales; una tabla única y comprobada evita que esos literales se desvíen del sistema en silencio, que es justo lo que pasó con `#101010`.
+
+Plan y gates: `odd/tasks/fase-38-correos.md`.

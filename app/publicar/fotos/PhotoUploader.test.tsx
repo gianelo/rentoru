@@ -26,8 +26,8 @@ const TRES: readonly UploadedPhoto[] = [
  *
  * **Lo que sí puede ver, y es exactamente el riesgo de esta tarea**: el
  * marcado que el navegador recibe ANTES de que corra un solo script — que es
- * donde tienen que estar las cuatro acciones nombradas y las dos frases que
- * la especificación marca como no decorativas. Si aparecieran sólo después
+ * donde tienen que estar las cuatro acciones nombradas y la explicación
+ * aprobada de portada. Si aparecieran sólo después
  * de hidratar, o sólo dentro de un atributo, este archivo no las vería, y
  * ese es el punto.
  */
@@ -43,19 +43,18 @@ describe("PhotoUploader — las acciones nombradas, antes de cualquier mejora", 
     expect(html).toContain(">Quitar del aviso<");
   });
 
-  it("las dos frases no decorativas se leen, no se adivinan", () => {
+  it("la explicación aprobada aparece una sola vez, sin ayudas históricas", () => {
     const html = renderToStaticMarkup(<PhotoUploader initial={TRES} />);
 
-    expect(html).toContain(">no borra la foto de tu teléfono<");
-    expect(html).toContain(">se ve en la lista y arriba del aviso<");
+    expect(html.split("Es la foto principal de tu aviso")).toHaveLength(2);
+    expect(html).not.toMatch(/no borra la foto de tu teléfono/i);
+    expect(html).not.toContain("se ve en la lista y arriba del aviso");
   });
 
-  it("el botón nombra la foto y repite la consecuencia, porque se lee solo", () => {
+  it("el botón conserva la acción y la identidad de la foto", () => {
     const html = renderToStaticMarkup(<PhotoUploader initial={TRES} />);
 
-    expect(html).toContain(
-      'aria-label="Quitar del aviso: Cocina. No borra la foto de tu teléfono"',
-    );
+    expect(html).toContain('aria-label="Quitar del aviso: Cocina"');
   });
 
   it("la portada no ofrece hacerse portada ni moverse arriba, y con una sola foto sólo queda quitar", () => {
@@ -71,6 +70,15 @@ describe("PhotoUploader — las acciones nombradas, antes de cualquier mejora", 
     const html = renderToStaticMarkup(<PhotoUploader initial={TRES} />);
 
     expect(html).toContain('aria-label="Acciones de Balcón"');
+  });
+
+  it("sirve cada disclosure cerrado con su summary nativo", () => {
+    const html = renderToStaticMarkup(<PhotoUploader initial={TRES} />);
+    const disclosures = html.match(/<details\b[^>]*>/g) ?? [];
+
+    expect(disclosures).toHaveLength(TRES.length);
+    expect(disclosures.every((tag) => !/\bopen(?:\s|=|>)/.test(tag))).toBe(true);
+    expect(html.match(/<summary\b/g)).toHaveLength(TRES.length);
   });
 
   it("lo que el paso 8 envía sigue siendo clave, nombre y tamaño en el mismo orden", () => {

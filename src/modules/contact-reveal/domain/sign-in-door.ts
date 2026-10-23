@@ -90,10 +90,10 @@ export function contactDoorFor(
   const noun = contactChannelNoun(contact.method);
 
   return {
-    title: `Entrá para ver el ${noun} ${publisherPhrase(publisher)}`,
-    reason: "Pedimos la cuenta para frenar avisos falsos. Es gratis y es un toque.",
+    title: `Entra para ver el ${noun} ${publisherPhrase(publisher)}`,
+    reason: "Pedimos la cuenta para frenar avisos falsos. Es gratis y es rápido.",
     closeLabel: "Cerrar sin entrar",
-    assurance: "Volvés a este mismo aviso al terminar.",
+    assurance: "Vuelves a este mismo aviso al terminar.",
     email: {
       separator: "o con tu correo",
       label: "Correo",
@@ -129,7 +129,7 @@ export function contactDoorFor(
 export function lockedContactNotice(method: ContactMethod): string {
   return (
     `Mostramos el ${contactChannelNoun(method)} a usuarios registrados. ` +
-    "Pedimos la cuenta para frenar avisos falsos: es gratis y es un toque."
+    "Pedimos la cuenta para frenar avisos falsos: es gratis y es rápido."
   );
 }
 

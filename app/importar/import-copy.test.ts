@@ -37,7 +37,7 @@ describe("importRowReasonText", () => {
 
   it("traduce lo que sólo la importación conoce", () => {
     expect(importRowReasonText("externalReference.required")).toBe(
-      "Falta la referencia externa: es el código con el que reconocés esta propiedad.",
+      "Falta la referencia externa: es el código con el que reconoces esta propiedad.",
     );
     expect(importRowReasonText("externalReference.duplicateInFile")).toBe(
       "Esta referencia externa aparece más de una vez en el archivo.",

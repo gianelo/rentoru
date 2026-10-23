@@ -129,7 +129,7 @@ const DERIVATIVE_CONTENT_TYPE = "image/webp";
  * Exact segments rather than `startsWith`, because a prefix test accepts
  * `incoming/<publisher>/../elsewhere`.
  */
-function tokenFromOwnedKey(incomingKey: string, publisherId: string): string | null {
+export function tokenFromOwnedKey(incomingKey: string, publisherId: string): string | null {
   const segments = incomingKey.split("/");
   if (segments.length !== 3) return null;
 

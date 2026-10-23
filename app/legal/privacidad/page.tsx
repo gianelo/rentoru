@@ -28,18 +28,18 @@ export default function PrivacidadPage() {
       <h2 className={styles.heading}>Qué datos recogemos</h2>
       <ul className={styles.list}>
         <li className={styles.item}>
-          Si entrás con Google: el nombre y el correo verificado que Google confirma. No se guarda
+          Si entras con Google: el nombre y el correo verificado que Google confirma. No se guarda
           ninguna foto de perfil ni ningún otro dato de tu cuenta de Google.
         </li>
         <li className={styles.item}>
-          Si entrás con el enlace por correo: la dirección de correo a la que lo enviamos.
+          Si entras con el enlace por correo: la dirección de correo a la que lo enviamos.
         </li>
         <li className={styles.item}>
-          Al publicar un aviso: el método y el valor de contacto que elegís mostrar (WhatsApp,
+          Al publicar un aviso: el método y el valor de contacto que eliges mostrar (WhatsApp,
           teléfono o correo), y los datos del inmueble.
         </li>
         <li className={styles.item}>
-          Al contactar a un dueño: el mensaje que escribís antes de ver su contacto queda asociado a
+          Al contactar a un dueño: el mensaje que escribes antes de ver su contacto queda asociado a
           ese momento — qué aviso, cuándo, y tu cuenta.
         </li>
       </ul>
@@ -69,7 +69,7 @@ export default function PrivacidadPage() {
 
       <h2 className={styles.heading}>Tus derechos</h2>
       <p className={styles.text}>
-        Hoy no existe una pantalla propia para corregir o borrar tus datos. Mientras tanto, escribí
+        Hoy no existe una pantalla propia para corregir o borrar tus datos. Mientras tanto, escribe
         a <AppLink href="mailto:hola@rentoru.com">hola@rentoru.com</AppLink>.
       </p>
 

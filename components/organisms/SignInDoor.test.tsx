@@ -1,16 +1,16 @@
 import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { ContactDoorCopy } from "@/modules/contact-reveal/domain/sign-in-door";
+import { type ContactDoorCopy, contactDoorFor } from "@/modules/contact-reveal/domain/sign-in-door";
 import { SignInDoor } from "./SignInDoor";
 
 const source = readFileSync("components/organisms/SignInDoor.tsx", "utf-8");
 
 const COPY: ContactDoorCopy = {
-  title: "Entrá para ver el WhatsApp del dueño",
-  reason: "Pedimos la cuenta para frenar avisos falsos. Es gratis y es un toque.",
+  title: "Entra para ver el WhatsApp del dueño",
+  reason: "Pedimos la cuenta para frenar avisos falsos. Es gratis y es rápido.",
   closeLabel: "Cerrar sin entrar",
-  assurance: "Volvés a este mismo aviso al terminar.",
+  assurance: "Vuelves a este mismo aviso al terminar.",
   email: {
     separator: "o con tu correo",
     label: "Correo",
@@ -23,10 +23,10 @@ const COPY: ContactDoorCopy = {
 
 async function noop(): Promise<void> {}
 
-function markup() {
+function markup(copy = COPY) {
   return renderToStaticMarkup(
     <SignInDoor
-      copy={COPY}
+      copy={copy}
       stayHref="/alquiler/distrito-capital/chacao/apto-abc123"
       callbackUrl="/alquiler/distrito-capital/chacao/apto-abc123"
       signInAction={noop}
@@ -36,6 +36,28 @@ function markup() {
 }
 
 describe("SignInDoor", () => {
+  it.each([
+    ["whatsapp", "owner", null, "WhatsApp del dueño"],
+    ["telefono", "broker", null, "teléfono de la inmobiliaria"],
+    ["email", "broker", "María F.", "email de María F."],
+  ] as const)("35.2a: renderiza la puerta real neutra %s/%s/%s", (method, type, name, phrase) => {
+    const copy = contactDoorFor({ state: "locked", method }, { type, name }, "si", true);
+    expect(copy).not.toBeNull();
+    if (copy === null) throw new Error("La puerta debe estar abierta");
+    const html = markup(copy);
+    expect(html).toContain(`Entra para ver el ${phrase}`);
+    expect(html).toContain("Pedimos la cuenta para frenar avisos falsos. Es gratis y es rápido.");
+    expect(html).toContain("Vuelves a este mismo aviso al terminar.");
+    expect(html).toContain("Al entrar aceptas los ");
+    expect(html).toContain('href="/legal/terminos">términos</a>');
+    expect(html).toContain('href="/legal/privacidad">privacidad</a>');
+    expect(html).toContain('aria-label="Cerrar sin entrar"');
+    expect(html).toContain("verificado por ");
+    expect(
+      html.match(/name="callbackUrl" value="\/alquiler\/distrito-capital\/chacao\/apto-abc123"/g),
+    ).toHaveLength(2);
+    expect(html).toContain('href="/alquiler/distrito-capital/chacao/apto-abc123"');
+  });
   /**
    * tasks.md 22.20 — el disco de Google entra al botón, y el botón deja el
    * nivel 1 (relleno `--accent`) por el nivel 3 (borde `--strong`, sin

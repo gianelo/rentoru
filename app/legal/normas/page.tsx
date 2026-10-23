@@ -30,7 +30,7 @@ export default function NormasPage() {
       <h2 className={styles.heading}>Qué se puede publicar, y quién publica</h2>
       <p className={styles.text}>
         Sólo inmuebles residenciales en alquiler: apartamento, casa, quinta, anexo o habitación. No
-        se acepta local comercial ni ningún otro uso. Te identificás como dueño o como inmobiliaria
+        se acepta local comercial ni ningún otro uso. Te identificas como dueño o como inmobiliaria
         al crear el aviso.
       </p>
 

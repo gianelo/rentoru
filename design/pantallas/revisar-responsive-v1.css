@@ -1,0 +1,234 @@
+/* Lámina F36.16: roles existentes; no estilos ni reglas de producto. */
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--ficha-body-fs);
+  line-height: var(--ficha-body-lh);
+}
+a {
+  color: var(--accent);
+}
+a:focus-visible,
+#design-notes:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.container {
+  max-inline-size: 1100px;
+  margin-inline: auto;
+  padding-inline: 16px;
+}
+.design-note {
+  padding-block: 16px;
+  color: var(--soft);
+  font-size: var(--meta-fs);
+  line-height: var(--secondary-lh);
+}
+.design-note p {
+  margin: 0 0 8px;
+}
+.specimen {
+  background: var(--surface);
+}
+.bar {
+  border-block-end: 1px solid var(--line);
+}
+.bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-block-size: var(--brandbar-h);
+}
+.brand,
+.exit,
+.change,
+.primary,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--target-min);
+  min-inline-size: var(--target-min);
+}
+.brand {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: var(--title-fs);
+  font-weight: var(--title-fw);
+  letter-spacing: var(--brand-ls);
+  text-decoration: none;
+}
+.saved {
+  margin-inline-start: auto;
+  color: var(--soft);
+  font-family: var(--meta);
+  font-size: var(--meta-fs-sm);
+}
+.exit {
+  color: var(--soft);
+  text-decoration: none;
+}
+.review {
+  padding-block: 24px 48px;
+}
+h1 {
+  margin: 0 0 24px;
+  font-size: var(--title-fs);
+  font-weight: var(--title-fw);
+  line-height: var(--title-lh);
+}
+.review-row {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 8px 16px;
+  padding-block: 16px;
+  border-block-start: 1px solid var(--line);
+}
+h2 {
+  margin: 0;
+  font-size: var(--meta-fs);
+  font-family: var(--meta);
+  font-weight: var(--meta-fw);
+  color: var(--soft);
+}
+.change {
+  justify-self: start;
+  font-size: var(--control-fs);
+}
+.value {
+  grid-column: 1 / -1;
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.price {
+  font-family: var(--disp);
+  font-size: var(--card-price-fs);
+  font-weight: var(--ficha-price-fw);
+}
+.price span {
+  font: var(--ficha-body-fs) var(--sans);
+}
+.description {
+  max-inline-size: 520px;
+}
+.description p,
+.photo-summary {
+  margin: 0 0 12px;
+}
+.description p:last-child {
+  margin-block-end: 0;
+}
+.photos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+figure {
+  margin: 0;
+}
+.photo {
+  aspect-ratio: var(--card-photo-ratio);
+  background: var(--thumb);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+figcaption {
+  padding-block-start: 8px;
+  font-size: var(--meta-fs);
+  color: var(--soft);
+}
+figcaption span,
+.contact-value {
+  display: block;
+}
+.owner {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: var(--rs);
+  background: var(--ink);
+  color: var(--surface);
+  font-size: var(--badge-fs);
+  font-weight: var(--badge-fw);
+}
+.warning {
+  margin-block: 24px 16px;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.primary,
+.secondary {
+  padding: 8px 24px;
+  border-radius: var(--r);
+  text-decoration: none;
+}
+.primary {
+  min-block-size: var(--action-h);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: var(--meta-fw);
+}
+.secondary {
+  border: 1px solid var(--strong);
+  color: var(--ink);
+}
+@media (min-width: 768px) {
+  body {
+    font-size: var(--ficha-body-fs-desktop);
+    line-height: var(--ficha-body-lh-desktop);
+  }
+  .container {
+    padding-inline: 24px;
+  }
+  .bar-inner {
+    min-block-size: var(--brandbar-h-desktop);
+  }
+  .review-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .change {
+    justify-self: end;
+  }
+  .photos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+@media (min-width: 1100px) {
+  .review-row {
+    grid-template-columns: 160px minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 24px;
+  }
+  h2 {
+    padding-block-start: 12px;
+  }
+  .change {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .value {
+    grid-column: 2;
+    grid-row: 1;
+    padding-block-start: 8px;
+  }
+}

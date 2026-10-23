@@ -33,8 +33,8 @@ export default function TerminosPage() {
         rentoru.com conecta a quien publica un aviso con quien lo busca, pero no participa en la
         negociación entre las partes, no es parte del contrato de alquiler y no verifica la
         identidad de quien publica más allá de lo que se describe en{" "}
-        <AppLink href="/ayuda/como-contactar-al-dueno">Cómo contactar al dueño</AppLink>. Visitá la
-        propiedad y verificá quién es el dueño antes de entregar dinero.
+        <AppLink href="/ayuda/como-contactar-al-dueno">Cómo contactar al dueño</AppLink>. Visita la
+        propiedad y verifica quién es el dueño antes de entregar dinero.
       </p>
 
       <h2 className={styles.heading}>Quién puede publicar</h2>

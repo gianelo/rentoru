@@ -180,9 +180,34 @@ describe("el paso 3 sirve el histograma sin una línea de JavaScript (18.9)", ()
     const html = await servido();
 
     expect(html).toContain("Con 3 avisos en Chacao no alcanza");
+    expect(html).toContain(
+      "Con 3 avisos en Chacao no alcanza para decir cuánto se pide: el precio lo pones tú.</p>",
+    );
+    expect(html).toContain('type="hidden" name="step" value="precio"');
+    expect(html).toContain('type="submit"');
+    expect(html).toContain('type="text" inputMode="numeric"');
     expect(html).not.toContain("data-band=");
     // El formulario sigue entero: no se dibuja, pero se publica igual.
     expect(html).toContain('name="priceUsd"');
+  });
+});
+
+describe("el aviso de mercado escaso sirve tuteo completo (F35.4 A0)", () => {
+  it.each([
+    [0, "Todavía no hay avisos en Chacao: el precio lo pones tú."],
+    [1, "Con 1 aviso en Chacao no alcanza para decir cuánto se pide: el precio lo pones tú."],
+  ])("con %i avisos conserva el formulario nativo y no dibuja barras", async (count, notice) => {
+    tallyForZone.mockResolvedValue([{ count, lowestUsd: 500, highestUsd: 500 }]);
+    const html = await servido();
+
+    expect(html).toContain(`${notice}</p>`);
+    expect(html).not.toContain("data-band=");
+    expect(html).toContain('name="priceUsd"');
+    // React SSR transforma la acción doblada: no acredita el POST HTTP.
+    expect(html).toContain("<form ");
+    expect(html).toContain('type="hidden" name="step" value="precio"');
+    expect(html).toContain('type="submit"');
+    expect(html).toContain('type="text" inputMode="numeric"');
   });
 });
 

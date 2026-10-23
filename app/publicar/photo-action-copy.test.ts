@@ -7,6 +7,7 @@ import {
   coverChangedNotice,
   discardPhotoLabel,
   PHOTO_ACTION_COPY,
+  PHOTO_COVER_EXPLANATION,
   PHOTO_REMOVAL_REFUSAL_COPY,
   photoActionLabel,
   photoRemovalRefusalMessage,
@@ -19,16 +20,16 @@ describe("los cuatro renglones del menú de una foto", () => {
     expect(PHOTO_ACTION_COPY.remove.label).toBe("Quitar del aviso");
   });
 
-  it("la frase de quitar sale literal de la especificación, y es visible", () => {
-    expect(PHOTO_ACTION_COPY.remove.hint).toBe("no borra la foto de tu teléfono");
+  it("quitar conserva la acción sin ayuda del teléfono", () => {
+    expect(PHOTO_ACTION_COPY.remove).toEqual({ label: "Quitar del aviso" });
   });
 
-  it("la frase de portada sale literal de la especificación", () => {
-    expect(PHOTO_ACTION_COPY.makeCover.label).toBe("Hacer portada");
-    expect(PHOTO_ACTION_COPY.makeCover.hint).toBe("se ve en la lista y arriba del aviso");
+  it("portada conserva la acción y su explicación compartida aprobada", () => {
+    expect(PHOTO_ACTION_COPY.makeCover).toEqual({ label: "Hacer portada" });
+    expect(PHOTO_COVER_EXPLANATION).toBe("Es la foto principal de tu aviso");
   });
 
-  it("las dos frases no decorativas son ésas dos: mover no inventa una tercera", () => {
+  it("mover conserva sus etiquetas sin ayudas adicionales", () => {
     expect(PHOTO_ACTION_COPY.moveUp).toEqual({ label: "Mover arriba" });
     expect(PHOTO_ACTION_COPY.moveDown).toEqual({ label: "Mover abajo" });
   });
@@ -41,16 +42,12 @@ describe("los cuatro renglones del menú de una foto", () => {
 });
 
 describe("el nombre accesible de cada botón", () => {
-  it("nombra la foto Y dice la consecuencia, que es el estándar que ya shipeaba", () => {
-    expect(photoActionLabel("remove", "Sala")).toBe(
-      "Quitar del aviso: Sala. No borra la foto de tu teléfono",
-    );
+  it("quitar conserva la acción y el nombre de la foto", () => {
+    expect(photoActionLabel("remove", "Sala")).toBe("Quitar del aviso: Sala");
   });
 
   it("hace lo mismo con portada", () => {
-    expect(photoActionLabel("makeCover", "Cocina")).toBe(
-      "Hacer portada: Cocina. Se ve en la lista y arriba del aviso",
-    );
+    expect(photoActionLabel("makeCover", "Cocina")).toBe("Hacer portada: Cocina");
   });
 
   it("sin frase no inventa una ni deja un punto colgando", () => {
@@ -64,7 +61,7 @@ describe("lo que se dice al quitar", () => {
     if (plan.ok) throw new Error("quitar la única foto tenía que rechazarse");
 
     expect(PHOTO_REMOVAL_REFUSAL_COPY[plan.refusal]).toBe(
-      "Es la única foto y sin fotos no se puede publicar. Agregá otra y después quitá ésta.",
+      "Es la única foto y sin fotos no se puede publicar. Agrega otra y después quita esta.",
     );
   });
 

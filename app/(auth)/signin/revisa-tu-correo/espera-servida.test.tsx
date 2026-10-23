@@ -1,3 +1,5 @@
+// @vitest-environment happy-dom
+import { runInNewContext } from "node:vm";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -39,7 +41,7 @@ vi.mock("next/headers", () => ({
 }));
 vi.mock("@/modules/identity/infrastructure/auth", () => ({ signIn: vi.fn() }));
 
-const { default: EsperaPage } = await import("./page");
+const { default: EsperaPage, metadata } = await import("./page");
 const { TICKET_COOKIE } = await import("../enlace");
 const { MAGIC_LINK_RESEND_COOLDOWN_SECONDS, serialiseMagicLinkTicket } = await import(
   "@/modules/identity/domain/magic-link-request"
@@ -48,6 +50,9 @@ const { MAGIC_LINK_RESEND_COOLDOWN_SECONDS, serialiseMagicLinkTicket } = await i
 const AHORA = Date.UTC(2026, 7, 29, 12, 0, 0);
 const FICHA = "/alquiler/distrito-capital/chacao/apartamento-2h";
 const CORREO = "maria.f@gmail.com";
+const AVISO_NEUTRO =
+  "Abriste el enlace en otro dispositivo. Puedes seguir ahí: aquí ya no hace falta esperar.";
+const SONDEO = "/signin/revisa-tu-correo/estado";
 
 function conComprobante(sentAtMs: number, returnTo: string | null = FICHA) {
   jar.set(TICKET_COOKIE, serialiseMagicLinkTicket({ address: CORREO, sentAtMs, returnTo }));
@@ -83,7 +88,100 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  document.body.replaceChildren();
+  jar.clear();
+  vi.clearAllTimers();
+  vi.restoreAllMocks();
   vi.useRealTimers();
+});
+
+/** Ejecuta los bytes exactos del sondeo servido, no el script de React. */
+async function sondeoServido(fetch: ReturnType<typeof vi.fn>) {
+  document.body.innerHTML = await servida();
+  const scripts = Array.from(document.querySelectorAll("script")).filter((script) =>
+    script.textContent?.includes(SONDEO),
+  );
+  expect(scripts).toHaveLength(1);
+  const script = scripts[0];
+  const aviso = document.querySelector<HTMLElement>('[data-testid="espera-entro"]');
+  if (!script || !aviso) throw new Error("Falta el sondeo o el aviso servido");
+  const detener = vi.fn(clearInterval);
+  runInNewContext(script.textContent ?? "", {
+    document,
+    window: { fetch },
+    fetch,
+    Date,
+    setInterval,
+    clearInterval: detener,
+  });
+  return { aviso, detener };
+}
+
+describe("35.2b: metadata y DOM del sondeo servido", () => {
+  it("exporta el título neutro y conserva el canonical, no mide el title servido", () => {
+    expect(metadata).toEqual({
+      title: "Revisa tu correo — Rentoru",
+      alternates: { canonical: "/signin/revisa-tu-correo" },
+    });
+  });
+
+  it("false mantiene oculto; true revela el aviso neutro completo y detiene el sondeo", async () => {
+    conHuella(AHORA);
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce({ status: 200, json: async () => ({ entro: false }) })
+      .mockResolvedValueOnce({ status: 200, json: async () => ({ entro: true }) });
+    const { aviso, detener } = await sondeoServido(fetch);
+    expect(aviso.hidden).toBe(true);
+    expect(aviso.getAttribute("role")).toBe("status");
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(aviso.hidden).toBe(true);
+    expect(detener).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledWith(SONDEO, { headers: { accept: "application/json" } });
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(aviso.hidden).toBe(false);
+    expect(detener).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(aviso.textContent).toBe(AVISO_NEUTRO);
+  });
+
+  it.each(["204", "rechazo"])("%s mantiene el aviso oculto y detiene el sondeo", async (caso) => {
+    conHuella(AHORA);
+    const json = vi.fn();
+    const fetch = vi.fn();
+    if (caso === "204") fetch.mockResolvedValue({ status: 204, json });
+    else fetch.mockRejectedValue(new Error("Red no disponible"));
+    const { aviso, detener } = await sondeoServido(fetch);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(aviso.hidden).toBe(true);
+    expect(detener).toHaveBeenCalledTimes(1);
+    expect(json).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(aviso.hidden).toBe(true);
+  });
+
+  it("el tick estrictamente posterior al vencimiento detiene sin fetch ni revelar", async () => {
+    conHuella(AHORA);
+    const fetch = vi.fn();
+    const { aviso, detener } = await sondeoServido(fetch);
+    vi.setSystemTime(AHORA + 15 * 60 * 1000 + 1);
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(detener).toHaveBeenCalledTimes(1);
+    expect(fetch).not.toHaveBeenCalled();
+    expect(aviso.hidden).toBe(true);
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("el HTML de un enlace ya vencido no sirve script de sondeo y mantiene el aviso oculto", async () => {
+    conHuella(AHORA - 15 * 60 * 1000 - 1);
+    const html = await servida();
+    expect(html).not.toContain(SONDEO);
+    document.body.innerHTML = html;
+    expect(document.querySelector<HTMLElement>('[data-testid="espera-entro"]')?.hidden).toBe(true);
+  });
 });
 
 describe("la pantalla de espera sale entera en el HTML (15.9)", () => {
@@ -101,7 +199,7 @@ describe("la pantalla de espera sale entera en el HTML (15.9)", () => {
     conComprobante(AHORA);
     const html = await servida();
 
-    expect(titulo(html)).toBe("Revisá tu correo");
+    expect(titulo(html)).toBe("Revisa tu correo");
     expect(html).not.toContain("Al entrar aceptás los ");
     expect(html).not.toContain('href="/legal/terminos"');
     expect(html).not.toContain('href="/legal/privacidad"');
@@ -109,7 +207,7 @@ describe("la pantalla de espera sale entera en el HTML (15.9)", () => {
     // afirmar sólo que la cadena aparece pasaría con la dirección en cualquier
     // parte del documento.
     expect(html).toMatch(new RegExp(`Le mandamos un enlace a <b[^>]*>${CORREO}</b>`));
-    expect(html).toContain("Abrilo y entrás sin escribir nada más.");
+    expect(html).toContain("Ábrelo y entras sin escribir nada más.");
     // **Y a nadie más.** La dirección no viaja en ninguna dirección web: ni en
     // la barra, ni en un enlace, ni en el historial de quien mira por encima
     // del hombro. Sale del comprobante y vuelve a la pantalla.
@@ -122,7 +220,7 @@ describe("la pantalla de espera sale entera en el HTML (15.9)", () => {
 
     expect(html).toContain("Si no llega");
     expect(html).toContain("Puede tardar hasta dos minutos.");
-    expect(html).toContain("Mirá en correo no deseado.");
+    expect(html).toContain("Mira en correo no deseado.");
     expect(html).toContain("El enlace sirve una sola vez y vence en 15 minutos.");
   });
 
@@ -194,9 +292,8 @@ describe("la pantalla de espera sale entera en el HTML (15.9)", () => {
     conHuella(AHORA);
     const html = await servida();
 
-    expect(html).toMatch(
-      /<p[^>]*data-testid="espera-entro"[^>]*hidden[^>]*>Abriste el enlace en otro dispositivo\./,
-    );
+    expect(html).toMatch(/<p[^>]*data-testid="espera-entro"[^>]*role="status"[^>]*hidden[^>]*>/);
+    expect(html).toContain(`${AVISO_NEUTRO}</p>`);
   });
 
   /**

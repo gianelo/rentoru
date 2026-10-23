@@ -67,15 +67,15 @@ function spellDate(date: Date): string {
 }
 
 const INVALID_COPY: Record<string, string> = {
-  expired: "Este enlace ya no sirve. Entrá a tu cuenta para volver a publicar el aviso.",
-  "bad-signature": "Este enlace no es válido. Revisá que lo hayas copiado entero.",
-  malformed: "Este enlace no es válido. Revisá que lo hayas copiado entero.",
+  expired: "Este enlace ya no sirve. Entra a tu cuenta para volver a publicar el aviso.",
+  "bad-signature": "Este enlace no es válido. Revisa que lo hayas copiado entero.",
+  malformed: "Este enlace no es válido. Revisa que lo hayas copiado entero.",
 };
 
 function missingSecret(): Response {
   return page(
     "No se puede renovar ahora",
-    "<h1>No se puede renovar ahora</h1><p>Volvé a intentar en un rato.</p>",
+    "<h1>No se puede renovar ahora</h1><p>Vuelve a intentar en un rato.</p>",
     500,
   );
 }

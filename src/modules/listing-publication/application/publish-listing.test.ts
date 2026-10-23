@@ -245,6 +245,15 @@ describe("publishListing", () => {
     });
   });
 
+  it.each(["0412 123 4567", "4121234567", "+58 412 1234567", "0058 412 1234567", "584121234567"])(
+    "canonicalizes contact %s at the final write boundary",
+    async (contactValue) => {
+      const dependencies = deps();
+      await publishListing(request({ contactValue }), dependencies);
+      expect(dependencies.listings.saved[0]?.contactValue).toBe("+584121234567");
+    },
+  );
+
   it("stores zero parking when the draft never mentioned it", async () => {
     const dependencies = deps();
 

@@ -55,6 +55,14 @@ export const HOME_SEARCH_SUBMIT_LABEL = "Buscar";
 /** Cómo se anuncia la lista de opciones a quien navega con lector de pantalla. */
 export const HOME_SEARCH_RESULTS_LABEL = "Resultados de la búsqueda";
 
+/** Etiqueta y anuncio de las sugerencias mientras se escribe. */
+export const SEARCH_SUGGESTIONS_LABEL = "Sugerencias";
+
+export function searchSuggestionsStatus(count: number): string {
+  if (count === 0) return "";
+  return count === 1 ? "1 sugerencia" : `${count} sugerencias`;
+}
+
 /**
  * **«No entendí», nunca «no hay avisos».**
  *
@@ -68,7 +76,7 @@ export const HOME_SEARCH_RESULTS_LABEL = "Resultados de la búsqueda";
  * cadena de maquetado.
  */
 export function noMatchMessage(typed: string): string {
-  return `No reconocimos «${typed.trim()}». Probá con una zona, una ciudad o un tipo de vivienda.`;
+  return `No reconocimos «${typed.trim()}». Prueba con una zona, una ciudad o un tipo de vivienda.`;
 }
 
 /** Lo que la caja necesita para dibujarse, ya resuelto. */

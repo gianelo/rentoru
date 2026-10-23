@@ -56,7 +56,7 @@ export const SEARCH_STEPS: readonly SearchStepId[] = [
 
 /** Lista cerrada como `Record` para que un grupo nuevo no compile sin su copia. */
 const STEP_COPY: Readonly<Record<SearchStepId, { title: string; question: string }>> = {
-  precio: { title: "Precio", question: "¿Cuánto podés pagar al mes?" },
+  precio: { title: "Precio", question: "¿Cuánto puedes pagar al mes?" },
   habitaciones: { title: "Habitaciones", question: "¿Cuántas habitaciones?" },
   publica: { title: "Quién publica", question: "¿Quién publica el aviso?" },
   atributos: { title: "La propiedad tiene", question: "¿Qué tiene que tener?" },

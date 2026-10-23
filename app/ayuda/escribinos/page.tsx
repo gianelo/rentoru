@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AppLink } from "@/../components/atoms/AppLink";
 import { ActionButton } from "@/../components/atoms/buttons";
 import { Field } from "@/../components/molecules/Field";
 import {
@@ -7,8 +8,12 @@ import {
   CONTACT_NAME_MAX_LENGTH,
 } from "@/modules/site-contact/domain/contact-message";
 import {
+  CONTACT_CONTEXT_PARAM,
+  CONTACT_DELIVERY_ERROR_PARAM,
   CONTACT_ERROR_PARAM,
+  CONTACT_RETURN_MODE_PARAM,
   CONTACT_SENT_PARAM,
+  resolveContactContext,
   resolveContactScreen,
 } from "@/modules/site-contact/domain/contact-screen";
 import ayudaStyles from "../ayuda.module.css";
@@ -31,8 +36,8 @@ import styles from "./escribinos.module.css";
  * volver.
  */
 export const metadata: Metadata = {
-  title: "Escribinos — Rentoru",
-  description: "Escribinos un mensaje desde rentoru.com y te contestamos por correo.",
+  title: "Escríbenos — Rentoru",
+  description: "Escríbenos un mensaje desde rentoru.com y te contestamos por correo.",
   // 26.12 — relativa: `metadataBase` le pone la base una sola vez.
   alternates: { canonical: "/ayuda/escribinos" },
 };
@@ -43,23 +48,39 @@ interface EscribinosProps {
 
 export default async function EscribinosPage({ searchParams }: EscribinosProps) {
   const query = await searchParams;
-  const screen = resolveContactScreen(query[CONTACT_SENT_PARAM], query[CONTACT_ERROR_PARAM]);
+  const screen = resolveContactScreen(
+    query[CONTACT_SENT_PARAM],
+    query[CONTACT_ERROR_PARAM],
+    query[CONTACT_DELIVERY_ERROR_PARAM],
+  );
+  const context = resolveContactContext(
+    query[CONTACT_CONTEXT_PARAM],
+    query[CONTACT_RETURN_MODE_PARAM],
+  );
 
   return (
     <article>
-      <p className={ayudaStyles.category}>Ayuda / Escribinos</p>
-      <h1 className={ayudaStyles.title}>Escribinos</h1>
+      <p className={ayudaStyles.category}>Ayuda / Escríbenos</p>
+      <h1 className={ayudaStyles.title}>Escríbenos</h1>
+      {context ? <p className={ayudaStyles.text}>{context.scopeNotice}</p> : null}
 
       {screen.state === "sent" ? (
         <p className={ayudaStyles.text}>
-          Recibimos tu mensaje. Te contestamos por correo, al mismo que dejaste acá.
+          Recibimos tu mensaje. Te contestamos por correo, al mismo que dejaste aquí.
         </p>
       ) : (
         <>
           <p className={ayudaStyles.text}>
-            No publicamos ninguna dirección de correo acá: contanos qué necesitás y te escribimos
+            No publicamos ninguna dirección de correo aquí: cuéntanos qué necesitas y te escribimos
             nosotros a la tuya.
           </p>
+
+          {context ? (
+            <>
+              <p className={ayudaStyles.text}>{context.guidance}</p>
+              <p className={ayudaStyles.text}>{context.draftNotice}</p>
+            </>
+          ) : null}
 
           {screen.errorNotice ? (
             <p className={styles.errorBanner} role="alert">
@@ -68,6 +89,18 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
           ) : null}
 
           <form action={sendContactMessageAction} className={styles.form}>
+            {context ? (
+              <>
+                <input type="hidden" name={CONTACT_CONTEXT_PARAM} value={context.value} />
+                {context.returnMode ? (
+                  <input
+                    type="hidden"
+                    name={CONTACT_RETURN_MODE_PARAM}
+                    value={context.returnMode}
+                  />
+                ) : null}
+              </>
+            ) : null}
             <Field name="name" label="Tu nombre" required>
               {(attrs) => (
                 <input {...attrs} type="text" required maxLength={CONTACT_NAME_MAX_LENGTH} />
@@ -96,7 +129,7 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
                 pantalla— llega a este campo. Un script que completa cada
                 campo que encuentra, sí. */}
             <p className={styles.trap} aria-hidden="true">
-              <label htmlFor="sitioWeb">Dejá esto vacío</label>
+              <label htmlFor="sitioWeb">Deja esto vacío</label>
               <input id="sitioWeb" name="sitioWeb" type="text" tabIndex={-1} autoComplete="off" />
             </p>
 
@@ -104,6 +137,11 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
           </form>
         </>
       )}
+      {context ? (
+        <p className={ayudaStyles.text}>
+          <AppLink href={context.returnHref}>{context.returnLabel}</AppLink>
+        </p>
+      ) : null}
     </article>
   );
 }

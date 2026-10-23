@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { contactFeedback } from "../../src/modules/listing-publication/domain/contact-feedback";
 import {
   MAX_DESCRIPTION_CHARACTERS,
   MAX_REFERENCE_CHARACTERS,
@@ -75,6 +76,41 @@ const EVERY_VIOLATION: readonly PublishViolation[] = [
   // a la vez, y alcanzar el codigo cuesta su propia fixture.
   ...validatePublishableListing({ reference: "r".repeat(MAX_REFERENCE_CHARACTERS + 1) }, []),
 ];
+
+describe("contact copy with derived diagnosis", () => {
+  it.each([
+    [
+      "whatsapp",
+      "042431244444",
+      "El número para WhatsApp tiene 12 dígitos. Este formato requiere 11.",
+    ],
+    [
+      "whatsapp",
+      "0212 1234567",
+      "Este número es fijo. Selecciona Llamada; WhatsApp requiere un móvil venezolano.",
+    ],
+    [
+      "whatsapp",
+      "+1 4121234567",
+      "Para WhatsApp, usa un número venezolano: el código de país es +58.",
+    ],
+    [
+      "telefono",
+      "+58 0212 1234567",
+      "Después de +58 o 0058, no incluyas el 0 inicial del número para llamadas.",
+    ],
+    ["email", "sin-arroba", "Escribe un correo completo, como nombre@dominio.com."],
+  ] as const)("explains %s %s, not a different channel", (method, value, expected) => {
+    expect(
+      publishViolationMessage("contactValue.invalid", { contact: contactFeedback(method, value) }),
+    ).toBe(expected);
+  });
+  it("preserves the original fallback for callers without diagnosis", () => {
+    expect(publishViolationMessage("contactValue.invalid", {})).toBe(
+      "Revisa el dato: un correo lleva @, y un teléfono solo números.",
+    );
+  });
+});
 
 describe("publish violation copy", () => {
   it("has copy for every reachable violation, and no copy for anything else", () => {
@@ -231,7 +267,7 @@ describe("listingEditViolationMessage — un solo español para publicar y edita
     expect(message).toContain("Una inmobiliaria no puede volver a declararse dueño.");
     expect(message).toContain(PUBLISHER_TYPE_ONE_WAY_NOTICE);
     expect(PUBLISHER_TYPE_ONE_WAY_NOTICE).toBe(
-      "Aparece siempre en tu aviso. Después podés corregirlo de dueño a inmobiliaria, nunca al revés.",
+      "Aparece siempre en tu aviso. Después puedes corregirlo de dueño a inmobiliaria, nunca al revés.",
     );
   });
 

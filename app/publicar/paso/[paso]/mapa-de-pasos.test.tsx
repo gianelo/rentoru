@@ -6,7 +6,6 @@ import {
   validatePublishableListing,
 } from "@/modules/listing-publication/domain/publishable-listing";
 import type { StoredDraft } from "../../draft";
-import { STEP_MAP_TRIGGER_LABEL } from "../../step-copy";
 
 /**
  * **El mapa de pasos de móvil** (tasks.md 18.17, §12 de `Rentoru - Publicar -
@@ -95,6 +94,20 @@ async function servido(paso: string): Promise<string> {
 }
 
 describe("el mapa que en un teléfono reemplaza al riel (18.17)", () => {
+  it("zona conecta el buscador y el aviso en tuteo sin cambiar el GET ni el destino", async () => {
+    const html = await servido("zona");
+
+    expect(html).toMatch(/<label[^>]*for="q">Busca tu zona<\/label>/);
+    expect(html).toContain('placeholder="Busca tu zona"');
+    expect(html).toContain('name="q"');
+    expect(html).toMatch(/<form[^>]*method="get"/);
+    expect(html).toContain('name="zoneId"');
+    expect(html).toMatch(
+      /<a[^>]*href="\/ayuda\/escribinos\?motivo=zona-faltante"[^>]*>Avísanos<\/a>/,
+    );
+    expect(html).toContain('name="step" value="zona"');
+  });
+
   /**
    * El salto que en móvil no existía: desde el paso 4, volver al 2 sin
    * recorrer el 3 hacia atrás con la flecha. Es un enlace de verdad, con su
@@ -103,7 +116,11 @@ describe("el mapa que en un teléfono reemplaza al riel (18.17)", () => {
   it("dibuja un enlace a cada paso ya contestado, sin ningún formulario ni script detrás", async () => {
     const html = await servido("tamano");
 
-    expect(html).toContain(STEP_MAP_TRIGGER_LABEL);
+    expect(html).toContain('aria-label="Ver los pasos a los que puedes volver"');
+    expect(html).toMatch(/<h1[^>]*>¿Cómo es de grande\?<\/h1>/);
+    expect(html).toContain(
+      "Un estudio cuenta como 1 habitación. Si no tiene estacionamiento, déjalo en 0.",
+    );
     expect(html).toContain("<details");
     expect(html).toMatch(/<a[^>]+href="\/publicar\/paso\/zona"/);
     expect(html).toMatch(/<a[^>]+href="\/publicar\/paso\/tipo"/);
@@ -131,7 +148,7 @@ describe("el mapa que en un teléfono reemplaza al riel (18.17)", () => {
 
     const html = await servido("tipo");
 
-    expect(html).not.toContain(STEP_MAP_TRIGGER_LABEL);
+    expect(html).not.toContain('aria-label="Ver los pasos a los que puedes volver"');
     expect(html).not.toContain("<details");
     expect(html).toContain("1 / 9");
   });

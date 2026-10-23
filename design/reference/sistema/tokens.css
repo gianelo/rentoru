@@ -16,6 +16,14 @@
   /* Separación exterior del panel vacío, móvil / desde 768px. */
   --home-invite-outer-gap:16px;
   --home-invite-outer-gap-desktop:24px;
+  /* Indicador de carga aprobado (F36.3): sólo gira el aro. */
+  --loading-ring-width: 3px;
+  --loading-inline-size: 1em;
+  --loading-duration: 1.2s;
+  --loading-layer: 1000;
+  /* Ancho máximo de la búsqueda pública (F36.4, láminas desktop 14i/Lista). */
+  --nav-search-max: 420px;
+  --photo-menu-visible-size: 30px;
 }
 
 /* ---------- Eje 1 · estructura ---------- */

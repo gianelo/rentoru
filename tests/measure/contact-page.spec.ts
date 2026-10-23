@@ -13,7 +13,7 @@ const viewports = [
 
 for (const viewport of viewports) {
   for (const state of states) {
-    test(`Escribinos ${state.kind} at ${viewport.width}x${viewport.height} without JS`, async ({
+    test(`Escríbenos ${state.kind} at ${viewport.width}x${viewport.height} without JS`, async ({
       browser,
     }) => {
       const context = await browser.newContext({ viewport, javaScriptEnabled: false });
@@ -21,7 +21,7 @@ for (const viewport of viewports) {
         const page = await context.newPage();
         await page.goto(`/ayuda/escribinos${state.suffix}`);
         const article = page.locator("main article");
-        await expect(article.getByRole("heading", { level: 1, name: "Escribinos" })).toBeVisible();
+        await expect(article.getByRole("heading", { level: 1, name: "Escríbenos" })).toBeVisible();
         const form = article.locator("form");
         const receipt = article.getByText("Recibimos tu mensaje", { exact: false });
         const error = article.getByRole("alert");
@@ -73,7 +73,7 @@ for (const viewport of viewports) {
           };
         });
         expect(geometry).toMatchObject({
-          category: "Ayuda / Escribinos",
+          category: "Ayuda / Escríbenos",
           color: geometry.soft,
           weight: "600",
           titleSize: geometry.tokenSize,

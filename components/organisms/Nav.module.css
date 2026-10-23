@@ -259,6 +259,20 @@
     justify-content: center;
   }
 
+  /* 36.4: el wrapper también ocupa el ancho disponible; sin esto el
+     formulario al 100% sigue dependiendo del ancho intrínseco de <search>. */
+  .pillCol > search {
+    inline-size: 100%;
+    max-inline-size: var(--nav-search-max);
+  }
+
+  /* Sólo la barra con búsqueda visible adopta el mínimo táctil aprobado.
+     El menú de cuenta tiene su propio wrapper; no se alteran sus filas. */
+  .inner:has(> .pillCol:not(.mobileOnly)) .actions > a,
+  .inner:has(> .pillCol:not(.mobileOnly)) .actions > span > a {
+    min-block-size: var(--target-min-desktop);
+  }
+
   /* Founder override: formerly pill-less routes search on mobile only. */
   .mobileOnly {
     display: none;
@@ -276,6 +290,15 @@
   .publishOutline,
   .enter {
     min-block-size: 40px;
+  }
+}
+
+/* En tablet, tres tracks fluidos sustituyen los bookends de 250px.
+   La simetría conserva el centro del viewport y deja espacio para las
+   acciones reales con/sin sesión, sin esconderlas ni modificar el marcado. */
+@media (min-width: 768px) and (max-width: 1099px) {
+  .inner:has(> .pillCol:not(.mobileOnly)) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 

@@ -4,7 +4,7 @@ const routes = [
   ["preguntas-frecuentes", "Preguntas frecuentes", "Entre 1 y 6 fotos por aviso."],
   ["como-contactar-al-dueno", "Cómo contactar al dueño", "antes de entregar dinero."],
   ["como-publicar-un-aviso", "Cómo publicar un aviso", "«Mis avisos»."],
-  ["como-reportar-un-aviso", "Cómo reportar un aviso", "Escribinos"],
+  ["como-reportar-un-aviso", "Cómo reportar un aviso", "Escríbenos"],
 ] as const;
 const viewports = [
   { width: 390, height: 840 },
