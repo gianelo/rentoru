@@ -128,7 +128,7 @@ export function SubirFoto({
       setMensaje(exito);
     } catch {
       setEstado("fallo");
-      setMensaje("✱ No pudimos subir esta foto. Probá de nuevo.");
+      setMensaje("✱ No pudimos subir esta foto. Inténtalo de nuevo.");
     }
   }
 
@@ -170,8 +170,8 @@ export function SubirFoto({
           pantalla de importar (9.26). */}
       <noscript>
         <p className={styles.fotoError}>
-          Subir fotos necesita JavaScript: las comprimimos en tu teléfono antes de mandarlas, así
-          gastás muchos menos datos.
+          Subir fotos necesita JavaScript: las comprimimos en tu teléfono antes de enviarlas, así
+          consumes muchos menos datos.
         </p>
       </noscript>
     </div>
