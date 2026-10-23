@@ -86,7 +86,7 @@ Las referencias son puntos de entrada actuales; verificar estados y consumidores
   Referencias: `app/ayuda/`, `src/modules/site-contact/domain/contact-screen.ts`.
   Aceptación: textos y nombres accesibles del HTML servido, envío inválido y acuse en `app/ayuda/escribinos/page.test.tsx`; separar el correo dirigido al operador y registrar su disposición.
 
-- [ ] **35.9 Estilo legal únicamente.** Revisar tuteo, neutralidad y consistencia sin ratificar contenido.
+- [x] **35.9 Estilo legal únicamente.** Revisar tuteo, neutralidad y consistencia sin ratificar contenido. Verificada localmente: 17 literales de voseo en tuteo; plazos, obligaciones, enlaces y `DraftNotice` intactos; «F35.9: addresses the reader in neutral tuteo, not voseo» en `app/legal/{terminos,privacidad,cookies,datos,normas}/page.test.tsx`; aceptación del fundador «si ya las revise todo bien». Seguimiento F33, sin cambios: privacidad «a quién le revelaste un contacto» frente a datos «quién vio tu contacto», y la afirmación de «dos cookies». Evidencia y hashes en [estilo legal](fase-35-legales-estilo.md); PR e integración humana pendientes.
   Referencias: `app/legal/`, `odd/tasks/fase-33-ratificacion-legal.md` (frontera, no tarea de F35).
   Aceptación: ampliar `app/legal/terminos/page.test.tsx` y las pruebas servidas de páginas afectadas; cotejar significado, plazos, obligaciones y permanencia de `DraftNotice`. Elevar cualquier cambio sustantivo a decisión separada.
 

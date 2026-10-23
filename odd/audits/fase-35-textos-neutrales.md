@@ -65,7 +65,7 @@ Estado f35-a: 35.4 cerrada localmente con aceptación del fundador (versión ser
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `app/legal/`; `app/legal/draft-notice.tsx` | HTML, visitante; cinco páginas y aviso de borrador | `app/legal/terminos/page.tsx`, privacidad, cookies, normas y datos | `app/legal/terminos/page.test.tsx:12`: «carries the unratified-draft notice». Sólo estilo; cotejo de significado pendiente. `DraftNotice` y ratificación pertenecen a F33 |
+| `app/legal/`; `app/legal/draft-notice.tsx` | HTML, visitante; cinco páginas y aviso de borrador | `app/legal/terminos/page.tsx`, privacidad, cookies, normas y datos | `app/legal/terminos/page.test.tsx:12`: «carries the unratified-draft notice». **35.9 verificada localmente:** 17 literales de voseo en tuteo en las cinco páginas, cotejados sin cambiar significado, plazos ni obligaciones; «F35.9: addresses the reader in neutral tuteo, not voseo» por página. `DraftNotice` intacto. Seguimiento F33: «revelaste» frente a «quién vio» y la afirmación de «dos cookies». Detalle en [estilo legal](../tasks/fase-35-legales-estilo.md) |
 
 ### 35.10 — correo transaccional e interno
 

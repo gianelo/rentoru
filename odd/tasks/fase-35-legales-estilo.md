@@ -10,9 +10,9 @@ Entrega: PR a dev ≤400 A+D; Vitest servido, gates bajo lock, aceptación del f
 - S5: comandos pesados bajo `lockf /tmp/rentoru-f35-heavy.lock` (regla del fundador, 2026-10-23).
 
 ## Tasks
-- T1 [S1–S3] in_progress; delegada: 17 literales de voseo en `app/legal/*/page.tsx` y una prueba servida por página afectada.
-- T2 [S3–S5] pending; padre: gates bajo lock, versión servida y aceptación.
-- T3 [S1–S5] pending; padre: cierre en OpenSpec/canónico/auditoría, commit, PR y cierre de recursos.
+- T1 [S1–S3] done; delegada: 17 literales de voseo en `app/legal/*/page.tsx` y una prueba servida por página afectada.
+- T2 [S3–S5] done; gates bajo lock (L5) y aceptación del fundador (L6).
+- T3 [S1–S5] in_progress; padre: cierre en OpenSpec/canónico/auditoría, commit, PR y cierre de recursos.
 
 ## Log
 L1 — Cola original del fundador: «Your queue, in order: 35.5 publisher management (mis avisos, editar, activar, renovar, vencer) → 35.9 legal style only». 35.5 publicada en PR #437 antes de empezar esta tarea.
@@ -20,3 +20,6 @@ L2 — Inicio: worktree `rentoru-phase35-task-35-9` desde `origin/dev` `aee3f4c`
 L3 — Fuera de alcance por sustantivo (elevar, no tocar): `privacidad` «registro de a quién le revelaste un contacto» no es voseo pero contradice `datos` (quién vio tu contacto) y roza la retención abierta en 33.2; las afirmaciones «únicas dos cookies» de `cookies` las verifica 33.1. Plazos, límites, obligaciones y leyes se conservan tal cual.
 L4 — T1 (delegada): RED `pnpm exec vitest run app/legal -t "F35.9"` 5 fallos/41 omitidos con la fuente original; GREEN `pnpm exec vitest run app/legal` 7 archivos/46 pruebas. Mutación: restaurar sólo «¿Podés navegar sin ellas?» hace fallar únicamente `CookiesPage > F35.9: addresses the reader in neutral tuteo, not voseo`; restaurado, 46/46. Prueba por página en `app/legal/{terminos,privacidad,cookies,datos,normas}/page.test.tsx` — «F35.9: addresses the reader in neutral tuteo, not voseo». Biome sobre los 10 archivos: OK.
 L5 — Gates (job-16, test:unit y typecheck bajo `lockf /tmp/rentoru-f35-heavy.lock`): EXIT 0 en test:unit (321 archivos/3668 pruebas), typecheck --incremental false, lint (8 warnings/2 infos preexistentes) y lint:tokens (323 archivos). HTML servido por `pnpm dev` en 3102 desde este worktree (cwd verificado, sin DB): las cinco páginas responden 200 con `DraftNotice`; frases neutras presentes y ningún voseo previo. Envío de la solicitud de aceptación al coordinador rechazado; se publica en el panel. Sin aceptación, commit ni push.
+L6 — Aceptación del fundador (relevada por el coordinador, literal, 2026-10-23): «si ya las revise todo bien». Versión servida en `http://localhost:3102/legal/*` desde este worktree, con estos SHA-256: `terminos/page.tsx` d311fffc…47cc25, `privacidad/page.tsx` 359a1758…baecf97a, `cookies/page.tsx` 410de41a…935082, `datos/page.tsx` bc42411d…8ff8b9 y `normas/page.tsx` b3e91429…338ff8b9. Después se hizo rebase de la rama local, sin publicar, sobre `origin/dev` `4548c1f` (incluye #437, #438 y #439): las cinco fuentes quedan byte a byte iguales.
+L7 — Seguimientos F33 (contenido, no estilo; sin cambios aquí): (1) privacidad dice «registro de a quién le revelaste un contacto» y datos, «quién vio tu contacto»; aclarar el sentido toca la retención abierta en 33.2. (2) Comprobar las afirmaciones de cookies «las únicas dos cookies» y «exactamente dos cookies» (33.1).
+L8 — Gates sobre la rama rebasada (job-19; test:unit y typecheck bajo lock): test:unit 323 archivos/3727 pruebas, typecheck --incremental false, lint y lint:tokens, todos con EXIT 0 y sin timeouts. Siguen pendientes el PR, CI y la integración humana.
