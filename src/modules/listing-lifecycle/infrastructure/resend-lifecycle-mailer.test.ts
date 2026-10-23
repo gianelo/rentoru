@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { composeNotice, type NoticeKind } from "../domain/lifecycle-notice";
 import {
   LifecycleMailerNotConfiguredError,
   LifecycleMailerSendError,
@@ -21,7 +22,7 @@ function fakeResend(result: { error: { message: string } | null }) {
 const MESSAGE = {
   to: "duenio@ejemplo.com",
   subject: "Tu aviso vence en 3 días",
-  body: "Hola.\n\nTu aviso «Apartamento en Chacao» vence pronto.\nRenovalo acá.",
+  body: "Hola.\n\nTu aviso «Apartamento en Chacao» vence pronto.\nRenuévalo aquí.",
 };
 
 describe("configuración", () => {
@@ -83,12 +84,82 @@ describe("el envío", () => {
   });
 });
 
+describe("el correo final que recibe Resend (35.10)", () => {
+  const OPEN = `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">`;
+  const LISTING = {
+    id: "l-1",
+    title: 'Casa <b>"A&B"</b>',
+    expiresAt: new Date("2026-08-31T10:00:00.000Z"),
+  };
+  const URL = "https://rentoru.test/renovar/t?a=1&b=2";
+  const TITLE_TEXT = '«Casa <b>"A&B"</b>»';
+  const TITLE_HTML = "«Casa &lt;b&gt;&quot;A&amp;B&quot;&lt;/b&gt;»";
+  const URL_HTML = "https://rentoru.test/renovar/t?a=1&amp;b=2";
+  const KEEP =
+    "Si no lo renuevas, el aviso sale de la búsqueda pero no se borra: " +
+    "puedes volver a activarlo después.";
+  const PURGE_TAIL =
+    "Después de esa fecha el aviso sigue existiendo, pero para volver a publicarlo " +
+    "vas a tener que subir las fotos de nuevo. Esto no se deshace.";
+
+  // composeNotice → ResendLifecycleMailer: asunto, texto y HTML exactos, con
+  // título y enlace sintéticos que llegan intactos al texto y escapados al HTML.
+  it.each<[string, NoticeKind, string, string, string, string]>([
+    [
+      "vencimiento en 3 días",
+      "expiry",
+      "2026-08-28T10:00:00.000Z",
+      "Tu aviso vence en 3 días",
+      `${TITLE_TEXT} vence el 31 de agosto de 2026.\n\n` +
+        `Renuévalo por 30 días más desde aquí:\n${URL}\n\n${KEEP}`,
+      `<p>${TITLE_HTML} vence el 31 de agosto de 2026.</p>` +
+        `<p>Renuévalo por 30 días más desde aquí:<br />${URL_HTML}</p><p>${KEEP}</p>`,
+    ],
+    [
+      "vencimiento en 1 día, en singular",
+      "expiry",
+      "2026-08-30T10:00:00.000Z",
+      "Tu aviso vence en 1 día",
+      `${TITLE_TEXT} vence el 31 de agosto de 2026.\n\n` +
+        `Renuévalo por 30 días más desde aquí:\n${URL}\n\n${KEEP}`,
+      `<p>${TITLE_HTML} vence el 31 de agosto de 2026.</p>` +
+        `<p>Renuévalo por 30 días más desde aquí:<br />${URL_HTML}</p><p>${KEEP}</p>`,
+    ],
+    [
+      "purga de fotos",
+      "purge",
+      "2026-09-10T10:00:00.000Z",
+      "Las fotos de tu aviso se borran pronto",
+      `${TITLE_TEXT} venció el 31 de agosto de 2026 y sus fotos se borran el ` +
+        "15 de septiembre de 2026.\n\n" +
+        `Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:\n${URL}\n\n${PURGE_TAIL}`,
+      `<p>${TITLE_HTML} venció el 31 de agosto de 2026 y sus fotos se borran el ` +
+        "15 de septiembre de 2026.</p>" +
+        `<p>Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:<br />${URL_HTML}</p>` +
+        `<p>${PURGE_TAIL}</p>`,
+    ],
+  ])("%s", async (_name, kind, now, subject, text, html) => {
+    const { send, client } = fakeResend({ error: null });
+    const notice = composeNotice(kind, LISTING, new Date(now), URL);
+
+    await new ResendLifecycleMailer("re_loquesea", "avisos@rentoru.com", client).send({
+      to: "duenio@ejemplo.com",
+      ...notice,
+    });
+
+    const payload = send.mock.calls[0]?.[0];
+    expect(payload.subject).toBe(subject);
+    expect(payload.text).toBe(text);
+    expect(payload.html).toBe(`${OPEN}${html}</div>`);
+  });
+});
+
 describe("el HTML, que es presentación y no redacción", () => {
   it("parte el cuerpo en párrafos sin agregar ni una palabra", () => {
     const html = renderLifecycleHtml(MESSAGE.body);
 
     expect(html).toContain("<p>Hola.</p>");
-    expect(html).toContain("Renovalo acá.");
+    expect(html).toContain("Renuévalo aquí.");
     // Los saltos simples quedan dentro del mismo párrafo.
     expect(html).toContain("<br />");
   });
