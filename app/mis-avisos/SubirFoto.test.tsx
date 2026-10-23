@@ -21,6 +21,8 @@ describe("SubirFoto — copia por defecto", () => {
     expect(html).toMatch(new RegExp(`for="${inputId}"[^>]*>Subir fotos</label>`));
     expect(html).not.toContain("Elegir fotos");
     expect(html).toContain("<noscript>");
-    expect(html).toContain("Subir fotos necesita JavaScript");
+    expect(html).toContain(
+      "Subir fotos necesita JavaScript: las comprimimos en tu teléfono antes de enviarlas, así consumes muchos menos datos.",
+    );
   });
 });

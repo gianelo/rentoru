@@ -1,0 +1,47 @@
+# F35.5 — Gestión del publicador neutra
+Objetivo: auditar estilo sin cambiar reglas; rama `fix/fase-35-gestion-publicador`, base `4cf806330ad57c22df442c71e0cdeabd8dd64a21`.
+Entrega: PR a dev ≤400 A+D; Vitest, tipos, Biome, tokens, navegador y aceptación humana antes de push.
+
+## Specs
+- S1: «35.5 publisher management (mis avisos, editar, activar, renovar, vencer)»; contrato canónico: «Auditar mis avisos, editar, activar, renovar, vencimiento y avisos de retención.»
+- S2: «textos/acciones de estados en `app/mis-avisos/mis-avisos-contract.test.tsx` y `[id]/editar/editar-servido.test.tsx`, con fechas/interpolaciones y errores; sin cambiar tiempos de retención ni ciclo de vida.»
+- S3: «Strict TDD on the served HTML/consumer, mutation check, full gates (test:unit, typecheck, lint, lint:tokens).»
+- S4: «Copy changes are screen changes: get the founder's explicit browser acceptance of the served version BEFORE pushing.»
+- S5: «Shared copy: `app/publicar/step-copy.ts` and `app/publicar/violation-copy.ts` belong to f35-a. If you need to change a string used by another agent's surface, message its owner first and do not edit it yourself.»
+
+## Tasks
+- T1 [S1–S3,S5] done local; ruta delegada por context backstop: copia propia y pruebas de consumidores; focal 87/87, mutación restaurada y gates completos; commit pendiente.
+- T2 [S2–S4] done; Chromium bajo lock 3/3 PASS y aceptación del fundador observada (L7).
+- T3 [S1–S5] done; commit `8e7c614`, PR #437 hacia dev, recursos propios detenidos (L8); CI y merge humano pendientes.
+
+## Log
+L1 — Solicitud original del fundador (2026-10-23):
+
+> You are agent f35-b, one of four persistent Gentle Shell agents working on Rentoru phase 35 (neutral Spanish copy audit) in the Herdr tab «Fase 35». The founder (gianelo) watches this tab. Talk to the founder in neutral professional Spanish (tuteo, no voseo); write code, tests and commits following the repository conventions.
+>
+> Your queue, in order: 35.5 publisher management (mis avisos, editar, activar, renovar, vencer) → 35.9 legal style only
+> Work one task at a time. When a task's PR is open and its resources are closed, start the next task in your queue. When your queue is done, tell the founder and stay open; do not exit.
+>
+> Before anything, read in this order:
+> 1. AGENTS.md (mandatory, especially §1 and §6) and load `.agents/skills/task-start/SKILL.md`; load `.agents/skills/task-close/SKILL.md` when closing.
+> 2. `odd/tasks/fase-35-textos-neutrales.md` (phase plan, your task's acceptance) and `odd/audits/fase-35-textos-neutrales.md` (policy and inventory). For 35.4 also `odd/tasks/fase-35-publicacion-neutra.md` (slice A0 already merged in #374; resume there).
+> 3. Engram: `mem_search` project rentoru, topic `fase-35/coordinacion-agentes` — the shared coordination record (queues, shared-file ownership, port ranges). Follow it.
+>
+> Hard rules for this run:
+> - Check what already exists before writing (stale checkboxes have lied before).
+> - One sibling worktree per task under /Users/gianelo/Documents/Dev/py, created from fresh origin/dev, named rentoru-phase35-task-35-<n>; branch fix/fase-35-<topic>. Never write in the main checkout /Users/gianelo/Documents/Dev/py/rentas.com.ve.
+> - Strict TDD on the served HTML/consumer, mutation check, full gates (test:unit, typecheck, lint, lint:tokens). PR ≤400 additions+deletions to dev, Spanish conventional commit, Spanish PR body (why + verification at the end), no AI attribution, never merge.
+> - Copy changes are screen changes: get the founder's explicit browser acceptance of the served version BEFORE pushing. Use only your port range: app 3102, proxy/DB 55511-55519. Owned containers: `rentoru-f35b-<task>-pg`, label `rentoru.task=f35.<n>`. Never touch rentas-pg, CI containers, or another agent's resources or worktrees.
+> - Check the task box in the final candidate once checks and acceptance are observed (AGENTS.md §6). Right after your PR exists, close every resource you own (jobs, app, proxy, browsers incl. orphan «Google Chrome for Testing», docker stop your containers) and verify (AGENTS.md «Close task resources at publication»).
+> - Shared copy: `app/publicar/step-copy.ts` and `app/publicar/violation-copy.ts` belong to f35-a. If you need to change a string used by another agent's surface, message its owner first and do not edit it yourself.
+> - Coordination: first call `orchestrator_session_id` with subject "f35-b fase 35". Use `orchestrator_list` to find f35-a/f35-b/f35-c/f35-d and `orchestrator_send_message` to report conflicts, shared-file needs, or blockers to them. Keep messages short and concrete.
+> - Editar shares publisher-type copy with publicar/revisar (PUBLISHER_TYPE_ONE_WAY_*): coordinate with f35-a before touching it.
+> Start now with the first task in your queue.
+
+L2 — Inicio verificado: worktree propio registrado, árbol inicial limpio; sin app servida ni recursos propios. Reservas: app 3102, DB/proxy 55511–55519. Sólo contenedor futuro `rentoru-f35b-35-5-pg`, etiqueta `rentoru.task=f35.5`. No acceso a credenciales reales ni DB compartida. Estimación inicial completa 300–390 A+D; conservar margen de cierre, sin nueva infraestructura.
+L3 — Exploración: existen consumidores SSR y fixtures; acciones devuelven códigos y no necesitan cambios. f35-a avisado sobre PUBLISHER_TYPE_ONE_WAY_* y lastPhoto de photo-action-copy; f35-c avisado sobre import-copy externalReference.required. Correo lifecycle-notice pertenece a 35.10, no se toca aquí. La exploración generó un índice .codegraph local, no es artefacto de entrega. Pendientes entonces RED/GREEN, mutación, gates, navegador, aceptación y entrega.
+L4 — T1 local observado: RED 15 fallos de copia + 1 de arnés happy-dom, luego matriz renovación RED 8/10; GREEN focal final 87/87. Mutación exclusiva de `exito` en página real: «sirve el estado cliente neutro, éxito=true» falla, error=false conserva GREEN; restauración 87/87. Full gates EXIT 0: test:unit 322 archivos/3672 tests, typecheck --incremental false, lint (8 warnings/2 infos preexistentes) y lint:tokens 324 archivos. ASSESS inicial no evaluable por untracked; tras declarar los dos archivos nuevos con intent-to-add: nativeRisk medium, 11 rutas/256 A+D, reviewDue=false/under_budget, sin verificador independiente (ningún item alto identificado). No revisión nativa iniciada ni consumida.
+L5 — Recursos propios: PG `527cfc7b35b48024ffe4acf38ed585bdef99e868cdeab80e4253e09bf52152a9`, nombre `rentoru-f35b-35-5-pg`, etiqueta f35.5, loopback55511, tmpfs256MiB/sin mounts; migraciones y semilla existentes EXIT0 (6 avisos/8 fotos). Proxy job-5 55512 y app job-9 3102; cwd del servidor confirmado en task sibling. Sesión sintética local creada sólo en DB propia. Primer navegador GET500 por SITE_URL ausente: diagnóstico del layout, comando corregido sin parche de producto; primer browser salió y app job-6 detenida. No prueba de copia atribuida a ese fallo. Job-10 confirmó /mis-avisos200 y retención, pero editar500 por R2_BUCKET_PUBLIC_URL ausente; cerrado en catch. Se configuró origen de fotos sintético loopback (sin assets; no storage/proveedor real) en app job-11. Job-12 confirmó /mis-avisos200, luego su selector exacto omitía el resto de la frase de ayuda; editar respondió200 pero `getByText('Marca lo que tiene', {exact:true})` agotó30000ms: el literal completo es «Marca lo que tiene. Quien busca puede filtrar por cada uno.». Job-12 EXIT1, browser cerrado en catch; timeout es fallo, no se reintenta automáticamente. Evidencia de edición/renovación final pendiente, no atribuir ese arnés al producto. Sin aceptación ni push/PR.
+L6 — Fundador (relevado, literal): «y las otras repite el cheque»; regla: comandos pesados bajo `lockf /tmp/rentoru-f35-heavy.lock`. Job-13 bajo lock, selectores de frase completa: /mis-avisos 200 (retención neutra, sin «Renovalo»), /editar 200 (dos ayudas neutras completas, sin voseo previo), /renovar/malformed 400 (negativa neutra): EXIT0, 3/3. Ventana de aceptación job-14 con 3 pestañas. Envío al coordinador 01a1688b rechazado de nuevo; solicitud publicada en el panel.
+L7 — Aceptación del fundador (relevada por el coordinador, literal, 2026-10-23): «35.5 ya la revise esta bien todos los textos». Versión servida en `http://localhost:3102` desde este worktree, con estos SHA-256: `app/mis-avisos/page.tsx` c6dc7794…05d6, `app/mis-avisos/SubirFoto.tsx` 95733cf1…130c, `app/mis-avisos/[id]/editar/page.tsx` 93eea98b…9e, `app/renovar/[token]/route.ts` bcb737f8…2112, `retention-notice.ts` f8dac9f8…02a0. Gates job-3 corridos sobre esos mismos bytes; después sólo cambió documentación. `origin/dev` sigue en `4cf8063`, sin integración pendiente. Límites: los literales compartidos quedan en 35.4/35.6, el correo de ciclo de vida en 35.10 y no hay acción manual de «vencer» (`markExpired` es un cron). Commit, PR y CI pendientes.
+L8 — Publicado: commit `8e7c614` en `fix/fase-35-gestion-publicador`, [PR #437](https://github.com/gianelo/rentoru/pull/437) hacia `dev`, +242/−24. Recursos detenidos y comprobados: jobs 14 (navegador), 11 (app 3102) y 5 (proxy 55512); `docker stop rentoru-f35b-35-5-pg`, que queda `exited` con etiqueta f35.5 (no se eliminó); puertos 3102/55511/55512 libres; sin `next dev` en 3102. El único «Google Chrome for Testing» vivo (perfil `gpimrY9s`, una hora de antigüedad) no es de esta tarea y quedó intacto. CI y merge humano pendientes; borrar el worktree y el contenedor queda para después del merge, con confirmación.

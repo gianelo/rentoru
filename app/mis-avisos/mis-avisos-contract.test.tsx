@@ -1,4 +1,7 @@
+// @vitest-environment happy-dom
 import { readFileSync } from "node:fs";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublisherListingBoard } from "../../src/modules/listing-publication/domain/publisher-listing-board";
@@ -54,6 +57,7 @@ vi.mock("./actions", () => ({
   adjuntarFotoAlBorrador: vi.fn(),
 }));
 
+import { adjuntarFotoAlBorrador, pedirDestinoDeFoto } from "./actions";
 import MisAvisosPage from "./page";
 
 const NOW = new Date("2026-08-27T12:00:00Z");
@@ -205,7 +209,7 @@ describe("/mis-avisos — la lista de avisos (14d)", () => {
    * lee el fuente en vez de renderizar.
    */
   it("el formulario de activar envía a la acción de servidor, nunca a un manejador de cliente", () => {
-    const fuente = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
+    const fuente = readFileSync("app/mis-avisos/page.tsx", "utf8");
 
     expect(fuente).toContain("<form action={activarBorrador}");
     expect(fuente).not.toContain("onClick");
@@ -264,7 +268,9 @@ describe("/mis-avisos — la lista de avisos (14d)", () => {
 
     const html = await draw();
 
-    expect(html).toContain("Todavía no publicaste ningún aviso");
+    expect(html).toContain(
+      "Todavía no publicaste ningún aviso. Cuando publiques uno —o importes tu cartera— lo verás aquí.",
+    );
     expect(html).not.toContain("Subir fotos");
   });
 
@@ -290,7 +296,7 @@ describe("/mis-avisos — la lista de avisos (14d)", () => {
     const html = await draw();
 
     expect(html).toContain("Sus fotos se borran el 1 de septiembre");
-    expect(html).toContain("Renovalo antes de esa fecha y el aviso vuelve con sus fotos.");
+    expect(html).toContain("Renuévalo antes de esa fecha y el aviso vuelve con sus fotos.");
   });
 
   /**
@@ -318,7 +324,7 @@ describe("/mis-avisos — la lista de avisos (14d)", () => {
     expect(html).toContain("Apartamento amoblado en La Castellana");
     expect(html).toContain("Las fotos de este aviso ya se borraron.");
     expect(html).toContain("Volver a publicarlo significa subir las fotos de nuevo.");
-    expect(html).not.toContain("Renovalo antes de esa fecha");
+    expect(html).not.toContain("Renuévalo antes de esa fecha");
   });
 
   /**
@@ -327,6 +333,22 @@ describe("/mis-avisos — la lista de avisos (14d)", () => {
    * una pantalla que hubiera dejado de dibujar el aviso de retención en
    * TODAS las fichas pasaría la segunda.
    */
+  it("F35.5: con limpieza atrasada sirve la promesa neutra sin inventar fecha", async () => {
+    listPublisherListings.mockResolvedValue(
+      boardOf([
+        listing({
+          status: "expired",
+          photoCount: 4,
+          expiresAt: new Date("2026-08-01T02:00:00Z"),
+        }),
+      ]),
+    );
+    const html = await draw();
+    expect(html).toContain("Sus fotos se borran en la próxima limpieza.");
+    expect(html).toContain("Renuévalo ya: mientras las fotos estén, el aviso vuelve con ellas.");
+    expect(html).not.toContain("Renuévalo antes de esa fecha");
+  });
+
   it("el conteo aparece en la ficha vencida y en ninguna otra de la misma lista", async () => {
     listPublisherListings.mockResolvedValue(
       boardOf([
@@ -394,6 +416,60 @@ describe("/mis-avisos — la lista de avisos (14d)", () => {
     // orden real es Activar y luego Editar — no el orden en que se mockean.
     expect(bloques.some((bloque) => bloque.includes("Activar"))).toBe(true);
     expect(bloques.some((bloque) => bloque.includes("Editar"))).toBe(true);
+  });
+});
+
+describe("F35.5 — subir desde la página real", () => {
+  it.each([false, true])("sirve el estado cliente neutro, éxito=%s", async (success) => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    vi.stubGlobal(
+      "createImageBitmap",
+      vi.fn(async () => {
+        if (!success) throw new Error("imagen inválida");
+        return { width: 100, height: 100, close: vi.fn() };
+      }),
+    );
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({
+      drawImage: vi.fn(),
+    } as unknown as CanvasRenderingContext2D);
+    vi.spyOn(HTMLCanvasElement.prototype, "toBlob").mockImplementation((callback) =>
+      callback(new Blob(["foto"], { type: "image/webp" })),
+    );
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true })),
+    );
+    vi.mocked(pedirDestinoDeFoto).mockResolvedValue({
+      url: "https://upload.invalid",
+      key: "foto",
+      expiresAt: "2026-08-27T12:05:00Z",
+    });
+    vi.mocked(adjuntarFotoAlBorrador).mockResolvedValue({ position: 0 });
+    try {
+      const tree = await MisAvisosPage({ searchParams: Promise.resolve({}) });
+      await act(async () => root.render(tree));
+      const input = container.querySelector<HTMLInputElement>('input[type="file"]');
+      if (!input) throw new Error("falta el selector de fotos");
+      Object.defineProperty(input, "files", { value: [new File(["foto"], "foto.jpg")] });
+      await act(async () => {
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      expect(container.querySelector('[role="status"]')?.textContent).toBe(
+        success
+          ? "Foto subida. Ya puedes activar el aviso."
+          : "✱ No pudimos subir esta foto. Inténtalo de nuevo.",
+      );
+      expect(input.disabled).toBe(false);
+      expect(container.textContent).toContain("Activar");
+    } finally {
+      await act(async () => root.unmount());
+      container.remove();
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    }
   });
 });
 
