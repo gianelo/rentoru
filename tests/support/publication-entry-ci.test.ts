@@ -7,7 +7,7 @@ const require = createRequire(import.meta.url);
 const cliRequire = createRequire(require.resolve("@lhci/cli/package.json"));
 const utilsRequire = createRequire(cliRequire.resolve("@lhci/utils/package.json"));
 const yaml = utilsRequire("js-yaml") as { safeLoad: (source: string) => Workflow };
-type Step = { name?: string; env?: Record<string, string>; run?: string };
+type Step = { name?: string; if?: string; env?: Record<string, string>; run?: string };
 type Workflow = { jobs: { e2e: { env: Record<string, string>; steps: Step[] } } };
 const workflow = yaml.safeLoad(readFileSync(".github/workflows/ci.yml", "utf8"));
 const steps = workflow.jobs.e2e.steps;
@@ -25,14 +25,16 @@ function dedicated(): Step {
 }
 
 describe("publication entry CI isolation", () => {
-  it("runs after the deterministic seed and before the general suites", () => {
+  it("runs alone in its own leg right after that leg's deterministic seed", () => {
     const seedIndex = steps.findIndex(
       (step) => step.name === "Seed the deterministic e2e catalogue",
     );
     const ownIndex = steps.indexOf(dedicated());
     expect(seedIndex).toBeGreaterThan(-1);
     expect(ownIndex).toBe(seedIndex + 1);
-    expect(ownIndex).toBeLessThan(steps.indexOf(general as Step));
+    expect(steps[seedIndex]?.if).toBeUndefined();
+    expect(steps.filter((step) => step.if === "matrix.leg == 'publication'")).toEqual([own]);
+    expect(general?.if).toBe("matrix.leg == 'reads'");
     expect(workflow.jobs.e2e.env).toEqual({
       TEST_DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/rentas_test",
     });

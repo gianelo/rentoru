@@ -1,10 +1,9 @@
 name: CI
 
-# CI minutes are metered on this private repository (design.md, "Continuous
-# Integration") — Actions minutes come from a monthly quota, not the free
-# unlimited tier public repos get. Cheap gates that need no deployment run
-# on pull requests into dev/staging/main. The expensive half — E2E,
-# crawlability, measurement and budgets — runs on pushes to dev/staging.
+# This repository is public (design.md, "Continuous Integration"). Cheap
+# gates that need no deployment run on pull requests into dev/staging/main.
+# The expensive half — E2E, crawlability, measurement and budgets — still
+# runs only on pushes to dev/staging, for proportionality and speed.
 # Only Lighthouse needs the exact commit's deployed preview.
 # Full remains the default on dev and mandatory on staging. Enable the optional
 # CI_DEV_PROFILE=critical repository variable only after validating the staging
@@ -15,7 +14,7 @@ name: CI
 #
 #   - The preview URL is resolved at run time from GitHub's Deployments API,
 #     which Vercel populates. Nothing to keep in sync by hand.
-#   - The `integration` and `e2e` jobs each get their own ephemeral Postgres
+#   - The `integration` job and each `e2e` leg get their own ephemeral Postgres
 #     container, local to the job and never the production Neon database.
 #   - The `build` job uses a deliberately fake, unroutable DATABASE_URL.
 #
@@ -29,9 +28,14 @@ on:
   pull_request:
     branches: [dev, staging, main]
 
+# A newer run cancels a stale one only on PRs and dev; a started staging run
+# always finishes. GitHub keeps one pending run per group, so a queued
+# intermediate staging push can be superseded; the newest still runs.
+# CI never deploys (Vercel migrates in vercel-build), so cancelling CI cannot
+# cancel a deployment that is running migrations.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/dev' }}
 
 permissions:
   contents: read
@@ -314,6 +318,15 @@ jobs:
     # `assertPooledConnectionString` no se debilita.
     #
     # Ahora corre tras actualizar dev/staging, siempre contra este contenedor.
+    #
+    # Tres piernas en paralelo, cada una con su propio contenedor, migraciones
+    # y semilla: ninguna ve lo que otra escribe, así que el orden entre bloques
+    # ya no depende de una base compartida. `fail-fast: false` deja terminar a
+    # las demás cuando una falla, para que cada fallo se vea por separado.
+    strategy:
+      fail-fast: false
+      matrix:
+        leg: [publication, reads, auth]
     services:
       postgres:
         # El mismo 18 que el job `integration` y que la instancia de Neon.
@@ -374,10 +387,12 @@ jobs:
       - name: Seed the deterministic e2e catalogue
         run: pnpm db:test:seed:e2e
 
-      # This preservation fixture needs the seed publisher still draft-free.
-      # Keep it before all general suites, local only, with no ambient worker DB.
+      # This preservation fixture needs the seed publisher still draft-free, so
+      # it runs alone in its own leg on a freshly seeded container, local only,
+      # with no ambient worker DB.
       # Only the build gets a fake pooled URL; webServer supplies its own DB/proxy.
       - name: '36.3: publication entry (local production build)'
+        if: matrix.leg == 'publication'
         env:
           PLAYWRIGHT_BASE_URL: ''
           VERCEL_AUTOMATION_BYPASS_SECRET: ''
@@ -396,6 +411,7 @@ jobs:
 
       # Always exercise the seeded job-owned app, not the remote deployment.
       - name: E2E + crawlability
+        if: matrix.leg == 'reads'
         env:
           READ_PROFILE: ${{ github.ref == 'refs/heads/dev' && vars.CI_DEV_PROFILE == 'critical' && 'critical' || 'full' }}
           PLAYWRIGHT_BASE_URL: ''
@@ -471,9 +487,10 @@ jobs:
           exit $fail
 
       # The listing and missing-route diagnostics need the seeded local catalogue
-      # just like the main suite. Run them before pagination changes those six
-      # rows, and never send them to the preview.
+      # just like the main suite. Pagination appends rows in another leg's
+      # container, never this one; never send them to the preview.
       - name: 30.2–30.4 served listing and route diagnostics (local production build)
+        if: matrix.leg == 'reads'
         env:
           PLAYWRIGHT_BASE_URL: ''
           VERCEL_AUTOMATION_BYPASS_SECRET: ''
@@ -490,6 +507,7 @@ jobs:
       # Authenticated logout needs the owned local session table, not the preview.
       # Build with a fake pooled URL, then start with Playwright's local DB proxy.
       - name: 30.4b2–30.7 authenticated contact and door (local production build)
+        if: matrix.leg == 'auth'
         env:
           PLAYWRIGHT_BASE_URL: ''
           VERCEL_AUTOMATION_BYPASS_SECRET: ''
@@ -507,9 +525,11 @@ jobs:
           pnpm exec playwright test tests/e2e/reporte-con-motivo.spec.ts --project=chromium --project=crawlability --workers=1
           pnpm exec playwright test tests/e2e/puerta-cierre.spec.ts tests/e2e/puerta-de-whatsapp-sin-javascript.spec.ts --project=chromium --project=crawlability --workers=2
 
-      # Append only after the six-row suite succeeds. Never point this step at
-      # the preview: it has a separate catalogue and may be protected.
+      # Last in its leg: it appends rows, so it runs only after the six-row
+      # suite above succeeds. Never point this step at the preview: it has a
+      # separate catalogue and may be protected.
       - name: 29.2 isolated pagination (local production build)
+        if: matrix.leg == 'auth'
         env:
           PLAYWRIGHT_BASE_URL: ''
           VERCEL_AUTOMATION_BYPASS_SECRET: ''

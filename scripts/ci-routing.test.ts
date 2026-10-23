@@ -5,10 +5,18 @@ import { describe, expect, it } from "vitest";
 const require = createRequire(import.meta.url);
 const cliRequire = createRequire(require.resolve("@lhci/cli/package.json"));
 const utilsRequire = createRequire(cliRequire.resolve("@lhci/utils/package.json"));
-type Step = { uses?: string; id?: string; run?: string; env?: Record<string, string> };
+type Step = {
+  name?: string;
+  if?: string;
+  uses?: string;
+  id?: string;
+  run?: string;
+  env?: Record<string, string>;
+};
 type Job = {
   if: string;
   needs?: string;
+  strategy?: unknown;
   env?: Record<string, string>;
   outputs?: Record<string, string>;
   services?: { postgres: { image: string } };
@@ -93,6 +101,35 @@ describe("CI branch routing", () => {
     }
     expect(commands(jobs.budget)).toContain("pnpm run budget:bundle");
     expect(commands(jobs.budget)).toContain("pnpm run budget:rows");
+  });
+
+  it("splits push e2e into three fail-open legs, each with its own seeded Postgres", () => {
+    const { steps } = jobs.e2e;
+    expect(jobs.e2e.strategy).toEqual({
+      "fail-fast": false,
+      matrix: { leg: ["publication", "reads", "auth"] },
+    });
+    const leg = (name: string) =>
+      steps.filter((step) => step.if === `matrix.leg == '${name}'`).map((step) => step.name);
+    expect(leg("publication")).toEqual(["36.3: publication entry (local production build)"]);
+    expect(leg("reads")).toEqual([
+      "E2E + crawlability",
+      "30.2–30.4 served listing and route diagnostics (local production build)",
+    ]);
+    expect(leg("auth")).toEqual([
+      "30.4b2–30.7 authenticated contact and door (local production build)",
+      "29.2 isolated pagination (local production build)",
+    ]);
+    // Every other step is shared setup that each leg runs on its own container.
+    const shared = steps.filter((step) => step.if === undefined);
+    expect(shared).toHaveLength(steps.length - 5);
+    expect(commands({ ...jobs.e2e, steps: shared })).not.toContain("playwright test");
+    const migrate = steps.findIndex((step) => step.run === "pnpm db:migrate");
+    const seed = steps.findIndex((step) => step.run === "pnpm db:test:seed:e2e");
+    expect(shared).toContain(steps[migrate]);
+    expect(shared).toContain(steps[seed]);
+    expect(migrate).toBeLessThan(seed);
+    expect(steps.findIndex((step) => step.if !== undefined)).toBe(seed + 1);
   });
 
   it("fails Lighthouse closed for missing access, transport errors and non-200 pages", () => {
