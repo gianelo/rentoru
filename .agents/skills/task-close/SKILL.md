@@ -32,7 +32,9 @@ Do not require a human slash command. For new task setup, load task-start instea
    passive-documentation exception; list exact commands and results without reruns invented.
 3. Record human browser acceptance for the actual served version when applicable.
 4. Prepare closure/evidence inside the final candidate before integration;
-   preserve later completed work when reconciling stale ledgers.
+   check the task box there once local checks and acceptance are observed, with
+   publication/merge status as text, never gated on the merge (AGENTS.md §6).
+   Preserve later completed work when reconciling stale ledgers.
 5. Hand off the route, complete additions + deletions and residual risks.
    After human integration, report actual dev verification and owned-service disposition
    only when observed under the authoritative cleanup gates.

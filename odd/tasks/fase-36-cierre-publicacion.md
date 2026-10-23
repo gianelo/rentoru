@@ -181,7 +181,8 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 
 ### A — Baseline y shell
 
-- [ ] **36.1 — Reproducir los nueve pasos y fijar baseline.** Sin dependencia.
+- [x] **36.1 — Reproducir los nueve pasos y fijar baseline.** Sin dependencia.
+  - Conciliada 2026-10-23: El fundador la da por cerrada («desde la 36.18 para abajo todo está cerrado»); 36.1a integrada por #365/#366. 36.1b (fotos reales, final/loader, conciliación F34) no se midió y no se afirma.
   - Trabajo: recorrer entrada, respuestas, guardado, Atrás, mapa, descarte, revisar y publicación en entorno de prueba autorizado; cruzar los checks completados del issue y fases previas.
   - Aceptar: matriz comentario → reproducción/resultado/entorno, separando confirmado, no reproducido y no probado; reconciliación dimensional con F34 asignada.
   - Comprobar: cuatro medidas vigentes, navegación nativa sin JS salvo fotos; no repetir baseline ya protegido sin hallazgo.
@@ -208,7 +209,8 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: sugerencias al teclear, teclado/selección accesibles, estados vacío/error y zona guardada preservada; servidor valida ID y ciudad.
   - Comprobar: selección real y persistencia en HTML servido, consulta con/sin JS, nombres largos, acentos y respuesta tardía que no reemplace búsqueda nueva.
 
-- [ ] **36.6 — Conciliar catálogo de zonas soportadas.** Después de 36.1; alimenta fixtures de 36.5.
+- [x] **36.6 — Conciliar catálogo de zonas soportadas.** Después de 36.1; alimenta fixtures de 36.5.
+  - Conciliada 2026-10-23: integrada por #382, #383 y #384.
   - Trabajo: comparar fuentes territoriales, seed, búsqueda y registros en entorno autorizado para todas las ciudades ya soportadas; identificar Maracaibo faltante vs alias/consulta.
   - Aceptar: lista de faltantes comprobados y fuente, propuesta curada aprobada; sin ciudades nuevas ni geografía ampliada por este issue.
   - Comprobar: IDs/slugs sin colisiones, aislamiento ciudad-zona y búsqueda por nombre; migración/seed sólo si diagnóstico lo exige y con autorización posterior.
@@ -220,7 +222,8 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 
 ### C — Texto vivo, copy y controles
 
-- [ ] **36.8 — Contador y preview vivos del título.** Después de 36.1.
+- [x] **36.8 — Contador y preview vivos del título.** Después de 36.1.
+  - Conciliada 2026-10-23: integrada por #395, #396, #397 y #398.
   - Trabajo: añadir mejora cliente reutilizando medición/límites de dominio; servidor conserva autoridad y guardado.
   - Aceptar: contador y preview reflejan texto actual al escribir/pegar/borrar, sin alterar precio/zona ni aceptar un título inválido.
   - Comprobar: límites y Unicode conforme a medición compartida; con JS reacción inmediata, sin JS guardar/revisar muestra lo guardado y errores del servidor.
@@ -230,17 +233,20 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: debajo del mínimo indica faltantes exactos; al alcanzar/superar cambia a suficiencia sin número negativo.
   - Comprobar: vacío, borde mínimo, pegado/borrado y recarga; HTML servido y rechazo servidor sin JS siguen funcionando.
 
-- [ ] **36.10 — Copy neutral de fotos y portada.** G3 aprobado por el fundador: «Elegir fotos» y «Es la foto principal de tu aviso», en publicación y edición.
+- [x] **36.10 — Copy neutral de fotos y portada.** G3 aprobado por el fundador: «Elegir fotos» y «Es la foto principal de tu aviso», en publicación y edición.
+  - Conciliada 2026-10-23: integrada por #405 (`6a2eab4`); la casilla quedó sin marcar después del merge.
   - Implementación funcional T1: `PhotoUploader.tsx`, `photo-action-copy.ts` y edición sirven la selección; `SubirFoto` recibe copia de presentación sólo en edición y conserva «Subir fotos» por defecto para importación.
   - Protección: `fotos-servido.test.tsx` («conserva copia y formulario») y `editar-servido.test.tsx` («sirve la copia aprobada de fotos») ejercitan los componentes reales. Ayuda de teléfono retirada; acciones y nombres accesibles conservados; explicación de portada una vez por superficie. Supersesión acotada de 18.15, coordinada con F35 sin cerrar 35.4.
   - Pendiente T2: texto y acciones en móvil/tablet/desktop; no se declara 36.10 completa ni publicación/commit por este pase.
 
-- [ ] **36.11 — Reducir huella visual del menú de fotos.** Después de 36.1.
+- [x] **36.11 — Reducir huella visual del menú de fotos.** Después de 36.1.
+  - Conciliada 2026-10-23: integrada por #409 (`e6a3c65`).
   - Trabajo: distinguir glyph/superficie visible de área interactiva; ajustar con tokens, no nuevos iconos.
   - Aceptar: tamaño visual compacto aprobado en tablet/desktop, blanco accesible ≥44×44 y menú legible.
   - Comprobar: medidas, teclado/foco y abrir/cerrar; mover, portada y quitar siguen disponibles conforme a 18.15, sin regresión móvil.
 
-- [ ] **36.12 — Resolver jerarquía de Quién publica.** Después de 36.1; gate G3/F35.
+- [x] **36.12 — Resolver jerarquía de Quién publica.** Después de 36.1; gate G3/F35.
+  - Conciliada 2026-10-23: integrada por #410 (`919da49`).
   - Trabajo: decidir conjuntamente conservar título con legend accesible no repetido visualmente, o título general con legend específico visible; registrar alternativa elegida.
   - Aceptar: pregunta visible una sola vez en la jerarquía aprobada, controles etiquetados, sin selección de dueño por defecto.
   - Comprobar: headings/fieldset/legend en HTML servido, lector/teclado y elección requerida por servidor; warning sigue coherente con 36.18.
@@ -252,24 +258,28 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: conservar elección WhatsApp/teléfono/correo, sin conversión histórica ni migración de esquema/datos propuesta; mantener destinos por canal y autenticación intacta.
   - Comprobar: lectura de lectores/escritores y coherencia documental; no afirmar pruebas funcionales ejecutadas. Decisiones, formatos y límites en `fase-36-contacto-compatible.md`.
 
-- [ ] **36.14 — Validar teléfono/WhatsApp conservando tres canales.** Después de 36.13; implementación diferida.
+- [x] **36.14 — Validar teléfono/WhatsApp conservando tres canales.** Después de 36.13; implementación diferida.
+  - Conciliada 2026-10-23: integrada por #411 (`855861a`).
   - Trabajo: parser/validación puros con política de país centralizada; sólo Venezuela activa, ampliable sin framework genérico. Teléfono admite móvil/fijo; WhatsApp no requiere comprobar cuenta.
   - Aceptar: formatos aprobados en 36.13, canonización internacional antes de persistir nuevos valores y destinos sin inferir país nuevamente; conservar correo y legado sin conversión silenciosa.
   - Comprobar: HTML servido y POST nativo, equivalencias y rechazos aprobados, persistencia y destinos `wa.me`/`tel:`/`mailto:`; preservar elección multicanal, edición/import/defaults y autenticación. TDD y mutación al implementar, no en este corte documental.
 
 ### E — Fotos y revisar
 
-- [ ] **36.15 — Miniaturas persistentes al volver.** Después de 36.1.
+- [x] **36.15 — Miniaturas persistentes al volver.** Después de 36.1.
+  - Conciliada 2026-10-23: integrada por #424 (`7621b00`) y #425 (`477e120`) con aceptación visual del fundador. Se conserva el límite: la verificación independiente de T2 no estuvo disponible.
   - Trabajo: reproducir elegir/subir/Seguir/Atrás y regreso desde revisar/recarga; contrastar borrador persistido, URL blob/presignada, expiración y objeto almacenado, sin presuponer causa.
   - Aceptar: fotos conservadas visibles en el mismo orden/portada o explicación recuperable si caducaron; no ocultar fallo con imagen ficticia.
   - Comprobar: ida/vuelta y recarga en navegador, payload persistido y URL resoluble en storage de prueba; borrador expirado y upload fallido; coordinar 18.39/18.40, no declararlas cerradas por esto.
 
-- [ ] **36.16 — Aprobar composición de revisar.** Después de 36.1; gate G2.
+- [x] **36.16 — Aprobar composición de revisar.** Después de 36.1; gate G2.
+  - Conciliada 2026-10-23: integrada por #426 (`da1fb0e`).
   - Trabajo: preparar lámina derivada del sistema para móvil, tablet y desktop; móvil sitúa `Cambiar` junto al título de sección, tablet puede mantenerlo a la derecha.
   - Aceptar: aprobación explícita con ruta/versionado de lámina, texto largo, fotos/contacto y warning; no hay autorización de dibujar boards en esta entrega documental.
   - Comprobar: política 390×844/768×1024/1440×900 más 440×956, contenedor centrado y uso de tokens; coordinar F34 sin absorber auditoría global.
 
-- [ ] **36.17 — Implementar revisar según lámina aprobada.** Después de 36.16.
+- [x] **36.17 — Implementar revisar según lámina aprobada.** Después de 36.16.
+  - Conciliada 2026-10-23: integrada por #428 (`081cfc9`).
   - Trabajo: adaptar composición, no reescribir reglas de navegación/guardado existentes; conservar vínculos a cada paso y contexto de regreso.
   - Aceptar: cuerpo legible sin columnas apretadas/solapes; `Cambiar` en posición aprobada y mensaje de cambio visible.
   - Comprobar: geometría real de cuatro medidas, descripción/zona largas; HTML y navegación sin JS, guardar vuelve a revisar conservando pasos posteriores y descartar no escribe (18.8/18.18).
