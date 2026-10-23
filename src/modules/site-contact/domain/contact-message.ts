@@ -108,8 +108,8 @@ export function composeContactNotice(input: ContactMessageInput): ContactNotice 
   const message = input.message.trim();
 
   return {
-    subject: `Escribinos: mensaje de ${name}`,
-    body: `${name} <${email}> escribió desde "Escribinos":\n\n${message}`,
+    subject: `Escríbenos: mensaje de ${name}`,
+    body: `${name} <${email}> escribió desde "Escríbenos":\n\n${message}`,
     replyTo: email,
   };
 }

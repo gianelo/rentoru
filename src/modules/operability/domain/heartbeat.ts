@@ -64,6 +64,6 @@ export function composeHeartbeatFailureNotice(failure: HeartbeatFailure): Heartb
       `${failure.url} ${statusText} el ${spellDateTime(failure.checkedAt)} (UTC).\n\n` +
       "Esto no mide cuánta cuota queda — el plan Free de Neon no lo permite por " +
       "ningún medio automático (tasks.md 27.5) — sólo que la consecuencia ya se " +
-      "ve. Revisá el panel de Neon para confirmar la causa.",
+      "ve. Revisa el panel de Neon para confirmar la causa.",
   };
 }

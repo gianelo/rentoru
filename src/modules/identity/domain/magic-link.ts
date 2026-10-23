@@ -25,9 +25,9 @@ export function composeMagicLinkEmail(url: string): MagicLinkEmail {
   return {
     subject: "Tu enlace para entrar a Rentoru",
     body:
-      `Entrá con este enlace:\n${url}\n\n` +
+      `Entra con este enlace:\n${url}\n\n` +
       "Vale por 15 minutos y se puede usar una sola vez. " +
-      "Si no lo pediste vos, ignorá este correo.",
+      "Si no lo pediste, ignora este correo.",
   };
 }
 
