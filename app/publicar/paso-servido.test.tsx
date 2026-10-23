@@ -93,6 +93,61 @@ describe("los nueve pasos muestran instrucciones en tuteo neutro (35.4)", () => 
 });
 
 /**
+ * 35.4 — cada negativa se lee en tuteo neutro al lado de su campo. Los
+ * literales se escriben a mano: importar la tabla afirmaría que es igual a sí
+ * misma. El destino «paso 2» de las fotos se conserva tal como se sirve.
+ */
+describe("las negativas de cada paso se leen en tuteo neutro (35.4)", () => {
+  it.each([
+    [
+      "quien",
+      "publisherType.required",
+      "✱ obligatorio. Elige si publicas como dueño o como inmobiliaria.",
+    ],
+    ["quien", "publisherType.invalid", "Elige una de las dos opciones: dueño o inmobiliaria."],
+    ["tipo", "propertyType.required", "Dinos qué vas a alquilar."],
+    ["tipo", "propertyType.invalid", "Elige una de las cinco opciones de la lista."],
+    ["titulo", "title.required", "✱ obligatorio. Escribe un título, como lo dirías tú."],
+    ["descripcion", "description.required", "✱ obligatorio. Cuenta cómo es el inmueble."],
+    ["precio", "priceUsd.required", "✱ obligatorio. Pon el alquiler mensual en dólares."],
+    ["zona", "cityId.required", "✱ obligatorio. Elige la ciudad."],
+    ["zona", "zoneId.required", "✱ obligatorio. Elige la zona."],
+    [
+      "zona",
+      "zoneId.notInCity",
+      "Esa zona no pertenece a la ciudad elegida. Elige una de la lista.",
+    ],
+    [
+      "tamano",
+      "bathrooms.invalid",
+      "Un número entero de baños. Cuenta el de servicio si lo tiene.",
+    ],
+    ["tamano", "parkingSpots.invalid", "Un número entero. Si no tiene, pon 0."],
+    ["quien", "contactMethod.required", "✱ obligatorio. ¿Por dónde quieres que te escriban?"],
+    ["quien", "contactMethod.invalid", "Elige WhatsApp, teléfono o correo."],
+    ["quien", "contactValue.required", "✱ obligatorio. Pon el dato por el que te contactan."],
+    [
+      "quien",
+      "contactValue.invalid",
+      "Revisa el dato: un correo lleva @, y un teléfono solo números.",
+    ],
+    ["fotos", "photos.required", "✱ obligatorio. Sube al menos una foto en el paso 2."],
+    ["fotos", "photos.tooMany", "Hasta 6 fotos por aviso. Elige las mejores."],
+  ] as const)("%s sirve %s en tuteo", (paso, codigo, mensaje) => {
+    expect(dibujar(paso, [codigo])).toContain(mensaje);
+  });
+
+  it("quién publica advierte la dirección cerrada en tuteo, antes del contacto", () => {
+    const html = dibujar("quien", []);
+
+    expect(html).toContain(
+      "Aparece siempre en tu aviso. Después puedes corregirlo de dueño a inmobiliaria, " +
+        "<strong>nunca al revés</strong>.",
+    );
+  });
+});
+
+/**
  * tasks.md 18.25 — **de dónde sale el «Vas N» que la pantalla dibuja.**
  *
  * Publicar NO tiene el defecto de editar, y la razón se prueba acá en vez de

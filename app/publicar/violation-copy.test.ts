@@ -107,7 +107,7 @@ describe("contact copy with derived diagnosis", () => {
   });
   it("preserves the original fallback for callers without diagnosis", () => {
     expect(publishViolationMessage("contactValue.invalid", {})).toBe(
-      "Revisá el dato: un correo lleva @, y un teléfono solo números.",
+      "Revisa el dato: un correo lleva @, y un teléfono solo números.",
     );
   });
 });
@@ -267,7 +267,7 @@ describe("listingEditViolationMessage — un solo español para publicar y edita
     expect(message).toContain("Una inmobiliaria no puede volver a declararse dueño.");
     expect(message).toContain(PUBLISHER_TYPE_ONE_WAY_NOTICE);
     expect(PUBLISHER_TYPE_ONE_WAY_NOTICE).toBe(
-      "Aparece siempre en tu aviso. Después podés corregirlo de dueño a inmobiliaria, nunca al revés.",
+      "Aparece siempre en tu aviso. Después puedes corregirlo de dueño a inmobiliaria, nunca al revés.",
     );
   });
 

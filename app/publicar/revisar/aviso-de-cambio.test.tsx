@@ -48,7 +48,7 @@ vi.mock("../publication-context", () => ({
 }));
 
 import stepStyles from "../publish-steps.module.css";
-import ReviewPage from "./page";
+import ReviewPage, { metadata } from "./page";
 
 /** Los nueve pasos contestados: sin eso la pantalla redirige y no dibuja nada. */
 const DRAFT: StoredDraft = {
@@ -112,7 +112,9 @@ describe("la pantalla de revisar dice qué cambió", () => {
   it("no dice nada cuando no se volvió desde ningún paso", async () => {
     const html = await served({});
 
-    expect(html).toContain("Revisá tu aviso");
+    expect(html).toMatch(/<h1 class="[^"]*">Revisa tu aviso<\/h1>/);
+    expect(metadata.title).toBe("Revisa tu aviso — Rentoru");
+    expect(html).toMatch(/<dt class="[^"]*">Publicas como<\/dt>/);
     expect(html).not.toContain("Cambiaste");
     expect(html).not.toContain("El resto del aviso");
   });
@@ -135,7 +137,7 @@ describe("la pantalla de revisar dice qué cambió", () => {
     const html = await served({});
 
     expect(html).toContain(
-      "Aparece siempre en tu aviso. Después podés corregirlo de dueño a inmobiliaria, " +
+      "Aparece siempre en tu aviso. Después puedes corregirlo de dueño a inmobiliaria, " +
         "<strong>nunca al revés</strong>.",
     );
     expect(html).not.toContain("menos si publicás como dueño o inmobiliaria");

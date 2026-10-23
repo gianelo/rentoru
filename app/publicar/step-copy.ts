@@ -190,7 +190,9 @@ export function stepSummary(
       const declared = declaredFeatures(draft);
       // "0 atributos" se lee como un paso que fallo. Quien contesto "No tiene
       // ninguna" contesto, y el riel tiene que decirlo asi.
-      return declared === 0 ? "Ninguno" : `${declared} atributos`;
+      return declared === 0
+        ? "Ninguno"
+        : `${declared} ${declared === 1 ? "atributo" : "atributos"}`;
     }
 
     case "titulo":

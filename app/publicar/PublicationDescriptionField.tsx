@@ -36,7 +36,11 @@ export function PublicationDescriptionField({ listing, error }: PublicationDescr
       </div>
       <p className={styles.counterLine}>
         <span className={guidance.sufficient ? undefined : styles.counterShort}>
-          {guidance.sufficient ? "ya alcanza" : `te faltan ${guidance.remaining} caracteres`}
+          {guidance.sufficient
+            ? "ya alcanza"
+            : guidance.remaining === 1
+              ? "te falta 1 carácter"
+              : `te faltan ${guidance.remaining} caracteres`}
         </span>
         <span>
           {guidance.written} / {guidance.minimum}
