@@ -383,6 +383,12 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Comprobar: HTML servido + regla CSS en `paso-servido.test.tsx`, mutación, suite/tipos/lint/tokens y aceptación del fundador en navegador.
   - Aceptación del fundador en navegador (2026-10-23, `127.0.0.1:3007`, `/publicar/paso/tipo` y `/publicar/revisar`): «si las dos ventanas que abriste ya esta arreglado lo de los avisos tanto el de abajo como el el de arriba ya tienen el espacion». Sin commit, push ni integración al registrar.
 
+- [x] **36.24 — Loader detenido con movimiento reducido.** Reporte del fundador (2026-10-23): «supuestamente s un spinner loader pero no da vuelta el circulo de la R». Decisión: «vamos hacer tu recomendacion» (pulso de opacidad). Corrección: «no es mejor en este caso el pulso sea entero no solo un la barita azul».
+  - Trabajo: bajo `prefers-reduced-motion: reduce`, anillo completo sin giro y pulso de opacidad de toda la marca, en el componente global.
+  - Aceptar: con movimiento reducido la marca entera pulsa sin desplazarse ni girar; sin esa preferencia sigue girando.
+  - Comprobar: regla CSS y HTML servido en `LoadingOverlay.test.tsx`, mutación, suite/tipos/lint/tokens y aceptación del fundador.
+  - Aceptación del fundador en Chromium con movimiento reducido (2026-10-23): «exacto asi pero esteo es con movimeinto reducido supongo que quedara el otro que teniamos verdad?»; el giro sin esa preferencia queda igual, medido en Chromium. Sin commit, push ni integración al registrar.
+
 - [ ] **36.22 — Aceptación integrada de fase, no cierre automático.** Después de todas las unidades aplicables y gates resueltos.
   - Trabajo: repetir recorrido nueve pasos con correcciones integradas, actualizar matriz de 21 comentarios y checks transversales realmente observados.
   - Aceptar: fundador valida preview en medidas vigentes, sin gaps ocultos; cada cierre cita archivo/prueba/entorno; #289 sólo se cierra por decisión posterior, no por CI verde.
