@@ -108,6 +108,9 @@ describe("fotos servidas por la ruta real", () => {
     expect(html).not.toContain("Elegir del teléfono");
     expect(html).not.toMatch(/no borra la foto de tu teléfono/i);
     expect(html.split("Es la foto principal de tu aviso")).toHaveLength(2);
+    expect(html).toContain(
+      "Las comprimimos aquí antes de subirlas, así gastas menos datos. Es la foto principal de tu aviso.",
+    );
     expect(html).not.toContain("se ve en la lista y arriba del aviso");
     expect(html).toMatch(/<form\b[^>]*\baction="[^"]+"[^>]*\bmethod="post"/);
     expect(html).toContain('name="step" value="fotos"');

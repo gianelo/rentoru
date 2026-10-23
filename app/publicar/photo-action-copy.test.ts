@@ -61,7 +61,7 @@ describe("lo que se dice al quitar", () => {
     if (plan.ok) throw new Error("quitar la única foto tenía que rechazarse");
 
     expect(PHOTO_REMOVAL_REFUSAL_COPY[plan.refusal]).toBe(
-      "Es la única foto y sin fotos no se puede publicar. Agregá otra y después quitá ésta.",
+      "Es la única foto y sin fotos no se puede publicar. Agrega otra y después quita esta.",
     );
   });
 

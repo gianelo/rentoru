@@ -51,7 +51,7 @@ export function photoActionLabel(action: DraftPhotoAction, photoName: string): s
  * se puede decir de un estado que no se entiende.
  */
 export const PHOTO_REMOVAL_REFUSAL_COPY: Record<PhotoRemovalRefusal, string> = {
-  lastPhoto: "Es la única foto y sin fotos no se puede publicar. Agregá otra y después quitá ésta.",
+  lastPhoto: "Es la única foto y sin fotos no se puede publicar. Agrega otra y después quita esta.",
   notFound: "Esa foto ya no está en la lista.",
 };
 
