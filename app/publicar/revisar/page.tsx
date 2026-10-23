@@ -21,7 +21,7 @@ import {
 import reviewStyles from "./review.module.css";
 
 export const metadata: Metadata = {
-  title: "Revisá tu aviso — Rentoru",
+  title: "Revisa tu aviso — Rentoru",
   // 26.12 — relativa: `metadataBase` le pone la base una sola vez.
   alternates: { canonical: "/publicar/revisar" },
 };
@@ -109,7 +109,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
     },
     {
       step: "quien",
-      term: "Publicás como",
+      term: "Publicas como",
       value: `${stepSummary("quien", draft, { zoneName }) ?? ""} ${listing.contactValue ?? ""}`,
     },
   ];
@@ -130,7 +130,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
 
       <div className={reviewStyles.review}>
         <main className={reviewStyles.reviewBody}>
-          <h1 className={reviewStyles.title}>Revisá tu aviso</h1>
+          <h1 className={reviewStyles.title}>Revisa tu aviso</h1>
 
           {/* Regla 4 de la sección 4: se dice qué cambió. Sin esto nadie sabe
               si se guardó, y quien no sabe vuelve a entrar al paso a

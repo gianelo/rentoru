@@ -110,19 +110,19 @@ export const PUBLISH_VIOLATION_COPY: Record<PublishViolation, ViolationCopy> = {
   // The design's help text says this cannot be changed after publishing, so
   // the error explains the choice rather than nagging about an empty field.
   "publisherType.required": {
-    message: () => `${REQUIRED}. Elegí si publicás como dueño o como inmobiliaria.`,
+    message: () => `${REQUIRED}. Elige si publicas como dueño o como inmobiliaria.`,
   },
   "publisherType.invalid": {
-    message: () => "Elegí una de las dos opciones: dueño o inmobiliaria.",
+    message: () => "Elige una de las dos opciones: dueño o inmobiliaria.",
   },
   "propertyType.required": {
-    message: () => "Decinos qué vas a alquilar.",
+    message: () => "Dinos qué vas a alquilar.",
   },
   "propertyType.invalid": {
-    message: () => "Elegí una de las cinco opciones de la lista.",
+    message: () => "Elige una de las cinco opciones de la lista.",
   },
   "title.required": {
-    message: () => `${REQUIRED}. Escribí un título, como lo dirías vos.`,
+    message: () => `${REQUIRED}. Escribe un título, como lo dirías tú.`,
   },
   // Se dice cuanto sobra, no "acortalo". El paso 6 ya dibuja "37 / 90"
   // mientras se escribe, asi que el mensaje no puede ser menos preciso que el
@@ -132,7 +132,7 @@ export const PUBLISH_VIOLATION_COPY: Record<PublishViolation, ViolationCopy> = {
       `Máximo ${MAX_TITLE_CHARACTERS} caracteres.${counted(context.titleLength)}`,
   },
   "description.required": {
-    message: () => `${REQUIRED}. Contá cómo es el inmueble.`,
+    message: () => `${REQUIRED}. Cuenta cómo es el inmueble.`,
   },
   "description.tooShort": {
     message: (context) =>
@@ -145,7 +145,7 @@ export const PUBLISH_VIOLATION_COPY: Record<PublishViolation, ViolationCopy> = {
       `Máximo ${MAX_DESCRIPTION_CHARACTERS} caracteres.${counted(context.descriptionLength)}`,
   },
   "priceUsd.required": {
-    message: () => `${REQUIRED}. Poné el alquiler mensual en dólares.`,
+    message: () => `${REQUIRED}. Pon el alquiler mensual en dólares.`,
   },
   // "solo el número": no currency selector exists, so the error must not
   // suggest one is missing.
@@ -153,19 +153,19 @@ export const PUBLISH_VIOLATION_COPY: Record<PublishViolation, ViolationCopy> = {
     message: () => "Solo el número, en dólares y sin centavos. Por ejemplo: 520.",
   },
   "cityId.required": {
-    message: () => `${REQUIRED}. Elegí la ciudad.`,
+    message: () => `${REQUIRED}. Elige la ciudad.`,
   },
   "cityId.unknown": {
     message: () => "Por ahora publicamos en Distrito Capital y Maracaibo.",
   },
   "zoneId.required": {
-    message: () => `${REQUIRED}. Elegí la zona.`,
+    message: () => `${REQUIRED}. Elige la zona.`,
   },
   // The publisher did nothing wrong here — a stale city/zone pair is what the
   // browser posts when the city changes without the zone. Blaming them for it
   // would be blaming them for the form's own behaviour.
   "zoneId.notInCity": {
-    message: () => "Esa zona no pertenece a la ciudad elegida. Elegí una de la lista.",
+    message: () => "Esa zona no pertenece a la ciudad elegida. Elige una de la lista.",
   },
   // **Sin medida, y es una decision y no un olvido.** El paso 6 dibuja
   // "37 / 90" mientras se escribe, asi que `title.tooLong` cuenta; el paso 2
@@ -197,39 +197,39 @@ export const PUBLISH_VIOLATION_COPY: Record<PublishViolation, ViolationCopy> = {
     message: () => `${REQUIRED}. ¿Cuántos baños tiene?`,
   },
   "bathrooms.invalid": {
-    message: () => "Un número entero de baños. Contá el de servicio si lo tiene.",
+    message: () => "Un número entero de baños. Cuenta el de servicio si lo tiene.",
   },
   // No `parkingSpots.required` exists, and that is deliberate: the field is
   // optional and defaults to 0. This copy only fires when somebody typed
   // something that is not a whole number -- so it says what shape to use and
   // names zero as a real answer rather than a way to skip the question.
   "parkingSpots.invalid": {
-    message: () => "Un número entero. Si no tiene, poné 0.",
+    message: () => "Un número entero. Si no tiene, pon 0.",
   },
   // The reveal button's whole purpose. A listing without a contact is a dead
   // end wearing a button.
   "contactMethod.required": {
-    message: () => `${REQUIRED}. ¿Por dónde querés que te escriban?`,
+    message: () => `${REQUIRED}. ¿Por dónde quieres que te escriban?`,
   },
   "contactMethod.invalid": {
-    message: () => "Elegí WhatsApp, teléfono o correo.",
+    message: () => "Elige WhatsApp, teléfono o correo.",
   },
   "contactValue.required": {
     message: ({ contact }) =>
-      contactMessage(contact) ?? `${REQUIRED}. Poné el dato por el que te contactan.`,
+      contactMessage(contact) ?? `${REQUIRED}. Pon el dato por el que te contactan.`,
   },
   // Shape, not verification: nothing here proves the line rings. It catches
   // the typo while the publisher is still on the form, which is the only
   // moment it is cheap to fix.
   "contactValue.invalid": {
     message: ({ contact }) =>
-      contactMessage(contact) ?? "Revisá el dato: un correo lleva @, y un teléfono solo números.",
+      contactMessage(contact) ?? "Revisa el dato: un correo lleva @, y un teléfono solo números.",
   },
   "photos.required": {
-    message: () => `${REQUIRED}. Subí al menos una foto en el paso 2.`,
+    message: () => `${REQUIRED}. Sube al menos una foto en el paso 2.`,
   },
   "photos.tooMany": {
-    message: () => `Hasta ${MAX_PHOTOS_PER_LISTING} fotos por aviso. Elegí las mejores.`,
+    message: () => `Hasta ${MAX_PHOTOS_PER_LISTING} fotos por aviso. Elige las mejores.`,
   },
 };
 
@@ -255,7 +255,7 @@ export function publishViolationMessage(
  * decirlo antes de guardar — una negativa que llega después ya no evita nada.
  */
 export const PUBLISHER_TYPE_ONE_WAY_LEAD =
-  "Aparece siempre en tu aviso. Después podés corregirlo de dueño a inmobiliaria, ";
+  "Aparece siempre en tu aviso. Después puedes corregirlo de dueño a inmobiliaria, ";
 export const PUBLISHER_TYPE_ONE_WAY_STRESS = "nunca al revés";
 export const PUBLISHER_TYPE_ONE_WAY_NOTICE = `${PUBLISHER_TYPE_ONE_WAY_LEAD}${PUBLISHER_TYPE_ONE_WAY_STRESS}.`;
 

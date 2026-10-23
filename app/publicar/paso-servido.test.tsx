@@ -19,8 +19,8 @@ import type {
  * la 18.22 cita —«el mensaje va ANTES del campo que lo produjo»— estaba escrita
  * en un comentario y en ninguna aserción.
  *
- * Esto no prueba los nueve pasos. Prueba el mecanismo que las dos pantallas
- * comparten, en el paso donde es más barato mirarlo.
+ * Las negativas prueban el mecanismo compartido; la matriz de copia recorre
+ * los nueve componentes en SSR, no nueve rutas HTTP autenticadas.
  */
 
 // El componente arrastra la acción de servidor (que trae `next/headers` y la
@@ -60,6 +60,92 @@ function dibujar(
     />,
   );
 }
+
+describe("los nueve pasos muestran instrucciones en tuteo neutro (35.4)", () => {
+  it.each([
+    ["tipo", "¿Qué vas a alquilar?", null],
+    ["zona", "¿En qué zona queda?", null],
+    ["precio", "¿Cuánto pides al mes?", "En dólares, sin centavos."],
+    [
+      "tamano",
+      "¿Cómo es de grande?",
+      "Un estudio cuenta como 1 habitación. Si no tiene estacionamiento, déjalo en 0.",
+    ],
+    [
+      "atributos",
+      "¿Qué tiene?",
+      "Marca lo que tenga. Lo que dejes sin marcar no se menciona en el aviso.",
+    ],
+    ["titulo", "Ponle un título", "Lo más importante primero. Es lo que se lee en la lista."],
+    ["descripcion", "Cuenta lo que no se ve en las fotos", null],
+    ["fotos", "Sube las fotos", "Entre 1 y 6."],
+    ["quien", "¿Quién publica?", null],
+  ] as const)("%s conserva su pregunta, ayuda y control de paso", (paso, pregunta, ayuda) => {
+    const html = dibujar(paso, []);
+
+    expect(html.match(/<h1[^>]*>([^<]*)<\/h1>/)?.[1]).toBe(pregunta);
+    if (ayuda) expect(html).toContain(`<p class="${stepStyles.help}">${ayuda}</p>`);
+    else expect(html.slice(html.indexOf("</h1>"))).not.toMatch(/^<\/h1><p/);
+    expect(html).toContain(`name="step" value="${paso}"`);
+    expect(html).toContain('type="submit"');
+    expect(html).toContain("Siguiente</button>");
+  });
+});
+
+/**
+ * 35.4 — cada negativa se lee en tuteo neutro al lado de su campo. Los
+ * literales se escriben a mano: importar la tabla afirmaría que es igual a sí
+ * misma. El destino «paso 2» de las fotos se conserva tal como se sirve.
+ */
+describe("las negativas de cada paso se leen en tuteo neutro (35.4)", () => {
+  it.each([
+    [
+      "quien",
+      "publisherType.required",
+      "✱ obligatorio. Elige si publicas como dueño o como inmobiliaria.",
+    ],
+    ["quien", "publisherType.invalid", "Elige una de las dos opciones: dueño o inmobiliaria."],
+    ["tipo", "propertyType.required", "Dinos qué vas a alquilar."],
+    ["tipo", "propertyType.invalid", "Elige una de las cinco opciones de la lista."],
+    ["titulo", "title.required", "✱ obligatorio. Escribe un título, como lo dirías tú."],
+    ["descripcion", "description.required", "✱ obligatorio. Cuenta cómo es el inmueble."],
+    ["precio", "priceUsd.required", "✱ obligatorio. Pon el alquiler mensual en dólares."],
+    ["zona", "cityId.required", "✱ obligatorio. Elige la ciudad."],
+    ["zona", "zoneId.required", "✱ obligatorio. Elige la zona."],
+    [
+      "zona",
+      "zoneId.notInCity",
+      "Esa zona no pertenece a la ciudad elegida. Elige una de la lista.",
+    ],
+    [
+      "tamano",
+      "bathrooms.invalid",
+      "Un número entero de baños. Cuenta el de servicio si lo tiene.",
+    ],
+    ["tamano", "parkingSpots.invalid", "Un número entero. Si no tiene, pon 0."],
+    ["quien", "contactMethod.required", "✱ obligatorio. ¿Por dónde quieres que te escriban?"],
+    ["quien", "contactMethod.invalid", "Elige WhatsApp, teléfono o correo."],
+    ["quien", "contactValue.required", "✱ obligatorio. Pon el dato por el que te contactan."],
+    [
+      "quien",
+      "contactValue.invalid",
+      "Revisa el dato: un correo lleva @, y un teléfono solo números.",
+    ],
+    ["fotos", "photos.required", "✱ obligatorio. Sube al menos una foto en el paso 2."],
+    ["fotos", "photos.tooMany", "Hasta 6 fotos por aviso. Elige las mejores."],
+  ] as const)("%s sirve %s en tuteo", (paso, codigo, mensaje) => {
+    expect(dibujar(paso, [codigo])).toContain(mensaje);
+  });
+
+  it("quién publica advierte la dirección cerrada en tuteo, antes del contacto", () => {
+    const html = dibujar("quien", []);
+
+    expect(html).toContain(
+      "Aparece siempre en tu aviso. Después puedes corregirlo de dueño a inmobiliaria, " +
+        "<strong>nunca al revés</strong>.",
+    );
+  });
+});
 
 /**
  * tasks.md 18.25 — **de dónde sale el «Vas N» que la pantalla dibuja.**

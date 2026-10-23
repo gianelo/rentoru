@@ -59,7 +59,7 @@ let draft: StoredDraft;
 // Real route/validation chooses props and errors; backend ports alone are doubled.
 describe("la descripción guardada servida por StepPage", () => {
   it.each([
-    ["guardada corta", "a".repeat(119), 119, "te faltan 1 caracteres", 99, null],
+    ["guardada corta", "a".repeat(119), 119, "te falta 1 carácter", 99, null],
     ["último intento rechazado", "a".repeat(1201), 1201, "ya alcanza", 100, "description.tooLong"],
   ] as const)(
     "conserva %s sin JavaScript",

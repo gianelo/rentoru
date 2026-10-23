@@ -461,7 +461,7 @@ function StepFields(props: FieldsProps) {
               className={styles.escapeLink}
               href={missingZoneContactHref(props.returningToReview)}
             >
-              Avisanos
+              Avísanos
             </AppLink>
           </p>
 

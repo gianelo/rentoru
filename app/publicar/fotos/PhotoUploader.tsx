@@ -192,8 +192,8 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       // should not watch six upload to learn the rest were dropped.
       setNotice(
         room === 0
-          ? `Ya tenés ${MAX_PHOTOS_PER_LISTING} fotos. Quitá alguna para agregar otra.`
-          : `Podés agregar ${room} más. Elegí las mejores.`,
+          ? `Ya tienes ${MAX_PHOTOS_PER_LISTING} fotos. Quita alguna para agregar otra.`
+          : `Puedes agregar ${room} más. Elige las mejores.`,
       );
       return;
     }
@@ -414,7 +414,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
                 <div className={styles.name}>{photo.name}</div>
                 {photo.previewFailed ? (
                   <div className={styles.rowError} role="status">
-                    No pudimos mostrar la foto. Podés reintentar o quitarla y volver a subirla.
+                    No pudimos mostrar la foto. Puedes reintentar o quitarla y volver a subirla.
                     <button
                       type="button"
                       className={styles.addMore}
@@ -481,7 +481,7 @@ export function PhotoUploader({ initial = [] }: { initial?: readonly UploadedPho
       ) : null}
 
       <p className={styles.hint}>
-        Las comprimimos acá antes de subirlas, así gastás menos datos. {PHOTO_COVER_EXPLANATION}.
+        Las comprimimos aquí antes de subirlas, así gastas menos datos. {PHOTO_COVER_EXPLANATION}.
       </p>
 
       <div className={styles.trust}>

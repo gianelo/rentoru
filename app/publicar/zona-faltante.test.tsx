@@ -58,8 +58,8 @@ async function served(volver?: string) {
 }
 
 function reportHref(html: string) {
-  const match = html.match(/<a[^>]*href="([^"]+)"[^>]*>Avisanos<\/a>/);
-  expect(match, "native Avisanos anchor").not.toBeNull();
+  const match = html.match(/<a[^>]*href="([^"]+)"[^>]*>Avísanos<\/a>/);
+  expect(match, "native Avísanos anchor").not.toBeNull();
   return match?.[1]?.replaceAll("&amp;", "&");
 }
 

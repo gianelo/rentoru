@@ -58,7 +58,9 @@ describe("PhotoUploader — el menú de tres puntos se cierra de verdad (28.1)",
     expect(container.querySelector("img")?.getAttribute("src")).toBe(original);
     act(() => container.querySelector("img")?.dispatchEvent(new Event("error")));
     expect(container.querySelectorAll("img")).toHaveLength(2);
-    expect(container.textContent).toContain("No pudimos mostrar la foto");
+    expect(container.querySelector('[role="status"]')?.textContent).toContain(
+      "No pudimos mostrar la foto. Puedes reintentar o quitarla y volver a subirla.",
+    );
     expect(container.querySelectorAll('[name="photoKey"]')).toHaveLength(3);
     act(() =>
       (
@@ -159,5 +161,47 @@ describe("PhotoUploader — el menú de tres puntos se cierra de verdad (28.1)",
     });
 
     expect(details.open).toBe(true);
+  });
+});
+
+// 35.4 — avisos de la región viva en tuteo neutro. Ambas salidas responden
+// antes de comprimir, firmar o subir: no hay red ni almacenamiento en juego.
+describe("PhotoUploader — avisos de capacidad y de última foto (35.4)", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+
+  const notice = () => container.querySelector('[aria-live="polite"]')?.textContent;
+
+  it("quitar la única foto dice la salida en tuteo y no la quita", () => {
+    act(() => root.render(<PhotoUploader initial={[DOS[0] as UploadedPhoto]} />));
+    act(() =>
+      (container.querySelector('[aria-label="Quitar del aviso: Sala"]') as HTMLElement).click(),
+    );
+    expect(notice()).toBe(
+      "Es la única foto y sin fotos no se puede publicar. Agrega otra y después quita esta.",
+    );
+    expect(container.querySelectorAll('[name="photoKey"]')).toHaveLength(1);
+  });
+
+  it("elegir más fotos que el espacio libre lo avisa en tuteo sin agregar ninguna", () => {
+    const cinco = Array.from({ length: 5 }, (_, i) => ({ key: `k${i}`, name: `F${i}`, bytes: 10 }));
+    act(() => root.render(<PhotoUploader initial={cinco} />));
+    const input = container.querySelector('input[type="file"]') as HTMLInputElement;
+    const files = [new File(["a"], "a.jpg", { type: "image/jpeg" }), new File(["b"], "b.jpg")];
+    Object.defineProperty(input, "files", { configurable: true, value: files });
+    act(() => input.dispatchEvent(new Event("change", { bubbles: true })));
+    expect(notice()).toBe("Puedes agregar 1 más. Elige las mejores.");
+    expect(container.querySelectorAll("li")).toHaveLength(5);
   });
 });

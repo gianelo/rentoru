@@ -27,6 +27,8 @@ No se enumeran todos los literales ni se sustituye la auditoría de estados futu
 
 ### 35.4 — publicación
 
+Estado f35-a: 35.4 cerrada localmente con aceptación del fundador (versión servida `9f2fb91`), PR a `dev` sin merge. Pasos, mapa, zona, revisión, 19 negativas, aviso de una sola dirección, fotos y última foto en tuteo. Matriz SSR de nueve pasos y de 18 códigos de negativa, y DOM de fotos; suite 3709/3709. Pendiente: disposición semántica de `listo/page.tsx`. Detalle en `../tasks/fase-35-publicacion-neutra.md`, «Cierre 35.4».
+
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
 | `app/publicar/step-copy.ts:11–17`; `app/publicar/violation-copy.ts:12–34` (Records tipados) | HTML, publicador; nueve pasos, validación, revisión | `app/publicar/PublishStep.tsx`; `app/publicar/paso/[paso]/page.tsx`; `app/publicar/revisar/page.tsx` | `app/publicar/paso-servido.test.tsx:70`: «dice los caracteres escritos, en puntos de código». No cubre por sí sola nueve pasos; pendiente matriz completa |

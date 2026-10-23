@@ -504,7 +504,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
   it("una negativa sobre algo que la edición no manda se sigue diciendo", async () => {
     const html = await dibujar("photos.required");
 
-    expect(html).toContain("Subí al menos una foto");
+    expect(html).toContain("Sube al menos una foto");
     expect(html).toContain('role="alert"');
     // Y no inventa un control que esta pantalla no dibuja.
     expect(html).not.toContain('id="photos-error"');
@@ -518,7 +518,7 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
     const html = await dibujar("priceUsd.invalid,photos.required");
 
     expect(html.split("Solo el número, en dólares").length - 1).toBe(1);
-    expect(html).toContain("Subí al menos una foto");
+    expect(html).toContain("Sube al menos una foto");
   });
 
   /**
