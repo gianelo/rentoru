@@ -8,7 +8,7 @@ import {
 
 describe("report reason", () => {
   it("shows feedback only for the fixed error marker", () => {
-    expect(reportReasonFeedback("motivo")).toContain("Elegí un motivo");
+    expect(reportReasonFeedback("motivo")).toContain("Elige un motivo");
     expect(reportReasonFeedback(["motivo"])).toBeUndefined();
     expect(reportReasonFeedback("forged")).toBeUndefined();
   });

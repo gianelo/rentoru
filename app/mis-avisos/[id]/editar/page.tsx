@@ -519,7 +519,7 @@ export default async function EditarAvisoPage({
                 {/* Y se dice que se puede vaciar: es el único campo del aviso
                     donde borrar el contenido es una corrección válida, y sin la
                     frase nadie sabría que dejarlo en blanco la saca. */}
-                <p className={styles.help}>Opcional. Dejala en blanco para sacarla.</p>
+                <p className={styles.help}>Opcional. Déjala en blanco para eliminarla.</p>
               </div>
 
               {/*
@@ -551,7 +551,7 @@ export default async function EditarAvisoPage({
                     (`search-criteria.ts`): destildar saca el aviso de esa
                     búsqueda, no lo mete en la contraria. */}
                 <p className={styles.help}>
-                  Marcá lo que tiene. Quien busca puede filtrar por cada uno.
+                  Marca lo que tiene. Quien busca puede filtrar por cada uno.
                 </p>
               </fieldset>
 

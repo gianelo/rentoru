@@ -157,7 +157,7 @@ export default async function MisAvisosPage({
           {board.total === 0 ? (
             <p className={styles.vacio}>
               Todavía no publicaste ningún aviso. Cuando publiques uno —o importes tu cartera— lo
-              vas a ver acá.
+              verás aquí.
             </p>
           ) : (
             <>
@@ -326,7 +326,7 @@ function FichaDeAviso({
               photoCount={card.photoCount}
               firmar={pedirDestinoDeFoto}
               adjuntar={adjuntarFotoAlBorrador}
-              exito="Foto subida. Ya podés activar el aviso."
+              exito="Foto subida. Ya puedes activar el aviso."
             />
             {/*
               **El disparador que faltaba.** Un `<form>` de verdad: sin
