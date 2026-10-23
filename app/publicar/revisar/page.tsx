@@ -196,7 +196,7 @@ export default async function ReviewPage({ searchParams }: ReviewPageProps) {
 
           {/* La misma advertencia de Quién publica y Editar: 18.38 permite
               corregir dueño a inmobiliaria, pero no volver atrás. */}
-          <p className={styles.warning}>
+          <p className={`${styles.warning} ${styles.warningBeforeForm}`}>
             {PUBLISHER_TYPE_ONE_WAY_LEAD}
             <strong>{PUBLISHER_TYPE_ONE_WAY_STRESS}</strong>.
           </p>
