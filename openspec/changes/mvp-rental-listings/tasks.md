@@ -3059,3 +3059,14 @@ Plan, specs, hechos verificados y gates: `odd/tasks/fase-37-publicar-listo.md`. 
 - [ ] 37.4 Pantalla `app/publicar/listo/page.tsx` según la lámina aprobada: portada, «Activo hasta», tres acciones reales, sin UUID; HTML servido, Chromium con y sin JS y aceptación del fundador (G3).
 - [ ] 37.5 Compartir por WhatsApp: `wa.me` con URL absoluta armada en el dominio; sin `SITE_URL` no se dibuja (G2).
 - [ ] 37.6 Aceptación integrada del recorrido publicar → «Listo» en `dev`, `crawlability` y `budget:bundle`.
+
+## Fase 38 — Rediseño de los correos
+
+Plan, hechos verificados y gates: `odd/tasks/fase-38-correos.md`. La 35.10 cambió los textos; esta fase cambia la forma de los cinco correos sin tocar lo que dicen ni el texto plano. Una tarea por PR ≤400 líneas a `dev`; G1 (lámina), G2 (correos internos) y G3 (entorno de prueba real) son decisiones del fundador.
+
+- [ ] 38.1 Lámina de correo derivada del sistema para los tres correos al usuario, claro y oscuro (G1).
+- [ ] 38.2 Un solo renderizador en lugar de las cuatro copias, con los valores del sistema resueltos y comparados contra `tokens.css`.
+- [ ] 38.3 Enlace para entrar con botón, enlace de respaldo y vigencia visibles.
+- [ ] 38.4 Vencimiento y purga con título, fecha y botón de renovar.
+- [ ] 38.5 Correos internos de contacto y latido según G2.
+- [ ] 38.6 Prueba en clientes reales (Gmail, Apple Mail, Outlook; claro y oscuro) y peso bajo el recorte de Gmail (G3).
