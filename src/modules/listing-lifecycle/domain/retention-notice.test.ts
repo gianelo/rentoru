@@ -93,7 +93,7 @@ describe("qué promete «volver a publicar» (19.7)", () => {
     const antes = retentionNoticeFor(4, VENCIO, new Date("2026-09-06T12:00:00Z"));
     const despues = retentionNoticeFor(0, VENCIO, new Date("2026-09-20T12:00:00Z"));
 
-    expect(antes.republish).toBe("Renovalo antes de esa fecha y el aviso vuelve con sus fotos.");
+    expect(antes.republish).toBe("Renuévalo antes de esa fecha y el aviso vuelve con sus fotos.");
     expect(despues.republish).toBe("Volver a publicarlo significa subir las fotos de nuevo.");
     expect(antes.republish).not.toBe(despues.republish);
   });
@@ -102,7 +102,7 @@ describe("qué promete «volver a publicar» (19.7)", () => {
     const aviso = retentionNoticeFor(4, VENCIO, new Date("2026-09-20T12:00:00Z"));
 
     expect(aviso.republish).toBe(
-      "Renovalo ya: mientras las fotos estén, el aviso vuelve con ellas.",
+      "Renuévalo ya: mientras las fotos estén, el aviso vuelve con ellas.",
     );
   });
 });

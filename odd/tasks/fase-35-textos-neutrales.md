@@ -70,7 +70,7 @@ Las referencias son puntos de entrada actuales; verificar estados y consumidores
   Referencias: `app/publicar/{step-copy.ts,violation-copy.ts}`, `src/modules/listing-publication/domain/publication-steps.ts`.
   Aceptación: extender `app/publicar/paso-servido.test.tsx` con una matriz de los nueve pasos y estados afectados, además de fotos/contadores cliente. Las pruebas actuales de pasos no prueban por sí solas los nueve; preservar conteos Unicode y límites.
 
-- [ ] **35.5 Gestión del publicador.** Auditar mis avisos, editar, activar, renovar, vencimiento y avisos de retención.
+- [x] **35.5 Gestión del publicador.** Auditar mis avisos, editar, activar, renovar, vencimiento y avisos de retención. Copia propia neutralizada y verificada localmente: `app/mis-avisos/mis-avisos-contract.test.tsx` — «F35.5: con limpieza atrasada sirve la promesa neutra sin inventar fecha» y «sirve el estado cliente neutro, éxito=%s»; `app/renovar/[token]/route.test.ts` — «%s conserva negativa y sirve tuteo»; aceptación del fundador «35.5 ya la revise esta bien todos los textos». Compartidos pendientes en 35.4 (f35-a) y 35.6 (f35-c); correo de ciclo de vida en 35.10. Evidencia y hashes en [gestión del publicador](fase-35-gestion-publicador-neutra.md); PR e integración humana pendientes.
   Referencias: `app/mis-avisos/`, `src/modules/listing-lifecycle/domain/{retention-notice.ts,lifecycle-notice.ts}`.
   Aceptación: textos/acciones de estados en `app/mis-avisos/mis-avisos-contract.test.tsx` y `[id]/editar/editar-servido.test.tsx`, con fechas/interpolaciones y errores; sin cambiar tiempos de retención ni ciclo de vida.
 
