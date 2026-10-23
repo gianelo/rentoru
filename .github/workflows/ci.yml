@@ -28,9 +28,11 @@ on:
   pull_request:
     branches: [dev, staging, main]
 
-# A newer run cancels a stale one only on PRs and dev; every staging push
-# validation finishes. CI never deploys (Vercel migrates in vercel-build), so
-# cancelling CI cannot cancel a deployment that is running migrations.
+# A newer run cancels a stale one only on PRs and dev; a started staging run
+# always finishes. GitHub keeps one pending run per group, so a queued
+# intermediate staging push can be superseded; the newest still runs.
+# CI never deploys (Vercel migrates in vercel-build), so cancelling CI cannot
+# cancel a deployment that is running migrations.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/dev' }}

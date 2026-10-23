@@ -273,7 +273,7 @@ Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability an
 
 The push `e2e` job is a `fail-fast: false` matrix of three parallel legs, each with its own PostgreSQL 18 container, migrations and deterministic seed: `publication` (36.3), `reads` (general E2E + crawlability, then 30.2–30.4) and `auth` (30.4b2–30.7, then 29.2 pagination last because it appends rows). No leg sees another's writes, so cross-block ordering no longer rests on a shared database. The optional dev critical profile still changes only the general read step.
 
-Concurrency keeps one group per workflow and ref; a newer run cancels a stale one only for pull requests and `dev`, so every `staging` push validation finishes. CI never deploys (Vercel migrates in `vercel-build`), so cancelling CI cannot cancel a migrating deployment. The repository is public; heavy suites stay on pushes for proportionality and speed, and F2's private-repo minutes row below no longer constrains that split.
+Concurrency keeps one group per workflow and ref; a newer run cancels a stale one only for pull requests and `dev`, so a started `staging` run always finishes; GitHub keeps one pending run per group, so a queued intermediate `staging` push can be superseded while the newest one still runs. CI never deploys (Vercel migrates in `vercel-build`), so cancelling CI cannot cancel a migrating deployment. The repository is public; heavy suites stay on pushes for proportionality and speed, and F2's private-repo minutes row below no longer constrains that split.
 
 | Gate | Command | Needs |
 |---|---|---|
@@ -651,7 +651,7 @@ rules:
 | Cloudflare R2 Free | Egress | Free for all storage classes, always | Matches D2/D12's "$0 egress" — no delta |
 | Cloudflare R2 Free | Requests | 1M Class A ops/month, 10M Class B ops/month | New information — no prior claim to compare against |
 | Resend Free | Send caps | 3,000 emails/month, 100 emails/day | Matches design table's "3k/mo, 100/day" — no delta |
-| GitHub Actions (Free plan, private repo) | Minutes | 2,000 minutes/month (Linux-minute equivalent; Windows runners bill 2x, macOS 10x) | New confirmation of the number the CI push/PR-only split (design.md, Continuous Integration) was already designed against — validates that split as necessary, not merely cautious |
+| GitHub Actions (Free plan, private repo) | Minutes | 2,000 minutes/month (Linux-minute equivalent; Windows runners bill 2x, macOS 10x) | Historical: the repository is now public, so this quota no longer applies; the push/PR split stays for proportionality and speed (Continuous Integration) |
 
 No provider tier is tighter than this design assumed, with the exception of Neon storage, which the design never quantified in the first place. The most actionable consequence: the existing open question "Retention for `contact_reveal_event`" and "Draft lifetime" should be revisited before the 0.5 GB ceiling, not the 10 GB R2 ceiling, becomes the operative constraint on how long the MVP can run unattended.
 

@@ -43,3 +43,11 @@ Base origin/dev `263345843bd7c8a366dd529cd4e574eb3dc36cb1`; no app served.
   pass. Parent spot check 33/33. Worker's stray untracked copy of ci.yml was verified
   identical (cmp) and removed by the parent. No required status checks exist on dev
   or staging, so renamed checks e2e (publication|reads|auth) break no protection.
+- L7 — Native ASSESS on ac8db10: high (native high + agent item5), reviewDue=true,
+  independent verifier required. Verifier mvl1ilnp-2-8s8b PARTIAL, no correctness
+  defect: all 13 steps identical minus the new if, one leg each, other jobs unchanged,
+  no cross-leg data dependency (writing specs clean up; 36.3 has no POSTs), 33/33.
+  Findings fixed in one correction: (A) "every staging validation finishes" was too
+  strong — GitHub keeps one pending run per group, so a queued intermediate staging
+  push can be superseded while a started run always finishes; (B) design.md F2 row
+  still claimed private-repo minutes; now marked historical. Contract tests 33/33.
