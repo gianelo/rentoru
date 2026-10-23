@@ -132,6 +132,21 @@ describe("CI branch routing", () => {
     expect(steps.findIndex((step) => step.if !== undefined)).toBe(seed + 1);
   });
 
+  it("installs the browser only through the bounded retry script, on every e2e leg", () => {
+    for (const name of ["measure", "e2e"] as const) {
+      const installs = jobs[name].steps.filter((step) =>
+        step.run?.includes("install-playwright-browser"),
+      );
+      expect(installs, name).toHaveLength(1);
+      expect(installs[0]?.run, name).toBe("bash .github/scripts/install-playwright-browser.sh");
+      expect(installs[0]?.if, name).toBeUndefined();
+    }
+    const direct = Object.values(jobs).flatMap((job) =>
+      job.steps.filter((step) => step.run?.includes("playwright install")),
+    );
+    expect(direct).toEqual([]);
+  });
+
   it("fails Lighthouse closed for missing access, transport errors and non-200 pages", () => {
     const lighthouse = jobs.budget.steps.find((step) => step.run?.includes("budget:lighthouse"));
     expect(lighthouse?.run).toContain(
