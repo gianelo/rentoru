@@ -696,6 +696,8 @@ el fallo. Los 62 casos locales con dobles no identifican el incidente; el acceso
 funcionó, pero las consultas históricas fallaron sin diagnóstico utilizable. No se atribuye el digest
 a deduplicación, sesión, storage o persistencia, ni se afirma ausencia de logs o retención vencida.
 36.20 conserva su requisito de causa y alcance aprobados; no se cierran 18.39/18.40 por este resultado.
+Actualización 2026-10-23: el fundador cierra 36.20 sin corrección tras publicar sin fallo en dev; el incidente
+sigue sin reproducir y sin causa confirmada.
 Evidencia y límites completos: `odd/tasks/fase-36-cierre-publicacion.md`,36.19; cierre documental local,
 sin cambios funcionales ni publicación/integración; en aquel checkpoint todavía sin commit.
 

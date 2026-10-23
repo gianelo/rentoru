@@ -228,7 +228,7 @@ export function PublishStep(props: PublishStepProps) {
           {/* Antes del formulario: explica por qué está vacío, y leerlo después
               de contestarlo entero no explicaría nada. */}
           {props.draftExpired ? (
-            <p className={styles.warning} role="status">
+            <p className={`${styles.warning} ${styles.warningBeforeForm}`} role="status">
               {DRAFT_EXPIRED_NOTICE}
             </p>
           ) : null}

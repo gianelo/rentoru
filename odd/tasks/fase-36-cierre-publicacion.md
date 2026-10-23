@@ -362,8 +362,9 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
     CI/aceptación visual. No se fabricó RED/mutación para documentación; al registrar ese checkpoint,
     el cierre estaba sin commit, push, PR ni integración. Comprobación documental: diff sin whitespace y lectura cruzada de registros.
 
-- [ ] **36.20 — Corregir causa confirmada y proteger reintento.** Después de 36.19 con causa y alcance aprobados.
+- [x] **36.20 — Corregir causa confirmada y proteger reintento.** Después de 36.19 con causa y alcance aprobados.
   - En espera:36.19 cerró sin causa confirmada; no se inicia una corrección a ciegas ni se cierran 18.39/18.40.
+  - Cerrada 2026-10-23 por decisión del fundador, sin corrección: «tambien cerramos la 36.20 que es la de la prueba de publicacion que hasta ahora paso». Prueba manual del fundador en dev.rentoru.com: publicación normal sin fallo. No reproduce el digest `901444967` ni prueba la variante con fotos de avisos ocultos; causa sin confirmar y 18.39/18.40 no se cierran por esto. Si el fallo reaparece, guardar hora y digest y leer los logs de Vercel ese mismo día (retención limitada).
   - Trabajo: construir regresión focal antes del cambio; si coincide con 18.40, enlazar una sola unidad y preservar atomicidad ya probada de 18.39.
   - Aceptar: publicación válida alcanza estado activo una sola vez; fallo explica acción recuperable y no anuncia fracaso tras guardar con éxito; no debilita exclusión entre publicadores.
   - Comprobar: falla antes/después de persistir, reintento y original/derivadas en entorno aislado; aviso y fotos en HTML servido, hash/dedup del mismo/otro publicador. No aplicar limpieza/migración productiva por este plan.
@@ -375,6 +376,12 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Evidencia local: `atributos-y-zona.test.tsx` («comparte las acciones…» y «es un POST propio…»), RED/GREEN, cuatro mutantes y 67 regresiones; 3647 unitarias, tipos/lint/tokens PASS. Chromium real:16 composiciones y POST nativo/mejorado; Some/None/alternancia/Atrás/Revisar Ninguno observados.
   - Aceptación humana explícita de ambas pestañas servidas en3005: «Sí, acepto esta versión», hashes renderer6ca025e…/CSS7e550180…. Después, por orden humana y skill de cierre, jobs120/121 detenidos y Chrome133 cerrado; ps/lsof sin perfiles21 ni listeners3005/55448. DB/datos conservados; ahora sin app servida. Unidades `055f6f7`/`cdbe1f7` publicadas en PR430 a dev (HEAD inicial remoto verificado); estado final en el mismo PR. Resultado remoto de CI aún no observado al registrar, sin merge ni bytes de fotos verificados. Seguimiento: `odd/tasks/fase-36-atributos-ninguna.md`.
   - Comprobar: servidor y HTML servido para ninguna, alguna, sin responder y alternancia; POST sin JS, regreso/revisar «Ninguno», blancos accesibles y geometría equilibrada.
+
+- [x] **36.23 — Avisos pegados a su formulario.** Reporte del fundador con captura (2026-10-23): «sale pegado a las opciones de abajo al momento de publicar. entocnes es darle ese peque∫ño espacio». Segundo reporte: «Este tambien tieneotro problema igual este al finalizar o ver el resumen de la publicacion» (advertencia de dueño a inmobiliaria en revisar).
+  - Trabajo: separar ambas advertencias del formulario que las sigue con un rol compartido, sin cambiar `.warning` (Quién publica y Editar ya quedan separados por el `gap` de su formulario).
+  - Aceptar: 16 px entre aviso y formulario en ambas pantallas, como `.notice`; los demás avisos sin cambio.
+  - Comprobar: HTML servido + regla CSS en `paso-servido.test.tsx`, mutación, suite/tipos/lint/tokens y aceptación del fundador en navegador.
+  - Aceptación del fundador en navegador (2026-10-23, `127.0.0.1:3007`, `/publicar/paso/tipo` y `/publicar/revisar`): «si las dos ventanas que abriste ya esta arreglado lo de los avisos tanto el de abajo como el el de arriba ya tienen el espacion». Sin commit, push ni integración al registrar.
 
 - [ ] **36.22 — Aceptación integrada de fase, no cierre automático.** Después de todas las unidades aplicables y gates resueltos.
   - Trabajo: repetir recorrido nueve pasos con correcciones integradas, actualizar matriz de 21 comentarios y checks transversales realmente observados.

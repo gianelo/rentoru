@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type {
@@ -29,6 +30,8 @@ vi.mock("./actions", () => ({ submitStep: vi.fn() }));
 vi.mock("./fotos/PhotoUploader", () => ({ PhotoUploader: () => null }));
 
 import { PublishStep } from "./PublishStep";
+import stepStyles from "./publish-steps.module.css";
+import { DRAFT_EXPIRED_NOTICE } from "./step-copy";
 
 const BORRADOR = {
   listing: { priceUsd: 610, title: "Apartamento en La Castellana" },
@@ -152,5 +155,41 @@ describe("un paso de publicar sirve la negativa al lado de su campo (18.22)", ()
     expect(html).toContain('id="zoneId-error"');
     expect(html).not.toContain('id="reference-error"');
     expect(html).not.toContain('aria-describedby="reference-error"');
+  });
+});
+
+/**
+ * 36.23 — el aviso de borrador vencido salía pegado a la primera opción: usa
+ * `.warning`, que no deja margen porque Revisar, Editar y el contacto la
+ * ubican ellos mismos. El aviso lleva el rol que separa una advertencia del formulario que la
+ * sigue, sin tocar `.warning`.
+ */
+describe("aviso de borrador vencido", () => {
+  it("deja el mismo espacio que el formulario entre el aviso y las opciones", () => {
+    const html = renderToStaticMarkup(
+      <PublishStep
+        stepId="tipo"
+        draft={BORRADOR}
+        violations={[] as never}
+        rail={[]}
+        jumpable={[]}
+        progress={0}
+        draftExpired={true}
+        returningToReview={false}
+        discardHref={null}
+        primaryLabel="Seguir"
+        previousStep={null}
+      />,
+    );
+    const role = stepStyles.warningBeforeForm;
+    if (!role) throw new Error("Falta el rol CSS del aviso de borrador vencido");
+    const aviso = html.match(/<p class="([^"]*)" role="status">([^<]*)<\/p>/);
+    expect(aviso?.[2]).toBe(DRAFT_EXPIRED_NOTICE.replace(/"/g, "&quot;"));
+    expect(aviso?.[1]?.split(" ")).toEqual([stepStyles.warning, role]);
+
+    const css = readFileSync("app/publicar/publish-steps.module.css", "utf8");
+    expect(css).toMatch(/\.warningBeforeForm\s*\{\s*margin-bottom:\s*16px;\s*\}/);
+    // `.warning` sigue sin margen: sus otros lugares no cambian.
+    expect(css).toMatch(/\.warning\s*\{[^}]*margin:\s*0;[^}]*\}/);
   });
 });

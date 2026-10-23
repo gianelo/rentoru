@@ -547,6 +547,12 @@
   margin: 0;
 }
 
+/* Una advertencia justo antes de un formulario (borrador vencido, revisar):
+   separarla como .notice, sin darle margen a .warning en todos sus usos (36.23). */
+.warningBeforeForm {
+  margin-bottom: 16px;
+}
+
 /* ---------- las acciones ---------- */
 
 .actions {

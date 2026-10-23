@@ -47,6 +47,7 @@ vi.mock("../publication-context", () => ({
   }),
 }));
 
+import stepStyles from "../publish-steps.module.css";
 import ReviewPage from "./page";
 
 /** Los nueve pasos contestados: sin eso la pantalla redirige y no dibuja nada. */
@@ -166,5 +167,21 @@ describe("la pantalla de revisar dice qué cambió", () => {
 
     expect(html).not.toContain("Cambiaste");
     expect(html).not.toContain("undefined");
+  });
+});
+
+/**
+ * 36.23 — la advertencia de dueño a inmobiliaria salía pegada a «Publicar
+ * aviso». Lleva el mismo rol que el aviso de borrador vencido: separa una
+ * advertencia del formulario que la sigue, sin tocar `.warning`.
+ */
+describe("la advertencia de revisar no se pega a las acciones", () => {
+  it("lleva el rol que la separa del formulario que la sigue", async () => {
+    const html = await served({});
+    const role = stepStyles.warningBeforeForm;
+    if (!role) throw new Error("Falta el rol CSS que separa la advertencia del formulario");
+    const aviso = html.match(/<p class="([^"]*)">[^<]*<strong>[^<]*<\/strong>\.<\/p>(<form)/);
+    expect(aviso?.[1]?.split(" ")).toEqual([stepStyles.warning, role]);
+    expect(aviso?.[2]).toBe("<form");
   });
 });
