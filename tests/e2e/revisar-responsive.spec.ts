@@ -74,7 +74,7 @@ for (const [width, height] of [
     await page.setViewportSize({ width, height });
     const response = await page.goto("/publicar/revisar?campo=rooms&antes=1&ahora=2");
     expect(response?.status()).toBe(200);
-    await expect(page.getByRole("heading", { name: "Revisá tu aviso" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Revisa tu aviso" })).toBeVisible();
     const geometry = await page.locator("main").evaluate((main) => {
       const box = (element: Element | null) => {
         if (!element) throw new Error("Missing review row markup");

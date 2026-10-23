@@ -44,3 +44,18 @@ describe("PreguntasFrecuentesPage", () => {
     expect(metadata.robots).toBeUndefined();
   });
 });
+
+describe("PreguntasFrecuentesPage — F35.8", () => {
+  it("F35.8: warns about the negotiation in neutral tuteo, not voseo", () => {
+    const markup = renderToStaticMarkup(<PreguntasFrecuentesPage />);
+
+    expect(markup).toContain(
+      "Visita la propiedad y\n        verifica quién es el dueño antes de entregar dinero.".replace(
+        /\n\s+/g,
+        " ",
+      ),
+    );
+    expect(markup).not.toContain("Visitá");
+    expect(markup).not.toContain("verificá");
+  });
+});

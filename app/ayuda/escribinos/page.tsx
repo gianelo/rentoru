@@ -36,8 +36,8 @@ import styles from "./escribinos.module.css";
  * volver.
  */
 export const metadata: Metadata = {
-  title: "Escribinos — Rentoru",
-  description: "Escribinos un mensaje desde rentoru.com y te contestamos por correo.",
+  title: "Escríbenos — Rentoru",
+  description: "Escríbenos un mensaje desde rentoru.com y te contestamos por correo.",
   // 26.12 — relativa: `metadataBase` le pone la base una sola vez.
   alternates: { canonical: "/ayuda/escribinos" },
 };
@@ -60,18 +60,18 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
 
   return (
     <article>
-      <p className={ayudaStyles.category}>Ayuda / Escribinos</p>
-      <h1 className={ayudaStyles.title}>Escribinos</h1>
+      <p className={ayudaStyles.category}>Ayuda / Escríbenos</p>
+      <h1 className={ayudaStyles.title}>Escríbenos</h1>
       {context ? <p className={ayudaStyles.text}>{context.scopeNotice}</p> : null}
 
       {screen.state === "sent" ? (
         <p className={ayudaStyles.text}>
-          Recibimos tu mensaje. Te contestamos por correo, al mismo que dejaste acá.
+          Recibimos tu mensaje. Te contestamos por correo, al mismo que dejaste aquí.
         </p>
       ) : (
         <>
           <p className={ayudaStyles.text}>
-            No publicamos ninguna dirección de correo acá: contanos qué necesitás y te escribimos
+            No publicamos ninguna dirección de correo aquí: cuéntanos qué necesitas y te escribimos
             nosotros a la tuya.
           </p>
 
@@ -129,7 +129,7 @@ export default async function EscribinosPage({ searchParams }: EscribinosProps) 
                 pantalla— llega a este campo. Un script que completa cada
                 campo que encuentra, sí. */}
             <p className={styles.trap} aria-hidden="true">
-              <label htmlFor="sitioWeb">Dejá esto vacío</label>
+              <label htmlFor="sitioWeb">Deja esto vacío</label>
               <input id="sitioWeb" name="sitioWeb" type="text" tabIndex={-1} autoComplete="off" />
             </p>
 

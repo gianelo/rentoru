@@ -53,3 +53,36 @@ describe("ComoReportarPage", () => {
     expect(metadata.robots).toBeUndefined();
   });
 });
+
+describe("ComoReportarPage — F35.8", () => {
+  it("F35.8: guides the report in neutral tuteo and names the contact screen «Escríbenos»", () => {
+    const markup = renderToStaticMarkup(<ComoReportarPage />);
+
+    expect(markup).toContain(
+      "Reportar es por aviso, así que no se hace desde aquí: se hace desde la propia ficha del aviso\n        que quieres reportar.".replace(
+        /\n\s+/g,
+        " ",
+      ),
+    );
+    expect(markup).toContain(">1. Abre el aviso</h2>");
+    expect(markup).toContain("Entra a la ficha del aviso que te parece sospechoso");
+    expect(markup).toContain(">2. Entras con tu cuenta</h2>");
+    expect(markup).toContain(">3. Envías el reporte</h2>");
+    expect(markup).toMatch(
+      /Para cualquier otra cosa, escríbenos desde <a [^>]*href="\/ayuda\/escribinos"[^>]*>Escríbenos<\/a>\./,
+    );
+
+    for (const voseo of [
+      "acá",
+      "querés",
+      "Abrí",
+      "Entrá ",
+      "Entrás",
+      "Enviás",
+      "scribinos<",
+      "escribinos desde",
+    ]) {
+      expect(markup).not.toContain(voseo);
+    }
+  });
+});

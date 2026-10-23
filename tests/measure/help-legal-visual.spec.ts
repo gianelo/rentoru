@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const pages = [
   { path: "/ayuda/preguntas-frecuentes", slug: "faq", title: "Preguntas frecuentes" },
-  { path: "/ayuda/escribinos", slug: "contacto", title: "Escribinos" },
+  { path: "/ayuda/escribinos", slug: "contacto", title: "Escríbenos" },
   { path: "/legal/terminos", slug: "legal", title: "Términos y condiciones" },
 ] as const;
 const viewports = [

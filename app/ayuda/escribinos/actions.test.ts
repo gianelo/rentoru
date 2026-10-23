@@ -152,7 +152,7 @@ describe("POST → GET served contact outcome", () => {
     expect(html).toContain('href="/publicar/paso/zona?volver=revisar"');
     expect(html).toContain("Avisarnos no crea ni habilita una zona.");
     if (kind === "empty") {
-      expect(html).toContain("Revisá los datos e intentá de nuevo.");
+      expect(html).toContain("Revisa los datos e inténtalo de nuevo.");
       expect(html).toContain('name="motivo" value="zona-faltante"');
       expect(html).not.toContain("Recibimos tu mensaje");
     } else {
@@ -165,7 +165,7 @@ describe("POST → GET served contact outcome", () => {
   it("typed delivery failure POST renders a negative notice, never false success", async () => {
     send.mockRejectedValueOnce(new ContactMailerSendError("private-provider-detail"));
     const html = await postHtml(zoneForm());
-    expect(html).toContain("No pudimos enviar tu mensaje. Intentá de nuevo.");
+    expect(html).toContain("No pudimos enviar tu mensaje. Inténtalo de nuevo.");
     expect(html).toContain('role="alert"');
     expect(html).toContain('href="/publicar/paso/zona?volver=revisar"');
     expect(html).toContain('name="volver" value="revisar"');
@@ -207,7 +207,7 @@ describe("POST → GET served contact outcome", () => {
     expect(html).not.toContain("/publicar/paso/zona");
     expect(html).toContain(
       kind === "empty"
-        ? "Revisá los datos"
+        ? "Revisa los datos"
         : kind === "failure"
           ? "No pudimos enviar"
           : "Recibimos tu mensaje",

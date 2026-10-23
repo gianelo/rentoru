@@ -59,7 +59,7 @@ Estado f35-a: 35.4 cerrada localmente con aceptación del fundador (versión ser
 
 | Fuente / catálogo propietario | Superficie, destinatario y estado | Consumidor real | Prueba de salida / disposición |
 |---|---|---|---|
-| `app/ayuda/`; `src/modules/site-contact/domain/contact-screen.ts` | HTML, visitante; cinco páginas, formulario, error y acuse | `app/ayuda/escribinos/page.tsx` y artículos | `app/ayuda/escribinos/page.test.tsx:75`: «dibuja el acuse y ningún formulario cuando llega `?enviado`». Pendiente revisar artículos/errores; conservar ruta escribinos |
+| `app/ayuda/`; `src/modules/site-contact/domain/contact-screen.ts` | HTML, visitante; cinco páginas, formulario, error y acuse | `app/ayuda/escribinos/page.tsx` y artículos | `app/ayuda/escribinos/page.test.tsx:75`: «dibuja el acuse y ningún formulario cuando llega `?enviado`». **35.8**: artículos, errores, acuse y etiqueta «Escríbenos» neutralizados; ruta escribinos conservada; correo al operador asignado a 35.10 |
 
 ### 35.9 — legales
 

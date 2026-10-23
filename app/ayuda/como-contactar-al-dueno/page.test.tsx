@@ -32,3 +32,19 @@ describe("ComoContactarPage", () => {
     expect(metadata.robots).toBeUndefined();
   });
 });
+
+describe("ComoContactarPage — F35.8", () => {
+  it("F35.8: explains the reveal in neutral tuteo, not voseo", () => {
+    const markup = renderToStaticMarkup(<ComoContactarPage />);
+
+    expect(markup).toContain("pero lo mantiene tapado hasta que haces dos");
+    expect(markup).toContain(">1. Entras</h2>");
+    expect(markup).toContain(">2. Escribes un mensaje</h2>");
+    expect(markup).toContain(">3. Ves el contacto y escribes por el canal que corresponda</h2>");
+    expect(markup).toContain("Visita la propiedad y verifica quién es el dueño");
+
+    for (const voseo of ["hacés", "Entrás", "Escribís", "escribís", "Visitá", "verificá"]) {
+      expect(markup).not.toContain(voseo);
+    }
+  });
+});

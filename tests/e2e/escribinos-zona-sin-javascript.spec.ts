@@ -72,7 +72,7 @@ for (const scenario of ["normal", "review", "provider-negative"] as const) {
         expect(page.url()).toBe(`${origin}/ayuda/escribinos?motivo=zona-faltante${mode}`);
         await expect(page.locator('[name="message"]')).toHaveValue("");
         await expect(page.locator("body")).toContainText(
-          "Contanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.",
+          "Cuéntanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.",
         );
         await expect(page.locator("body")).toContainText("Avisarnos no crea ni habilita una zona.");
         await expect(page.locator("body")).not.toContainText("No-inferir-ciudad");
@@ -103,10 +103,10 @@ for (const scenario of ["normal", "review", "provider-negative"] as const) {
         expect(served?.status()).toBe(200);
         const html = await served?.text();
         if (failed) {
-          expect(html).toContain("No pudimos enviar tu mensaje. Intentá de nuevo.");
+          expect(html).toContain("No pudimos enviar tu mensaje. Inténtalo de nuevo.");
           expect(html).not.toContain("Recibimos tu mensaje.");
           await expect(page.getByRole("alert")).toHaveText(
-            "No pudimos enviar tu mensaje. Intentá de nuevo.",
+            "No pudimos enviar tu mensaje. Inténtalo de nuevo.",
           );
           await expect(page.getByRole("button", { name: "Enviar mensaje" })).toBeVisible();
         } else {
