@@ -51,3 +51,8 @@ Base origin/dev `263345843bd7c8a366dd529cd4e574eb3dc36cb1`; no app served.
   strong — GitHub keeps one pending run per group, so a queued intermediate staging
   push can be superseded while a started run always finishes; (B) design.md F2 row
   still claimed private-repo minutes; now marked historical. Contract tests 33/33.
+- L8 — Native review review-1a263818cb232b9e, committed range from 2633458 (6 files,
+  176 lines), lenses resilience+reliability: APPROVED, exact acknowledgement burned
+  authority. Advisory only: R3-001 (auth leg skips pagination after an auth failure,
+  as the old serial job did) and R3-002 (more concurrency cases); follow-ups, not
+  blockers. Local work verified; publication, real CI timing and Notion07 pending.
