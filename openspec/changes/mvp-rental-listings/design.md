@@ -711,7 +711,8 @@ protegen vínculo y alcance;16 composiciones y flujos reales ambos modos pasan c
 El fundador acepta explícitamente «Sí, acepto esta versión» sobre6ca025e…/7e550180… en3005;
 es aceptación visual local, no entrega ni permiso de push/PR. Después ordena cerrar jobs y Chrome:
 servicios y navegador propios detenidos, ausencia física comprobada, DB conservada y app ya no servida.
-Unidad local `055f6f7` conserva la implementación aceptada y su evidencia; cierre local, no entrega.
+Unidades `055f6f7`/`cdbe1f7` publicadas en PR[#430](https://github.com/gianelo/rentoru/pull/430) a dev;
+estado final en el mismo PR, sin integración ni resultado remoto de CI acreditado al registrar.
 Evidencia, fallos y límites: `odd/tasks/fase-36-atributos-ninguna.md`.
 
 ### Photo copy — bounded G3/F35 coordination (F36.10)

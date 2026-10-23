@@ -3031,8 +3031,8 @@ Estado reconciliado: 36.1 parcial; 36.2–36.6 completadas en implementación; 3
     Verificación pasiva: diff sin whitespace y lectura cruzada de plan, índice y decisión en `design.md`.
 - [ ] 36.20 Corregir causa confirmada y proteger reintento; enlazar 18.39/18.40 si corresponde.
   - En espera de causa y alcance aprobados; el cierre inconcluso de36.19 no satisface esa dependencia.
-- [x] 36.21 Elegir botón vs checkbox de No tiene ninguna; conservar `featuresDeclared` — cierre local aceptado, sin publicación ni integración.
+- [x] 36.21 Elegir botón vs checkbox de No tiene ninguna; conservar `featuresDeclared` — aceptado y publicado en PR[#430](https://github.com/gianelo/rentoru/pull/430) a dev, sin integrar.
   - G7 aprobado: «Botón secundario — recomendado», sin checkbox ni cambio de reglas. Implementación local en `PublishStep.tsx`/CSS sólo atributos; POST propio vía asociación HTML nativa.
   - `atributos-y-zona.test.tsx`: agrupación y POST propio, RED/GREEN y cuatro mutantes; 67 regresiones y3647 unitarias PASS, tipos/lint/tokens PASS.16 composiciones/POST ambos modos/Atrás/Revisar observados con actor y DB propios.
-  - Fundador acepta «Sí, acepto esta versión» (3005;6ca025e…/7e550180…). Skill de cierre aplicada y jobs/Chrome propios cerrados por orden humana, con ausencia física verificada; DB conservada y app ya no servida. Unidad local `055f6f7` y estado final documental del mismo candidato, sin publicación ni integración; fallos y evidencia: `odd/tasks/fase-36-atributos-ninguna.md`.
+  - Fundador acepta «Sí, acepto esta versión» (3005;6ca025e…/7e550180…). Skill de cierre aplicada y jobs/Chrome propios cerrados por orden humana, con ausencia física verificada; DB conservada y app ya no servida. Unidades `055f6f7`/`cdbe1f7` publicadas en PR430; estado final documental en ese mismo PR, checks remotos aún no acreditados al registrar y sin integración; fallos y evidencia: `odd/tasks/fase-36-atributos-ninguna.md`.
 - [ ] 36.22 Aceptación integrada con pruebas observadas y fundador, sin cierre automático de #289.
