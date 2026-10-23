@@ -358,12 +358,12 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Aceptar: publicación válida alcanza estado activo una sola vez; fallo explica acción recuperable y no anuncia fracaso tras guardar con éxito; no debilita exclusión entre publicadores.
   - Comprobar: falla antes/después de persistir, reintento y original/derivadas en entorno aislado; aviso y fotos en HTML servido, hash/dedup del mismo/otro publicador. No aplicar limpieza/migración productiva por este plan.
 
-- [ ] **36.21 — Elegir control de No tiene ninguna.** Después de 36.1; gate G7.
+- [x] **36.21 — Elegir control de No tiene ninguna.** Cierre local verificado y aceptado; no publicado ni integrado.
   - Trabajo: presentar botón secundario vs checkbox explícito, jerarquía con Seguir/Atrás y exclusión respecto de atributos seleccionados; elegir al iniciar, no ahora.
   - Aceptar: elección aprobada conserva `featuresDeclared`: declarar ninguna es respuesta, casillas vacías sin declaración siguen sin contestar; no anidar formularios.
   - G7 resuelto al iniciar: fundador eligió «Botón secundario — recomendado». Se conserva POST propio nativo y se agrupa con Seguir/Atrás; el rol CSS que permite filas sólo alcanza Atributos, sin modificar reglas compartidas.
   - Evidencia local: `atributos-y-zona.test.tsx` («comparte las acciones…» y «es un POST propio…»), RED/GREEN, cuatro mutantes y 67 regresiones; 3647 unitarias, tipos/lint/tokens PASS. Chromium real:16 composiciones y POST nativo/mejorado; Some/None/alternancia/Atrás/Revisar Ninguno observados.
-  - Aceptación humana explícita de ambas pestañas servidas en3005: «Sí, acepto esta versión», hashes renderer6ca025e…/CSS7e550180…. Después, por orden humana y skill de cierre, jobs120/121 detenidos y Chrome133 cerrado; ps/lsof sin perfiles21 ni listeners3005/55448. DB/datos conservados; ahora sin app servida. Cierre Git local en curso, sin push/PR/CI/merge ni bytes de fotos verificados. Seguimiento: `odd/tasks/fase-36-atributos-ninguna.md`.
+  - Aceptación humana explícita de ambas pestañas servidas en3005: «Sí, acepto esta versión», hashes renderer6ca025e…/CSS7e550180…. Después, por orden humana y skill de cierre, jobs120/121 detenidos y Chrome133 cerrado; ps/lsof sin perfiles21 ni listeners3005/55448. DB/datos conservados; ahora sin app servida. Unidad local `055f6f7` con código/pruebas/aceptación/cierre; estado final registrado en el mismo candidato. Sin push/PR/CI/merge ni bytes de fotos verificados. Seguimiento: `odd/tasks/fase-36-atributos-ninguna.md`.
   - Comprobar: servidor y HTML servido para ninguna, alguna, sin responder y alternancia; POST sin JS, regreso/revisar «Ninguno», blancos accesibles y geometría equilibrada.
 
 - [ ] **36.22 — Aceptación integrada de fase, no cierre automático.** Después de todas las unidades aplicables y gates resueltos.

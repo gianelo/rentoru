@@ -1,6 +1,6 @@
 # 36.21 — No tiene ninguna como acción secundaria
 Conservar el botón y equilibrarlo con Atrás sin cambiar la declaración de atributos ni el POST nativo.
-Rama `fix/fase-36-atributos-ninguna`; base `58365cb`; ruta prevista a dev ≤400 líneas, sin permiso de push/PR; runner `pnpm test:unit`.
+Rama `fix/fase-36-atributos-ninguna`; base `58365cb`; ruta autorizada por PR a dev ≤400 líneas, sin push directo a dev ni merge por agente; runner `pnpm test:unit`.
 
 ## Specs
 
@@ -10,12 +10,14 @@ Rama `fix/fase-36-atributos-ninguna`; base `58365cb`; ruta prevista a dev ≤400
 - S4: Criterio canónico: «elección aprobada conserva `featuresDeclared`: declarar ninguna es respuesta, casillas vacías sin declaración siguen sin contestar; no anidar formularios.»
 - S5: Comprobación canónica: «servidor y HTML servido para ninguna, alguna, sin responder y alternancia; POST sin JS, regreso/revisar «Ninguno», blancos accesibles y geometría equilibrada.»
 - S6: Cierre solicitado: «recuerda correr la skill de cerrar tarea, cerrar los jobs y cerrar el chrome test que abriste».
+- S7: Publicación solicitada: «y de una haz el PR y push a dev»; confirmación: «y de una haz el PR a dev».
 
 ## Tasks
 
-- T1 [S1–S5] completada — mínimo markup y rol CSS sólo atributos; RED/GREEN11, cuatro mutantes detectados/restaurados, 67 regresiones PASS y16 composiciones nativas finales PASS; ruta inline; commit pendiente de la unidad.
-- T2 [S1–S5] completada — fundador acepta «Sí, acepto esta versión» en ambas pestañas de3005, hashes6ca025e…/7e550180…; no autoriza push/PR; ruta inline; commit pendiente de la unidad.
-- T3 [S1–S6] en curso — skill de cierre aplicada, documentación/evaluación y recursos propios detenidos; guardar unidad local verificada ≤400 líneas y registrar SHA; ruta inline; commit pendiente. Push/PR/merge no autorizados.
+- T1 [S1–S5] completada — mínimo markup y rol CSS sólo atributos; RED/GREEN11, cuatro mutantes detectados/restaurados, 67 regresiones PASS y16 composiciones finales PASS; ruta inline; commit `055f6f7`.
+- T2 [S1–S5] completada — fundador acepta «Sí, acepto esta versión» en ambas pestañas de3005, hashes6ca025e…/7e550180…; sin permiso de push/PR; ruta inline; evidencia en `055f6f7`.
+- T3 [S1–S6] completada — skill de cierre, evaluación medium/reviewDuefalse y recursos cerrados comprobados; unidad local `055f6f7` conserva código, pruebas, aceptación y cierre; este registro añade SHA y estado final.
+- T4 [S7] pendiente — publicar rama de tarea sin force, abrir PR hacia dev y registrar OID/URL/estado real de checks; sin push directo a dev ni merge por agente; commit pendiente.
 
 ## Log
 
@@ -56,3 +58,6 @@ Rama `fix/fase-36-atributos-ninguna`; base `58365cb`; ruta prevista a dev ≤400
 - L28, aceptación humana estructurada literal: «Sí, acepto esta versión» (`f3621_accept_ui_only`); opción: «Los controles y su organización están bien; registra mi aceptación y completa el cierre local.» Pregunta limitada a UI de ambas pestañas y excluía push/PR. Es aceptación real de la versión servida6ca025e…/7e550180…, no aprobación de fotos/publicación ni receipt nativo.
 - L29, instrucción posterior literal: «recuerda correr la skill de cerrar tarea, cerrar los jobs y cerrar el chrome test que abriste». Se recarga íntegra `task-close/SKILL.md`; S6 se añade sólo a T3, sin reabrir requisitos de producto ya aceptados.
 - L30, cierre autorizado de recursos: inventario fresco identifica sólo jobs120/121/133 activos, cwd de listeners propios3005/55448 y ChromePID14391 con perfil humano exacto. Se verifica de nuevo PID/argv y se envía SIGTERM sólo a ese Chrome;133 termina exit0.120/121 detenidos por tool. Comprobación independiente ps/lsof: ningún Chrome bajo perfiles de runtime21 ni listeners3005/55448; no se toca proceso ajeno. No hay app servida ahora. DB propia55447, manuales/históricas, worktrees, ramas y datos conservados, sin eliminación ni comandos sobre contenedores.
+- L31, unidad local observada `055f6f78fc0c7b297c27569ccdb92f1078be8a35`, `fix(publicar): equilibrar la acción sin atributos`:7 archivos,199 adiciones+31 eliminaciones=230 líneas; commit exit0 y árbol limpio antes de registrar SHA. Incluye también cierre pasivo heredado36.19, sin confirmar causa ni corregir digest. Evaluación del candidato exacto230 líneas: medium/reviewDuefalse, self-verification, sin reviewer/receipt aprobado. Lectura estructural PASS: S1–S6, aceptación literal y tres registros coherentes; hashes aceptados intactos. T3 se cierra localmente con este registro documental previo a cualquier integración. No build/CI/e2e completo ni fotos reales reclamados; verificaciones funcionales concretas y límites anteriores se conservan. Ruta futura: PR a dev sólo con nuevo permiso, sin merge por agente. Risk: none (rol nuevo sólo Atributos; selectores, parsers y contratos compartidos intactos, con regresión de otro paso protegida).
+- L32, autorización posterior literal: «y de una haz el PR y push a dev». Se aplica §6: push de `fix/fase-36-atributos-ninguna` y PR con base dev, nunca push directo a dev ni merge automático. Añade S7/T4, sin reabrir S1–S6 ni cambiar la UI aceptada. Se conservará el cierre completo en ese mismo PR antes de integración humana; aún no se afirma publicación.
+- L33, confirmación literal: «y de una haz el PR a dev». Preflight remoto ya en curso135, sin duplicarlo. Skill branch-pr cargada; se aplica la política Rentoru explícita sobre defaults Gentle AI: sin issue-first, template ni type labels, cuerpo español con porqué y verificación al final; referencia289 sin keyword que lo cierre.
