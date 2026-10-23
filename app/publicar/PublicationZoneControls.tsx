@@ -4,6 +4,7 @@ import { MAX_REFERENCE_CHARACTERS } from "../../src/modules/listing-publication/
 import type { PublicationZoneOption } from "../../src/modules/listing-publication/domain/zone-search";
 import { FieldError } from "./FieldError";
 import styles from "./publish-steps.module.css";
+import { ZONE_SEARCH_LABEL } from "./step-copy";
 
 /** Mismo GET, también cuando el script no llega. */
 export function PublicationZoneSearchControl({
@@ -20,7 +21,7 @@ export function PublicationZoneSearchControl({
   return (
     <form method="get" className={styles.search} action={action}>
       <label className={styles.srOnly} htmlFor="q">
-        Busca tu zona
+        {ZONE_SEARCH_LABEL}
       </label>
       <div className={styles.searchField}>
         <input
@@ -29,7 +30,7 @@ export function PublicationZoneSearchControl({
           type="search"
           className={`${styles.control} ${loading ? styles.searchBusy : ""}`}
           defaultValue={query ?? ""}
-          placeholder="Busca tu zona"
+          placeholder={ZONE_SEARCH_LABEL}
           onChange={onChange}
           aria-busy={loading || undefined}
         />
