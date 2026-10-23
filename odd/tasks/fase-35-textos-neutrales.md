@@ -82,7 +82,7 @@ Las referencias son puntos de entrada actuales; verificar estados y consumidores
   Referencias: `src/modules/listing-trust/domain/report-reason.ts`, `src/modules/contact-reveal/domain/reveal-message.ts`, `components/molecules/ContactBlock.tsx`, `app/alquiler/[ciudad]/[zona]/[slug]/`.
   Aceptación: HTML real bloqueado/revelado/reporte y estados cliente; decodificar el texto generado del enlace WhatsApp y preservar mensaje del usuario, privacidad, escape y condiciones de contacto. No basta probar el helper aislado.
 
-- [ ] **35.8 Ayuda y contacto del sitio.** Auditar artículos, FAQ, formulario, errores y acuse.
+- [x] **35.8 Ayuda y contacto del sitio.** Verificada localmente: 5 páginas de ayuda, Escríbenos (ruta `/ayuda/escribinos` conservada), guía de zona faltante, dos errores y etiqueta del footer en tuteo. «F35.8: …» en `app/ayuda/{como-publicar-un-aviso,como-reportar-un-aviso,como-contactar-al-dueno,preguntas-frecuentes,escribinos}/page.test.tsx`, `contact-screen.test.ts` y `footer-links.test.ts`: RED 7/7, GREEN y 3 mutantes detectados y restaurados; suite 3734/3734, tipos/lint/tokens PASS. Correo al operador fuera de alcance: lo cambia 35.10. Specs de CI actualizadas, incluida `revisar-responsive.spec.ts` («Revisá tu aviso», vieja desde 35.4). Aceptación del fundador en navegador (127.0.0.1:3108, 8 pestañas, 2026-10-23): «si acepto todo se ve bien». Sin push, PR ni integración al registrar. Auditar artículos, FAQ, formulario, errores y acuse.
   Referencias: `app/ayuda/`, `src/modules/site-contact/domain/contact-screen.ts`.
   Aceptación: textos y nombres accesibles del HTML servido, envío inválido y acuse en `app/ayuda/escribinos/page.test.tsx`; separar el correo dirigido al operador y registrar su disposición.
 

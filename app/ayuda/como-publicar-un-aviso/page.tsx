@@ -23,24 +23,24 @@ interface Step {
 const STEPS: readonly Step[] = [
   {
     label: "Tipo",
-    text: "Elegís qué vas a alquilar: apartamento, casa, quinta, anexo o habitación.",
+    text: "Eliges qué vas a alquilar: apartamento, casa, quinta, anexo o habitación.",
   },
-  { label: "Zona", text: "Buscás la zona donde queda. La ciudad la determina la zona." },
-  { label: "Precio", text: "Ponés cuánto pedís al mes, en dólares." },
+  { label: "Zona", text: "Buscas la zona donde queda. La ciudad la determina la zona." },
+  { label: "Precio", text: "Pones cuánto pides al mes, en dólares." },
   {
     label: "Tamaño",
     text: "Habitaciones, baños, metros cuadrados y puestos de estacionamiento.",
   },
   {
     label: "Qué tiene",
-    text: "Marcás lo que tenga: planta eléctrica, agua regular, amoblado, vigilancia 24 h, línea blanca.",
+    text: "Marcas lo que tenga: planta eléctrica, agua regular, amoblado, vigilancia 24 h, línea blanca.",
   },
-  { label: "Título", text: "Le ponés un título. Es lo primero que se lee en la lista." },
-  { label: "Descripción", text: "Contás lo que no se ve en las fotos, hasta 1.200 caracteres." },
-  { label: "Fotos", text: "Subís entre 1 y 6 fotos." },
+  { label: "Título", text: "Le pones un título. Es lo primero que se lee en la lista." },
+  { label: "Descripción", text: "Cuentas lo que no se ve en las fotos, hasta 1.200 caracteres." },
+  { label: "Fotos", text: "Subes entre 1 y 6 fotos." },
   {
     label: "Quién publica",
-    text: "Decís si publicás como dueño o como inmobiliaria, y dejás un contacto.",
+    text: "Dices si publicas como dueño o como inmobiliaria, y dejas un contacto.",
   },
 ];
 
@@ -69,7 +69,7 @@ export default function ComoPublicarPage() {
       <h2 className={styles.heading}>Después de publicar</h2>
       <p className={styles.text}>
         El aviso queda activo 30 días. Antes de que venza, te avisamos por correo con un enlace para
-        renovarlo, y podés editarlo en cualquier momento desde «Mis avisos».
+        renovarlo, y puedes editarlo en cualquier momento desde «Mis avisos».
       </p>
     </article>
   );

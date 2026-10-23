@@ -40,7 +40,7 @@ export function resolveContactContext(
   return {
     value: MISSING_ZONE_CONTEXT,
     guidance:
-      "Contanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.",
+      "Cuéntanos la ciudad, el nombre de la zona que falta y por qué debería estar en el catálogo.",
     scopeNotice: "Avisarnos no crea ni habilita una zona.",
     draftNotice:
       "Los cambios que no hayas enviado en publicación no se guardan al abrir este formulario.",
@@ -103,7 +103,7 @@ export interface ContactSentScreen {
 
 export type ContactScreen = ContactFormScreen | ContactSentScreen;
 
-const ERROR_NOTICE = "Revisá los datos e intentá de nuevo.";
+const ERROR_NOTICE = "Revisa los datos e inténtalo de nuevo.";
 
 /**
  * **Presencia y no valor**, igual que `resolveReportScreen`: `?enviado` pelado
@@ -121,7 +121,7 @@ export function resolveContactScreen(
   deliveryErrorFlag?: string | readonly string[],
 ): ContactScreen {
   if (deliveryErrorFlag !== undefined) {
-    return { state: "form", errorNotice: "No pudimos enviar tu mensaje. Intentá de nuevo." };
+    return { state: "form", errorNotice: "No pudimos enviar tu mensaje. Inténtalo de nuevo." };
   }
   if (sentFlag !== undefined) return { state: "sent" };
 
