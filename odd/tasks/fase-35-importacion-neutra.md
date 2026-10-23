@@ -11,7 +11,7 @@ S4. Canonical 35.6 acceptance: “ampliar `app/importar/importar-contract.test.t
 ## Tasks
 - T1 [done] S1,S2,S4 — worker `mvl2jvur-2-995y` and parent: consumer RED/GREEN and mutation observed; shared-copy coordination resolved, 34/34 client/catalogue/management PASS; commit pending.
 - T2 [done] S2,S3 — founder browser acceptance recorded (L7); suite load-dependent timeouts published under founder decision (L10).
-- T3 [in_progress] S2,S3 — inline: records synchronized; commit/push/PR and close owned resources.
+- T3 [done] S2,S3 — commit `447e59d`, merge of `origin/dev` `811f2ea`, PR #438 to `dev` open; owned resources closed (L11).
 
 ## Log
 L1. Original assignment (verbatim):
@@ -46,3 +46,4 @@ L7. 2026-10-23 founder browser acceptance, relayed verbatim by the coordinator: 
 L8. 2026-10-23 founder authorized the rerun under the shared lock (`lockf /tmp/rentoru-f35-heavy.lock`, no timeout changes). Job-11: typecheck/lint/tokens exit0; unit exit1, 12 failed/3660 passed, 6 files, all 5s timeouts (wait-for-preview, photo-derivatives x7, draft-sweep, photo-purge, expiry-reminders, auth-pages-fixture). None of the six files is in the diff. Load average 24.26 on 8 cores observed right after: the lock serializes heavy checks but the machine is not idle. Diagnosis in progress: job-12 runs the six files alone; no blind rerun, no publication while unit is red.
 L9. Job-12 discriminating check: the six failing files alone on this branch pass 62/62 (40.2 s) with load average 20.09→19.15 on 8 cores. The failures reproduce only inside the full parallel suite on a loaded machine: load-dependent, not caused by the diff (no failing file touched; no assertion failure). The founder's push condition («if all pass») is not met; no push. Decision requested from the founder.
 L10. Founder decision relayed verbatim: «si ya tenemos la aceptacion las pruebas son otro problema esto se va arregla supongo con el problema del CI que estamos solventando.» Applies to F35: publish when the full suite fails only by timeouts in files outside the diff, with zero assertion failures, and those files pass alone. 35.6 meets it (L8–L9). Canonical, audit and OpenSpec 35.6 checked as locally closed; PR open, merge pending.
+L11. Published: https://github.com/gianelo/rentoru/pull/438 (+337/−35, 17 files). Integrated tree: focused 244/244, typecheck (lock) and lint PASS; RDD assess medium, reviewDue=false (under budget). Closed at publication: jobs 5/9/10 stopped, no Chrome for Testing process, no listener on 3103/55521/55522, container `rentoru-f35c-35-6-pg` stopped (not removed). Merge pending (founder).
