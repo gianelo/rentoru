@@ -1,4 +1,5 @@
 import { type BrowserContext, expect, type Page, type Route, test } from "@playwright/test";
+import { ZONE_SEARCH_LABEL } from "../../app/publicar/step-copy";
 
 const forbiddenByContext = new WeakMap<BrowserContext, string[]>();
 const zoneHandlers = new WeakMap<BrowserContext, (route: Route) => void | Promise<void>>();
@@ -21,7 +22,7 @@ const long = {
   scope: "Distrito Capital",
 };
 const post = (page: Page) => page.locator('form[method="post"]');
-const search = (page: Page) => page.getByRole("searchbox", { name: "Buscá tu zona" });
+const search = (page: Page) => page.getByRole("searchbox", { name: ZONE_SEARCH_LABEL });
 async function values(page: Page) {
   return post(page).evaluate((form) => {
     const data = new FormData(form as HTMLFormElement);
