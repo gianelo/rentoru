@@ -254,7 +254,13 @@ export function PublishStep(props: PublishStepProps) {
 
               <StepFields {...props} errors={errors} />
 
-              <div className={styles.actions}>
+              <div
+                className={
+                  stepId === "atributos"
+                    ? `${styles.actions} ${styles.attributeActions}`
+                    : styles.actions
+                }
+              >
                 <button type="submit" className={styles.primary}>
                   {primaryLabel}
                 </button>
@@ -262,6 +268,11 @@ export function PublishStep(props: PublishStepProps) {
                   <AppLink className={styles.secondary} href={backHref}>
                     Atrás
                   </AppLink>
+                ) : null}
+                {stepId === "atributos" ? (
+                  <button type="submit" form="publication-no-features" className={styles.secondary}>
+                    No tiene ninguna
+                  </button>
                 ) : null}
                 {/* Nivel neutro de la jerarquia de botones, la misma fila que
                   "Atrás" — y un ENLACE, no un boton: no postea nada, porque
@@ -275,17 +286,13 @@ export function PublishStep(props: PublishStepProps) {
             </form>
           </PublicationZoneEnhancement>
 
-          {/* La otra mitad del paso 5. Un formulario propio porque sin
-              JavaScript nada puede destildar las casillas al enviar: este
-              postea el paso SIN ninguna, que es exactamente lo que
-              "No tiene ninguna" significa. */}
+          {/* El botón comparte las acciones, pero su atributo form envía sólo
+              este POST propio. Sin JavaScript también sustituye las casillas
+              por ninguna, sin anidar formularios ni enviar sus valores. */}
           {stepId === "atributos" ? (
-            <form action={submitStep} method="post">
+            <form id="publication-no-features" action={submitStep} method="post">
               <input type="hidden" name="step" value="atributos" />
               {returningToReview ? <input type="hidden" name="volver" value="revisar" /> : null}
-              <button type="submit" className={styles.secondary}>
-                No tiene ninguna
-              </button>
             </form>
           ) : null}
         </main>

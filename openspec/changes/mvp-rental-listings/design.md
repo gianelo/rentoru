@@ -689,6 +689,30 @@ abriste». Se mantiene la regla vigente; esta aceptación no autoriza cambios de
 
 Copy/jerarquía, loader contextual, país/formato y botón vs checkbox quedan como gates al iniciar sus unidades. El digest `901444967` no prueba deduplicación ni fallo de sesión: cualquier consulta productiva requiere autorización read-only separada, sin mutación. Plan y criterios completos: `odd/tasks/fase-36-cierre-publicacion.md`; esta adenda confirma alcance, no implementación ni nuevas decisiones numeradas.
 
+### Digest901444967 — cierre de diagnóstico36.19
+
+El fundador dispone cerrar36.19 como «no se pudo replicar»: no se confirmó una causa ni se corrigió
+el fallo. Los 62 casos locales con dobles no identifican el incidente; el acceso productivo autorizado
+funcionó, pero las consultas históricas fallaron sin diagnóstico utilizable. No se atribuye el digest
+a deduplicación, sesión, storage o persistencia, ni se afirma ausencia de logs o retención vencida.
+36.20 conserva su requisito de causa y alcance aprobados; no se cierran 18.39/18.40 por este resultado.
+Evidencia y límites completos: `odd/tasks/fase-36-cierre-publicacion.md`,36.19; cierre documental local,
+sin cambios funcionales ni publicación/integración; en aquel checkpoint todavía sin commit.
+
+### Atributos36.21 — decisión G7 y estado local
+
+El fundador eligió «Botón secundario — recomendado»: declarar ninguna sustituye la selección y continúa;
+no se convierte en checkbox ni se infiere una respuesta de casillas vacías no enviadas.
+El botón comparte acciones con Seguir/Atrás, pero `form` lo asocia a su POST externo propio;
+se conservan `featuresDeclared`, los campos de retorno y la operación nativa sin formularios anidados.
+El rol CSS de Atributos permite empaquetar cuatro acciones al volver desde Revisar, sin cambiar
+selectores compartidos, tokens, parser ni reglas de publicador. RED/GREEN/mutaciones y HTML servido
+protegen vínculo y alcance;16 composiciones y flujos reales ambos modos pasan con DB propia.
+El fundador acepta explícitamente «Sí, acepto esta versión» sobre6ca025e…/7e550180… en3005;
+es aceptación visual local, no entrega ni permiso de push/PR. Después ordena cerrar jobs y Chrome:
+servicios y navegador propios detenidos, ausencia física comprobada, DB conservada y app ya no servida.
+Cierre Git local en curso. Evidencia, fallos y límites: `odd/tasks/fase-36-atributos-ninguna.md`.
+
 ### Photo copy — bounded G3/F35 coordination (F36.10)
 
 Founder approved «Elegir fotos» and «Es la foto principal de tu aviso» for publication and editing. The cover explanation appears once per surface; the historical phone-deletion help is removed, while «Quitar del aviso», «Hacer portada», photo identities and native POST remain intact. Editing supplies presentation copy to the shared uploader; imported drafts retain its «Subir fotos» default. This supersedes only those historical 18.15 literals, not compression copy, photo rules, menu sizing (36.11) or the remaining F35.4 audit. Browser acceptance remains T2 in `odd/tasks/fase-36-fotos-textos.md`.
