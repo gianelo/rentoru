@@ -1,4 +1,5 @@
 // @vitest-environment happy-dom
+import { readFileSync } from "node:fs";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -13,6 +14,7 @@ import {
   validatePublishableListing,
 } from "@/modules/listing-publication/domain/publishable-listing";
 import type { StoredDraft } from "../../draft";
+import stepStyles from "../../publish-steps.module.css";
 import { STEP_COPY } from "../../step-copy";
 
 /**
@@ -23,7 +25,7 @@ import { STEP_COPY } from "../../step-copy";
  * botón contextual los cerró la 18.24 el 2026-08-31, y estos dos seguían sin
  * una sola aserción sobre un archivo de 723 líneas.
  *
- * **Es caracterización, y decirlo importa.** Las dos piezas ya están servidas,
+ * **La cobertura original es caracterización, y decirlo importa.** Las dos piezas ya están servidas,
  * así que estas pruebas no pudieron verse rojas antes de existir: no hay RED
  * que fingir. Lo que les da filo son las mutaciones corridas contra cada
  * aserción —con este archivo y sin él—, anotadas en el cuerpo del PR.
@@ -322,24 +324,70 @@ describe("los cinco atributos del paso 5 (18.24)", () => {
     expect(STEP_COPY.atributos.railLabel).toBe("Qué tiene");
   });
 
-  /**
-   * **La otra mitad del paso 5, y sin ella «Ninguno» es inalcanzable sin
-   * JavaScript**: nada destilda cinco casillas al enviar, así que declarar que
-   * no hay ninguna necesita su propio POST. Va FUERA del formulario de las
-   * casillas porque un formulario dentro de otro no es HTML válido, y con el
-   * script apagado un navegador lo desanida donde quiere.
-   */
+  it("«No tiene ninguna» comparte las acciones y el estilo secundario de Atrás (36.21)", async () => {
+    const page = document.createElement("div");
+    page.innerHTML = await servido("atributos");
+    const buttons = [...page.querySelectorAll<HTMLButtonElement>("button")];
+    const none = buttons.find((button) => button.textContent === "No tiene ninguna");
+    const next = buttons.find((button) => button.textContent === "Seguir");
+    const back = [...page.querySelectorAll("a")].find((link) => link.textContent === "Atrás");
+
+    expect(none).toBeDefined();
+    expect(next).toBeDefined();
+    expect(back).toBeDefined();
+    expect(none?.parentElement).toBe(next?.parentElement);
+    expect(none?.parentElement).toBe(back?.parentElement);
+    expect(none?.className).toBe(back?.className);
+    const attributeActions = stepStyles.attributeActions;
+    if (!attributeActions) throw new Error("Falta el rol CSS de acciones de atributos");
+    expect(none?.parentElement?.classList.contains(attributeActions)).toBe(true);
+    expect(readFileSync("app/publicar/publish-steps.module.css", "utf8")).toMatch(
+      /\.attributeActions\s*\{\s*flex-wrap:\s*wrap;/,
+    );
+  });
+
+  /** El propietario nativo del botón, no su posición visual, decide qué se envía. */
   it("«No tiene ninguna» es un POST propio y sólo existe en el paso 5", async () => {
     const html = await servido("atributos");
-    const cierreDelFormulario = html.indexOf("</form>");
-    const segundoBoton = html.indexOf("No tiene ninguna");
-
-    expect(segundoBoton).toBeGreaterThan(cierreDelFormulario);
-    expect(html.slice(cierreDelFormulario, segundoBoton)).toContain(
-      '<input type="hidden" name="step" value="atributos"/>',
-    );
-
-    await expect(servido("tamano")).resolves.not.toContain("No tiene ninguna");
+    const page = document.createElement("div");
+    page.innerHTML = html;
+    document.body.append(page);
+    try {
+      const none = [...page.querySelectorAll<HTMLButtonElement>("button")].find(
+        (button) => button.textContent === "No tiene ninguna",
+      );
+      const field = page.querySelector<HTMLInputElement>('input[name="hasPowerPlant"]');
+      expect(field).toBeInstanceOf(HTMLInputElement);
+      // HappyDOM prioriza el ancestro sobre `form`; Chromium comprueba la asociación real.
+      // Acá se protege el vínculo servido y su payload, también con las cinco casillas marcadas.
+      const formId = none?.getAttribute("form");
+      const own = formId
+        ? page.querySelector<HTMLFormElement>(`form[id="${formId}"]`)
+        : none?.closest("form");
+      expect(own).toBeInstanceOf(HTMLFormElement);
+      expect(own).not.toBe(field?.form);
+      for (const checkbox of page.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
+        checkbox.checked = true;
+      }
+      const data = new FormData(own as HTMLFormElement);
+      expect(data.get("step")).toBe("atributos");
+      for (const name of [
+        "hasPowerPlant",
+        "hasRegularWater",
+        "isFurnished",
+        "hasSecurity",
+        "hasAppliances",
+      ]) {
+        expect(data.has(name)).toBe(false);
+      }
+      expect(html.slice(0, html.indexOf("</form>")).match(/<form\b/g)).toHaveLength(1);
+      expect(page.querySelectorAll("form")).toHaveLength(2);
+      const otherStep = await servido("tamano");
+      expect(otherStep).not.toContain("No tiene ninguna");
+      expect(otherStep).not.toContain(stepStyles.attributeActions);
+    } finally {
+      page.remove();
+    }
   });
 });
 

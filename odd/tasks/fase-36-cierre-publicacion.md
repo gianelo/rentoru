@@ -1,6 +1,6 @@
 # Fase 36 — Cierre de publicación (#289)
 
-Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Estado vigente de este cierre:36.1 parcial;36.7 aceptada funcionalmente y entrega humana cerrada;36.8/36.9 con merges humanos registrados;36.10–36.22 pendientes. Para36.2–36.6 se conserva el índice central vigente. El checkpoint documental separado de36.7 fue fusionado por humano en #403 hacia dev `da34a8990b800f854439e0400652969ba271d589` (2026-10-09T10:26:46Z). Escribir el plan no acreditó aceptación funcional: los cierres proceden de las unidades posteriores citadas abajo, sin cerrar #289.
+Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Estado del checkpoint documental histórico:36.1 parcial;36.7 aceptada funcionalmente y entrega humana cerrada;36.8/36.9 con merges humanos registrados;36.10–36.22 pendientes. Para36.2–36.6 se conserva el índice central vigente. El checkpoint documental separado de36.7 fue fusionado por humano en #403 hacia dev `da34a8990b800f854439e0400652969ba271d589` (2026-10-09T10:26:46Z). Escribir el plan no acreditó aceptación funcional: los cierres proceden de las unidades posteriores citadas abajo, sin cerrar #289.
 
 ## Reconciliación documental — progreso
 
@@ -333,19 +333,37 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
 
 ### F — Fallo final y atributos
 
-- [ ] **36.19 — Diagnosticar digest 901444967 sin mutar producción.** Después de 36.1; G6 para cualquier lectura productiva.
-  - Trabajo: correlacionar fecha/build/digest y logs redactados si se autoriza; distinguir dedup, propiedad/reutilización de fotos ocultas, storage, persistencia y sesión automatizada.
+- [x] **36.19 — Diagnosticar digest 901444967 sin mutar producción.** Cierre local: no se pudo reproducir; causa no confirmada, no corregida.
+  - Trabajo previsto: correlacionar fecha/build/digest y logs redactados si se autoriza; distinguir dedup, propiedad/reutilización de fotos ocultas, storage, persistencia y sesión automatizada.
   - Aceptar: informe con causa sustentada o hipótesis aún abiertas y límites de acceso; reproducción mínima con datos propios en prueba cuando sea posible.
-  - Comprobar: mismo publicador/otro publicador y fotos nuevas/reutilizadas; no concluir dedup por screenshot. Sin autorización de producción, continuar local y dejar explícito lo no consultado.
+  - Comprobación prevista: mismo publicador/otro publicador y fotos nuevas/reutilizadas; no concluir dedup por screenshot. Sin autorización de producción, continuar local y dejar explícito lo no consultado.
+  - Disposición del fundador: «No. lo que vamos ahcer es lo dejamos asi como que no se pudo replicar. y vamos con la otra tarea recuerda correr el skill de cerrar la tarea».
+  - Evidencia local en base `58365cb`: `publish-listing.test.ts` y `process-uploaded-photo.test.ts`
+    (`src/modules/listing-publication/application/`), comando enfocado `pnpm test:unit` con ambos
+    archivos: 62 PASS, 205 ms. Caracterizan rechazos y fallos antes/después del guardado con dobles;
+    no reproducen el incidente ni acreditan SQL/Auth.js/R2/HTML reales o la matriz completa con ocultos.
+  - La primera ejecución usó por error el checkout principal antiguo; sus 62 PASS no son evidencia
+    de esta base. La ejecución válida posterior se hizo en el sibling36.19 con HEAD comprobado.
+  - Producción, con G6 autorizado: autenticación disponible y alias actual del 08/10/2026; no es
+    el build del reporte del 02/10. Dos consultas históricas acotadas fallaron sin diagnóstico
+    técnico utilizable tras el filtrado; no prueban ausencia de logs, retención ni causa del digest.
+    Se detiene la investigación por decisión humana, sin mutación productiva ni corrección.
+  - Cierre pasivo en `test/fase-36-diagnostico-digest`: código intacto, sin app servida ni nueva
+    CI/aceptación visual. No se fabricó RED/mutación para documentación; al registrar ese checkpoint,
+    el cierre estaba sin commit, push, PR ni integración. Comprobación documental: diff sin whitespace y lectura cruzada de registros.
 
 - [ ] **36.20 — Corregir causa confirmada y proteger reintento.** Después de 36.19 con causa y alcance aprobados.
+  - En espera:36.19 cerró sin causa confirmada; no se inicia una corrección a ciegas ni se cierran 18.39/18.40.
   - Trabajo: construir regresión focal antes del cambio; si coincide con 18.40, enlazar una sola unidad y preservar atomicidad ya probada de 18.39.
   - Aceptar: publicación válida alcanza estado activo una sola vez; fallo explica acción recuperable y no anuncia fracaso tras guardar con éxito; no debilita exclusión entre publicadores.
   - Comprobar: falla antes/después de persistir, reintento y original/derivadas en entorno aislado; aviso y fotos en HTML servido, hash/dedup del mismo/otro publicador. No aplicar limpieza/migración productiva por este plan.
 
-- [ ] **36.21 — Elegir control de No tiene ninguna.** Después de 36.1; gate G7.
+- [x] **36.21 — Elegir control de No tiene ninguna.** Verificado y aceptado; publicado en PR[#430](https://github.com/gianelo/rentoru/pull/430) hacia dev, sin integración humana todavía.
   - Trabajo: presentar botón secundario vs checkbox explícito, jerarquía con Seguir/Atrás y exclusión respecto de atributos seleccionados; elegir al iniciar, no ahora.
   - Aceptar: elección aprobada conserva `featuresDeclared`: declarar ninguna es respuesta, casillas vacías sin declaración siguen sin contestar; no anidar formularios.
+  - G7 resuelto al iniciar: fundador eligió «Botón secundario — recomendado». Se conserva POST propio nativo y se agrupa con Seguir/Atrás; el rol CSS que permite filas sólo alcanza Atributos, sin modificar reglas compartidas.
+  - Evidencia local: `atributos-y-zona.test.tsx` («comparte las acciones…» y «es un POST propio…»), RED/GREEN, cuatro mutantes y 67 regresiones; 3647 unitarias, tipos/lint/tokens PASS. Chromium real:16 composiciones y POST nativo/mejorado; Some/None/alternancia/Atrás/Revisar Ninguno observados.
+  - Aceptación humana explícita de ambas pestañas servidas en3005: «Sí, acepto esta versión», hashes renderer6ca025e…/CSS7e550180…. Después, por orden humana y skill de cierre, jobs120/121 detenidos y Chrome133 cerrado; ps/lsof sin perfiles21 ni listeners3005/55448. DB/datos conservados; ahora sin app servida. Unidades `055f6f7`/`cdbe1f7` publicadas en PR430 a dev (HEAD inicial remoto verificado); estado final en el mismo PR. Resultado remoto de CI aún no observado al registrar, sin merge ni bytes de fotos verificados. Seguimiento: `odd/tasks/fase-36-atributos-ninguna.md`.
   - Comprobar: servidor y HTML servido para ninguna, alguna, sin responder y alternancia; POST sin JS, regreso/revisar «Ninguno», blancos accesibles y geometría equilibrada.
 
 - [ ] **36.22 — Aceptación integrada de fase, no cierre automático.** Después de todas las unidades aplicables y gates resueltos.
