@@ -321,7 +321,7 @@ it.each([
 ])(
   "serves only the revealed $method channel with the tenant's saved message",
   async ({ method, value, href }) => {
-    const message = "Hola, quisiera visitar este aviso";
+    const message = '  Hola, ¿tenés disponibilidad? <visita> & "mañana" 👋  ';
     sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
     findForDetail.mockResolvedValue(
       detail({ status: "active", expiresAt: VIGENTE(), contactMethod: method }),
@@ -336,6 +336,11 @@ it.each([
     const html = await servedBody();
     expect(html).toContain(`data-testid="contact-value">${value}`);
     expect(html).toContain(`href="${href}${encodeURIComponent(message)}"`);
+    const destination = new URL(
+      html.match(/href="((?:https:\/\/wa\.me\/|mailto:)[^"]*)"/)?.[1] ?? "",
+    );
+    expect(destination.searchParams.get(method === "email" ? "subject" : "text")).toBe(message);
+    expect(html).not.toContain("<visita>");
     expect(html).not.toContain(method === "email" ? "wa.me/" : "mailto:");
     sessionForPage.mockResolvedValue(null);
     const anonymous = await servedBody();
@@ -391,7 +396,7 @@ it("31.4: serves an empty four-row message field with its external, announced he
   expect(textarea).toContain('aria-describedby="message-help"');
   expect(textarea).toMatch(/><\/textarea>$/);
   expect(html).toContain(
-    'id="message-help">Escribí con tus palabras qué querés consultar. El ejemplo no se envía.</p>',
+    'id="message-help">Escribe con tus palabras qué quieres consultar. El ejemplo no se envía.</p>',
   );
 });
 
@@ -402,7 +407,9 @@ it("serves missing-message feedback in the locked authenticated contact form onl
   expect(html).toMatch(
     /<textarea[^>]*aria-invalid="true"[^>]*aria-describedby="message-error message-help"/,
   );
-  expect(html).toMatch(/<p[^>]*id="message-error"[^>]*>[^<]*mensaje[^<]*<\/p>/i);
+  expect(html).toMatch(
+    /<p[^>]*id="message-error"[^>]*>Escribe un mensaje para revelar el contacto\.<\/p>/,
+  );
   expect(html).toContain('data-testid="contact-value">+58 ••• ••• ••••');
   expect(html).not.toContain(TELEFONO);
   for (const query of [{} as Record<string, string>, { revelar: "desconocido" }]) {
@@ -1045,4 +1052,35 @@ describe("la puerta del WhatsApp no saca al inquilino de la ficha (15.8)", () =>
     );
     expect(html).toContain(`name="callbackUrl" value="${RUTA}"`);
   });
+});
+
+it.each([false, true])(
+  "F35.7: serves neutral safety advice with session=%s",
+  async (hasSession) => {
+    sessionForPage.mockResolvedValue(hasSession ? { user: { id: "tenant-1" } } : null);
+    findForDetail.mockResolvedValue(detail({ status: "active", expiresAt: VIGENTE() }));
+    const html = await servedBody();
+    expect(html).toContain(
+      "Rentoru no participa en la negociación. Visita la propiedad y verifica quién es el dueño antes de entregar dinero.",
+    );
+    expect(html).not.toContain(TELEFONO);
+  },
+);
+
+it("F35.7: decodes the generated WhatsApp fallback without changing or exposing the title", async () => {
+  const title = 'Apartamento <luminoso> & "céntrico" 👋';
+  sessionForPage.mockResolvedValue({ user: { id: "tenant-1" } });
+  findForDetail.mockResolvedValue(detail({ title, status: "active", expiresAt: VIGENTE() }));
+  findUniquePairs.mockResolvedValue([{ tenantUserId: "tenant-1", listingId: VENCIDO_ID }]);
+  findRevealable.mockResolvedValue({
+    publisherId: "publisher-1",
+    contactMethod: "whatsapp",
+    contactValue: TELEFONO,
+  });
+  const html = await servedBody(`apartamento-luminoso-centrico-${VENCIDO_ID}`);
+  const destination = new URL(html.match(/href="(https:\/\/wa\.me\/[^"]*)"/)?.[1] ?? "");
+  expect(destination.searchParams.get("text")).toBe(
+    `Hola, vi tu aviso «${title}» en rentoru.com y me interesa.`,
+  );
+  expect(html).not.toContain("<luminoso>");
 });

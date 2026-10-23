@@ -61,7 +61,7 @@ const FORM: ReportFormScreen = {
   state: "form",
   heading: "Reportar este aviso",
   body:
-    "Contanos que algo no está bien con este aviso y lo revisamos. " +
+    "Cuéntanos que algo no está bien con este aviso y lo revisamos. " +
     "Contamos un solo reporte por cuenta, así que no hace falta insistir.",
   submitLabel: "Enviar el reporte",
 };

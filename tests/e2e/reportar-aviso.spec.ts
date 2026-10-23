@@ -33,6 +33,10 @@ test("ofrece un POST de verdad, no un enlace", async ({ page }) => {
   // `crawlability` corre esta misma línea con el script apagado.
   expect(html).toMatch(/<form[^>]*method=["']?post/i);
   await expect(page.getByRole("button", { name: "Enviar el reporte" })).toBeVisible();
+  await expect(page.locator("main")).toContainText(
+    "Cuéntanos que algo no está bien con este aviso y lo revisamos. Contamos un solo reporte por cuenta, así que no hace falta insistir.",
+  );
+  await expect(page.getByRole("combobox", { name: "Motivo" })).toContainText("Elige un motivo");
 });
 
 /**
@@ -76,4 +80,21 @@ test("un slug sin aviso adentro no ofrece reportar", async ({ page }) => {
 
   expect(response?.status()).toBe(404);
   expect(await page.content()).not.toMatch(/<form[^>]*method=["']?post/i);
+});
+
+test("F35.7: report feedback and acknowledgement retain neutral, private copy", async ({
+  page,
+}) => {
+  await page.goto(`${REPORTAR}?error=motivo`);
+  await expect(page.getByRole("combobox", { name: "Motivo" })).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
+  await expect(page.locator("#reason-error")).toHaveText(
+    "✱ Elige un motivo para enviar el reporte.",
+  );
+  await page.goto(`${REPORTAR}?enviado`);
+  await expect(page.getByRole("heading", { name: "Recibimos tu reporte" })).toBeVisible();
+  await expect(page.locator("main")).toContainText("No hace falta que hagas nada más.");
+  await expect(page.getByRole("button", { name: "Enviar el reporte" })).toHaveCount(0);
 });
