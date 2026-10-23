@@ -147,7 +147,7 @@ export default async function ReportarPage({ params, searchParams }: ReportarPro
                   >
                     {(attributes) => (
                       <select {...attributes} required>
-                        <option value="">Elegí un motivo</option>
+                        <option value="">Elige un motivo</option>
                         {REPORT_REASON_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
                             {option.label}

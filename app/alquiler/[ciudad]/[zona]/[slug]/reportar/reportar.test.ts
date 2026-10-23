@@ -144,6 +144,8 @@ describe("el formulario", () => {
     expect(markup).toContain('aria-invalid="true"');
     expect(markup).toContain('aria-describedby="reason-error"');
     expect(markup).toContain('id="reason-error"');
+    expect(markup).toContain("✱ Elige un motivo para enviar el reporte.");
+
     expect(markup).not.toContain('name="reporterId"');
     expect(markup).not.toContain('name="email"');
   });
@@ -155,6 +157,9 @@ describe("el formulario", () => {
     expect(markup).toContain(`name="listingId" value="${ID}"`);
     expect(markup).toContain(`name="listingPath" value="${FICHA}"`);
     expect(markup).toContain("Enviar el reporte");
+    expect(markup).toContain(
+      "Cuéntanos que algo no está bien con este aviso y lo revisamos. Contamos un solo reporte por cuenta, así que no hace falta insistir.",
+    );
   });
 
   /**
@@ -231,4 +236,10 @@ describe("un slug que no nombra ningún aviso", () => {
 
     expect(notFound).toHaveBeenCalled();
   });
+});
+
+it("F35.7: serves the neutral reason prompt without a forged feedback error", async () => {
+  const markup = renderToStaticMarkup(await open());
+  expect(markup).toContain('<option value="" selected="">Elige un motivo</option>');
+  expect(markup).not.toContain('id="reason-error"');
 });

@@ -29,7 +29,7 @@ export function missingRevealMessageDestination(doorHref: string): string {
 }
 
 export function revealMessageFeedback(raw: string | string[] | undefined): string | null {
-  return raw === MARKER ? "Escribí un mensaje para revelar el contacto." : null;
+  return raw === MARKER ? "Escribe un mensaje para revelar el contacto." : null;
 }
 
 export class MissingRevealMessageError extends Error {
