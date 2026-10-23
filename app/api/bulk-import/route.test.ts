@@ -42,8 +42,14 @@ vi.mock("../../../src/modules/broker-bulk-import/application/confirm-import", ()
 }));
 
 import { BulkImportDisabledError } from "../../../src/modules/broker-bulk-import/application/authorize-bulk-import";
-import { ImportMissingColumnsError } from "../../../src/modules/broker-bulk-import/application/parse-import-file";
-import { ImportTooManyRowsError } from "../../../src/modules/broker-bulk-import/application/read-bounded-import-file";
+import {
+  ImportEncodingError,
+  ImportMissingColumnsError,
+} from "../../../src/modules/broker-bulk-import/application/parse-import-file";
+import {
+  ImportFileTooLargeError,
+  ImportTooManyRowsError,
+} from "../../../src/modules/broker-bulk-import/application/read-bounded-import-file";
 import { ImportMissingAccountContactError } from "../../../src/modules/broker-bulk-import/application/run-import-validation";
 import { UnauthenticatedError } from "../../../src/modules/identity/application/require-authenticated-session";
 import { POST } from "./route";
@@ -271,19 +277,43 @@ describe("POST /api/bulk-import — crear", () => {
  */
 describe("POST /api/bulk-import — los rechazos de 14f", () => {
   it.each([
-    ["columna faltante", () => new ImportMissingColumnsError(["descripcion"]), "columna-faltante"],
-    ["demasiadas filas", () => new ImportTooManyRowsError(), "demasiadas-filas"],
-    ["cuenta sin contacto", () => new ImportMissingAccountContactError(), "cuenta-sin-contacto"],
-  ])("%s devuelve 422 y su motivo", async (_nombre, build, motivo) => {
+    [
+      "columna faltante",
+      () => new ImportMissingColumnsError(["descripcion"]),
+      "columna-faltante",
+      "Faltan columnas obligatorias en el archivo: descripcion. Descarga la plantilla y compara la fila de encabezados.",
+    ],
+    [
+      "codificación",
+      () => new ImportEncodingError(),
+      "codificacion",
+      'No se pudo leer el archivo como UTF-8. Vuelve a exportarlo como "CSV UTF-8" desde tu hoja de cálculo (Excel: Archivo > Guardar como > CSV UTF-8; Google Sheets: Archivo > Descargar > Valores separados por comas).',
+    ],
+    [
+      "archivo grande",
+      () => new ImportFileTooLargeError(),
+      "archivo-muy-grande",
+      "El archivo supera el tamaño máximo de 2 MB (2097152 bytes). Divide la cartera en archivos más pequeños y sube cada uno por separado.",
+    ],
+    [
+      "demasiadas filas",
+      () => new ImportTooManyRowsError(),
+      "demasiadas-filas",
+      "El archivo supera el máximo de 50 filas (límite: 50). Divide la cartera en archivos más pequeños y sube cada uno por separado.",
+    ],
+    [
+      "cuenta sin contacto",
+      () => new ImportMissingAccountContactError(),
+      "cuenta-sin-contacto",
+      "Tu cuenta no tiene un método de contacto predeterminado configurado. Configura un método de contacto y su valor en tu cuenta antes de importar: un borrador importado sin un contacto que mostrar no se puede activar.",
+    ],
+  ])("%s devuelve 422 y su motivo", async (_nombre, build, motivo, mensaje) => {
     validateImport.mockRejectedValueOnce(build());
 
     const response = await post(request("revisar"));
 
     expect(response.status).toBe(422);
-    const payload = (await response.json()) as { estado: string; motivo: string; mensaje: string };
-    expect(payload.estado).toBe("rechazado");
-    expect(payload.motivo).toBe(motivo);
-    // El mensaje del dominio viaja entero: es el que dice qué hacer.
-    expect(payload.mensaje.length).toBeGreaterThan(0);
+    await expect(response.json()).resolves.toEqual({ estado: "rechazado", motivo, mensaje });
+    expect(confirmImport).not.toHaveBeenCalled();
   });
 });

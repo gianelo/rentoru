@@ -84,6 +84,15 @@ function sourceFromText(text: string): ImportFileSourcePort {
 }
 
 describe("generateImportTemplate", () => {
+  it("F35.6: entrega la descripción de ejemplo con acentos sin cambiar los encabezados", async () => {
+    const csv = await generateImportTemplate({ catalogue: fakeCatalogue() });
+    expect(csv).toContain(
+      "Inmueble amoblado, con excelente iluminación natural, cerca de transporte público, comercios y áreas verdes.",
+    );
+    expect(csv.replace(/^﻿/, "").split("\n")[0]).toBe(
+      IMPORT_COLUMN_ALLOWLIST.map((column) => column.header).join(","),
+    );
+  });
   it("calls the catalogue for both cities and every zone exactly once", async () => {
     const catalogue = fakeCatalogue();
     await generateImportTemplate({ catalogue });

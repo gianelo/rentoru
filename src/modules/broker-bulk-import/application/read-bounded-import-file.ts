@@ -38,7 +38,7 @@ export class ImportFileTooLargeError extends Error {
 
   constructor(maxBytes: number = MAX_IMPORT_FILE_SIZE_BYTES) {
     super(
-      `read-bounded-import-file: file exceeds the maximum size of 2 MB (${maxBytes} bytes). Split the portfolio into smaller files and upload each separately.`,
+      `El archivo supera el tamaño máximo de 2 MB (${maxBytes} bytes). Divide la cartera en archivos más pequeños y sube cada uno por separado.`,
     );
     this.name = "ImportFileTooLargeError";
     this.maxBytes = maxBytes;
@@ -50,7 +50,7 @@ export class ImportTooManyRowsError extends Error {
 
   constructor(maxRows: number = MAX_IMPORT_ROW_COUNT) {
     super(
-      `read-bounded-import-file: file exceeds the maximum of 50 rows (limit: ${maxRows}). Split the portfolio into smaller files and upload each separately.`,
+      `El archivo supera el máximo de 50 filas (límite: ${maxRows}). Divide la cartera en archivos más pequeños y sube cada uno por separado.`,
     );
     this.name = "ImportTooManyRowsError";
     this.maxRows = maxRows;

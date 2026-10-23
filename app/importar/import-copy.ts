@@ -143,7 +143,7 @@ const COUNTED_COPY: Record<string, (cells: ImportRowCells) => string> = {
 
 const IMPORT_ONLY_COPY: Record<string, string> = {
   "externalReference.required":
-    "Falta la referencia externa: es el código con el que reconocés esta propiedad.",
+    "Falta la referencia externa: es el código con el que reconoces esta propiedad.",
   "externalReference.duplicateInFile":
     "Esta referencia externa aparece más de una vez en el archivo.",
 };

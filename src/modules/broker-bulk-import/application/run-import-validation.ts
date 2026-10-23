@@ -26,9 +26,9 @@ import type { ImportFileSourcePort } from "./ports/import-file-source.port";
 export class ImportMissingAccountContactError extends Error {
   constructor() {
     super(
-      "run-import-validation: the importing account has no default contact method " +
-        "configured. Set a contact method and value on your account before importing — " +
-        "an imported draft with no way to reveal contact could never be activated.",
+      "Tu cuenta no tiene un método de contacto predeterminado configurado. " +
+        "Configura un método de contacto y su valor en tu cuenta antes de importar: " +
+        "un borrador importado sin un contacto que mostrar no se puede activar.",
     );
     this.name = "ImportMissingAccountContactError";
   }
