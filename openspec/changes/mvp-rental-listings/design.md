@@ -794,3 +794,13 @@ El fundador aprobó la lámina `design/pantallas/Rentoru - Revisar - Responsive-
 - [ ] **Optional CSV columns.** Whether `habitaciones`, `banos`, and `metros2` are accepted depends on whether those fields exist on `listing`; confirm against the schema when the publication module is written rather than inventing columns the model cannot store.
 - [ ] **Draft lifetime.** An imported draft that never receives photos lives forever today. Decide whether drafts expire, and whether the broker is reminded — otherwise the table accumulates dead rows against the Neon free-tier ceiling.
 - [x] **Palette and visual tone (D14).** **RESOLVED: `compacto` + `menta`.** The design system of record is `design/reference/sistema/SISTEMA.md`, with tokens at `design/reference/sistema/tokens.css` and six worked surfaces at `design/reference/sistema/pantallas-compacto-menta.html`. PR1b is unblocked. See D16 for the token contract that carries the system to the sixteen surfaces the reference does not draw.
+
+### Publicar · Listo — fase 37
+
+La confirmación posterior a publicar deja de ser un texto provisional. La ficha ya existe, así que «Listo» enlaza al aviso y muestra su resumen. Tres decisiones de diseño técnico, con su razón:
+
+- **Lectura propia por id, no la lista completa.** `PublisherListingsPort` lee todos los avisos del publicador; «Listo» necesita uno. Se agrega un puerto de lectura al lado (AGENTS.md §3) que sólo devuelve un aviso del propio publicador y activo; cualquier otro caso devuelve nada, porque el `id` viaja en la URL y cualquiera puede escribir otro.
+- **La portada no espera a nadie.** Las derivadas se generan dentro de `publishListing`, antes del redirect; la pantalla usa la misma derivada pública que la ficha.
+- **Compartir falla cerrado.** El enlace de WhatsApp necesita la URL absoluta; sin `SITE_URL` el bloque no se dibuja, en vez de compartir un enlace relativo que no abre nada.
+
+Plan y gates: `odd/tasks/fase-37-publicar-listo.md`.

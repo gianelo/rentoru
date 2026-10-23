@@ -3048,3 +3048,14 @@ Estado reconciliado: 36.1 parcial; 36.2–36.6 completadas en implementación; 3
   - `components/molecules/LoadingOverlay.test.tsx` — «pulses the whole mark», «stops the ring and drops its arc so it never reads as a halted spinner» y «animates opacity only, never position or rotation»: RED, GREEN y cuatro mutantes detectados y restaurados byte a byte. Chromium real: reduce → marca `pulse` 1→0,41, anillo sin animación y del mismo color en todo el borde, sin transform; no-preference → anillo `rotate`, marca fija. Suite 3653 PASS; tipos/lint/tokens/whitespace PASS. Falta aceptación del fundador.
   - Aceptación del fundador en Chromium con movimiento reducido (2026-10-23): «exacto asi pero esteo es con movimeinto reducido supongo que quedara el otro que teniamos verdad?»; el giro sin esa preferencia queda igual, medido en Chromium. Sin commit, push ni integración al registrar.
 - [ ] 36.22 Aceptación integrada con pruebas observadas y fundador, sin cierre automático de #289.
+
+## Fase 37 — Pantalla «Listo» de publicar
+
+Plan, specs, hechos verificados y gates: `odd/tasks/fase-37-publicar-listo.md`. Base: lámina `design/pantallas/Rentoru - Publicar - Listo-v1.html` (#441). Una tarea por PR ≤400 líneas a `dev`; G1 (lámina v2), G2 (mensaje de WhatsApp) y G3 (aviso ilegible) son decisiones del fundador.
+
+- [ ] 37.1 Lámina v2: «Compártelo» alineado con la tarjeta en escritorio y rol de confirmación propio para el ✓; aprobación del fundador (G1).
+- [ ] 37.2 Roles del sistema: tokens de confirmación y miniatura de «Listo» y sección en `SISTEMA.md`; `lint:tokens`.
+- [ ] 37.3 Puerto de lectura del aviso propio recién publicado, al lado del de escritura, que falla cerrado ante aviso ajeno, inexistente o no activo; dominio que arma la vista; integración contra Postgres real.
+- [ ] 37.4 Pantalla `app/publicar/listo/page.tsx` según la lámina aprobada: portada, «Activo hasta», tres acciones reales, sin UUID; HTML servido, Chromium con y sin JS y aceptación del fundador (G3).
+- [ ] 37.5 Compartir por WhatsApp: `wa.me` con URL absoluta armada en el dominio; sin `SITE_URL` no se dibuja (G2).
+- [ ] 37.6 Aceptación integrada del recorrido publicar → «Listo» en `dev`, `crawlability` y `budget:bundle`.
