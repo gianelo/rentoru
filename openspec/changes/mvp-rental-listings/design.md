@@ -273,6 +273,8 @@ Pushes to `dev` and `staging` run layout measurements, local E2E/crawlability an
 
 The push `e2e` job is a `fail-fast: false` matrix of three parallel legs, each with its own PostgreSQL 18 container, migrations and deterministic seed: `publication` (36.3), `reads` (general E2E + crawlability, then 30.2–30.4) and `auth` (30.4b2–30.7, then 29.2 pagination last because it appends rows). No leg sees another's writes, so cross-block ordering no longer rests on a shared database. The optional dev critical profile still changes only the general read step.
 
+`measure` and every e2e leg install the browser through `.github/scripts/install-playwright-browser.sh`: apt has stalled that step for 409–827 s (normally 11–28 s), so each attempt is cut at 180 s with its whole process group, retried once, and two failed attempts fail the job with a `::warning::` per attempt. Whether a retry avoids the slow mirror is measured after merge.
+
 Concurrency keeps one group per workflow and ref; a newer run cancels a stale one only for pull requests and `dev`, so a started `staging` run always finishes; GitHub keeps one pending run per group, so a queued intermediate `staging` push can be superseded while the newest one still runs. CI never deploys (Vercel migrates in `vercel-build`), so cancelling CI cannot cancel a migrating deployment. The repository is public; heavy suites stay on pushes for proportionality and speed, and F2's private-repo minutes row below no longer constrains that split.
 
 | Gate | Command | Needs |

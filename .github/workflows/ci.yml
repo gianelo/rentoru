@@ -184,7 +184,7 @@ jobs:
       # --with-deps on every path: the apt libraries it installs do not live
       # in that cache, so a hit without them leaves a browser that cannot
       # start.
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: bash .github/scripts/install-playwright-browser.sh
       - run: node --test scripts/measure-trace.test.cjs
       - id: measure
         run: pnpm test:measure
@@ -367,9 +367,10 @@ jobs:
       # `--with-deps` runs on every path, cache hit or not: the system
       # libraries it installs through apt do NOT live in ~/.cache/ms-playwright,
       # so skipping it on a hit would leave a cached browser that cannot start.
-      # The cache saves the ~150 MB download, which is the slow half.
+      # The cache saves the ~150 MB download; the apt half can still stall on a
+      # slow mirror, so the script cuts each attempt at 180 s and retries once.
       - name: Install the browser
-        run: pnpm exec playwright install --with-deps chromium
+        run: bash .github/scripts/install-playwright-browser.sh
 
       # Las mismas migraciones generadas que la aplicacion despacha, para que la
       # suite corra contra el esquema real y no contra una copia a mano.
