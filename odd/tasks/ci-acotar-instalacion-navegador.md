@@ -11,7 +11,7 @@ Worktree `rentoru-ci-apt-acotado`, branch `ci/acotar-instalacion-navegador`, bas
 
 ## Tasks
 - T1 [done: local] — S1–S3; worker mvlf7693-3-cdes: shared script, both workflow call sites, tests RED→GREEN, docs.
-- T2 [pending] — parent: review, risk-gated verification, commit, PR→dev, measure real runs.
+- T2 [in_progress: published, real runs pending] — parent: review, risk-gated verification, commit, PR→dev, measure real runs.
 
 ## Log
 - L1 — User request verbatim: «dale mitigacion del apt».
@@ -27,3 +27,9 @@ Worktree `rentoru-ci-apt-acotado`, branch `ci/acotar-instalacion-navegador`, bas
 - L6 — Review limit: Ubuntu sudo may run apt in its own session (use_pty); TERM reaches sudo,
   which relays it. If apt ignored TERM, the later KILL would not reach it and the retry would hit
   the dpkg lock and fail the job visibly (red), never silently. Unproven until a real runner.
+- L7 — Independent verifier mvlfovbq-4-gb8z: S1–S3 PASS with own fakes (fast success, hang with child,
+  exit 7, double failure; no survivors; TERM-ignoring child killed by KILL). Minor: dpkg repair has no
+  own bound; leader exiting with live children leaves them unreaped. Native review review-1acb34d38b1b3002
+  (resilience+reliability) approved on its single retry after a relay abort; authority burned. Advisory:
+  a slow-but-progressing mirror now fails red after 2×180 s instead of finishing late (accepted by the
+  user before publication). User authorized push and PR to dev.
