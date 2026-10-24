@@ -1,5 +1,7 @@
 # Fase 36 — Cierre de publicación (#289)
 
+**Fase cerrada el 2026-10-23**: 36.1–36.24 integradas en `main` (#451). #289 cerrado por el fundador el mismo día.
+
 Plan completo de [#289 — Prueba manual 4/6: Publicar](https://github.com/gianelo/rentoru/issues/289), listo para continuar desde la laptop. **La entrega de planificación sólo documentó**: no implementó funcionalidades, modificó producción ni cerró el issue. El registro de ejecución siguiente incorpora observaciones posteriores de verificadores, sin correcciones funcionales. Estado del checkpoint documental histórico:36.1 parcial;36.7 aceptada funcionalmente y entrega humana cerrada;36.8/36.9 con merges humanos registrados;36.10–36.22 pendientes. Para36.2–36.6 se conserva el índice central vigente. El checkpoint documental separado de36.7 fue fusionado por humano en #403 hacia dev `da34a8990b800f854439e0400652969ba271d589` (2026-10-09T10:26:46Z). Escribir el plan no acreditó aceptación funcional: los cierres proceden de las unidades posteriores citadas abajo, sin cerrar #289.
 
 ## Reconciliación documental — progreso
@@ -389,7 +391,7 @@ Cada ID coincide con el índice central. «Comprobar» exige evidencia de cierre
   - Comprobar: regla CSS y HTML servido en `LoadingOverlay.test.tsx`, mutación, suite/tipos/lint/tokens y aceptación del fundador.
   - Aceptación del fundador en Chromium con movimiento reducido (2026-10-23): «exacto asi pero esteo es con movimeinto reducido supongo que quedara el otro que teniamos verdad?»; el giro sin esa preferencia queda igual, medido en Chromium. Sin commit, push ni integración al registrar.
 
-- [ ] **36.22 — Aceptación integrada de fase, no cierre automático.** Después de todas las unidades aplicables y gates resueltos.
+- [x] **36.22 — Aceptación integrada de fase, no cierre automático.** Cerrada 2026-10-23 por decisión del fundador: «ya hice el recorrido y todo va bien no publique. nada mas. cierr las dos fases 35 y 36». Recorrido de publicar en producción (`fd52fa9`, despliegue 7288710571 success) sin publicar; el paso de publicación se verificó antes por el fundador en dev (36.20) y por el E2E de publicación del CI de staging `8a83c4a`. Todas las unidades 36.1–36.24 cerradas. #289 cerrado por el fundador el 2026-10-23 («si tambien esta finalizadi»), con la correspondencia de los 21 hallazgos en su [comentario de cierre](https://github.com/gianelo/rentoru/issues/289#issuecomment-6375691402). Después de todas las unidades aplicables y gates resueltos.
   - Trabajo: repetir recorrido nueve pasos con correcciones integradas, actualizar matriz de 21 comentarios y checks transversales realmente observados.
   - Aceptar: fundador valida preview en medidas vigentes, sin gaps ocultos; cada cierre cita archivo/prueba/entorno; #289 sólo se cierra por decisión posterior, no por CI verde.
   - Comprobar: unitarios/integración enfocados, HTML servido, navegador JS/sin JS según superficie, tokens/tipos/lint y gates de build/bundle cuando corresponda; autorizar comandos exactos antes de ejecutarlos.
