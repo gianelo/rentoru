@@ -1,6 +1,6 @@
 # Fase 37 — Pantalla «Listo» de publicar
 
-Implementar la confirmación posterior a publicar según la lámina `design/pantallas/Rentoru - Publicar - Listo-v1.html` (#441). Hoy `app/publicar/listo/page.tsx` sólo recibe `?id=`, muestra ese UUID como «Referencia» y dice que la ficha «se está construyendo», lo que ya no es cierto: la ficha existe y `buildListingPath` arma su ruta.
+Implementar la confirmación posterior a publicar según la lámina `design/pantallas/Rentoru - Publicar - Listo-v2.html` (v1 en #441; v2 aprobada en 37.1). Hoy `app/publicar/listo/page.tsx` sólo recibe `?id=`, muestra ese UUID como «Referencia» y dice que la ficha «se está construyendo», lo que ya no es cierto: la ficha existe y `buildListingPath` arma su ruta.
 Base `0a68af8`; una tarea por PR ≤400 líneas a `dev`, en orden, con TDD sobre el HTML servido y aceptación del fundador en navegador antes de cada push que cambie pantalla.
 
 ## Specs
@@ -19,7 +19,10 @@ Base `0a68af8`; una tarea por PR ≤400 líneas a `dev`, en orden, con TDD sobre
 
 ## Tareas
 
-- [ ] **37.1 Lámina v2.** Llevar «Compártelo» en escritorio a la altura de la tarjeta del aviso, no del ✓; dar al ✓ un rol de confirmación propio en vez de `--wait-mark-*`. Gate G1: aprobación del fundador de la v2 antes de 37.2. Comprobar: lámina renderizada en 390/768/1440.
+- [x] **37.1 Lámina v2.** Dar al ✓ un rol de confirmación propio en vez de `--wait-mark-*`. Gate G1: aprobación del fundador de la v2 antes de 37.2. Comprobar: lámina renderizada en 390/768/1440.
+  - **Corrección con razón:** la tarea pedía bajar «Compártelo» en escritorio a la altura de la tarjeta. Se probó y el fundador la rechazó (L4): queda arriba de la columna lateral, como en v1.
+  - Hecho: `git mv` a `design/pantallas/Rentoru - Publicar - Listo-v2.html` y `publicar-listo-v2.css`; el ✓ usa `--done-mark-size`/`--done-mark-fs` (56 px/22 px), declarados en la lámina como propuesta para 37.2. Medido en Chromium contra v1: misma geometría en 390/768/1440 para ✓, título, tarjeta, acciones y «Compártelo», sin desbordamiento horizontal.
+  - G1 aprobado por el fundador (L5). Sin app servida: lámina estática.
 - [ ] **37.2 Roles del sistema.** Tokens del rol de confirmación y de la miniatura de «Listo» en `src/styles/tokens.css` y `design/reference/sistema/tokens.css`; sección «Publicar · Listo» en `SISTEMA.md`. Comprobar: `pnpm lint:tokens` (cada token con lector).
 - [ ] **37.3 Lectura del aviso recién publicado.** Puerto de lectura nuevo al lado del de escritura (AGENTS.md §3): `(publisherId, listingId)` → resumen (precio, tipo, zona y ciudad, medidas, tipo de publicador, `expiresAt`, derivadas de portada, partes de la ruta). Sólo devuelve avisos del propio publicador; ajeno, inexistente o no activo devuelve nada (falla cerrado). Dominio puro que arma la vista: fecha en es-VE/UTC y destinos de las acciones. Comprobar: integración contra Postgres real (propio, ajeno, inexistente, vencido) y unidad del dominio con mutación.
 - [ ] **37.4 Pantalla.** Recrear la lámina aprobada en `app/publicar/listo/page.tsx` sólo con lo que llega decidido de 37.3: cabecera del flujo, resumen con portada de derivada pública, «Activo hasta», tres acciones como enlaces reales. Gate G3: qué se muestra cuando 37.3 no devuelve aviso. Comprobar: prueba del HTML servido (portada, fecha, tres `href`, sin UUID ni «se está construyendo»), Chromium 390/440/768/1440 con y sin JS, aceptación del fundador.
@@ -30,7 +33,7 @@ Base `0a68af8`; una tarea por PR ≤400 líneas a `dev`, en orden, con TDD sobre
 
 | Gate | Decisión del fundador | Bloquea |
 | --- | --- | --- |
-| G1 | Aprobar la lámina v2 | 37.2 en adelante |
+| G1 | Aprobar la lámina v2 — **aprobado** (L5) | 37.2 en adelante |
 | G2 | Texto del mensaje de WhatsApp | 37.5 |
 | G3 | Si el aviso no se puede leer: redirigir a `/mis-avisos` o confirmación genérica sin datos | 37.4 |
 
@@ -39,3 +42,5 @@ Base `0a68af8`; una tarea por PR ≤400 líneas a `dev`, en orden, con TDD sobre
 - L1 (2026-10-23): «la 35-a exacto esta pantalla debemos disedñarla» — sobre el hallazgo de 35.4 de que `listo/page.tsx` sigue diciendo que la ficha se está construyendo.
 - L2: «te pare porque hice unos cambios a la laminas. revisalos de nuevo. recuerda que para las imagenes necesitamos esa funcionalidad. y todo. como eta fase es de puro texto yo pienso voy a mandar al agente hacer commit y push aparetir de esto vamos a generar una fase nueva fase 37 para implementar esta nueva pantalla. ya que debemos agregar preview de las imagenes, funcionalidadesd e botones unos que ya tenemos otros que no. y todo eso».
 - L3: lámina v1 integrada por el fundador en #441 (`0a68af8`); revisión del coordinador: jerarquía de botones, sin UUID y sin JS correctos; observaciones de «Compártelo» en escritorio y del rol del ✓ pasan a 37.1.
+- L4 (2026-10-24), sobre la propuesta de bajar «Compártelo»: «pero lo de compartir porque no esta arriba del todo esta como en el medio raro en escritorio en los otros esta bien». Se vuelve al layout de v1.
+- L5: aprobación G1 de la v2 (sólo el rol propio del ✓): «si la apruebo.»

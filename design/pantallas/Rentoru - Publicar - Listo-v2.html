@@ -3,13 +3,13 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Publicar · Listo · lámina v1 — Rentoru</title>
+    <title>Publicar · Listo · lámina v2 — Rentoru</title>
     <link rel="stylesheet" href="../../src/styles/tokens.css">
-    <link rel="stylesheet" href="publicar-listo-v1.css">
+    <link rel="stylesheet" href="publicar-listo-v2.css">
   </head>
   <body>
     <aside class="design-note" aria-label="Contexto de la lámina">
-      <p><strong>Publicar · Listo · v1 · propuesta sin aprobar</strong></p>
+      <p><strong>Publicar · Listo · v2 · propuesta sin aprobar</strong></p>
       <p>Referencia estática, sin JavaScript: 390, 768 y 1440 px, uno al lado del otro.
         Aviso, foto y fecha son muestras de diseño, no un aviso real.</p>
     </aside>
@@ -153,12 +153,13 @@
         <li>Publicar otro aviso → <code>/publicar</code> (enlace de texto, como «Cambiar» en Revisar).</li>
         <li>Compartir por WhatsApp → <code>https://wa.me/?text=</code> con la URL pública del aviso (neutro, sin ícono ni verde de marca).</li>
       </ul>
-      <p>Derivada de SISTEMA.md y de Revisar responsive v1, con tokens de producción. Barra del flujo: marca y estado
+      <p>Derivada de SISTEMA.md y de Revisar responsive v1, con tokens de producción. v2: sólo el rol propio del ✓; «Compártelo» sigue arriba de la columna lateral en escritorio, como en v1, por decisión del fundador. Barra del flujo: marca y estado
         «✓ Publicado». Sin «Referencia» con el UUID y sin el aviso de página en construcción. La fecha y los 30 días
         llegan ya calculados del dominio; la pantalla sólo los muestra.</p>
       <p>Valores que el sistema no define (señalados, no inventados):
-        la marca ✓ reutiliza <code>--wait-mark-size</code>/<code>--wait-mark-fs</code>, roles del indicador de espera;
-        si se aprueba, conviene un rol propio de confirmación. La miniatura reutiliza
+        la marca ✓ usa un rol propio de confirmación, <code>--done-mark-size</code>/<code>--done-mark-fs</code>,
+        propuesto en esta lámina con los mismos valores que el indicador de espera (56 px y 22 px) y que 37.2 lleva a <code>tokens.css</code>;
+        así cambiar el loader no cambia la confirmación. La miniatura reutiliza
         <code>--mis-avisos-thumb-w</code>/<code>-h</code> en móvil y <code>--card-w-desktop</code> con <code>--card-photo-ratio</code> desde 768px. No existe un color de éxito: se usa <code>--tint</code> + <code>--accent</code>.</p>
     </aside>
   </body>
