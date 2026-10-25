@@ -815,3 +815,7 @@ Los cinco correos comparten hoy un renderizador copiado cuatro veces, con un col
 - **Valores del sistema resueltos, con una prueba que los ata a `tokens.css`.** Los clientes de correo no entienden variables CSS, así que el correo necesita literales; una tabla única y comprobada evita que esos literales se desvíen del sistema en silencio, que es justo lo que pasó con `#101010`.
 
 Plan y gates: `odd/tasks/fase-38-correos.md`.
+
+### Fondo de página — fase 41
+
+El sistema define roles para paneles (`--surface`, `--tint`, `--bg` dentro de bloques) pero ninguno para la página. El resultado es que cada pantalla con `min-block-size: 100dvh` pinta su propio fondo, y el mismo flujo de publicar pasa de blanco a blanco azulado en su última pantalla. La decisión: **la página no pinta su fondo; lo pone un solo rol del sistema en `base.css`**, igual en los dos temas, y los paneles conservan sus roles. Una prueba sobre las hojas de estilo evita que una pantalla nueva vuelva a pintarlo, salvo las excepciones que apruebe el fundador. Plan y gates: `odd/tasks/fase-41-fondos.md`.
