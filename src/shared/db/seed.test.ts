@@ -1,5 +1,9 @@
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadDotEnvWithoutOverriding } from "./seed";
+import { DEMO_SEED_REFUSAL, demoSeedRefusal, loadDotEnvWithoutOverriding } from "./seed";
 
 /**
  * `pnpm db:seed` failed on every developer machine with "DATABASE_URL
@@ -59,4 +63,56 @@ describe("loadDotEnvWithoutOverriding", () => {
     expect(() => loadDotEnvWithoutOverriding(env)).not.toThrow();
     expect(env.DATABASE_URL).toBe("from-real-environment");
   });
+});
+
+/**
+ * `pnpm db:seed` inserts two invented publishers and ten fake listings. Run
+ * with production's DATABASE_URL it would put them in the real catalogue, so
+ * the demo half only runs after a human names a non-production target on the
+ * command itself. Read before `.env`: a stale value in a file that points at
+ * production must not be able to authorize it.
+ */
+describe("demoSeedRefusal", () => {
+  it.each(["local", "dev", "staging"])("allows the named non-production target %s", (target) => {
+    expect(demoSeedRefusal(target)).toBeNull();
+  });
+
+  it.each([undefined, "", "production", "prod", "Staging", " staging"])("refuses %j", (target) => {
+    expect(demoSeedRefusal(target)).toBe(DEMO_SEED_REFUSAL);
+  });
+});
+
+describe("pnpm db:seed entry", () => {
+  const script = resolve("src/shared/db/seed.ts");
+  const tsx = resolve("node_modules/.bin/tsx");
+
+  function run(extra: Record<string, string>) {
+    const cwd = mkdtempSync(join(tmpdir(), "seed-guard-"));
+    writeFileSync(join(cwd, ".env"), "SEED_DEMO_TARGET=local\n");
+    return spawnSync(tsx, [script], {
+      cwd,
+      encoding: "utf8",
+      timeout: 20_000,
+      env: {
+        PATH: process.env.PATH,
+        NODE_ENV: "test",
+        DATABASE_URL: "postgresql://u:p@ep-guard-0000-pooler.invalid.neon.tech/db?sslmode=require",
+        ...extra,
+      },
+    });
+  }
+
+  it("refuses before touching the database when no target is named, even if .env names one", () => {
+    const result = run({});
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toBe(`${DEMO_SEED_REFUSAL}\n`);
+  }, 30_000);
+
+  it("refuses a production target", () => {
+    const result = run({ SEED_DEMO_TARGET: "production" });
+    expect(result.status).toBe(1);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toBe(`${DEMO_SEED_REFUSAL}\n`);
+  }, 30_000);
 });

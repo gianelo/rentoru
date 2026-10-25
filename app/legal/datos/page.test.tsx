@@ -28,13 +28,15 @@ describe("DatosPage", () => {
     expect(markup).toContain("mensaje");
   });
 
-  it("names the real processors: Google, Resend, Neon and Cloudflare", () => {
+  // Same rule as /legal/privacidad (founder, 2026-10-25): categories, not names.
+  it("describes infrastructure processors by category without naming them", () => {
     const markup = renderToStaticMarkup(<DatosPage />);
 
-    expect(markup).toContain("Google");
-    expect(markup).toContain("Resend");
-    expect(markup).toContain("Neon");
-    expect(markup).toContain("Cloudflare");
+    expect(markup).toContain("<strong>Google</strong>");
+    expect(markup).toContain("proveedores de envío de correo");
+    for (const provider of ["Resend", "Vercel", "Neon", "Cloudflare", "AWS", "Amazon"]) {
+      expect(markup).not.toContain(provider);
+    }
   });
 
   it("states data is not sold and no advertising profile is built", () => {

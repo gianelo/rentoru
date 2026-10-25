@@ -55,7 +55,7 @@ if (gaps.length > 0) {
       `${describeTaxonomyGaps(gaps)}\n\n` +
       "Esto es el fallo del 2026-09-05: la búsqueda sigue andando porque lee lo\n" +
       "poco que hay, y publicar es imposible porque el paso 2 no tiene una sola\n" +
-      "zona que ofrecer. Corré `pnpm db:seed` contra este entorno — es\n" +
+      "zona que ofrecer. Corré `pnpm db:seed:taxonomy` contra este entorno — es\n" +
       "idempotente y no borra nada — y volvé a desplegar.",
   );
   process.exit(1);

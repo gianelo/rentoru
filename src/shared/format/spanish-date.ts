@@ -23,8 +23,8 @@
  * define (AGENTS.md §2).
  */
 
-function formatter(month: "short" | "long"): Intl.DateTimeFormat {
-  return new Intl.DateTimeFormat("es-VE", { day: "numeric", month, timeZone: "UTC" });
+function formatter(month: "short" | "long", year?: "numeric"): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat("es-VE", { day: "numeric", month, year, timeZone: "UTC" });
 }
 
 /** «19 ago.» — la escala del pie de la ficha y de la línea de verificación. */
@@ -35,4 +35,12 @@ export function shortSpanishDate(date: Date): string {
 /** «12 de septiembre» — la escala del recuadro del aviso vencido. */
 export function longSpanishDate(date: Date): string {
   return formatter("long").format(date);
+}
+
+/**
+ * «22 de noviembre de 2026» — la vigencia de «Listo» (37.3). Lleva el año
+ * porque treinta días desde diciembre ya son el año siguiente.
+ */
+export function fullSpanishDate(date: Date): string {
+  return formatter("long", "numeric").format(date);
 }

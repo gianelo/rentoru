@@ -1,0 +1,221 @@
+/* Publicar · Listo (fase 37), lámina `Rentoru - Publicar - Listo-v2`. */
+.done {
+  display: grid;
+  gap: 24px;
+  padding: 24px 16px 48px;
+}
+
+.doneMain {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+
+.share {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--bg);
+}
+
+.share h2 {
+  margin: 0;
+  font-size: var(--ficha-title-fs);
+  font-weight: var(--ficha-title-fw);
+}
+
+.share p {
+  margin: 0;
+  color: var(--soft);
+  font-size: var(--ficha-body-fs);
+  line-height: var(--ficha-body-lh);
+}
+
+.head {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--done-mark-size);
+  block-size: var(--done-mark-size);
+  border-radius: var(--rs);
+  background: var(--tint);
+  color: var(--accent);
+  font-size: var(--done-mark-fs);
+  line-height: 1;
+}
+
+.lead,
+.summary p,
+.validity p {
+  margin: 0;
+}
+
+.lead,
+.validity {
+  font-size: var(--ficha-body-fs);
+  line-height: var(--ficha-body-lh);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.thumb {
+  display: block;
+  inline-size: var(--mis-avisos-thumb-w);
+  block-size: var(--mis-avisos-thumb-h);
+  border-radius: var(--r-thumb);
+  background: var(--thumb);
+  object-fit: cover;
+}
+
+.summaryText {
+  display: grid;
+  gap: 4px;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--ficha-body-fs);
+}
+
+.price {
+  font-family: var(--disp);
+  font-size: var(--card-price-fs);
+  font-weight: var(--ficha-price-fw);
+}
+
+.perMonth,
+.meta,
+.validityHelp {
+  color: var(--soft);
+}
+
+.meta {
+  font-family: var(--meta);
+  font-size: var(--meta-fs);
+}
+
+.validity {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--bg);
+}
+
+.validity h2 {
+  margin: 0;
+  color: var(--soft);
+  font-family: var(--meta);
+  font-size: var(--meta-fs);
+  font-weight: var(--meta-fw);
+}
+
+.validityDate {
+  font-size: var(--ficha-title-fs);
+  font-weight: var(--ficha-title-fw);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.button {
+  text-decoration: none;
+}
+
+.textLink {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--target-min);
+  font-size: var(--control-fs);
+  color: var(--accent);
+}
+
+@media (min-width: 768px) {
+  .done {
+    grid-template-columns: minmax(0, 600px);
+    justify-content: center;
+    padding: 48px 24px;
+  }
+
+  .lead,
+  .validity,
+  .summaryText {
+    font-size: var(--ficha-body-fs-desktop);
+    line-height: var(--ficha-body-lh-desktop);
+  }
+
+  .summary {
+    gap: 24px;
+    padding: 16px;
+  }
+
+  .thumb {
+    inline-size: var(--card-w-desktop);
+    block-size: auto;
+    aspect-ratio: var(--card-photo-ratio);
+  }
+
+  .summaryText {
+    gap: 8px;
+  }
+
+  .price {
+    font-size: var(--title-fs);
+  }
+
+  .summaryTitle {
+    font-size: var(--ficha-title-fs);
+    font-weight: var(--ficha-title-fw);
+  }
+
+  .actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .textLink {
+    align-self: auto;
+  }
+
+  .share {
+    justify-items: start;
+  }
+
+  .share p {
+    font-size: var(--ficha-body-fs-desktop);
+    line-height: var(--ficha-body-lh-desktop);
+  }
+}
+
+/* Escritorio: «Compártelo» en la columna lateral, arriba (lámina v2, G1). */
+@media (min-width: 1100px) {
+  .done {
+    grid-template-columns: minmax(0, 600px) minmax(0, 360px);
+    justify-content: center;
+    align-items: start;
+    column-gap: 48px;
+  }
+
+  .share {
+    padding: 24px;
+  }
+}

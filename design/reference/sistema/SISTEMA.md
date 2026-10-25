@@ -176,6 +176,10 @@ En el buscador de zona de Publicar, el aro inline usa `--loading-inline-size: 1e
 
 Esta base reutilizable no es un diálogo ni activa carga de publicación: activación, plazo y gestión de foco quedan pendientes de integración. La salida nativa útil se conserva: añade altura respecto de la demo aprobada, sin prometer una altura de tarjeta idéntica.
 
+### Publicar · Listo — fase 37
+
+La confirmación tras publicar, según `design/pantallas/Rentoru - Publicar - Listo-v2.html`. Misma barra del flujo de publicar, con estado «✓ Publicado». Encabezado centrado: la ✓ sobre `--tint` en `--accent` con su propio rol, `--done-mark-size` (56px) y `--done-mark-fs` (22px), separado de `--wait-mark-*` para que el indicador de carga y la confirmación no se arrastren entre sí. Debajo, la tarjeta del aviso (borde `--line`, radio `--r`) con la portada del mismo par que la tarjeta de resultados: `thumb` a `--mis-avisos-thumb-w`×`--mis-avisos-thumb-h` en móvil y `card` a `--card-w-desktop` con `--card-photo-ratio` desde 768px; precio, tipo · zona, medidas y la placa de publicador. La vigencia va en un bloque `--bg` con la fecha completa. Acciones: **una sola primaria**, «Ver mi aviso» (Acción), «Ir a Mis avisos» (Neutro) y «Publicar otro aviso» como enlace de texto. Columna de 600px centrada desde 768px.
+
 ## Jerarquía de botones
 
 Tres niveles, y no deben mezclarse:
