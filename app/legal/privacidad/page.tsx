@@ -131,9 +131,8 @@ export default function PrivacidadPage() {
         </li>
         <li className={styles.item}>
           <strong>Proveedores que procesan datos por nuestra cuenta:</strong> Google (inicio de
-          sesión), Resend (envío de correos), Vercel (alojamiento del sitio), Neon (base de datos) y
-          Cloudflare (fotos y reenvío del correo hola@rentoru.com). No usan tus datos para fines
-          propios por encargo nuestro.
+          sesión) y proveedores de alojamiento del sitio, base de datos, almacenamiento de fotos y
+          envío de correo. Están obligados a proteger los datos y no los usan para fines propios.
         </li>
         <li className={styles.item}>
           <strong>Autoridades</strong>, cuando una orden o una norma lo exija, o para proteger la

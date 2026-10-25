@@ -58,11 +58,18 @@ describe("PrivacidadPage", () => {
     );
   });
 
-  it("names the real processors: Google, Resend, Vercel, Neon and Cloudflare", () => {
+  // Founder, 2026-10-25: like Airbnb (Privacy §5.5), infrastructure
+  // providers are described by category and never named, so the page does
+  // not map where the services run. Google stays named: users see it.
+  it("describes infrastructure processors by category without naming them", () => {
     const markup = renderToStaticMarkup(<PrivacidadPage />);
 
-    for (const processor of ["Google", "Resend", "Vercel", "Neon", "Cloudflare"]) {
-      expect(markup).toContain(processor);
+    expect(markup).toContain("Google (inicio de sesión)");
+    expect(markup).toContain(
+      "proveedores de alojamiento del sitio, base de datos, almacenamiento de fotos y envío de correo",
+    );
+    for (const provider of ["Resend", "Vercel", "Neon", "Cloudflare", "AWS", "Amazon"]) {
+      expect(markup).not.toContain(provider);
     }
   });
 
