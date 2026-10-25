@@ -3059,7 +3059,7 @@ Plan, specs, hechos verificados y gates: `odd/tasks/fase-37-publicar-listo.md`. 
 
 - [x] 37.1 Lámina v2: rol de confirmación propio para el ✓ (`--done-mark-*`); «Compártelo» sigue arriba en escritorio por decisión del fundador. `design/pantallas/Rentoru - Publicar - Listo-v2.html`, misma geometría que v1 medida en Chromium a 390/768/1440; G1 aprobado: «si la apruebo.»
 - [ ] 37.2 Roles del sistema: tokens de confirmación y miniatura de «Listo» y sección en `SISTEMA.md`; `lint:tokens`.
-- [ ] 37.3 Puerto de lectura del aviso propio recién publicado, al lado del de escritura, que falla cerrado ante aviso ajeno, inexistente o no activo; dominio que arma la vista; integración contra Postgres real.
+- [x] 37.3 Puerto de lectura del aviso propio recién publicado, al lado del de escritura, que falla cerrado ante aviso ajeno, inexistente o no activo e integración contra Postgres real. `tests/integration/published-listing.test.ts` (siete casos y SQL), `read-published-listing.test.ts`, `listing-id.test.ts`; cuatro mutantes detectados. El dominio de la vista pasa a 37.4 con su llamador.
 - [ ] 37.4 Pantalla `app/publicar/listo/page.tsx` según la lámina aprobada: portada, «Activo hasta», tres acciones reales, sin UUID; HTML servido, Chromium con y sin JS y aceptación del fundador (G3).
 - [ ] 37.5 Compartir por WhatsApp: `wa.me` con URL absoluta armada en el dominio; sin `SITE_URL` no se dibuja (G2).
 - [ ] 37.6 Aceptación integrada del recorrido publicar → «Listo» en `dev`, `crawlability` y `budget:bundle`.
