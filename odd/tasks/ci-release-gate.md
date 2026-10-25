@@ -19,7 +19,7 @@ Worktree `rentoru-ci-release-gate`, branch `ci/release-gate`, base origin/dev `2
 
 ## Tasks
 - T1 [done: local] — S1–S3; worker mvo2y82g-6-oegh: script, workflow job, tests RED→GREEN with mutations, docs.
-- T2 [pending] — parent: review, verification, commit, PR→dev, promote, then S4 setting with consent.
+- T2 [in_progress: verified locally, publication pending authorization] — parent: review, verification, commit, PR→dev, promote, then S4 setting with consent.
 
 ## Log
 - L1 — User request verbatim: «vamos con la 11 ahora.»
@@ -35,3 +35,9 @@ Worktree `rentoru-ci-release-gate`, branch `ci/release-gate`, base origin/dev `2
   contracts. Mutations caught and restored by hash: accept any conclusion (4 failed), skip staging-HEAD
   check (1), skip tree check (1). bash -n, typecheck, Biome, diff check ok. Parent read the script and
   spot-checked 31/31. Deviation: fixed message for unreadable trees (fail closed). 286 changed lines.
+- L6 — Independent verifier mvo36mf6-7-np1w: S1/S3 PASS, S2 PASS locally (enforcement is S4). Own fakes
+  covered 15 cases incl. 40 polls/39 sleeps timeout and no body/token leak. Read-only against real GitHub:
+  current staging 7f70195 passed with run 40214159720; stale 8a83c4a refused; API shape matches. Native
+  review review-2cef52825bf75984 (risk/resilience/reliability) approved, authority burned. Advisories: no
+  retry on a transient API error and no re-evaluation after timeout (both fail closed; re-run the job);
+  gate code comes from the PR head itself; real merge-ref checkout and bash 5 not yet exercised.
