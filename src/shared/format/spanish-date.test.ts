@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { longSpanishDate, shortSpanishDate } from "./spanish-date";
+import { fullSpanishDate, longSpanishDate, shortSpanishDate } from "./spanish-date";
 
 const ZONA_ORIGINAL = process.env.TZ;
 
@@ -50,5 +50,21 @@ describe("longSpanishDate", () => {
     process.env.TZ = "America/Caracas";
 
     expect(longSpanishDate(new Date("2026-09-12T01:00:00.000Z"))).toBe("12 de septiembre");
+  });
+});
+
+describe("fullSpanishDate", () => {
+  it("escribe día, mes entero y año, como la vigencia de «Listo» (37.3)", () => {
+    expect(fullSpanishDate(new Date("2026-11-22T12:00:00.000Z"))).toBe("22 de noviembre de 2026");
+  });
+
+  it("lleva el año porque treinta días pueden cruzar diciembre", () => {
+    expect(fullSpanishDate(new Date("2027-01-05T12:00:00.000Z"))).toBe("5 de enero de 2027");
+  });
+
+  it("tampoco corre el día", () => {
+    process.env.TZ = "America/Caracas";
+
+    expect(fullSpanishDate(new Date("2026-11-22T01:00:00.000Z"))).toBe("22 de noviembre de 2026");
   });
 });
