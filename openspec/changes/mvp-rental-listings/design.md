@@ -613,6 +613,8 @@ Session handling and CSRF come from Auth.js, query parameterisation from Drizzle
 
 No migration — greenfield. Ship in capability slices, each independently deployable: identity → publication (+trust) → search → reveal → lifecycle. Each slice is sized against the 400-line review budget; publication+trust is the likeliest to need splitting.
 
+**Seeding a real environment.** `pnpm db:seed:taxonomy` seeds the territory only and is the command for production. `pnpm db:seed` also inserts two invented publishers and ten fake listings, so its CLI refuses (exit 1, before any database access) unless the command itself sets `SEED_DEMO_TARGET` to exactly `local`, `dev` or `staging`. The value is read before `.env`, so a stale file pointing at production cannot authorize demo rows. Calls that pass their own handle (`seed(db)` in tests and `budget:rows`) are unaffected.
+
 ## Required Follow-up Actions
 
 **F1 — `openspec/config.yaml` (this phase does NOT edit it; `sdd-tasks` must sequence it as an early task):**
