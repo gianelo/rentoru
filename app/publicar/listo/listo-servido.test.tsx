@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PublishedListingReading } from "@/modules/listing-publication/application/read-published-listing";
@@ -28,6 +29,8 @@ vi.mock("@/modules/listing-discovery/infrastructure/photo-public-base-url", () =
   readPhotoPublicBaseUrl: () => "https://fotos.example",
 }));
 
+import buttons from "@/../components/atoms/Button.module.css";
+import listo from "./listo.module.css";
 import PublishDonePage from "./page";
 
 const ID = "0b6f2c9e-4d1a-4f7b-9c3e-2a5d8e1f7b40";
@@ -102,5 +105,32 @@ describe("pantalla Listo servida (37.4)", () => {
       await expect(served(id)).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
     }
     expect(redirect.mock.calls).toEqual([["/mis-avisos"], ["/mis-avisos"], ["/mis-avisos"]]);
+  });
+});
+
+describe("diseño de la pantalla Listo (37.4b)", () => {
+  it("draws one primary action, a neutral one and a text link, as the system's hierarchy asks", async () => {
+    read.mockResolvedValue(READING);
+    const html = await served(ID);
+    const classOf = (label: string) =>
+      html.match(new RegExp(`<a [^>]*class="([^"]*)"[^>]*>${label}</a>`))?.[1]?.split(" ") ?? [];
+
+    expect(classOf("Ver mi aviso")).toContain(buttons.action);
+    expect(classOf("Ir a Mis avisos")).toContain(buttons.neutral);
+    expect(classOf("Publicar otro aviso")).toEqual([listo.textLink]);
+    expect(html.match(new RegExp(buttons.action ?? "^$", "g"))).toHaveLength(1);
+  });
+
+  it("gives the check mark its own confirmation role, not the loading one", async () => {
+    read.mockResolvedValue(READING);
+    expect(await served(ID)).toContain(`<span class="${listo.mark}" aria-hidden="true">✓</span>`);
+    const css = readFileSync("app/publicar/listo/listo.module.css", "utf8");
+    const mark = css.match(/\.mark\s*\{([^}]*)\}/)?.[1] ?? "";
+    expect(mark).toContain("var(--done-mark-size)");
+    expect(mark).toContain("var(--done-mark-fs)");
+    expect(css).not.toContain("--wait-mark");
+    expect(readFileSync("src/styles/tokens.css", "utf8")).toMatch(
+      /--done-mark-size:\s*56px;\s*--done-mark-fs:\s*22px;/,
+    );
   });
 });

@@ -370,6 +370,11 @@
      misma discusión sobre estas dos láminas. */
   --wait-mark-size: 56px;
   --wait-mark-fs: 22px;
+  /* La ✓ de «Listo» (37.1/37.2): mismos 56/22 que la marca de espera, pero
+     su propio rol, para que cambiar el indicador de carga no cambie la
+     confirmación de un aviso publicado. */
+  --done-mark-size: 56px;
+  --done-mark-fs: 22px;
   /* Indicador de carga aprobado (F36.3): sólo gira el aro. */
   --loading-ring-width: 3px;
   --loading-inline-size: 1em;

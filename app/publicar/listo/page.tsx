@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AppLink } from "@/../components/atoms/AppLink";
+import buttons from "@/../components/atoms/Button.module.css";
 import { Price } from "@/../components/atoms/Price";
 import { PublisherBadge } from "@/../components/atoms/PublisherBadge";
 import { DrizzleListingPhotos } from "@/modules/listing-discovery/infrastructure/drizzle-listing-photos";
@@ -13,6 +14,7 @@ import { db } from "@/shared/db/client";
 import { requireSession } from "../../_lib/require-session";
 import styles from "../publish-page.module.css";
 import { PROPERTY_TYPE_LABEL } from "../step-copy";
+import listo from "./listo.module.css";
 
 export const metadata: Metadata = {
   title: "Aviso publicado — Rentoru",
@@ -56,44 +58,64 @@ export default async function PublishDonePage({ searchParams }: DonePageProps) {
         </div>
       </header>
 
-      <main className={styles.column}>
-        <span aria-hidden="true">✓</span>
-        <h1 className={styles.title}>Tu aviso está publicado</h1>
-        <p>Ya aparece en las búsquedas y cualquiera puede verlo.</p>
+      <main className={listo.done}>
+        <div className={listo.head}>
+          <span className={listo.mark} aria-hidden="true">
+            ✓
+          </span>
+          <h1 className={styles.title}>Tu aviso está publicado</h1>
+          <p className={listo.lead}>Ya aparece en las búsquedas y cualquiera puede verlo.</p>
+        </div>
 
-        <article aria-label="Aviso publicado">
+        <article className={listo.summary} aria-label="Aviso publicado">
           {view.cover ? (
             <picture>
               <source media="(min-width: 768px)" srcSet={view.cover.cardUrl} />
-              <img src={view.cover.thumbUrl} alt={view.cover.alt} />
+              <img className={listo.thumb} src={view.cover.thumbUrl} alt={view.cover.alt} />
             </picture>
-          ) : null}
-          <p>
-            <Price usd={listing.priceUsd} /> al mes
-          </p>
-          <p>
-            {PROPERTY_TYPE_LABEL[listing.propertyType]} · {listing.zoneName}
-          </p>
-          <p>
-            {view.sizeLine} <PublisherBadge publisherType={listing.publisherType} />
-          </p>
+          ) : (
+            <span className={listo.thumb} />
+          )}
+          <div className={listo.summaryText}>
+            <p className={listo.price}>
+              <Price usd={listing.priceUsd} /> <span className={listo.perMonth}>al mes</span>
+            </p>
+            <p className={listo.summaryTitle}>
+              {PROPERTY_TYPE_LABEL[listing.propertyType]} · {listing.zoneName}
+            </p>
+            <p className={listo.meta}>
+              {view.sizeLine} <PublisherBadge publisherType={listing.publisherType} />
+            </p>
+          </div>
         </article>
 
-        <section aria-labelledby="vigencia">
+        <section className={listo.validity} aria-labelledby="vigencia">
           <h2 id="vigencia">Activo hasta</h2>
-          <p>
+          <p className={listo.validityDate}>
             <time dateTime={view.expiresOnIso}>{view.expiresOn}</time>
           </p>
-          <p>
+          <p className={listo.validityHelp}>
             Dura {LISTING_ACTIVE_DAYS} días. Te avisamos por correo antes de que venza para que
             puedas renovarlo.
           </p>
         </section>
 
-        <nav aria-label="Qué puedes hacer ahora">
-          <AppLink href={view.listingHref}>Ver mi aviso</AppLink>
-          <AppLink href={view.myListingsHref}>Ir a Mis avisos</AppLink>
-          <AppLink href={view.publishAgainHref}>Publicar otro aviso</AppLink>
+        <nav className={listo.actions} aria-label="Qué puedes hacer ahora">
+          <AppLink
+            className={`${buttons.base} ${buttons.action} ${listo.button}`}
+            href={view.listingHref}
+          >
+            Ver mi aviso
+          </AppLink>
+          <AppLink
+            className={`${buttons.base} ${buttons.neutral} ${listo.button}`}
+            href={view.myListingsHref}
+          >
+            Ir a Mis avisos
+          </AppLink>
+          <AppLink className={listo.textLink} href={view.publishAgainHref}>
+            Publicar otro aviso
+          </AppLink>
         </nav>
       </main>
     </>
