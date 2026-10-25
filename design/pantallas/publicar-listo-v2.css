@@ -1,4 +1,4 @@
-/* Lámina Publicar · Listo v1: roles existentes de tokens.css; no estilos ni reglas de producto.
+/* Lámina Publicar · Listo v2: roles existentes de tokens.css; no estilos ni reglas de producto.
    Cada marco es un contenedor: las variantes responden a su propio ancho
    (container queries), así móvil, tablet y escritorio conviven en una lámina. */
 * {
@@ -107,6 +107,13 @@ a:focus-visible,
   gap: 24px;
   padding-block: 24px 48px;
 }
+/* Rol de confirmación propuesto (37.1): mismos valores que el indicador de
+   espera, pero su propio nombre. 37.2 lo lleva a tokens.css; hasta entonces
+   vive sólo en esta lámina. */
+.screen {
+  --done-mark-size: 56px;
+  --done-mark-fs: 22px;
+}
 .done-main {
   display: grid;
   gap: 24px;
@@ -122,12 +129,12 @@ a:focus-visible,
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  inline-size: var(--wait-mark-size);
-  block-size: var(--wait-mark-size);
+  inline-size: var(--done-mark-size);
+  block-size: var(--done-mark-size);
   border-radius: var(--rs);
   background: var(--tint);
   color: var(--accent);
-  font-size: var(--wait-mark-fs);
+  font-size: var(--done-mark-fs);
   line-height: 1;
 }
 h1 {

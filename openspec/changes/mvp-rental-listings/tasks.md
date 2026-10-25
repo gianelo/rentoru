@@ -3055,9 +3055,9 @@ Estado reconciliado: 36.1 parcial; 36.2–36.6 completadas en implementación; 3
 
 ## Fase 37 — Pantalla «Listo» de publicar
 
-Plan, specs, hechos verificados y gates: `odd/tasks/fase-37-publicar-listo.md`. Base: lámina `design/pantallas/Rentoru - Publicar - Listo-v1.html` (#441). Una tarea por PR ≤400 líneas a `dev`; G1 (lámina v2), G2 (mensaje de WhatsApp) y G3 (aviso ilegible) son decisiones del fundador.
+Plan, specs, hechos verificados y gates: `odd/tasks/fase-37-publicar-listo.md`. Base: lámina `design/pantallas/Rentoru - Publicar - Listo-v2.html` (v1 en #441, v2 aprobada en 37.1). Una tarea por PR ≤400 líneas a `dev`; G1 (lámina v2), G2 (mensaje de WhatsApp) y G3 (aviso ilegible) son decisiones del fundador.
 
-- [ ] 37.1 Lámina v2: «Compártelo» alineado con la tarjeta en escritorio y rol de confirmación propio para el ✓; aprobación del fundador (G1).
+- [x] 37.1 Lámina v2: rol de confirmación propio para el ✓ (`--done-mark-*`); «Compártelo» sigue arriba en escritorio por decisión del fundador. `design/pantallas/Rentoru - Publicar - Listo-v2.html`, misma geometría que v1 medida en Chromium a 390/768/1440; G1 aprobado: «si la apruebo.»
 - [ ] 37.2 Roles del sistema: tokens de confirmación y miniatura de «Listo» y sección en `SISTEMA.md`; `lint:tokens`.
 - [ ] 37.3 Puerto de lectura del aviso propio recién publicado, al lado del de escritura, que falla cerrado ante aviso ajeno, inexistente o no activo; dominio que arma la vista; integración contra Postgres real.
 - [ ] 37.4 Pantalla `app/publicar/listo/page.tsx` según la lámina aprobada: portada, «Activo hasta», tres acciones reales, sin UUID; HTML servido, Chromium con y sin JS y aceptación del fundador (G3).
