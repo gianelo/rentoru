@@ -3074,3 +3074,14 @@ Plan, hechos verificados y gates: `odd/tasks/fase-38-correos.md`. La 35.10 cambi
 - [ ] 38.4 Vencimiento y purga con título, fecha y botón de renovar.
 - [ ] 38.5 Correos internos de contacto y latido según G2.
 - [ ] 38.6 Prueba en clientes reales (Gmail, Apple Mail, Outlook; claro y oscuro) y peso bajo el recorte de Gmail (G3).
+
+## Fase 41 — Un solo fondo de página
+
+Plan, hechos verificados y gates: `odd/tasks/fase-41-fondos.md`. Hoy cada pantalla decide su fondo: el `body` pinta `--bg` (blanco azulado), publicar lo tapa con `--surface` (blanco) y «Listo» o el inicio dejan ver el primero. Numeración 41 por pedido del fundador (39 y 40 las usa otro agente). G1 (fondo único) y G2 (excepciones) son decisiones del fundador.
+
+- [ ] 41.1 Inventario medido en Chromium del color pintado detrás del contenido, por pantalla, a 390 y 1440 px y en los dos temas.
+- [ ] 41.2 Lámina comparativa de las opciones reales sobre publicar, inicio y ficha (G1).
+- [ ] 41.3 Rol de fondo de página en `tokens.css` y `base.css`, regla en `SISTEMA.md` y prueba que impida fondos de pantalla completa fuera de las excepciones (G2).
+- [ ] 41.4 Publicar (pasos, revisar, «Listo»), entrar y espera sin fondo propio.
+- [ ] 41.5 Inicio, resultados, ficha, Mis avisos, importar, ayuda y legales.
+- [ ] 41.6 Aceptación integrada en los dos temas, `crawlability` y `lint:tokens`.
