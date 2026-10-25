@@ -3081,7 +3081,7 @@ Plan, hechos verificados y gates: `odd/tasks/fase-38-correos.md`. La 35.10 cambi
 
 Documento canónico: `odd/tasks/fase-39-conservacion-datos.md`. Contiene el inventario verificado de cada dato personal y las decisiones D1–D8, cada una con lo que hace Airbnb, su porqué y su porqué no. Se abrió porque la 23.5 no puede publicar plazos de conservación que el sistema no cumple: hoy `contact_reveal_event` y `listing_report` se guardan para siempre, y su `ON DELETE restrict` impide borrar una cuenta. Primero se decide y después se implementa. La redacción de Privacidad y Tratamiento de datos (23.5) cierra con la 39.5.
 
-- [ ] 39.1 Decidir D1–D8 con el fundador.
+- [x] 39.1 Decidir D1–D8 con el fundador. Decididas el 2026-10-25; el registro está en `odd/tasks/fase-39-conservacion-datos.md`.
 - [ ] 39.2 Migración: columnas que admitan nulos y claves foráneas `SET NULL` (alto riesgo, una sola migración en serie).
 - [ ] 39.3 Job de conservación: anonimizar los registros de contactos y los reportes, y vaciar el contacto de los avisos purgados.
 - [ ] 39.4 ~~Cierre de cuenta y copia de datos~~: pasan a la fase 40 (D4, D5).

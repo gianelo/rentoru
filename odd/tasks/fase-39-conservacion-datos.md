@@ -54,7 +54,7 @@ Formato de cada una: **Hoy**, **Airbnb**, **Opciones (por qué sí / por qué no
 - (b) Anonimizar a los 12 meses, borrando el denunciante y la explicación y conservando el motivo y la fecha. Por qué sí: sigue sirviendo como historial del aviso.
 - (c) Borrar al resolverse. Por qué no: se pierde el patrón de un publicador que reincide.
 - Recomendación: (b), con una excepción: nada se anonimiza mientras el aviso siga oculto por reportes y sin resolver.
-- Decidido (fundador, 2026-10-25): **(b), anonimizar a los 12 meses**, con la excepción.
+- Decidido (fundador, 2026-10-25): **(b), anonimizar a los 12 meses**, con la excepción. La política publica sólo el criterio, igual que en D1 (fundador, 2026-10-25: «si como en D1»).
 
 **D3 — Contacto guardado en los avisos vencidos.**
 - Hoy: `listing.contact_value` se conserva para siempre, aunque nadie pueda verlo.
@@ -92,11 +92,11 @@ Formato de cada una: **Hoy**, **Airbnb**, **Opciones (por qué sí / por qué no
 
 **D8 — Respaldos y registros de los proveedores.**
 - Recomendación: declarar lo mismo que Airbnb §10.3: copias residuales por un tiempo limitado, según cada proveedor. Rentoru no puede prometer un plazo propio.
-- Decidido: —
+- Decidido (fundador, 2026-10-25): **sí**, se declara como en Airbnb §10.3.
 
 ## Tareas
 
-- [ ] 39.1 Decidir D1–D8 con el fundador y registrar cada respuesta aquí y en `design.md` → Open Questions.
+- [x] 39.1 Decidir D1–D8 con el fundador. Las ocho quedaron decididas el 2026-10-25 y registradas en este documento. Requisito antes de ratificar: Privacidad describe el comportamiento que implementan la 39.3 y la fase 40, así que el `DraftNotice` no se retira hasta que existan.
 - [ ] 39.2 Migración (una sola y en serie, AGENTS.md §6): `contact_reveal_event.tenant_user_id`, `listing_report.reporter_id` y `listing.contact_value` pasan a admitir nulos, y las claves foráneas a usuario pasan a `ON DELETE SET NULL`. Alto riesgo: verificador independiente.
 - [ ] 39.3 Job de conservación (cron en `vercel.json`, cerrado si falta `CRON_SECRET`) que anonimice D1 y D2 y vacíe D3 al purgar las fotos.
 - [ ] 39.4 ~~Cierre de cuenta y copia de datos~~: los dos pasan a la fase 40 por decisión del fundador (D4, D5). Esta tarea queda vacía a propósito.
