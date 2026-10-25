@@ -3,10 +3,11 @@ import { describe, expect, it } from "vitest";
 import PrivacidadPage, { metadata } from "./page";
 
 /**
- * tasks.md 23.5 — "Política de privacidad", drafted by the agent for the
- * founder to ratify. Verified first: `toMinimalGoogleProfile` (name + email
- * only), `enlace.ts`, `resend-lifecycle-mailer.ts`, and the real
- * `hola@rentoru.com` address already used in `PublishStep.tsx`.
+ * tasks.md 23.5 — "Política de privacidad" v3, on Airbnb's structure (not
+ * its text) for the founder to ratify. Verified first: `toMinimalGoogleProfile`
+ * (name + email only), `enlace.ts`, `resend-lifecycle-mailer.ts`, the reveal
+ * rate limit, and the retention decisions of fase 39 (D1–D8): retention is
+ * stated as a criterion, never as a month count.
  */
 describe("PrivacidadPage", () => {
   it("carries the unratified-draft notice", () => {
@@ -15,37 +16,111 @@ describe("PrivacidadPage", () => {
     expect(markup).toContain("Borrador en revisión");
   });
 
+  it("carries the twelve sections in order", () => {
+    const markup = renderToStaticMarkup(<PrivacidadPage />);
+    const headings = [...markup.matchAll(/<h2[^>]*>([^<]*)<\/h2>/g)].map((match) => match[1]);
+
+    expect(headings).toEqual([
+      "1. Qué son los datos personales",
+      "2. Quién es el responsable",
+      "3. Qué datos recogemos",
+      "4. Para qué los usamos",
+      "5. Con quién los compartimos",
+      "6. Transferencias internacionales",
+      "7. Tus derechos",
+      "8. Cuánto tiempo los conservamos",
+      "9. Seguridad",
+      "10. Menores de edad",
+      "11. Cambios a esta política",
+      "12. Contacto",
+    ]);
+  });
+
+  it("names the responsible party as an anonymous natural person", () => {
+    const markup = renderToStaticMarkup(<PrivacidadPage />);
+
+    expect(markup).toContain("el titular de Rentoru, persona natural domiciliada");
+    expect(markup).not.toMatch(/cédula|RIF/);
+  });
+
   it("states Google sign-in captures only name and email, no picture", () => {
     const markup = renderToStaticMarkup(<PrivacidadPage />);
 
-    expect(markup).toContain("nombre y el correo");
-    expect(markup).toContain("ninguna foto");
+    expect(markup).toContain("tu nombre y el correo");
+    expect(markup).toContain("No guardamos tu foto de perfil");
   });
 
-  it("names the real processors: Google, Resend, Neon and Cloudflare", () => {
+  it("states the real reveal limit: 40 distinct listings per account in 24 hours", () => {
     const markup = renderToStaticMarkup(<PrivacidadPage />);
 
-    expect(markup).toContain("Google");
-    expect(markup).toContain("Resend");
-    expect(markup).toContain("Neon");
-    expect(markup).toContain("Cloudflare");
+    expect(markup).toContain(
+      "limitar a 40 los avisos distintos cuyo contacto puede ver una cuenta en 24 horas",
+    );
+  });
+
+  // Founder, 2026-10-25: like Airbnb (Privacy §5.5), infrastructure
+  // providers are described by category and never named, so the page does
+  // not map where the services run. Google stays named: users see it.
+  it("describes infrastructure processors by category without naming them", () => {
+    const markup = renderToStaticMarkup(<PrivacidadPage />);
+
+    expect(markup).toContain("Google (inicio de sesión)");
+    expect(markup).toContain(
+      "proveedores de alojamiento del sitio, base de datos, almacenamiento de fotos y envío de correo",
+    );
+    for (const provider of ["Resend", "Vercel", "Neon", "Cloudflare", "AWS", "Amazon"]) {
+      expect(markup).not.toContain(provider);
+    }
   });
 
   it("states data is not sold or used for advertising", () => {
     const markup = renderToStaticMarkup(<PrivacidadPage />);
 
-    expect(markup).toContain("no vendemos");
+    expect(markup).toContain("No vendemos tus datos, no los usamos para publicidad");
+  });
+
+  it("answers rights requests within thirty days", () => {
+    const markup = renderToStaticMarkup(<PrivacidadPage />);
+
+    expect(markup).toContain("dentro de los 30 días siguientes");
+  });
+
+  it("states retention as a criterion, never as a month count", () => {
+    const markup = renderToStaticMarkup(<PrivacidadPage />);
+
+    expect(markup).toContain(
+      "<strong>Registro de contactos revelados:</strong> Mientras sea necesario para prevenir fraudes y medir el servicio; después se anonimiza.",
+    );
+    expect(markup).not.toContain("12 meses");
+    expect(markup).not.toMatch(/\d+ meses/);
+  });
+
+  it("deletes the contact copied into an expired listing with its photos", () => {
+    const markup = renderToStaticMarkup(<PrivacidadPage />);
+
+    expect(markup).toContain(
+      "<strong>Contacto copiado en un aviso vencido:</strong> Se borra junto con sus fotos.",
+    );
+  });
+
+  it("discloses residual copies in the providers' backups", () => {
+    const markup = renderToStaticMarkup(<PrivacidadPage />);
+
+    expect(markup).toContain(
+      "Pueden quedar copias residuales en los respaldos de nuestros proveedores durante un tiempo limitado, según la política de cada uno.",
+    );
   });
 
   it("gives the real contact address for exercising rights", () => {
     const markup = renderToStaticMarkup(<PrivacidadPage />);
 
-    expect(markup).toContain("hola@rentoru.com");
+    expect(markup).toContain('href="mailto:hola@rentoru.com"');
   });
 
-  it("links to the cookies page", () => {
+  it("links to the terms and cookies pages", () => {
     const markup = renderToStaticMarkup(<PrivacidadPage />);
 
+    expect(markup).toContain('href="/legal/terminos"');
     expect(markup).toContain('href="/legal/cookies"');
   });
 
@@ -57,25 +132,17 @@ describe("PrivacidadPage", () => {
     const markup = renderToStaticMarkup(<PrivacidadPage />);
 
     expect(markup).toContain(
-      "Si entras con Google: el nombre y el correo verificado que Google confirma. No se guarda ninguna foto de perfil ni ningún otro dato de tu cuenta de Google.",
+      "Si entras con Google: tu nombre y el correo que Google confirma como verificado.",
     );
     expect(markup).toContain(
-      "Si entras con el enlace por correo: la dirección de correo a la que lo enviamos.",
+      "Cuando pides ver el contacto de un aviso, guardamos qué aviso, tu cuenta, el momento y el mensaje que escribiste.",
     );
-    expect(markup).toContain(
-      "Al publicar un aviso: el método y el valor de contacto que eliges mostrar (WhatsApp, teléfono o correo), y los datos del inmueble.",
-    );
-    expect(markup).toContain(
-      "Al contactar a un dueño: el mensaje que escribes antes de ver su contacto queda asociado a ese momento — qué aviso, cuándo, y tu cuenta.",
-    );
-    expect(markup).toContain(
-      "Hoy no existe una pantalla propia para corregir o borrar tus datos. Mientras tanto, escribe a <a",
-    );
+    expect(markup).toContain("Si no estás de acuerdo, puedes pedir el cierre de tu cuenta.");
+    expect(markup).toContain("Escribe a <a");
 
     expect(markup).not.toContain("Si entrás con Google:");
-    expect(markup).not.toContain("Si entrás con el enlace por correo:");
-    expect(markup).not.toContain("el valor de contacto que elegís mostrar");
-    expect(markup).not.toContain("el mensaje que escribís antes de ver su contacto");
-    expect(markup).not.toContain("Mientras tanto, escribí a");
+    expect(markup).not.toContain("Cuando pedís ver el contacto");
+    expect(markup).not.toContain("podés pedir el cierre");
+    expect(markup).not.toContain("Escribí a");
   });
 });
