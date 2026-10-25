@@ -1,5 +1,7 @@
 # Fase 37 — Pantalla «Listo» de publicar
 
+**Fase cerrada el 2026-10-25**: 37.1–37.6 integradas en `dev` (#454, #455, #458, #457, #459). Seguimientos: fondo de página en la fase 41; unificar los dos formateadores privados de fecha con año (`lifecycle-notice.ts:64`, `app/renovar/[token]/route.ts:64`) con `fullSpanishDate`.
+
 Implementar la confirmación posterior a publicar según la lámina `design/pantallas/Rentoru - Publicar - Listo-v2.html` (v1 en #441; v2 aprobada en 37.1). Hoy `app/publicar/listo/page.tsx` sólo recibe `?id=`, muestra ese UUID como «Referencia» y dice que la ficha «se está construyendo», lo que ya no es cierto: la ficha existe y `buildListingPath` arma su ruta.
 Base `0a68af8`; una tarea por PR ≤400 líneas a `dev`, en orden, con TDD sobre el HTML servido y aceptación del fundador en navegador antes de cada push que cambie pantalla.
 
@@ -42,7 +44,8 @@ Base `0a68af8`; una tarea por PR ≤400 líneas a `dev`, en orden, con TDD sobre
   - Hecho: `whatsAppShareHref` (`domain/whatsapp-share.ts`) arma `https://wa.me/?text=` con la URL absoluta (`new URL(ruta, base)`); base inválida o que no es `http(s)` devuelve `null` y la pantalla no dibuja el bloque. `page.tsx` usa `readSiteBaseUrl`; «Compártelo» con botón neutro, en escritorio (≥1100 px) arriba de la columna lateral (lámina v2) y en móvil/tablet debajo de las acciones.
   - Pruebas: `whatsapp-share.test.ts` (texto exacto, codificación, bases rechazadas) y «offers the approved message…» en `listo-servido.test.tsx`; RED y GREEN. Mutantes detectados y restaurados: cualquier protocolo, ruta relativa y compartir como acción primaria. Medido en Chromium: 390/440/768/1440 con y sin JavaScript, 200, sin desbordamiento, `href` absoluto; en escritorio «Compártelo» a la altura de la ✓.
   - Aceptación del fundador en navegador (2026-10-25, `127.0.0.1:3114/publicar/listo`, servido desde `rentoru-phase37-task-37-5`, `page.tsx` `8aa32e96…`, `listo.module.css` `7612c369…`, `whatsapp-share.ts` `5a995021…`): «como estructura esta bien. todo esta como es para cerrar toda esa tarea por ahora no toquemos los fondos porque vamos hacerlos para todo el sistema». El fondo de la pantalla no coincide con el del resto del flujo; queda fuera de esta tarea y pasa a la fase 41 (fondos de todo el sistema).
-- [ ] **37.6 Aceptación integrada.** Recorrido publicar → «Listo» → ficha / Mis avisos / Publicar otro en `dev`, `crawlability` y `budget:bundle`; cierre en este documento, `tasks.md` y Engram.
+- [x] **37.6 Aceptación integrada.** Recorrido publicar → «Listo» → ficha / Mis avisos / Publicar otro en `dev`, `crawlability` y `budget:bundle`; cierre en este documento, `tasks.md` y Engram.
+  - Cerrada 2026-10-25. Recorrido del fundador en dev.rentoru.com (publicar → «Listo» → ficha, Mis avisos, Publicar otro y Compartir por WhatsApp): «si todo bien.» Sobre `dev` `001e17b`: suite 3770/3770, `typecheck`, `lint` y `lint:tokens` PASS; `pnpm build` PASS con `SITE_URL` y `DATABASE_URL` sintéticos; `budget:bundle` PASS (`/publicar/listo` 104,71 KB; peor ruta `/publicar/paso/[paso]` 128,58 de 130 KB, que subió 0,41 KB desde la promoción anterior sin cambios de la fase 37 en esa ruta: queda 1,42 KB de margen). CI de `dev` run 40211227404 en verde: E2E lectura (incluida crawlability sin JavaScript), auth y publicación. El fondo de la pantalla queda para la fase 41.
 
 ## Gates
 
@@ -59,3 +62,4 @@ Base `0a68af8`; una tarea por PR ≤400 líneas a `dev`, en orden, con TDD sobre
 - L3: lámina v1 integrada por el fundador en #441 (`0a68af8`); revisión del coordinador: jerarquía de botones, sin UUID y sin JS correctos; observaciones de «Compártelo» en escritorio y del rol del ✓ pasan a 37.1.
 - L4 (2026-10-24), sobre la propuesta de bajar «Compártelo»: «pero lo de compartir porque no esta arriba del todo esta como en el medio raro en escritorio en los otros esta bien». Se vuelve al layout de v1.
 - L5: aprobación G1 de la v2 (sólo el rol propio del ✓): «si la apruebo.»
+- L6 (2026-10-25), recorrido integrado del fundador en dev.rentoru.com: «si todo bien.»
