@@ -6,9 +6,11 @@ import { Price } from "@/../components/atoms/Price";
 import { PublisherBadge } from "@/../components/atoms/PublisherBadge";
 import { DrizzleListingPhotos } from "@/modules/listing-discovery/infrastructure/drizzle-listing-photos";
 import { readPhotoPublicBaseUrl } from "@/modules/listing-discovery/infrastructure/photo-public-base-url";
+import { readSiteBaseUrl } from "@/modules/listing-discovery/infrastructure/site-base-url";
 import { LISTING_ACTIVE_DAYS } from "@/modules/listing-publication/application/publish-listing";
 import { readPublishedListing } from "@/modules/listing-publication/application/read-published-listing";
 import { publishedListingView } from "@/modules/listing-publication/domain/published-listing-view";
+import { whatsAppShareHref } from "@/modules/listing-publication/domain/whatsapp-share";
 import { DrizzlePublishedListing } from "@/modules/listing-publication/infrastructure/drizzle-published-listing";
 import { db } from "@/shared/db/client";
 import { requireSession } from "../../_lib/require-session";
@@ -46,6 +48,16 @@ export default async function PublishDonePage({ searchParams }: DonePageProps) {
 
   const { listing } = reading;
   const view = publishedListingView(reading, readPhotoPublicBaseUrl());
+  const typeLabel = PROPERTY_TYPE_LABEL[listing.propertyType] ?? listing.propertyType;
+  const shareHref = whatsAppShareHref(
+    {
+      typeLabel,
+      zoneName: listing.zoneName,
+      priceUsd: listing.priceUsd,
+      listingPath: view.listingHref,
+    },
+    readSiteBaseUrl(),
+  );
 
   return (
     <>
@@ -59,64 +71,79 @@ export default async function PublishDonePage({ searchParams }: DonePageProps) {
       </header>
 
       <main className={listo.done}>
-        <div className={listo.head}>
-          <span className={listo.mark} aria-hidden="true">
-            ✓
-          </span>
-          <h1 className={styles.title}>Tu aviso está publicado</h1>
-          <p className={listo.lead}>Ya aparece en las búsquedas y cualquiera puede verlo.</p>
+        <div className={listo.doneMain}>
+          <div className={listo.head}>
+            <span className={listo.mark} aria-hidden="true">
+              ✓
+            </span>
+            <h1 className={styles.title}>Tu aviso está publicado</h1>
+            <p className={listo.lead}>Ya aparece en las búsquedas y cualquiera puede verlo.</p>
+          </div>
+
+          <article className={listo.summary} aria-label="Aviso publicado">
+            {view.cover ? (
+              <picture>
+                <source media="(min-width: 768px)" srcSet={view.cover.cardUrl} />
+                <img className={listo.thumb} src={view.cover.thumbUrl} alt={view.cover.alt} />
+              </picture>
+            ) : (
+              <span className={listo.thumb} />
+            )}
+            <div className={listo.summaryText}>
+              <p className={listo.price}>
+                <Price usd={listing.priceUsd} /> <span className={listo.perMonth}>al mes</span>
+              </p>
+              <p className={listo.summaryTitle}>
+                {typeLabel} · {listing.zoneName}
+              </p>
+              <p className={listo.meta}>
+                {view.sizeLine} <PublisherBadge publisherType={listing.publisherType} />
+              </p>
+            </div>
+          </article>
+
+          <section className={listo.validity} aria-labelledby="vigencia">
+            <h2 id="vigencia">Activo hasta</h2>
+            <p className={listo.validityDate}>
+              <time dateTime={view.expiresOnIso}>{view.expiresOn}</time>
+            </p>
+            <p className={listo.validityHelp}>
+              Dura {LISTING_ACTIVE_DAYS} días. Te avisamos por correo antes de que venza para que
+              puedas renovarlo.
+            </p>
+          </section>
+
+          <nav className={listo.actions} aria-label="Qué puedes hacer ahora">
+            <AppLink
+              className={`${buttons.base} ${buttons.action} ${listo.button}`}
+              href={view.listingHref}
+            >
+              Ver mi aviso
+            </AppLink>
+            <AppLink
+              className={`${buttons.base} ${buttons.neutral} ${listo.button}`}
+              href={view.myListingsHref}
+            >
+              Ir a Mis avisos
+            </AppLink>
+            <AppLink className={listo.textLink} href={view.publishAgainHref}>
+              Publicar otro aviso
+            </AppLink>
+          </nav>
         </div>
 
-        <article className={listo.summary} aria-label="Aviso publicado">
-          {view.cover ? (
-            <picture>
-              <source media="(min-width: 768px)" srcSet={view.cover.cardUrl} />
-              <img className={listo.thumb} src={view.cover.thumbUrl} alt={view.cover.alt} />
-            </picture>
-          ) : (
-            <span className={listo.thumb} />
-          )}
-          <div className={listo.summaryText}>
-            <p className={listo.price}>
-              <Price usd={listing.priceUsd} /> <span className={listo.perMonth}>al mes</span>
-            </p>
-            <p className={listo.summaryTitle}>
-              {PROPERTY_TYPE_LABEL[listing.propertyType]} · {listing.zoneName}
-            </p>
-            <p className={listo.meta}>
-              {view.sizeLine} <PublisherBadge publisherType={listing.publisherType} />
-            </p>
-          </div>
-        </article>
-
-        <section className={listo.validity} aria-labelledby="vigencia">
-          <h2 id="vigencia">Activo hasta</h2>
-          <p className={listo.validityDate}>
-            <time dateTime={view.expiresOnIso}>{view.expiresOn}</time>
-          </p>
-          <p className={listo.validityHelp}>
-            Dura {LISTING_ACTIVE_DAYS} días. Te avisamos por correo antes de que venza para que
-            puedas renovarlo.
-          </p>
-        </section>
-
-        <nav className={listo.actions} aria-label="Qué puedes hacer ahora">
-          <AppLink
-            className={`${buttons.base} ${buttons.action} ${listo.button}`}
-            href={view.listingHref}
-          >
-            Ver mi aviso
-          </AppLink>
-          <AppLink
-            className={`${buttons.base} ${buttons.neutral} ${listo.button}`}
-            href={view.myListingsHref}
-          >
-            Ir a Mis avisos
-          </AppLink>
-          <AppLink className={listo.textLink} href={view.publishAgainHref}>
-            Publicar otro aviso
-          </AppLink>
-        </nav>
+        {shareHref ? (
+          <aside className={listo.share} aria-labelledby="compartir">
+            <h2 id="compartir">Compártelo</h2>
+            <p>Los avisos circulan mucho por WhatsApp. Envía el enlace a quien esté buscando.</p>
+            <AppLink
+              className={`${buttons.base} ${buttons.neutral} ${listo.button}`}
+              href={shareHref}
+            >
+              Compartir por WhatsApp
+            </AppLink>
+          </aside>
+        ) : null}
       </main>
     </>
   );

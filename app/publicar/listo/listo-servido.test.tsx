@@ -28,6 +28,9 @@ vi.mock("@/modules/listing-publication/application/read-published-listing", () =
 vi.mock("@/modules/listing-discovery/infrastructure/photo-public-base-url", () => ({
   readPhotoPublicBaseUrl: () => "https://fotos.example",
 }));
+vi.mock("@/modules/listing-discovery/infrastructure/site-base-url", () => ({
+  readSiteBaseUrl: () => "https://rentoru.example",
+}));
 
 import buttons from "@/../components/atoms/Button.module.css";
 import listo from "./listo.module.css";
@@ -132,5 +135,25 @@ describe("diseño de la pantalla Listo (37.4b)", () => {
     expect(readFileSync("src/styles/tokens.css", "utf8")).toMatch(
       /--done-mark-size:\s*56px;\s*--done-mark-fs:\s*22px;/,
     );
+  });
+});
+
+describe("compartir por WhatsApp (37.5)", () => {
+  it("offers the approved message with the listing's absolute address, as a neutral button", async () => {
+    read.mockResolvedValue(READING);
+    const html = await served(ID);
+    const text =
+      "Mira este aviso en Rentoru: Apartamento en Los Palos Grandes, $450 al mes. https://rentoru.example/alquiler/distrito-capital/los-palos-grandes/apartamento-con-vista-0b6f2c9e-4d1a-4f7b-9c3e-2a5d8e1f7b40";
+    const share = html.match(/<a ([^>]*)>Compartir por WhatsApp<\/a>/)?.[1] ?? "";
+
+    expect(html).toMatch(/<h2[^>]*>Compártelo<\/h2>/);
+    expect(html).toContain(
+      "Los avisos circulan mucho por WhatsApp. Envía el enlace a quien esté buscando.",
+    );
+    expect(share.match(/href="([^"]*)"/)?.[1]).toBe(
+      `https://wa.me/?text=${encodeURIComponent(text)}`,
+    );
+    expect(share.match(/class="([^"]*)"/)?.[1]?.split(" ")).toContain(buttons.neutral);
+    expect(html.match(new RegExp(buttons.action ?? "^$", "g"))).toHaveLength(1);
   });
 });
