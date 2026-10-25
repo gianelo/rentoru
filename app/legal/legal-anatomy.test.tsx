@@ -28,5 +28,16 @@ describe("legal served article anatomy", () => {
       expect(notice).toBeLessThan(section);
       expect(html).toContain(evidence);
     });
+
+    // Founder, 2026-10-25: every legal page says it is a draft still being
+    // worked on while the software it describes is completed (phase 39).
+    it(`${title}: the draft notice says the text and the software are still in progress`, () => {
+      const html = renderToStaticMarkup(<Page />);
+
+      expect(html).toContain(
+        "Algunas de las funciones que describe todavía se están implementando",
+      );
+      expect(html).not.toContain("todavía no ha sido ratificado por el fundador");
+    });
   }
 });
