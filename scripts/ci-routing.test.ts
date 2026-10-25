@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
@@ -159,6 +160,28 @@ describe("CI branch routing", () => {
     expect(lighthouse?.run).toContain(
       "--collect.puppeteerScript=scripts/lighthouse-preview-auth.cjs",
     );
+  });
+
+  it("gates only PRs into main on the staging SHA validated by staging CI", () => {
+    const gate: Job & { permissions?: unknown } = workflow.jobs["release-gate"];
+    for (const [event_name, base_ref, runs] of [
+      ["pull_request", "main", true],
+      ["pull_request", "staging", false],
+      ["pull_request", "dev", false],
+      ["push", "", false],
+    ] as const) {
+      expect(runInNewContext(gate.if, { github: { event_name, base_ref } })).toBe(runs);
+    }
+    expect(gate.permissions).toEqual({ contents: "read", actions: "read" });
+    expect(gate.steps[0]).toEqual({ uses: "actions/checkout@v4", with: { "fetch-depth": 0 } });
+    const step = gate.steps.find((candidate) => candidate.run?.includes("release-gate.sh"));
+    expect(step?.run).toBe("bash .github/scripts/release-gate.sh");
+    expect(step?.env).toEqual({
+      GH_TOKEN: expression("github.token"),
+      PR_HEAD_REF: expression("github.head_ref"),
+      PR_HEAD_REPO: expression("github.event.pull_request.head.repo.full_name"),
+      PR_HEAD_SHA: expression("github.event.pull_request.head.sha"),
+    });
   });
 
   it("allows only main/dev/staging Git deployments and preserves every cron", () => {
