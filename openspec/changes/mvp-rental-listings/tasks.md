@@ -3084,8 +3084,18 @@ Documento canónico: `odd/tasks/fase-39-conservacion-datos.md`. Contiene el inve
 - [ ] 39.1 Decidir D1–D8 con el fundador.
 - [ ] 39.2 Migración: columnas que admitan nulos y claves foráneas `SET NULL` (alto riesgo, una sola migración en serie).
 - [ ] 39.3 Job de conservación: anonimizar los registros de contactos y los reportes, y vaciar el contacto de los avisos purgados.
-- [ ] 39.4 Cierre de cuenta y copia de datos a pedido, en 30 días.
+- [ ] 39.4 ~~Cierre de cuenta y copia de datos~~: pasan a la fase 40 (D4, D5).
 - [ ] 39.5 Textos de Privacidad, Tratamiento de datos y Términos alineados con lo implementado.
+
+## Fase 40 — Cerrar mi cuenta (autoservicio)
+
+Decisión del fundador del 2026-10-25 (fase 39, D4): el cierre de cuenta es una pantalla de autoservicio, igual que en Airbnb, y no un pedido por correo. Lo dijo así: «al eliminar cuanta recuerda que debemos cumplir con el anonimato y no perder esa data se elimina y se deja lo minimo algo asi es debemos investigar esto logicamente». Depende de la migración de la 39.2.
+
+- [ ] 40.1 Investigar qué es «lo mínimo» que sobrevive a un cierre y por qué. Hay que cubrir tres cosas: la métrica anonimizada, la evidencia de un aviso oculto en revisión y si hace falta impedir que una cuenta expulsada vuelva a registrarse con el mismo correo. Se compara con lo que Airbnb conserva «por seguridad o por ley» (`help/article/2273`) y se decide con el fundador.
+- [ ] 40.2 Lámina derivada del sistema para la confirmación del cierre (cerrar es irreversible).
+- [ ] 40.3 Caso de uso del cierre: retirar los avisos, borrar las fotos y el contacto, anonimizar los contactos revelados y los reportes, y borrar la cuenta, las sesiones y el contacto verificado. Lleva pruebas de integración contra una base de datos propia.
+- [ ] 40.4 La pantalla, con prueba sobre el HTML servido y aceptación del fundador en el navegador.
+- [ ] 40.5 Botón «Descargar mis datos» en JSON (fase 39, D5), al lado del cierre.
 
 ## Fase 41 — Un solo fondo de página
 

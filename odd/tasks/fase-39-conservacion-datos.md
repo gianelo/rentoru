@@ -46,7 +46,7 @@ Formato de cada una: **Hoy**, **Airbnb**, **Opciones (por qué sí / por qué no
 - (b) Borrar la fila a los N meses. Por qué sí: minimiza los datos. Por qué no: destruye la métrica, y `design.md` advierte que no existe otra copia.
 - (c) Anonimizar a los N meses, borrando el usuario y el mensaje y conservando el aviso, la ciudad y la fecha. Por qué sí: la métrica sigue intacta y el dato personal desaparece. Por qué no: exige una migración que permita columnas nulas y un job nuevo.
 - Recomendación: (c) a los **12 meses**, que cubre la decisión de continuar o pivotar a los 6 meses y deja margen para investigar una estafa.
-- Decidido: —
+- Decidido (fundador, 2026-10-25): **(c), anonimizar a los 12 meses por dentro**. La política publica **sólo el criterio, como Airbnb**: «mientras sea necesario para prevenir fraudes y medir el servicio». El job aplica los 12 meses de todos modos, y cambiarlos no obliga a tocar el texto.
 
 **D2 — Reportes.**
 - Hoy: se guardan para siempre el denunciante, el motivo y la explicación.
@@ -54,14 +54,14 @@ Formato de cada una: **Hoy**, **Airbnb**, **Opciones (por qué sí / por qué no
 - (b) Anonimizar a los 12 meses, borrando el denunciante y la explicación y conservando el motivo y la fecha. Por qué sí: sigue sirviendo como historial del aviso.
 - (c) Borrar al resolverse. Por qué no: se pierde el patrón de un publicador que reincide.
 - Recomendación: (b), con una excepción: nada se anonimiza mientras el aviso siga oculto por reportes y sin resolver.
-- Decidido: —
+- Decidido (fundador, 2026-10-25): **(b), anonimizar a los 12 meses**, con la excepción.
 
 **D3 — Contacto guardado en los avisos vencidos.**
 - Hoy: `listing.contact_value` se conserva para siempre, aunque nadie pueda verlo.
 - (a) Dejarlo. Por qué no: guarda un teléfono sin ningún uso.
 - (b) Borrarlo cuando se purgan las fotos, 15 días después del vencimiento. Por qué sí: el enlace de renovación vence ese mismo día (`listing-lifecycle/domain/renewal-token.ts:27`), así que el contacto ya no tiene uso. Falta confirmar en 39.3 si «Mis avisos» permite reactivar un aviso purgado. Por qué no: pide una migración porque hoy la columna es `NOT NULL`.
 - Recomendación: (b), dentro del mismo job de purga.
-- Decidido: —
+- Decidido (fundador, 2026-10-25): **(b)**. El contacto vive en la cuenta, como en Airbnb, y la copia del aviso se borra al purgar las fotos.
 
 **D4 — Cierre de cuenta.**
 - Hoy: no existe, y el `restrict` de D1 y D2 lo impide.
@@ -70,12 +70,16 @@ Formato de cada una: **Hoy**, **Airbnb**, **Opciones (por qué sí / por qué no
 - (b) Una pantalla de autoservicio. Por qué sí: es lo que hace Airbnb. Por qué no: hoy agrega pantalla, verificación y pruebas sin una demanda medida.
 - (c) Además, desactivar. Por qué no: un aviso ya vence solo a los 30 días, que es el efecto de desactivar.
 - Recomendación: (a) ahora y (b) como seguimiento. El cierre retira los avisos, borra el contacto y las fotos, anonimiza D1 y D2 y borra la cuenta, las sesiones y el contacto verificado.
-- Decidido: —
+- Decidido (fundador, 2026-10-25): **(b), pantalla de autoservicio, en una fase propia (fase 40)**. Palabras del fundador: «al eliminar cuanta recuerda que debemos cumplir con el anonimato y no perder esa data se elimina y se deja lo minimo algo asi es debemos investigar esto logicamente». Qué es «lo mínimo» que sobrevive al cierre, y por qué, se investiga en la fase 40 antes de construir.
+
+**D1 — Aclaración pedida por el fundador:** «pero si Airbnb conserva mienstras haga falta porque no podemos hacer algo asi?». Sí se puede, y es el modelo de Airbnb. Pero tiene dos capas. **Por fuera**, la política publica criterios («mientras sea necesario para prevenir fraudes y medir el servicio»). **Por dentro**, cada criterio necesita un plazo concreto que el sistema ejecute; si no, «mientras haga falta» es «para siempre» con otro nombre. Airbnb publica §10.1 sin números, pero los criterios los aplica un sistema interno. La pregunta pasa a ser: ¿la política muestra el plazo o sólo el criterio? En los dos casos el job lo aplica.
+
+**D3 — Aclaración pedida por el fundador:** «que hace aribnb en este caso?». En Airbnb el teléfono es un dato **de la cuenta**, no del anuncio (Política §3.1.1), y se conserva mientras la cuenta exista (`help/article/2267`). Un anuncio desactivado no guarda una copia propia. En Rentoru el contacto está **copiado** en cada aviso (`listing.contact_value`) y también vive en la cuenta (`user.contact_value`). Hacer lo mismo que Airbnb es que la copia del aviso desaparezca cuando el aviso ya no la usa, y que el dato siga en la cuenta mientras la cuenta exista.
 
 **D5 — Copia de los datos.**
 - Airbnb: archivo descargable.
 - Recomendación: a pedido por correo, en JSON, dentro de los 30 días. No se construye una pantalla.
-- Decidido: —
+- Decidido (fundador, 2026-10-25): **un botón de descarga, como en Airbnb, en la fase 40** junto al cierre de cuenta. Mientras no exista, la política ofrece la copia a pedido por correo dentro de los 30 días (D6).
 
 **D6 — Plazo de respuesta a los derechos.**
 - Decidido (fundador, 2026-10-24): **30 días**.
@@ -84,7 +88,7 @@ Formato de cada una: **Hoy**, **Airbnb**, **Opciones (por qué sí / por qué no
 - Hoy: quedan en el correo personal del fundador sin plazo.
 - (a) Borrarlos a mano a los 12 meses y decirlo. (b) No prometer plazo. Por qué no (b): el dato existe y la política tendría que callarlo.
 - Recomendación: (a).
-- Decidido: —
+- Decidido (fundador, 2026-10-25): **(b), «mientras sea necesario para responder»**. Riesgo registrado: ningún sistema lo aplica, porque los mensajes viven en el correo personal del fundador, así que se cumple sólo con su disciplina.
 
 **D8 — Respaldos y registros de los proveedores.**
 - Recomendación: declarar lo mismo que Airbnb §10.3: copias residuales por un tiempo limitado, según cada proveedor. Rentoru no puede prometer un plazo propio.
@@ -95,7 +99,7 @@ Formato de cada una: **Hoy**, **Airbnb**, **Opciones (por qué sí / por qué no
 - [ ] 39.1 Decidir D1–D8 con el fundador y registrar cada respuesta aquí y en `design.md` → Open Questions.
 - [ ] 39.2 Migración (una sola y en serie, AGENTS.md §6): `contact_reveal_event.tenant_user_id`, `listing_report.reporter_id` y `listing.contact_value` pasan a admitir nulos, y las claves foráneas a usuario pasan a `ON DELETE SET NULL`. Alto riesgo: verificador independiente.
 - [ ] 39.3 Job de conservación (cron en `vercel.json`, cerrado si falta `CRON_SECRET`) que anonimice D1 y D2 y vacíe D3 al purgar las fotos.
-- [ ] 39.4 Caso de uso para cerrar una cuenta (D4) y exportar sus datos (D5), con pruebas de integración contra una base de datos propia.
+- [ ] 39.4 ~~Cierre de cuenta y copia de datos~~: los dos pasan a la fase 40 por decisión del fundador (D4, D5). Esta tarea queda vacía a propósito.
 - [ ] 39.5 Privacidad y Tratamiento de datos con los plazos reales, Términos 10.3 y Privacidad §7–§8 alineados. Cierra la redacción de la 23.5, que todavía espera la ratificación.
 
 ## Log
