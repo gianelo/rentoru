@@ -5,6 +5,33 @@
   padding: 24px 16px 48px;
 }
 
+.doneMain {
+  display: grid;
+  gap: 24px;
+  min-inline-size: 0;
+}
+
+.share {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--bg);
+}
+
+.share h2 {
+  margin: 0;
+  font-size: var(--ficha-title-fs);
+  font-weight: var(--ficha-title-fw);
+}
+
+.share p {
+  margin: 0;
+  color: var(--soft);
+  font-size: var(--ficha-body-fs);
+  line-height: var(--ficha-body-lh);
+}
+
 .head {
   display: grid;
   justify-items: center;
@@ -167,5 +194,28 @@
 
   .textLink {
     align-self: auto;
+  }
+
+  .share {
+    justify-items: start;
+  }
+
+  .share p {
+    font-size: var(--ficha-body-fs-desktop);
+    line-height: var(--ficha-body-lh-desktop);
+  }
+}
+
+/* Escritorio: «Compártelo» en la columna lateral, arriba (lámina v2, G1). */
+@media (min-width: 1100px) {
+  .done {
+    grid-template-columns: minmax(0, 600px) minmax(0, 360px);
+    justify-content: center;
+    align-items: start;
+    column-gap: 48px;
+  }
+
+  .share {
+    padding: 24px;
   }
 }
