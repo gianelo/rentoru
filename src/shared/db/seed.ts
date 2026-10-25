@@ -454,6 +454,25 @@ export async function seed(database?: SeedDatabase): Promise<void> {
   await seedDemo(database);
 }
 
+/**
+ * **Demo rows never reach production by accident.** `seed()` inserts two
+ * invented publishers and ten fake listings; run with production's
+ * DATABASE_URL it would put them in the real catalogue. So the CLI runs the
+ * demo half only after a human names a non-production target on the command
+ * (`SEED_DEMO_TARGET=staging pnpm db:seed`) — an explicit assertion, like
+ * `PREVIEW_HAS_OWN_DATABASE`, never an inference from the connection string.
+ * Exact values only, so a typo refuses instead of passing.
+ */
+const DEMO_SEED_TARGETS = new Set(["local", "dev", "staging"]);
+
+export const DEMO_SEED_REFUSAL =
+  "seed: refused — demo rows need SEED_DEMO_TARGET=local|dev|staging on this command " +
+  "(read before .env). For a real environment use pnpm db:seed:taxonomy.";
+
+export function demoSeedRefusal(target: string | undefined): string | null {
+  return target !== undefined && DEMO_SEED_TARGETS.has(target) ? null : DEMO_SEED_REFUSAL;
+}
+
 // Runs only when invoked directly (`pnpm db:seed`), never on import — so
 // this module can also be imported by tests without a side-effecting
 // database call (e.g. `loadDotEnvWithoutOverriding`, exercised in
@@ -476,6 +495,15 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // matching vitest.integration.config.ts: a deploy supplies the real
   // connection string through the environment, and a local file must never
   // be able to redirect it.
+  //
+  // The demo target is read BEFORE `.env` on purpose: a stale value in a
+  // file that points at production must not be able to authorize demo rows.
+  const taxonomyOnly = process.argv.includes("--taxonomy-only");
+  const refusal = taxonomyOnly ? null : demoSeedRefusal(process.env.SEED_DEMO_TARGET);
+  if (refusal !== null) {
+    console.error(refusal);
+    process.exit(1);
+  }
   loadDotEnvWithoutOverriding(process.env);
 
   // `--taxonomy-only` (`pnpm db:seed:taxonomy`) siembra el territorio y nada
@@ -483,8 +511,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   // publicantes inventados y diez avisos de mentira. Misma lectura de
   // argumentos que `scripts/seed-demo.ts --purge`, que ya es la convención
   // acá y no necesita un parser.
-  const taxonomyOnly = process.argv.includes("--taxonomy-only");
-
   (taxonomyOnly ? seedTaxonomy() : seed())
     .then(() => {
       console.log(taxonomyOnly ? "seed: taxonomy complete" : "seed: complete");

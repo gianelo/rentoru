@@ -67,7 +67,7 @@ Everything above lives in a dashboard. This one lives in the database, and it
 is the same kind of item for the same reason: nothing in the repository put it
 there.
 
-`city` and `zone` are populated only by `pnpm db:seed`, run by hand against
+`city` and `zone` are populated only by `pnpm db:seed:taxonomy`, run by hand against
 the target environment. No deploy step ran it and no CI job ran it, so a fresh
 environment comes up with whatever rows somebody typed in early on. On
 **2026-09-05** production held 10 provisional zones under a city called
@@ -79,10 +79,12 @@ because nothing asserted a real environment's contents.
 So: after pointing an environment at a database, run
 
 ```
-pnpm db:seed
+pnpm db:seed:taxonomy
 ```
 
-against it. It is idempotent — ids are derived from the full territorial path,
+against it. Plain `pnpm db:seed` also inserts two invented publishers and ten
+fake listings, so it refuses unless the command names a non-production target
+(`SEED_DEMO_TARGET=local|dev|staging`, read before `.env`). It is idempotent — ids are derived from the full territorial path,
 so a second run changes nothing — and it deletes nothing.
 
 **The deploy gate now verifies it.** `scripts/deploy-migrate.mjs` runs
