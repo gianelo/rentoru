@@ -1,11 +1,23 @@
 #!/usr/bin/env bash
 # `--with-deps` downloads apt packages, and a slow mirror has held this step for
 # 7-14 minutes when it normally takes 11-28 s. Each attempt is bounded and
-# retried once; two failed attempts still fail the step.
+# retried once; two failed attempts still fail the step. Playwright's `sudo apt-get`
+# runs in its own session, beyond the watchdog, so it is stopped before the retry.
 set -euo pipefail
 limit=${BROWSER_INSTALL_TIMEOUT_SECONDS:-180}
 marker=$(mktemp)
 trap 'rm -f "$marker"' EXIT
+
+# Signals apt and dpkg, then waits up to 15 s for all of them to exit.
+stop_apt() {
+  local name _
+  for name in apt-get apt dpkg; do sudo -n pkill "-$1" -x "$name" || true; done
+  for _ in {1..15}; do
+    pgrep -x apt-get >/dev/null || pgrep -x apt >/dev/null || pgrep -x dpkg >/dev/null || return 0
+    sleep 1
+  done
+  return 1
+}
 
 for attempt in 1 2; do
   : > "$marker"
@@ -42,6 +54,10 @@ for attempt in 1 2; do
   # An interrupted apt can leave dpkg half-configured; repair it only when sudo
   # cannot prompt, and never let the repair decide the outcome.
   if ((attempt < 2)) && command -v sudo >/dev/null && sudo -n true 2>/dev/null; then
+    if ! stop_apt TERM && ! stop_apt KILL; then
+      echo "::error::apt/dpkg still running after cleanup; browser install not retried"
+      exit 1
+    fi
     sudo -n dpkg --configure -a || true
   fi
 done
