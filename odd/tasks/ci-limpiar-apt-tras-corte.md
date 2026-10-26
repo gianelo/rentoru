@@ -33,3 +33,8 @@ Worktree `rentoru-ci-apt-limpieza`, branch `fix/limpiar-apt-tras-corte`, base or
   hash: no KILL escalation (2 failed), retry although apt survives (1 failed). bash -n, typecheck, Biome, diff
   check ok; parent read the diff, spot-checked 17/17, no orphan processes. 105 changed lines. Unproven until a
   real stall: real pkill name/session reach, 15+15 s sufficiency, dpkg repair after KILL.
+- L6 — Independent verifier mvpmj4xo-9-j90k: S1–S3 PASS with own fakes (7 cases: TERM enough, KILL needed,
+  survives both, no sudo, first-try success, hang→ok, double failure); success path, warnings and final error
+  byte-identical to base; pkill -x matches across sessions, so it reaches the staging orphan (reasoned). Minor:
+  a pgrep error is treated as "stopped" (fail-open to the old retry). Native review review-7e7ea3d866af198d
+  (resilience+reliability) approved, authority burned; advisories: pgrep names unproven, cleanup prints nothing.
