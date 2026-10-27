@@ -155,6 +155,29 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
+  # Production must be exactly what staging validated. A PR into main passes
+  # only when it promotes the current staging HEAD, whose staging push CI
+  # succeeded, with an identical merge tree. It blocks merge only once
+  # `release-gate` is a required status check on main (repository setting).
+  release-gate:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      # Full history: the staging commit's tree must be readable locally.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify the staging SHA validated by staging CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD_REF: ${{ github.head_ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/release-gate.sh
+
   # Layout-measurement harness (tasks.md 1b.10-1b.12, 1b.14). Runs on every
   # push to dev/staging alongside e2e/budget: it needs a Next.js build and
   # a real browser, but no deployed preview (its webServer runs `next dev`).
@@ -184,7 +207,7 @@ jobs:
       # --with-deps on every path: the apt libraries it installs do not live
       # in that cache, so a hit without them leaves a browser that cannot
       # start.
-      - run: pnpm exec playwright install --with-deps chromium
+      - run: bash .github/scripts/install-playwright-browser.sh
       - run: node --test scripts/measure-trace.test.cjs
       - id: measure
         run: pnpm test:measure
@@ -367,9 +390,10 @@ jobs:
       # `--with-deps` runs on every path, cache hit or not: the system
       # libraries it installs through apt do NOT live in ~/.cache/ms-playwright,
       # so skipping it on a hit would leave a cached browser that cannot start.
-      # The cache saves the ~150 MB download, which is the slow half.
+      # The cache saves the ~150 MB download; the apt half can still stall on a
+      # slow mirror, so the script cuts each attempt at 180 s and retries once.
       - name: Install the browser
-        run: pnpm exec playwright install --with-deps chromium
+        run: bash .github/scripts/install-playwright-browser.sh
 
       # Las mismas migraciones generadas que la aplicacion despacha, para que la
       # suite corra contra el esquema real y no contra una copia a mano.

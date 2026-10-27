@@ -47,10 +47,9 @@ export default function DatosPage() {
 
       <h2 className={styles.heading}>Encargados del tratamiento</h2>
       <p className={styles.text}>
-        <strong>Google</strong> procesa tu identidad sólo para verificarla al entrar.{" "}
-        <strong>Resend</strong> procesa tu correo sólo para enviarte mensajes del sitio.{" "}
-        <strong>Neon</strong> aloja la base de datos y <strong>Cloudflare</strong> aloja las fotos;
-        ninguno de los cuatro usa tus datos para nada propio.
+        <strong>Google</strong> procesa tu identidad sólo para verificarla al entrar. Nuestros
+        proveedores de envío de correo, alojamiento, base de datos y almacenamiento de fotos
+        procesan tus datos sólo para que el sitio funcione; ninguno los usa para nada propio.
       </p>
 
       <h2 className={styles.heading}>Lo que no hacemos, y a quién escribirle</h2>

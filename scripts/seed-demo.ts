@@ -372,7 +372,10 @@ async function main(): Promise<void> {
   const zones = await sql`select id, name, city_id from "zone"`;
   const [publisher] = await sql`
     select id from "user" where email = 'seed-owner@rentas.invalid' limit 1`;
-  if (!publisher) throw new Error("seed-demo: falta el publicante de ejemplo. Corré pnpm db:seed.");
+  if (!publisher)
+    throw new Error(
+      "seed-demo: falta el publicante de ejemplo. Corré SEED_DEMO_TARGET=<local|dev|staging> pnpm db:seed.",
+    );
 
   const cityByName = new Map(cities.map((c) => [c.name as string, c.id as string]));
   const zoneByKey = new Map(zones.map((z) => [`${z.city_id}/${z.name}`, z.id as string]));
