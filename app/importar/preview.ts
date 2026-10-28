@@ -56,6 +56,8 @@ export interface RechazadoResultado {
   readonly estado: "rechazado";
   readonly motivo: string;
   readonly mensaje: string;
+  /** Sólo con `motivo: "contacto-invalido"`: qué control del contacto corregir. */
+  readonly campo?: "contactMethod" | "contactValue";
 }
 
 export type ResultadoImportacion = VistaPreviaResultado | CreadoResultado | RechazadoResultado;

@@ -6,7 +6,11 @@ import { authorizeBulkImport } from "./authorize-bulk-import";
 import type { BulkImportAccountPort } from "./ports/bulk-import-account.port";
 import type { ImportAccountContactPort } from "./ports/import-account-contact.port";
 import type { ImportFileSourcePort } from "./ports/import-file-source.port";
-import { type ImportValidationOutcome, runImportValidation } from "./run-import-validation";
+import {
+  type ImportValidationOutcome,
+  runImportValidation,
+  type SubmittedImportContact,
+} from "./run-import-validation";
 
 export interface ValidateImportDependencies {
   readonly sessionPort: SessionPort;
@@ -41,7 +45,8 @@ export interface ValidateImportDependencies {
 export async function validateImport(
   source: ImportFileSourcePort,
   dependencies: ValidateImportDependencies,
+  submitted?: SubmittedImportContact,
 ): Promise<ImportValidationOutcome> {
   const { userId } = await authorizeBulkImport(dependencies);
-  return runImportValidation(userId, source, dependencies);
+  return runImportValidation(userId, source, dependencies, submitted);
 }

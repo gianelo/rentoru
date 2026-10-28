@@ -19,8 +19,8 @@ Base `c4b0266`. Una tarea por PR ≤400 líneas a `dev`; aceptación del fundado
 
 ## Tareas
 
-- [ ] **45.1 Decidir de dónde sale el contacto** (G1): una forma de configurar el contacto predeterminado en la cuenta, o columnas de contacto en el CSV. Validarlo contra los mismos formatos de contacto de publicar (36.14).
-- [ ] **45.2 Implementar lo decidido**, con prueba de integración que deje de lanzar `cuenta-sin-contacto` cuando el contacto existe, y que siga rechazando cuando no.
+- [x] **45.1 Decidir de dónde sale el contacto** (G1) — decidido 2026-10-27 (L3): campo en la pantalla de importar: una forma de configurar el contacto predeterminado en la cuenta, o columnas de contacto en el CSV. Validarlo contra los mismos formatos de contacto de publicar (36.14).
+- [x] **45.2 Implementar lo decidido** — evidencia en tasks.md 45.2 (L4), con prueba de integración que deje de lanzar `cuenta-sin-contacto` cuando el contacto existe, y que siga rechazando cuando no.
 - [ ] **45.3 Plantilla = campos de publicar.** Prueba que compara la plantilla con los campos que exige publicar y documenta cada diferencia intencional (contacto, tipo de publicador, fotos).
 - [ ] **45.4 Completar la prueba manual pendiente**: formato explicado, error por fila y motivo, vista previa antes de crear y avisos importados visibles en Mis avisos (fase 43).
 - [ ] **45.5 Aceptación integrada** en los tres anchos (S1: revisar tablet y escritorio).
@@ -29,9 +29,11 @@ Base `c4b0266`. Una tarea por PR ≤400 líneas a `dev`; aceptación del fundado
 
 | Gate | Decisión del fundador | Bloquea |
 | --- | --- | --- |
-| G1 | Contacto en la cuenta o en el CSV | 45.2 en adelante |
+| G1 | Contacto en la cuenta o en el CSV | Resuelto (L3): campo en la pantalla de importar |
 
 ## Log
 
 - L1 (2026-10-28): issue [#290](https://github.com/gianelo/rentoru/issues/290), comentario de importar citado en S1–S4.
 - L2: numeración del fundador: «42 entrada, 43 Mis avisos, 44 Editar Avisos y 45 Importar Cartera».
+- L3 (2026-10-27): G1 decidido por el fundador: «1. Campo en la pantalla de importar». El contacto se pide antes de subir el archivo, se valida con `publicationContactSchema` (36.14), la vista previa no escribe nada y «crear» lo guarda como predeterminado en `user.contact_*`; la próxima vez aparece prellenado. Sin migración ni pantalla de cuenta. Worktree `rentoru-phase45-task-45-2`, rama `feat/importar-contacto-predeterminado`, base `7ca36aa`.
+- L4 (2026-10-28): 45.2 aceptada por el fundador en local («si lo acepto»). Unidad A `1d679c8` (caso de uso, adaptador, integración); unidad B `0b86f07` + `d365163` (ruta, pantalla, foco al resultado tras «le doy a revisar y no hace nada… no mueve la pantalla a los errores»). Unidad 3854/3854; integración 30/30 en base desechable; 13 mutaciones atrapadas. Hallazgos: (1) «crear» da 500 en local porque `neon-http-proxy` no traduce el WebSocket de `getTransactionalDatabase`; se prueba en el preview. (2) Ante un 500 la pantalla dice «Revisa la conexión», que culpa a la red: mejora aparte. (3) El contacto se guarda antes de crear los avisos; si la creación falla queda guardado (dato válido y confirmado). (4) El archivo del fundador traía ciudades «Cabimas», «Caracas», «Santa Rita» que la validación rechaza; la plantilla servida hoy trae «Distrito Capital»: revisar en 45.3. (5) «Fila 2» se queda con la numeración de la hoja (fundador: «dejemoslo así»).

@@ -13,9 +13,15 @@ import type { ZoneCataloguePort } from "../../listing-publication/application/po
 import { BulkImportDisabledError } from "./authorize-bulk-import";
 import { confirmImport } from "./confirm-import";
 import type { BulkImportAccountPort } from "./ports/bulk-import-account.port";
-import type { ImportAccountContactPort } from "./ports/import-account-contact.port";
+import type {
+  ImportAccountContactPort,
+  ImportAccountContactWriterPort,
+} from "./ports/import-account-contact.port";
 import type { ImportFileSourcePort } from "./ports/import-file-source.port";
-import { ImportMissingAccountContactError } from "./run-import-validation";
+import {
+  ImportInvalidContactError,
+  ImportMissingAccountContactError,
+} from "./run-import-validation";
 
 /**
  * broker-bulk-import spec, "Whole-File Validation Before Any Write" +
@@ -46,11 +52,12 @@ function accountsReturning(account: { bulkImportEnabled: boolean } | null): Bulk
   return { findAccount: vi.fn().mockResolvedValue(account) };
 }
 
-function fakeContact(): ImportAccountContactPort {
+function fakeContact(): ImportAccountContactPort & ImportAccountContactWriterPort {
   return {
     findAccountContact: vi
       .fn()
       .mockResolvedValue({ contactMethod: "whatsapp", contactValue: "04121234567" }),
+    saveAccountContact: vi.fn().mockResolvedValue(undefined),
   };
 }
 
@@ -138,7 +145,7 @@ describe("confirmImport", () => {
       confirmImport(sourceFromText(`${REQUIRED_HEADER}\n${validRowLine("REF-1")}`), {
         sessionPort: sessionPortReturning(SESSION),
         accounts: accountsReturning({ bulkImportEnabled: true }),
-        contact: { findAccountContact: vi.fn().mockResolvedValue(null) },
+        contact: { ...fakeContact(), findAccountContact: vi.fn().mockResolvedValue(null) },
         zones: fakeZones(),
         catalogue: fakeCatalogue(),
         listings,
@@ -278,5 +285,62 @@ describe("confirmImport", () => {
     ]);
     // Y la referencia duplicada es lo que 14g resalta en su propia celda.
     expect(result.errors[0]?.offendingCells).toEqual(["externalReference"]);
+  });
+
+  // tasks.md 45.2 (G1): the contact typed on the import screen becomes the
+  // account default when the broker confirms — and only then.
+  describe("with a contact submitted from the import screen", () => {
+    const EMAIL = { contactMethod: "email", contactValue: "cartera@inmobiliaria.com" };
+
+    function confirmWith(submitted: typeof EMAIL | undefined, bulkImportEnabled = true) {
+      const contact = fakeContact();
+      const save = vi.fn().mockResolvedValue({ id: "new-id" });
+      const run = confirmImport(
+        sourceFromText(`${REQUIRED_HEADER}\n${validRowLine("REF-1")}`),
+        {
+          sessionPort: sessionPortReturning(SESSION),
+          accounts: accountsReturning({ bulkImportEnabled }),
+          contact,
+          zones: fakeZones(),
+          catalogue: fakeCatalogue(),
+          listings: { save },
+        },
+        submitted,
+      );
+      return { run, contact, save };
+    }
+
+    it("saves it as the account default and gives it to every draft", async () => {
+      const { run, contact, save } = confirmWith(EMAIL);
+      await run;
+
+      expect(contact.saveAccountContact).toHaveBeenCalledExactlyOnceWith("broker-1", EMAIL);
+      expect(save.mock.calls[0]?.[0]).toMatchObject(EMAIL);
+    });
+
+    it("leaves the account default untouched when nothing was submitted", async () => {
+      const { run, contact } = confirmWith(undefined);
+      await run;
+
+      expect(contact.saveAccountContact).not.toHaveBeenCalled();
+    });
+
+    it("writes nothing at all when the submitted contact is invalid", async () => {
+      const { run, contact, save } = confirmWith({
+        contactMethod: "whatsapp",
+        contactValue: "hola",
+      });
+
+      await expect(run).rejects.toBeInstanceOf(ImportInvalidContactError);
+      expect(contact.saveAccountContact).not.toHaveBeenCalled();
+      expect(save).not.toHaveBeenCalled();
+    });
+
+    it("never saves a contact for an account the import gate refuses", async () => {
+      const { run, contact } = confirmWith(EMAIL, false);
+
+      await expect(run).rejects.toBeInstanceOf(BulkImportDisabledError);
+      expect(contact.saveAccountContact).not.toHaveBeenCalled();
+    });
   });
 });

@@ -6,6 +6,7 @@ import type { SearchPillProps } from "../../components/molecules/SearchPill";
 import { Nav } from "../../components/organisms/Nav";
 import { isBulkImportAuthorized } from "../../src/modules/broker-bulk-import/domain/bulk-import-authorization";
 import { DrizzleBulkImportAccounts } from "../../src/modules/broker-bulk-import/infrastructure/drizzle-bulk-import-account";
+import { DrizzleImportAccountContact } from "../../src/modules/broker-bulk-import/infrastructure/drizzle-import-account-contact";
 import {
   resolveNavAccount,
   resolveNavPublish,
@@ -72,6 +73,9 @@ export default async function ImportarPage() {
   );
   const publish = resolveNavPublish(account);
 
+  // 45.2: el contacto que la cuenta ya guardó sale prellenado.
+  const contact = await new DrizzleImportAccountContact(db).findAccountContact(session.userId);
+
   const form = homeSearchForm();
   const pill: SearchPillProps = {
     action: form.action,
@@ -98,7 +102,7 @@ export default async function ImportarPage() {
             ← Mis avisos
           </AppLink>
           <h1 className={styles.titulo}>Importar cartera</h1>
-          <ImportarCartera />
+          <ImportarCartera contact={contact} />
         </Container>
       </main>
     </>
