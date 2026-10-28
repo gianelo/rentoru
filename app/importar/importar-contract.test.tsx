@@ -20,7 +20,7 @@ import { VistaPrevia } from "./VistaPrevia";
  * dice por qué — nunca un botón que se puede tocar y no hace nada.
  */
 describe("Importar · antes de elegir archivo (14e)", () => {
-  const html = renderToStaticMarkup(<ImportarCartera />);
+  const html = renderToStaticMarkup(<ImportarCartera contact={null} />);
 
   it("F35.6: sirve instrucciones completas en tuteo", () => {
     expect(html).toContain("Descarga la plantilla");
@@ -219,5 +219,33 @@ describe("Importar · vista previa (14g)", () => {
     );
     expect(html).not.toContain("Crear las");
     expect(html).toContain("Corregir el archivo");
+  });
+});
+
+// tasks.md 45.2 (G1): el contacto se pide en la pantalla, prellenado con el
+// que la cuenta ya guardó.
+describe("Importar · contacto de los avisos", () => {
+  it("pide cómo te contactan, con las tres formas de publicar", () => {
+    const html = renderToStaticMarkup(<ImportarCartera contact={null} />);
+
+    expect(html).toContain("¿Cómo te contactan?");
+    for (const value of ["whatsapp", "telefono", "email"]) {
+      expect(html).toMatch(new RegExp(`<input[^>]*name="contactMethod"[^>]*value="${value}"`));
+    }
+    expect(html).toMatch(/<input[^>]*name="contactValue"[^>]*value=""/);
+  });
+
+  it("sale prellenado con el contacto que la cuenta ya tiene", () => {
+    const html = renderToStaticMarkup(
+      <ImportarCartera
+        contact={{ contactMethod: "email", contactValue: "cartera@inmobiliaria.com" }}
+      />,
+    );
+
+    const radio = (value: string) =>
+      html.match(new RegExp(`<input[^>]*value="${value}"[^>]*>`))?.[0];
+    expect(radio("email")).toContain('checked=""');
+    expect(radio("whatsapp")).not.toContain("checked");
+    expect(html).toMatch(/<input[^>]*name="contactValue"[^>]*value="cartera@inmobiliaria.com"/);
   });
 });

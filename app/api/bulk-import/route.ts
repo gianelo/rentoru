@@ -9,7 +9,11 @@ import {
   ImportFileTooLargeError,
   ImportTooManyRowsError,
 } from "../../../src/modules/broker-bulk-import/application/read-bounded-import-file";
-import { ImportMissingAccountContactError } from "../../../src/modules/broker-bulk-import/application/run-import-validation";
+import {
+  ImportInvalidContactError,
+  ImportMissingAccountContactError,
+  type SubmittedImportContact,
+} from "../../../src/modules/broker-bulk-import/application/run-import-validation";
 import { validateImport } from "../../../src/modules/broker-bulk-import/application/validate-import";
 import type { ImportRowCellName } from "../../../src/modules/broker-bulk-import/domain/import-row-cells";
 import type { ImportRowError } from "../../../src/modules/broker-bulk-import/domain/import-row-validation";
@@ -18,6 +22,8 @@ import { DrizzleImportAccountContact } from "../../../src/modules/broker-bulk-im
 import { UnauthenticatedError } from "../../../src/modules/identity/application/require-authenticated-session";
 import { nextAuthSessionPort } from "../../../src/modules/identity/infrastructure/session-port";
 import { DrizzleCatalogue } from "../../../src/modules/listing-catalogue/infrastructure/drizzle-catalogue";
+import { contactFeedback } from "../../../src/modules/listing-publication/domain/contact-feedback";
+import type { ContactMethod } from "../../../src/modules/listing-publication/domain/publishable-listing";
 import {
   DrizzleListingRepository,
   DrizzleZoneCatalogue,
@@ -26,6 +32,7 @@ import { db } from "../../../src/shared/db/client";
 import { getTransactionalDatabase } from "../../../src/shared/db/transactional-client";
 import { importRowReasonText } from "../../importar/import-copy";
 import type { FilaConProblema, NombreDeCelda } from "../../importar/preview";
+import { PUBLISH_VIOLATION_COPY } from "../../publicar/violation-copy";
 
 /**
  * broker-bulk-import spec, Requirement: Operator-Granted Access (tasks.md
@@ -109,6 +116,21 @@ const RECHAZOS: readonly {
 function respondToError(error: unknown): Response {
   if (error instanceof UnauthenticatedError) return json({ error: "unauthorized" }, 401);
   if (error instanceof BulkImportDisabledError) return json({ error: "bulk_import_disabled" }, 403);
+  // tasks.md 45.2: el contacto se corrige en su campo, con el mismo texto que
+  // publicar muestra para la misma violación (36.14), no como archivo malo.
+  if (error instanceof ImportInvalidContactError) {
+    const { contactMethod, contactValue } = error.submitted;
+    const contact = contactFeedback(contactMethod as ContactMethod | undefined, contactValue ?? "");
+    return json(
+      {
+        estado: "rechazado",
+        motivo: "contacto-invalido",
+        campo: error.field,
+        mensaje: PUBLISH_VIOLATION_COPY[error.violation].message({ contact }),
+      },
+      422,
+    );
+  }
 
   const rechazo = RECHAZOS.find((candidate) => candidate.is(error));
   if (rechazo) {
@@ -179,10 +201,18 @@ export async function POST(request: Request): Promise<Response> {
   }
 
   const source = sourceFrom(archivo);
+  const texto = (name: string) => {
+    const value = form.get(name);
+    return typeof value === "string" ? value : undefined;
+  };
+  const contacto: SubmittedImportContact = {
+    contactMethod: texto("contactMethod"),
+    contactValue: texto("contactValue"),
+  };
 
   try {
     if (accion === "revisar") {
-      const preview = await validateImport(source, dependencies());
+      const preview = await validateImport(source, dependencies(), contacto);
       return json(
         {
           estado: "vista-previa",
@@ -194,7 +224,7 @@ export async function POST(request: Request): Promise<Response> {
       );
     }
 
-    const result = await confirmImport(source, dependencies());
+    const result = await confirmImport(source, dependencies(), contacto);
     return json(
       {
         estado: "creado",

@@ -8,6 +8,9 @@ import {
   MAX_IMPORT_ROW_COUNT,
 } from "../../src/modules/broker-bulk-import/domain/csv-import-bounds";
 import { REQUIRED_IMPORT_COLUMNS } from "../../src/modules/broker-bulk-import/domain/csv-import-columns";
+import type { AccountDefaultContact } from "../../src/modules/broker-bulk-import/domain/import-account-contact";
+import { FieldError } from "../publicar/FieldError";
+import publicar from "../publicar/publish-steps.module.css";
 import styles from "./importar.module.css";
 import type { ResultadoImportacion, VistaPreviaResultado } from "./preview";
 import { VistaPrevia } from "./VistaPrevia";
@@ -47,10 +50,27 @@ import { VistaPrevia } from "./VistaPrevia";
 
 const MAX_MB = Math.round(MAX_IMPORT_FILE_SIZE_BYTES / (1024 * 1024));
 
-async function enviar(archivo: File, accion: "revisar" | "crear"): Promise<ResultadoImportacion> {
+const FORMAS_DE_CONTACTO = [
+  ["whatsapp", "WhatsApp"],
+  ["telefono", "Llamada"],
+  ["email", "Correo"],
+] as const;
+
+interface Contacto {
+  readonly contactMethod: string;
+  readonly contactValue: string;
+}
+
+async function enviar(
+  archivo: File,
+  accion: "revisar" | "crear",
+  contacto: Contacto,
+): Promise<ResultadoImportacion> {
   const cuerpo = new FormData();
   cuerpo.set("archivo", archivo);
   cuerpo.set("accion", accion);
+  cuerpo.set("contactMethod", contacto.contactMethod);
+  cuerpo.set("contactValue", contacto.contactValue);
 
   const respuesta = await fetch("/api/bulk-import", { method: "POST", body: cuerpo });
   const datos = (await respuesta.json()) as ResultadoImportacion & { error?: string };
@@ -69,8 +89,13 @@ async function enviar(archivo: File, accion: "revisar" | "crear"): Promise<Resul
   return datos;
 }
 
-export function ImportarCartera() {
+/** `contact` es el predeterminado que la cuenta ya guardó (tasks.md 45.2), o `null`. */
+export function ImportarCartera({ contact }: { contact: AccountDefaultContact | null }) {
   const campoId = useId();
+  const [contacto, setContacto] = useState<Contacto>({
+    contactMethod: contact?.contactMethod ?? "",
+    contactValue: contact?.contactValue ?? "",
+  });
   const entrada = useRef<HTMLInputElement>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [resultado, setResultado] = useState<ResultadoImportacion | null>(null);
@@ -80,7 +105,7 @@ export function ImportarCartera() {
     if (!archivo) return;
     setEnviando(true);
     try {
-      setResultado(await enviar(archivo, accion));
+      setResultado(await enviar(archivo, accion, contacto));
     } catch {
       setResultado({
         estado: "rechazado",
@@ -99,6 +124,12 @@ export function ImportarCartera() {
   }
 
   const previa = resultado?.estado === "vista-previa" ? (resultado as VistaPreviaResultado) : null;
+  const errorDeContacto =
+    resultado?.estado === "rechazado" && resultado.motivo === "contacto-invalido"
+      ? resultado
+      : null;
+  const errorEn = (campo: keyof Contacto) =>
+    errorDeContacto?.campo === campo ? errorDeContacto.mensaje : undefined;
 
   return (
     <div className={styles.flujo}>
@@ -119,6 +150,55 @@ export function ImportarCartera() {
       <section className={styles.paso}>
         <p className={styles.pasoNumero}>Paso 2</p>
         <h2 className={styles.tituloSeccion}>Sube tu archivo</h2>
+
+        <fieldset
+          className={publicar.choices}
+          aria-invalid={errorEn("contactMethod") ? true : undefined}
+          aria-describedby={errorEn("contactMethod") ? "import-contact-method-error" : undefined}
+        >
+          <legend className={publicar.legend}>¿Cómo te contactan?</legend>
+          <FieldError id="import-contact-method-error" message={errorEn("contactMethod")} />
+          {FORMAS_DE_CONTACTO.map(([value, label]) => (
+            <label key={value} className={publicar.choice}>
+              <input
+                className={publicar.choiceInput}
+                type="radio"
+                name="contactMethod"
+                value={value}
+                checked={contacto.contactMethod === value}
+                onChange={() => setContacto({ ...contacto, contactMethod: value })}
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </fieldset>
+
+        <div>
+          <label className={publicar.label} htmlFor="contactValue">
+            Tu dato de contacto
+          </label>
+          <input
+            id="contactValue"
+            name="contactValue"
+            type="text"
+            className={`${publicar.control} ${errorEn("contactValue") ? publicar.controlInvalid : ""}`}
+            value={contacto.contactValue}
+            onChange={(evento) =>
+              setContacto({ ...contacto, contactValue: evento.currentTarget.value })
+            }
+            aria-invalid={errorEn("contactValue") ? true : undefined}
+            aria-describedby={
+              errorEn("contactValue")
+                ? "import-contact-error import-contact-help"
+                : "import-contact-help"
+            }
+          />
+          <FieldError id="import-contact-error" message={errorEn("contactValue")} />
+          <p className={publicar.help} id="import-contact-help">
+            Lo llevan todos los avisos del archivo y queda guardado en tu cuenta para la próxima
+            vez.
+          </p>
+        </div>
 
         <label className={styles.etiquetaArchivo} htmlFor={campoId}>
           Elegir archivo
@@ -183,7 +263,7 @@ export function ImportarCartera() {
         />
       ) : null}
 
-      {resultado?.estado === "rechazado" ? (
+      {resultado?.estado === "rechazado" && !errorDeContacto ? (
         <section className={styles.rechazo} role="alert">
           <h2 className={styles.tituloSeccion}>No pudimos usar ese archivo</h2>
           {/* El mensaje del dominio, entero: es el que dice QUÉ HACER —"volvé
