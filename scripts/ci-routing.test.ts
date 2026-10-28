@@ -111,7 +111,7 @@ describe("CI branch routing", () => {
     });
     const leg = (name: string) =>
       steps.filter((step) => step.if === `matrix.leg == '${name}'`).map((step) => step.name);
-    expect(leg("publication")).toEqual(["36.3: publication entry (local production build)"]);
+    expect(leg("publication")).toEqual(["Publication entry (local production build)"]);
     expect(leg("reads")).toEqual([
       "E2E + crawlability",
       "30.2–30.4 served listing and route diagnostics (local production build)",
