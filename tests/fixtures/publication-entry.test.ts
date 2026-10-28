@@ -119,6 +119,29 @@ describe("hot entry diagnostics", () => {
     collector.dispose();
   });
 
+  it("keeps publication rows after the general budget is spent, within their own bound", () => {
+    const { page, collector, request } = fixture();
+    for (let i = 0; i < 140; i++) page.emit("request", request("http://localhost:3001/"));
+    const destination = request("http://localhost:3001/publicar/paso/tipo");
+    page.emit("request", destination);
+    page.emit("response", { request: () => destination, status: () => 200 });
+    page.emit("requestfinished", destination);
+    page.emit("framenavigated", {
+      parentFrame: () => null,
+      url: () => "http://localhost:3001/publicar/paso/tipo",
+    });
+    const kept = collector
+      .report()
+      .rows.filter((row) => row.pathname === "/publicar/paso/tipo")
+      .map((row) => row.kind);
+    expect(kept).toEqual(["requeststart", "responseheaders", "requestfinished", "mainframepath"]);
+    expect(collector.report().dropped).toBe(12);
+    for (let i = 0; i < 140; i++) page.emit("request", request("http://localhost:3001/publicar"));
+    expect(collector.report().rows).toHaveLength(256);
+    expect(collector.report().dropped).toBe(28);
+    collector.dispose();
+  });
+
   it("preserves error identity after snapshot failure and removes only its listeners", async () => {
     const { page, collector, request, emit } = fixture();
     const unrelated = vi.fn();

@@ -1,0 +1,35 @@
+name: Release gate
+
+# Production must be exactly what staging validated. A PR into main passes
+# only when it promotes the current staging HEAD, whose staging push CI
+# succeeded, with an identical merge tree. `release-gate` is a required status
+# check on main (repository setting).
+#
+# Its own workflow on purpose: as a skipped job in ci.yml it still published a
+# `release-gate` check run on every staging push, on the very SHA a PR into
+# main promotes, and GitHub counts a skipped required check as passing.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      # Full history: the staging commit's tree must be readable locally.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Verify the staging SHA validated by staging CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_HEAD_REF: ${{ github.head_ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash .github/scripts/release-gate.sh

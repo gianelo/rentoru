@@ -17,7 +17,8 @@ const { jobs, concurrency } = yaml.safeLoad(readFileSync(".github/workflows/ci.y
 };
 const general = jobs.e2e.steps.find((step) => step.name === "E2E + crawlability") as Step;
 const profileExpression = `\${{ github.ref == 'refs/heads/dev' && vars.CI_DEV_PROFILE == 'critical' && 'critical' || 'full' }}`;
-const exclusions = "29\\.2:|30\\.2:|30\\.3|30\\.4b2:|30\\.5b2c:|30\\.6c:|30\\.7:|36\\.3:";
+const exclusions =
+  "29\\.2:|30\\.2:|30\\.3|30\\.4b2:|30\\.5b2c:|30\\.6c:|30\\.7:|publication entry:";
 const fullCommands = ["chromium", "crawlability"].map(
   (project) => `pnpm exec playwright test --project=${project} --grep-invert=${exclusions}`,
 );
