@@ -824,3 +824,7 @@ Plan y gates: `odd/tasks/fase-38-correos.md`.
 ### Fondo de página — fase 41
 
 El sistema define roles para paneles (`--surface`, `--tint`, `--bg` dentro de bloques) pero ninguno para la página. El resultado es que cada pantalla con `min-block-size: 100dvh` pinta su propio fondo, y el mismo flujo de publicar pasa de blanco a blanco azulado en su última pantalla. La decisión: **la página no pinta su fondo; lo pone un solo rol del sistema en `base.css`**, igual en los dos temas, y los paneles conservan sus roles. Una prueba sobre las hojas de estilo evita que una pantalla nueva vuelva a pintarlo, salvo las excepciones que apruebe el fundador. Plan y gates: `odd/tasks/fase-41-fondos.md`.
+
+### Prueba manual 5/6 (#290) — fases 42 a 45
+
+La prueba manual de entrar, Mis avisos, editar e importar se reparte en cuatro fases por pantalla: 42 Entrar, 43 Mis avisos, 44 Editar un aviso y 45 Importar cartera. Tres hallazgos son de datos y se tratan como tales, no como diseño: el enlace mágico que llega tres veces (sin límite por buzón en el servidor), la edición que descarta todo lo escrito ante un rechazo, y quitar una foto al instante, borrándola de R2 antes de guardar. La importación quedó trabada porque exige un contacto de cuenta que ninguna pantalla deja configurar; decidir de dónde sale ese contacto destraba el resto. El fondo de estas pantallas es de la fase 41.

@@ -3107,3 +3107,48 @@ Plan, hechos verificados y gates: `odd/tasks/fase-41-fondos.md`. Hoy cada pantal
 - [ ] 41.4 Publicar (pasos, revisar, «Listo»), entrar y espera sin fondo propio.
 - [ ] 41.5 Inicio, resultados, ficha, Mis avisos, importar, ayuda y legales.
 - [ ] 41.6 Aceptación integrada en los dos temas, `crawlability` y `lint:tokens`.
+
+## Fase 42 — Entrar
+
+Plan: `odd/tasks/fase-42-entrar.md`. Sale de la prueba manual [#290](https://github.com/gianelo/rentoru/issues/290). G1 (contador vivo, revierte 15.9/15.12), G2 (lámina de cabecera) y G3 (captcha) son decisiones del fundador.
+
+- [ ] 42.1 Diagnosticar con evidencia por qué el enlace mágico llega tres veces.
+- [ ] 42.2 Un solo correo por pedido: causa corregida, límite por buzón en el servidor y botón deshabilitado al enviar.
+- [ ] 42.3 Contador de reenvío vivo como mejora progresiva (G1).
+- [ ] 42.4 Cabecera: «Volver» a la izquierda y «Rentoru» a la derecha en los tres anchos; puerta centrada (G2).
+- [ ] 42.5 Investigar Cloudflare Turnstile para el pedido de enlace (G3).
+- [ ] 42.6 Aceptación integrada.
+
+## Fase 43 — Mis avisos
+
+Plan: `odd/tasks/fase-43-mis-avisos.md`. Sale de [#290](https://github.com/gianelo/rentoru/issues/290). G1 (lámina), G2 (borradores) y G3 (ocultar o eliminar) son decisiones del fundador.
+
+- [ ] 43.1 Lámina con y sin avisos, a 390/768/1440 (G1).
+- [ ] 43.2 Portadas reales en las tarjetas.
+- [ ] 43.3 Qué cuenta como borrador y alcance del filtro (G2).
+- [ ] 43.4 Renovar y volver a publicar desde Mis avisos: implementa la 9.31.
+- [ ] 43.5 Ocultar o eliminar un aviso propio, coordinado con la fase 39 (G3).
+- [ ] 43.6 Cabecera de cuenta sin «Mis avisos» duplicado y «Cerrar sesión» dentro del menú.
+- [ ] 43.7 Aceptación integrada.
+
+## Fase 44 — Editar un aviso
+
+Plan: `odd/tasks/fase-44-editar-aviso.md`. Sale de [#290](https://github.com/gianelo/rentoru/issues/290). G1 (lámina) es decisión del fundador.
+
+- [ ] 44.1 Lámina derivada del flujo de publicar (G1).
+- [ ] 44.2 Ante un rechazo, conservar lo escrito.
+- [ ] 44.3 Precio vacío como error visible.
+- [ ] 44.4 Quitar fotos recién al guardar, con aviso y estado de espera (alto riesgo: borra en R2).
+- [ ] 44.5 Portada y orden de fotos en editar.
+- [ ] 44.6 Validación viva de título y descripción.
+- [ ] 44.7 Aceptación integrada.
+
+## Fase 45 — Importar cartera
+
+Plan: `odd/tasks/fase-45-importar-cartera.md`. Sale de [#290](https://github.com/gianelo/rentoru/issues/290). G1 (de dónde sale el contacto) es decisión del fundador.
+
+- [ ] 45.1 Decidir si el contacto predeterminado se configura en la cuenta o va en el CSV (G1).
+- [ ] 45.2 Implementarlo, con prueba de integración.
+- [ ] 45.3 Prueba que compara la plantilla con los campos de publicar.
+- [ ] 45.4 Completar la prueba manual pendiente del issue.
+- [ ] 45.5 Aceptación integrada.
