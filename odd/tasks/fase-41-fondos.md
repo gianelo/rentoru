@@ -55,7 +55,7 @@ Límites de la medición: sin borrador, `/publicar/paso/fotos`, `quien` y `revis
 | Gate | Decisión del fundador | Bloquea |
 | --- | --- | --- |
 | G1 | Qué fondo único lleva la página — **decidido (2026-10-28): blanco liso `--surface` en todas las pantallas, cajas con borde `--line`; sin tono papel ni textura** | 41.3 en adelante |
-| G2 | Excepciones que conservan fondo propio. Propuesta: sólo el visor oscuro de fotos; el pie pasa a blanco con su borde superior | 41.3 |
+| G2 | Excepciones que conservan fondo propio — **decidido (2026-10-28): el visor oscuro de fotos y el pie azulado.** El pie recibe su propio rol de color en el sistema (en menta vale lo mismo que el `--bg` actual) y conserva su borde superior | 41.3 |
 
 ## Log
 
@@ -66,3 +66,4 @@ Límites de la medición: sin borrador, `/publicar/paso/fotos`, `quien` y `revis
 - L5 (2026-10-28): «que te parece si dejamos el pie asi? con ese color?»
 - L6 (2026-10-28): «sino usamos blanco blanco sino algo como de papel osea un color papel de libro algo asi. puedes mostrarme algunas pantallas para ver como se veria.» Tras ver la galería de tonos: «si por ahora blanco queda mejor y no le podemos dar textura a ese blanco de laguna forma para que se vea como si fuese papel».
 - L7 (2026-10-28): tras ver la galería de grano sutil y marcado: «blanco liso».
+- L8 (2026-10-28): ante la propuesta «el visor de fotos oscuro y el pie azulado», con el pie en su propio rol de color: «si claro asi exactamente. confirmo los dos».
