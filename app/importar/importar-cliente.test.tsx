@@ -199,3 +199,26 @@ it("un contacto inválido se muestra en su campo y no como archivo rechazado", a
   expect(container.querySelector("#import-contact-error")?.textContent).toBe("Revisa el número.");
   expect(container.querySelector('[role="alert"]')).toBeNull();
 });
+
+// #290: el resultado sale debajo del formulario; sin mover el foco nadie lo ve.
+it.each([
+  [{ estado: "vista-previa", totalFilas: 1, listas: 1, errores: [] }, "Revisa antes de crear"],
+  [{ estado: "rechazado", motivo: "codificacion", mensaje: "x" }, "No pudimos usar ese archivo"],
+])("lleva el foco al resultado de revisar (%#)", async (body, titulo) => {
+  responder(body);
+  await pulsar("Revisar el archivo");
+
+  expect(document.activeElement?.textContent).toBe(titulo);
+});
+
+it("lleva el foco al campo de contacto cuando el error es suyo", async () => {
+  responder({
+    estado: "rechazado",
+    motivo: "contacto-invalido",
+    campo: "contactValue",
+    mensaje: "m",
+  });
+  await pulsar("Revisar el archivo");
+
+  expect(document.activeElement?.id).toBe("contactValue");
+});

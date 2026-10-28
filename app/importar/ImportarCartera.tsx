@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { AppLink } from "../../components/atoms/AppLink";
 import { ActionButton } from "../../components/atoms/buttons";
 import {
@@ -124,12 +124,29 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
   }
 
   const previa = resultado?.estado === "vista-previa" ? (resultado as VistaPreviaResultado) : null;
+  const resultadoRef = useRef<HTMLDivElement>(null);
   const errorDeContacto =
     resultado?.estado === "rechazado" && resultado.motivo === "contacto-invalido"
       ? resultado
       : null;
   const errorEn = (campo: keyof Contacto) =>
     errorDeContacto?.campo === campo ? errorDeContacto.mensaje : undefined;
+
+  useEffect(() => {
+    if (!resultado) return;
+    if (errorDeContacto) {
+      const campo =
+        errorDeContacto.campo === "contactValue"
+          ? document.getElementById("contactValue")
+          : document.querySelector<HTMLInputElement>('input[name="contactMethod"]');
+      campo?.focus();
+      return;
+    }
+    const titulo = resultadoRef.current?.querySelector("h2");
+    if (!titulo) return;
+    titulo.tabIndex = -1;
+    titulo.focus();
+  }, [resultado, errorDeContacto]);
 
   return (
     <div className={styles.flujo}>
@@ -253,47 +270,52 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
         </ul>
       </section>
 
-      {previa ? (
-        <VistaPrevia
-          preview={previa}
-          archivo={archivo?.name ?? ""}
-          enviando={enviando}
-          onCrear={() => correr("crear")}
-          onCorregir={volverAEmpezar}
-        />
-      ) : null}
+      {/* #290: el resultado sale debajo del formulario. El foco va a su título
+          (o al campo de contacto, si el error es suyo) para que se vea y se
+          anuncie sin tener que bajar a buscarlo. */}
+      <div ref={resultadoRef} className={styles.resultado}>
+        {previa ? (
+          <VistaPrevia
+            preview={previa}
+            archivo={archivo?.name ?? ""}
+            enviando={enviando}
+            onCrear={() => correr("crear")}
+            onCorregir={volverAEmpezar}
+          />
+        ) : null}
 
-      {resultado?.estado === "rechazado" && !errorDeContacto ? (
-        <section className={styles.rechazo} role="alert">
-          <h2 className={styles.tituloSeccion}>No pudimos usar ese archivo</h2>
-          {/* El mensaje del dominio, entero: es el que dice QUÉ HACER —"volvé
+        {resultado?.estado === "rechazado" && !errorDeContacto ? (
+          <section className={styles.rechazo} role="alert">
+            <h2 className={styles.tituloSeccion}>No pudimos usar ese archivo</h2>
+            {/* El mensaje del dominio, entero: es el que dice QUÉ HACER —"volvé
               a exportar como CSV UTF-8", "partilo en dos"— y la lámina 14f
               pide exactamente eso, no una explicación de qué pasó. */}
-          <p className={styles.explicacion}>{resultado.mensaje}</p>
-        </section>
-      ) : null}
+            <p className={styles.explicacion}>{resultado.mensaje}</p>
+          </section>
+        ) : null}
 
-      {resultado?.estado === "creado" ? (
-        <section className={styles.creado}>
-          {/* 14h: "no dice «listo»: dice «ninguna se ve todavía»". */}
-          <h2 className={styles.tituloSeccion}>
-            Se crearon {resultado.creadas} propiedades. Ninguna se ve todavía.
-          </h2>
-          <p className={styles.explicacion}>
-            Les falta lo único que no venía en el archivo: al menos una foto cada una. Hasta
-            entonces quedan como borradores y no aparecen en las búsquedas.
-          </p>
-          {resultado.yaEstaban.length > 0 ? (
+        {resultado?.estado === "creado" ? (
+          <section className={styles.creado}>
+            {/* 14h: "no dice «listo»: dice «ninguna se ve todavía»". */}
+            <h2 className={styles.tituloSeccion}>
+              Se crearon {resultado.creadas} propiedades. Ninguna se ve todavía.
+            </h2>
             <p className={styles.explicacion}>
-              {resultado.yaEstaban.length} ya las habías importado antes y no se duplicaron:{" "}
-              {resultado.yaEstaban.map((fila) => fila.referencia).join(", ")}.
+              Les falta lo único que no venía en el archivo: al menos una foto cada una. Hasta
+              entonces quedan como borradores y no aparecen en las búsquedas.
             </p>
-          ) : null}
-          <AppLink className={styles.bajarPlantilla} href="/mis-avisos">
-            Ir a mis avisos
-          </AppLink>
-        </section>
-      ) : null}
+            {resultado.yaEstaban.length > 0 ? (
+              <p className={styles.explicacion}>
+                {resultado.yaEstaban.length} ya las habías importado antes y no se duplicaron:{" "}
+                {resultado.yaEstaban.map((fila) => fila.referencia).join(", ")}.
+              </p>
+            ) : null}
+            <AppLink className={styles.bajarPlantilla} href="/mis-avisos">
+              Ir a mis avisos
+            </AppLink>
+          </section>
+        ) : null}
+      </div>
     </div>
   );
 }
