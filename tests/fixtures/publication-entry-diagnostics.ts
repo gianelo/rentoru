@@ -53,12 +53,20 @@ export function publicationEntryDiagnostics(
   const ids = new WeakMap<Request, number>();
   let ordinal = 0;
   let dropped = 0;
+  let general = 0;
+  let publication = 0;
   const elapsed = () => Math.min(3_600_000, Math.max(0, Math.round(clock() - start)));
+  // Page assets fill a single 128-row budget within half a second, before the
+  // destination response ever arrives. Publication rows get their own bound so
+  // a failure still shows whether /publicar/paso/tipo finished and committed.
   const record = (kind: string, data: Row = {}) => {
-    if (rows.length >= 128) {
+    const isPublication = String(data.pathname ?? "").startsWith("/publicar");
+    if ((isPublication ? publication : general) >= 128) {
       dropped++;
       return;
     }
+    if (isPublication) publication++;
+    else general++;
     rows.push({ elapsedMs: elapsed(), kind, ...data });
   };
   const transport = (request: Request): Row => {
