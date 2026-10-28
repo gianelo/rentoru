@@ -392,7 +392,7 @@ jobs:
       # it runs alone in its own leg on a freshly seeded container, local only,
       # with no ambient worker DB.
       # Only the build gets a fake pooled URL; webServer supplies its own DB/proxy.
-      - name: '36.3: publication entry (local production build)'
+      - name: Publication entry (local production build)
         if: matrix.leg == 'publication'
         env:
           PLAYWRIGHT_BASE_URL: ''
@@ -473,7 +473,7 @@ jobs:
           # runs, so both the loop and the "no tests yet" tolerance below would
           # be dead code and one real failure would skip the remaining project.
           for project in chromium crawlability; do
-            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:|30\.7:|36\.3:' 2>&1); then
+            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:|30\.7:|publication entry:' 2>&1); then
               echo "$output"
             else
               echo "$output"
