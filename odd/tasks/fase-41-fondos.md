@@ -22,7 +22,8 @@ Base `8e5d020`; numeración 41 por pedido del fundador (39 y 40 las está usando
 ## Tareas
 
 - [x] **41.1 Inventario medido.** Recorrer las superficies del producto y leer en Chromium el color que de verdad queda pintado detrás del contenido (como hizo la 14.25 con la placa), a 390 y 1440 px y en los dos temas. Entregar una matriz pantalla → elemento que pinta el fondo → token → color. Sin cambios de código. Hecho: matriz en «Inventario medido (41.1)»; sin publicar hasta que exista el PR.
-- [ ] **41.2 Decisión del fondo único.** Lámina comparativa derivada del sistema con las opciones reales (`--bg` o `--surface` como fondo de página) sobre tres pantallas representativas: un paso de publicar, el inicio y la ficha. Gate G1.
+- [x] **41.2 Decisión del fondo único.** Decidida por el fundador sin lámina comparativa (L3–L4): la página es blanca (`--surface`) en todo el sitio y las cajas se distinguen por su borde `--line`, como en publicar. Corrección: la lámina comparativa ya no hace falta porque el fundador eligió mirando el flujo real; las pantallas de 41.4–41.5 se aceptan en el navegador.
+  - Texto original: Lámina comparativa derivada del sistema con las opciones reales (`--bg` o `--surface` como fondo de página) sobre tres pantallas representativas: un paso de publicar, el inicio y la ficha. Gate G1.
 - [ ] **41.3 Rol del sistema.** Token de fondo de página para los dos temas en `src/styles/tokens.css`, aplicado una sola vez en `base.css`; regla en `SISTEMA.md` («la página no pinta su fondo; los paneles sí, con su propio rol»). Prueba que impida que una hoja de pantalla vuelva a pintar el fondo a pantalla completa, salvo las excepciones aprobadas en G2.
 - [ ] **41.4 Flujo de publicar y acceso.** Quitar los fondos propios de pantalla completa de publicar (pasos, revisar, «Listo»), entrar y espera; los paneles interiores conservan su rol. Aceptación del fundador.
 - [ ] **41.5 Resto del sitio.** Inicio, resultados, ficha, Mis avisos, importar, ayuda y legales según la matriz de 41.1. Aceptación del fundador.
@@ -53,10 +54,12 @@ Límites de la medición: sin borrador, `/publicar/paso/fotos`, `quien` y `revis
 
 | Gate | Decisión del fundador | Bloquea |
 | --- | --- | --- |
-| G1 | Qué fondo único lleva la página | 41.3 en adelante |
-| G2 | Excepciones que conservan fondo propio (p. ej. el visor oscuro de fotos) | 41.3 |
+| G1 | Qué fondo único lleva la página — **decidido (2026-10-28): blanco `--surface` en todas las pantallas, cajas con borde `--line`** | 41.3 en adelante |
+| G2 | Excepciones que conservan fondo propio. Propuesta: sólo el visor oscuro de fotos; el pie pasa a blanco con su borde superior | 41.3 |
 
 ## Log
 
 - L1 (2026-10-25), durante la aceptación de 37.5: «veo algo raro los fondos del sitio estan mal. en publicaciones todo el fondo es blanco. cierto o bueno del color ese blancusco. aca sale menta o magenta. entonces fallo alli y en la pagina principal tambien. como estructura esta bien. todo esta como es para cerrar toda esa tarea por ahora no toquemos los fondos porque vamos hacerlos para todo el sistema. entonces. de una vamos a crear otra fase para esto. fase 41 porque hay otro agente creado otras fases. para revisar todo los fondos porque hay fgondo azul magente hay fondos blanco osea debemos dejar un solo fondo como tal.»
 - L2 (2026-10-28): «Arranquemos aca con la fase 41». 41.1 medida; ver «Inventario medido (41.1)».
+- L3 (2026-10-28): «a mi me gusta mas el estilo de publicar que el fondo es blanco y tiene bordes las cajas y todo eso.»
+- L4 (2026-10-28): «pero hay que aplicarlo en todos lados»

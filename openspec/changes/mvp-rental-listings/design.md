@@ -828,3 +828,7 @@ El sistema define roles para paneles (`--surface`, `--tint`, `--bg` dentro de bl
 ### Prueba manual 5/6 (#290) — fases 42 a 45
 
 La prueba manual de entrar, Mis avisos, editar e importar se reparte en cuatro fases por pantalla: 42 Entrar, 43 Mis avisos, 44 Editar un aviso y 45 Importar cartera. Tres hallazgos son de datos y se tratan como tales, no como diseño: el enlace mágico que llega tres veces (sin límite por buzón en el servidor), la edición que descarta todo lo escrito ante un rechazo, y quitar una foto al instante, borrándola de R2 antes de guardar. La importación quedó trabada porque exige un contacto de cuenta que ninguna pantalla deja configurar; decidir de dónde sale ese contacto destraba el resto. El fondo de estas pantallas es de la fase 41.
+
+### Fondo de página único (fase 41, G1)
+
+La página es blanca (`--surface`) en todo el sitio y en los dos temas; las cajas se distinguen por su borde `--line`, no por un fondo de otro tono. Lo decidió el fundador (2026-10-28) eligiendo el estilo de publicar: «hay que aplicarlo en todos lados». La medición de 41.1 encontró dos fondos conviviendo (`--bg` en 9 pantallas, `--surface` pintado encima en el resto); las tarjetas de resultados y de Mis avisos ya llevan borde, así que no pierden contorno sobre el blanco.

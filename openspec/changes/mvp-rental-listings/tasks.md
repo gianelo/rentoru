@@ -3102,7 +3102,7 @@ Decisión del fundador del 2026-10-25 (fase 39, D4): el cierre de cuenta es una 
 Plan, hechos verificados y gates: `odd/tasks/fase-41-fondos.md`. Hoy cada pantalla decide su fondo: el `body` pinta `--bg` (blanco azulado), publicar lo tapa con `--surface` (blanco) y «Listo» o el inicio dejan ver el primero. Numeración 41 por pedido del fundador (39 y 40 las usa otro agente). G1 (fondo único) y G2 (excepciones) son decisiones del fundador.
 
 - [x] 41.1 Inventario medido en Chromium del color pintado detrás del contenido, por pantalla, a 390 y 1440 px y en los dos temas. Evidencia: matriz en `odd/tasks/fase-41-fondos.md` («Inventario medido (41.1)»): 9 pantallas muestran `--bg` del `body`; ficha, reportar, ayuda, legales, entrar, espera y el flujo de publicar pintan `--surface` a pantalla completa; el visor es la única excepción intencional. Verificado localmente; sin publicar hasta su PR.
-- [ ] 41.2 Lámina comparativa de las opciones reales sobre publicar, inicio y ficha (G1).
+- [x] 41.2 Decisión del fondo único (G1): el fundador eligió el blanco `--surface` con cajas bordeadas `--line`, como en publicar, para todo el sitio (2026-10-28). Sin lámina comparativa: decidió sobre el flujo real. Verificado localmente; sin publicar hasta su PR.
 - [ ] 41.3 Rol de fondo de página en `tokens.css` y `base.css`, regla en `SISTEMA.md` y prueba que impida fondos de pantalla completa fuera de las excepciones (G2).
 - [ ] 41.4 Publicar (pasos, revisar, «Listo»), entrar y espera sin fondo propio.
 - [ ] 41.5 Inicio, resultados, ficha, Mis avisos, importar, ayuda y legales.
