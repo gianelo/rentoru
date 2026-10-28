@@ -26,7 +26,7 @@ body {
   /* The page owns the full viewport height so the themed background reaches
      the bottom on short pages instead of stopping at the content. */
   min-block-size: 100vh;
-  background: var(--bg);
+  background: var(--page);
   color: var(--ink);
   font-family: var(--sans);
   font-size: var(--fp);
