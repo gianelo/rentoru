@@ -305,7 +305,7 @@ describe("POST /api/bulk-import — los rechazos de 14f", () => {
       "cuenta sin contacto",
       () => new ImportMissingAccountContactError(),
       "cuenta-sin-contacto",
-      "Tu cuenta no tiene un método de contacto predeterminado configurado. Configura un método de contacto y su valor en tu cuenta antes de importar: un borrador importado sin un contacto que mostrar no se puede activar.",
+      "Indica cómo te contactan antes de revisar el archivo: un borrador importado sin un contacto que mostrar no se puede activar.",
     ],
   ])("%s devuelve 422 y su motivo", async (_nombre, build, motivo, mensaje) => {
     validateImport.mockRejectedValueOnce(build());

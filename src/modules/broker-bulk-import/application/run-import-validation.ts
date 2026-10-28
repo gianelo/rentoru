@@ -1,6 +1,10 @@
 import type { CataloguePort } from "../../listing-catalogue/application/ports/catalogue.port";
 import type { ZoneCataloguePort } from "../../listing-publication/application/ports/zone-catalogue.port";
-import { resolveImportAccountContact } from "../domain/import-account-contact";
+import { publicationContactSchema } from "../../listing-publication/application/publication-contact-schema";
+import {
+  type ResolvedImportContact,
+  resolveImportAccountContact,
+} from "../domain/import-account-contact";
 import {
   type ImportRowValidationOutcome,
   validateImportRows,
@@ -22,20 +26,80 @@ import type { ImportFileSourcePort } from "./ports/import-file-source.port";
  * at all. An account with no default cannot produce a single valid draft —
  * refusing fifty rows that could never be activated, silently, is worse
  * than refusing the whole import up front with an actionable message.
+ * Since tasks.md 45.2 the import screen asks for the contact, so the message
+ * points there instead of at an account screen that does not exist.
  */
 export class ImportMissingAccountContactError extends Error {
   constructor() {
     super(
-      "Tu cuenta no tiene un método de contacto predeterminado configurado. " +
-        "Configura un método de contacto y su valor en tu cuenta antes de importar: " +
+      "Indica cómo te contactan antes de revisar el archivo: " +
         "un borrador importado sin un contacto que mostrar no se puede activar.",
     );
     this.name = "ImportMissingAccountContactError";
   }
 }
 
+/** What the import screen sends next to the file (tasks.md 45.2, G1). Raw form text. */
+export interface SubmittedImportContact {
+  readonly contactMethod?: string;
+  readonly contactValue?: string;
+}
+
+export type ImportContactViolation =
+  | "contactMethod.required"
+  | "contactValue.required"
+  | "contactValue.invalid";
+
+/**
+ * The submitted contact failed the same schema publish uses (36.14). Thrown
+ * before the file is parsed: every row would carry the same bad contact, and
+ * fifty identical row errors are one fact, not fifty.
+ */
+export class ImportInvalidContactError extends Error {
+  readonly field: "contactMethod" | "contactValue";
+
+  constructor(
+    readonly violation: ImportContactViolation,
+    readonly submitted: SubmittedImportContact,
+  ) {
+    super(violation);
+    this.name = "ImportInvalidContactError";
+    this.field = violation === "contactMethod.required" ? "contactMethod" : "contactValue";
+  }
+}
+
 export interface ImportValidationOutcome extends ImportRowValidationOutcome {
   readonly totalRows: number;
+  /** The contact every valid row carries; `confirmImport` saves it as the account default. */
+  readonly contact: ResolvedImportContact;
+}
+
+function isBlank(value: string | undefined): boolean {
+  return value === undefined || value.trim() === "";
+}
+
+/**
+ * `null` means nothing was submitted, so the account default decides. Anything
+ * typed at all is validated and either wins or refuses — never silently
+ * replaced by the stored default.
+ */
+function resolveSubmittedContact(
+  submitted: SubmittedImportContact | undefined,
+): ResolvedImportContact | null {
+  if (!submitted || (isBlank(submitted.contactMethod) && isBlank(submitted.contactValue))) {
+    return null;
+  }
+  const result = publicationContactSchema.safeParse(submitted);
+  if (!result.success) {
+    throw new ImportInvalidContactError(
+      result.error.issues[0]?.message as ImportContactViolation,
+      submitted,
+    );
+  }
+  return {
+    contactMethod: result.data.contactMethod,
+    contactValue: result.data.contactValue as string,
+  };
 }
 
 export interface RunImportValidationDependencies {
@@ -71,11 +135,13 @@ export async function runImportValidation(
   userId: string,
   source: ImportFileSourcePort,
   dependencies: RunImportValidationDependencies,
+  submitted?: SubmittedImportContact,
 ): Promise<ImportValidationOutcome> {
   const { contact, zones, catalogue } = dependencies;
 
-  const account = await contact.findAccountContact(userId);
-  const resolvedContact = resolveImportAccountContact(account);
+  const resolvedContact =
+    resolveSubmittedContact(submitted) ??
+    resolveImportAccountContact(await contact.findAccountContact(userId));
   if (!resolvedContact) {
     throw new ImportMissingAccountContactError();
   }
@@ -103,5 +169,5 @@ export async function runImportValidation(
   const validationOutcome = validateImportRows(preparedRows, curatedZones, resolvedContact, rows);
   const outcome = mergeLocationResolutionErrors(validationOutcome, locationOutcomes, rows);
 
-  return { totalRows: rows.length, ...outcome };
+  return { totalRows: rows.length, contact: resolvedContact, ...outcome };
 }

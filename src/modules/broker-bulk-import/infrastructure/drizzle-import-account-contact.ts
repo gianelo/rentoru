@@ -2,8 +2,14 @@ import { eq } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import type * as schema from "../../../shared/db/schema";
 import { users } from "../../../shared/db/schema";
-import type { ImportAccountContactPort } from "../application/ports/import-account-contact.port";
-import type { AccountDefaultContact } from "../domain/import-account-contact";
+import type {
+  ImportAccountContactPort,
+  ImportAccountContactWriterPort,
+} from "../application/ports/import-account-contact.port";
+import type {
+  AccountDefaultContact,
+  ResolvedImportContact,
+} from "../domain/import-account-contact";
 
 /**
  * Same handle-by-constructor shape as `DrizzleBulkImportAccounts`: production
@@ -12,7 +18,9 @@ import type { AccountDefaultContact } from "../domain/import-account-contact";
  */
 export type ImportAccountContactDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
 
-export class DrizzleImportAccountContact implements ImportAccountContactPort {
+export class DrizzleImportAccountContact
+  implements ImportAccountContactPort, ImportAccountContactWriterPort
+{
   constructor(private readonly db: ImportAccountContactDatabase) {}
 
   async findAccountContact(userId: string): Promise<AccountDefaultContact | null> {
@@ -23,5 +31,12 @@ export class DrizzleImportAccountContact implements ImportAccountContactPort {
       .limit(1);
 
     return rows[0] ?? null;
+  }
+
+  async saveAccountContact(userId: string, contact: ResolvedImportContact): Promise<void> {
+    await this.db
+      .update(users)
+      .set({ contactMethod: contact.contactMethod, contactValue: contact.contactValue })
+      .where(eq(users.id, userId));
   }
 }

@@ -5,14 +5,17 @@ import type { ZoneCataloguePort } from "../../listing-publication/application/po
 import type { ImportRowError, ValidImportRow } from "../domain/import-row-validation";
 import { authorizeBulkImport } from "./authorize-bulk-import";
 import type { BulkImportAccountPort } from "./ports/bulk-import-account.port";
-import type { ImportAccountContactPort } from "./ports/import-account-contact.port";
+import type {
+  ImportAccountContactPort,
+  ImportAccountContactWriterPort,
+} from "./ports/import-account-contact.port";
 import type { ImportFileSourcePort } from "./ports/import-file-source.port";
-import { runImportValidation } from "./run-import-validation";
+import { runImportValidation, type SubmittedImportContact } from "./run-import-validation";
 
 export interface ConfirmImportDependencies {
   readonly sessionPort: SessionPort;
   readonly accounts: BulkImportAccountPort;
-  readonly contact: ImportAccountContactPort;
+  readonly contact: ImportAccountContactPort & ImportAccountContactWriterPort;
   readonly zones: ZoneCataloguePort;
   /** Ciudad/zona-by-name resolution — see `RunImportValidationDependencies`. */
   readonly catalogue: CataloguePort;
@@ -92,12 +95,22 @@ function isUniqueViolation(error: unknown): boolean {
 export async function confirmImport(
   source: ImportFileSourcePort,
   dependencies: ConfirmImportDependencies,
+  submitted?: SubmittedImportContact,
 ): Promise<ConfirmImportResult> {
   const { userId } = await authorizeBulkImport(dependencies);
   const { listings } = dependencies;
   const now = dependencies.now ?? (() => new Date());
 
-  const { totalRows, validRows, errors } = await runImportValidation(userId, source, dependencies);
+  const { totalRows, validRows, errors, contact } = await runImportValidation(
+    userId,
+    source,
+    dependencies,
+    submitted,
+  );
+
+  // tasks.md 45.2: what the broker typed becomes the default the screen
+  // prefills next time — only after validation passed, and only on confirm.
+  if (submitted) await dependencies.contact.saveAccountContact(userId, contact);
 
   const skippedDuplicates: SkippedDuplicateRow[] = [];
   let createdCount = 0;

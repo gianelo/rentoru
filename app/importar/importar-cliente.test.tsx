@@ -140,7 +140,7 @@ it.each([
   ],
   [
     new ImportMissingAccountContactError(),
-    "Tu cuenta no tiene un método de contacto predeterminado configurado. Configura un método de contacto y su valor en tu cuenta antes de importar: un borrador importado sin un contacto que mostrar no se puede activar.",
+    "Indica cómo te contactan antes de revisar el archivo: un borrador importado sin un contacto que mostrar no se puede activar.",
   ],
 ])("F35.6: muestra el rechazo real %s sin confirmar", async (error, message) => {
   responder({ estado: "rechazado", motivo: error.name, mensaje: error.message });
