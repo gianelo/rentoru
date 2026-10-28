@@ -1,6 +1,5 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { runInNewContext } from "node:vm";
 import { describe, expect, it } from "vitest";
 
 const require = createRequire(import.meta.url);
@@ -162,16 +161,17 @@ describe("CI branch routing", () => {
     );
   });
 
-  it("gates only PRs into main on the staging SHA validated by staging CI", () => {
-    const gate: Job & { permissions?: unknown } = workflow.jobs["release-gate"];
-    for (const [event_name, base_ref, runs] of [
-      ["pull_request", "main", true],
-      ["pull_request", "staging", false],
-      ["pull_request", "dev", false],
-      ["push", "", false],
-    ] as const) {
-      expect(runInNewContext(gate.if, { github: { event_name, base_ref } })).toBe(runs);
-    }
+  it("gates only PRs into main from its own workflow, so no skipped twin check exists", () => {
+    // A skipped job still publishes a `release-gate` check run, and GitHub
+    // counts skipped as passing for a required check. Living in ci.yml, every
+    // staging push left one on the very SHA a PR into main promotes.
+    expect(workflow.jobs["release-gate"]).toBeUndefined();
+    const gateWorkflow = yaml.safeLoad(readFileSync(".github/workflows/release-gate.yml", "utf8"));
+    expect(gateWorkflow.on).toEqual({ pull_request: { branches: ["main"] } });
+    expect(Object.keys(gateWorkflow.jobs)).toEqual(["release-gate"]);
+    const gate: Job & { permissions?: unknown } = gateWorkflow.jobs["release-gate"];
+    expect(gate.if).toBeUndefined();
+    expect(gateWorkflow.permissions).toEqual({});
     expect(gate.permissions).toEqual({ contents: "read", actions: "read" });
     expect(gate.steps[0]).toEqual({ uses: "actions/checkout@v4", with: { "fetch-depth": 0 } });
     const step = gate.steps.find((candidate) => candidate.run?.includes("release-gate.sh"));
