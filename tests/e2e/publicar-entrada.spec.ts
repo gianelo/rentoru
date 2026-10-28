@@ -416,7 +416,7 @@ for (const viewport of [
   { width: 768, height: 1024 },
   { width: 1440, height: 900 },
 ]) {
-  test(`36.3: real home → publication → initial destination at ${viewport.width}×${viewport.height}`, async ({
+  test(`publication entry: home → first step at ${viewport.width}×${viewport.height}`, async ({
     page,
     publicationEntry,
     javaScriptEnabled,
@@ -610,7 +610,7 @@ for (const viewport of [
   });
 }
 
-test("36.3: direct documentary GET retains the native authenticated redirect without writes", async ({
+test("publication entry: direct GET keeps the authenticated redirect without writes", async ({
   page,
   publicationEntry,
   javaScriptEnabled,
