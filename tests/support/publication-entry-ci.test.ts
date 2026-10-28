@@ -11,13 +11,14 @@ type Step = { name?: string; if?: string; env?: Record<string, string>; run?: st
 type Workflow = { jobs: { e2e: { env: Record<string, string>; steps: Step[] } } };
 const workflow = yaml.safeLoad(readFileSync(".github/workflows/ci.yml", "utf8"));
 const steps = workflow.jobs.e2e.steps;
-const ownName = "36.3: publication entry (local production build)";
+const ownName = "Publication entry (local production build)";
 const own = steps.find((step) => step.name === ownName);
 const general = steps.find((step) => step.name === "E2E + crawlability");
 const build =
   "DATABASE_URL=postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require pnpm build";
 const runner = "env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts";
-const exclusions = "29\\.2:|30\\.2:|30\\.3|30\\.4b2:|30\\.5b2c:|30\\.6c:|30\\.7:|36\\.3:";
+const exclusions =
+  "29\\.2:|30\\.2:|30\\.3|30\\.4b2:|30\\.5b2c:|30\\.6c:|30\\.7:|publication entry:";
 
 function dedicated(): Step {
   expect(own, "publication entry must have its own local CI step").toBeDefined();
@@ -70,10 +71,10 @@ describe("publication entry CI isolation", () => {
     const source = readFileSync("tests/e2e/publicar-entrada.spec.ts", "utf8");
     const titles = [...source.matchAll(/\btest\(([`"])(.*?)\1/g)].map((match) => match[2]);
     expect(titles).toHaveLength(2);
-    for (const title of titles) expect(title).toMatch(/^36\.3: /);
+    for (const title of titles) expect(title).toMatch(/^publication entry: /);
     expect(general?.run).toContain(`--grep-invert='${exclusions}'`);
     const taggedExclusions = steps.filter(
-      (step) => step.run?.includes("--grep-invert") && step.run.includes("36\\.3:"),
+      (step) => step.run?.includes("--grep-invert") && step.run.includes("publication entry:"),
     );
     expect(taggedExclusions).toEqual([general]);
     expect(dedicated().run).not.toMatch(/grep|skip|\|\|\s*true/);
