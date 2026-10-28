@@ -22,7 +22,7 @@ Base `8e5d020`; numeración 41 por pedido del fundador (39 y 40 las está usando
 ## Tareas
 
 - [x] **41.1 Inventario medido.** Recorrer las superficies del producto y leer en Chromium el color que de verdad queda pintado detrás del contenido (como hizo la 14.25 con la placa), a 390 y 1440 px y en los dos temas. Entregar una matriz pantalla → elemento que pinta el fondo → token → color. Sin cambios de código. Hecho: matriz en «Inventario medido (41.1)»; sin publicar hasta que exista el PR.
-- [x] **41.2 Decisión del fondo único.** Decidida por el fundador sin lámina comparativa (L3–L4): la página es blanca (`--surface`) en todo el sitio y las cajas se distinguen por su borde `--line`, como en publicar. Corrección: la lámina comparativa ya no hace falta porque el fundador eligió mirando el flujo real; las pantallas de 41.4–41.5 se aceptan en el navegador.
+- [x] **41.2 Decisión del fondo único.** Decidida por el fundador sin lámina comparativa (L3–L4): la página es blanca (`--surface`) en todo el sitio y las cajas se distinguen por su borde `--line`, como en publicar. El blanco es liso: se probaron sobre las pantallas reales tres tonos de papel (`#fcfaf5`, `#f8f4ea`, `#f3eddf`) y un grano de papel en dos intensidades, y el fundador eligió el blanco liso (L5–L7). Corrección: la lámina comparativa ya no hace falta porque el fundador eligió mirando el flujo real; las pantallas de 41.4–41.5 se aceptan en el navegador.
   - Texto original: Lámina comparativa derivada del sistema con las opciones reales (`--bg` o `--surface` como fondo de página) sobre tres pantallas representativas: un paso de publicar, el inicio y la ficha. Gate G1.
 - [ ] **41.3 Rol del sistema.** Token de fondo de página para los dos temas en `src/styles/tokens.css`, aplicado una sola vez en `base.css`; regla en `SISTEMA.md` («la página no pinta su fondo; los paneles sí, con su propio rol»). Prueba que impida que una hoja de pantalla vuelva a pintar el fondo a pantalla completa, salvo las excepciones aprobadas en G2.
 - [ ] **41.4 Flujo de publicar y acceso.** Quitar los fondos propios de pantalla completa de publicar (pasos, revisar, «Listo»), entrar y espera; los paneles interiores conservan su rol. Aceptación del fundador.
@@ -54,8 +54,8 @@ Límites de la medición: sin borrador, `/publicar/paso/fotos`, `quien` y `revis
 
 | Gate | Decisión del fundador | Bloquea |
 | --- | --- | --- |
-| G1 | Qué fondo único lleva la página — **decidido (2026-10-28): blanco `--surface` en todas las pantallas, cajas con borde `--line`** | 41.3 en adelante |
-| G2 | Excepciones que conservan fondo propio. Propuesta: sólo el visor oscuro de fotos; el pie pasa a blanco con su borde superior | 41.3 |
+| G1 | Qué fondo único lleva la página — **decidido (2026-10-28): blanco liso `--surface` en todas las pantallas, cajas con borde `--line`; sin tono papel ni textura** | 41.3 en adelante |
+| G2 | Excepciones que conservan fondo propio — **decidido (2026-10-28): el visor oscuro de fotos y el pie azulado.** El pie recibe su propio rol de color en el sistema (en menta vale lo mismo que el `--bg` actual) y conserva su borde superior | 41.3 |
 
 ## Log
 
@@ -63,3 +63,7 @@ Límites de la medición: sin borrador, `/publicar/paso/fotos`, `quien` y `revis
 - L2 (2026-10-28): «Arranquemos aca con la fase 41». 41.1 medida; ver «Inventario medido (41.1)».
 - L3 (2026-10-28): «a mi me gusta mas el estilo de publicar que el fondo es blanco y tiene bordes las cajas y todo eso.»
 - L4 (2026-10-28): «pero hay que aplicarlo en todos lados»
+- L5 (2026-10-28): «que te parece si dejamos el pie asi? con ese color?»
+- L6 (2026-10-28): «sino usamos blanco blanco sino algo como de papel osea un color papel de libro algo asi. puedes mostrarme algunas pantallas para ver como se veria.» Tras ver la galería de tonos: «si por ahora blanco queda mejor y no le podemos dar textura a ese blanco de laguna forma para que se vea como si fuese papel».
+- L7 (2026-10-28): tras ver la galería de grano sutil y marcado: «blanco liso».
+- L8 (2026-10-28): ante la propuesta «el visor de fotos oscuro y el pie azulado», con el pie en su propio rol de color: «si claro asi exactamente. confirmo los dos».
