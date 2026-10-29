@@ -53,7 +53,9 @@ Consecuencia práctica: el camino de lectura (resultados, ficha, página de zona
 |---|---|---|
 | `--accent` | `#272343` | Acción primaria (fondo de botón), enlaces |
 | `--accent-ink` | `#FFFFFF` | Texto sobre acento |
-| `--surface` | `#FFFFFF` | Superficie de tarjeta y de página |
+| `--surface` | `#FFFFFF` | Superficie de tarjeta y de panel |
+| `--page` | `#FFFFFF` | Fondo de la página: lo pinta sólo `body` (fase 41) |
+| `--footer-bg` | `#F0F5F9` | Fondo del pie del sitio, la franja que cierra cada página (fase 41) |
 | `--bg` | `#F0F5F9` | Fondo de bloques y relleno de controles |
 | `--ctl` | `#F0F5F9` | Relleno de campos e inputs |
 | `--line` | `#e1e4e6` | Separadores, bordes de miniatura |
@@ -179,6 +181,17 @@ Esta base reutilizable no es un diálogo ni activa carga de publicación: activa
 ### Publicar · Listo — fase 37
 
 La confirmación tras publicar, según `design/pantallas/Rentoru - Publicar - Listo-v2.html`. Misma barra del flujo de publicar, con estado «✓ Publicado». Encabezado centrado: la ✓ sobre `--tint` en `--accent` con su propio rol, `--done-mark-size` (56px) y `--done-mark-fs` (22px), separado de `--wait-mark-*` para que el indicador de carga y la confirmación no se arrastren entre sí. Debajo, la tarjeta del aviso (borde `--line`, radio `--r`) con la portada del mismo par que la tarjeta de resultados: `thumb` a `--mis-avisos-thumb-w`×`--mis-avisos-thumb-h` en móvil y `card` a `--card-w-desktop` con `--card-photo-ratio` desde 768px; precio, tipo · zona, medidas y la placa de publicador. La vigencia va en un bloque `--bg` con la fecha completa. Acciones: **una sola primaria**, «Ver mi aviso» (Acción), «Ir a Mis avisos» (Neutro) y «Publicar otro aviso» como enlace de texto. Columna de 600px centrada desde 768px.
+
+## Fondo de página
+
+**La página es blanca lisa (`--page`) en todas las pantallas, y la pinta una sola vez `body`** en `src/styles/base.css`. Una pantalla no pinta su fondo: los bloques se separan de la página con el borde `--line` o, cuando el bloque es de apoyo, con el relleno `--bg`. Así lo decidió el fundador al comparar las pantallas reales (fase 41, G1): «hay que aplicarlo en todos lados», y entre blanco, tonos de papel y un grano de papel, «blanco liso».
+
+Hay exactamente dos excepciones (G2), y cada una tiene su propio rol para que la excepción se lea en el nombre y no como un resto de otro token:
+
+- **El visor de fotos** conserva su fondo oscuro (`--viewer-bg`): es un visor, no una página.
+- **El pie del sitio** conserva el azulado (`--footer-bg`): es la franja que marca dónde termina la página.
+
+`--page` vale lo mismo que `--surface`, pero no es el mismo papel. Una hoja que pinte la pantalla entera con `--surface` vuelve a ser dueña del fondo, y la próxima decisión sobre la página ya no la alcanza. La prueba es `tests/e2e/fondo-de-pagina.spec.ts`: mide en el navegador el color pintado detrás del contenido y el del pie, con y sin JavaScript.
 
 ## Jerarquía de botones
 
