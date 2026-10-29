@@ -8,6 +8,7 @@ Base `c4b0266`. Una tarea por PR ≤400 líneas a `dev`; aceptación del fundado
 - S1 ([comentario](https://github.com/gianelo/rentoru/issues/290#issuecomment-6459784880)): «la distribución yo la veo bien no sé si podemos mejorar algo tanto en… tablet como en la de Desktop».
 - S2: «hay que validar ver que la plantilla de CSv sea la correcta con los campos específicos de publicación hay que validar eso no le no lo pude validar».
 - S3: «cuando intento cargar un archivo en error de que no tengo una configuración contacto predeterminado esto es raro ya que no hay una opción de configurar contacto predeterminado… si lo agregamos en el mismo Excel o creamos la función para poder agregar… una forma de contactar predeterminada en la cuenta».
+- S5 (2026-10-29): «el mensaje sale abajo creo que deberiamos de tener una pantalla de success. y tambienagregar spinner loader para revisar avisos. y todo eso».
 - S4: «no pude probar nada más porque no me deja cargar el archivo por el problema del contacto… luego… seguimos con las pruebas de esta parte del importar». Pendientes del issue: el formato explicado, el error por fila y motivo, la vista previa antes de crear y que lo importado aparezca en Mis avisos.
 
 ## Hechos verificados en `c4b0266`
@@ -24,6 +25,7 @@ Base `c4b0266`. Una tarea por PR ≤400 líneas a `dev`; aceptación del fundado
 - [ ] **45.3 Plantilla = campos de publicar.** Prueba que compara la plantilla con los campos que exige publicar y documenta cada diferencia intencional (contacto, tipo de publicador, fotos).
 - [ ] **45.4 Completar la prueba manual pendiente**: formato explicado, error por fila y motivo, vista previa antes de crear y avisos importados visibles en Mis avisos (fase 43).
 - [ ] **45.5 Aceptación integrada** en los tres anchos (S1: revisar tablet y escritorio).
+- [ ] **45.6 Mejorar el flujo de importar** (S5): pantalla de éxito después de crear, en vez del mensaje al pie; estado de carga al revisar y al crear; mensaje honesto ante un 500 (hoy «Revisa la conexión», que culpa a la red). Como `SISTEMA.md` no define un estado de carga, primero se extiende el sistema y recién después se dibuja.
 
 ## Gates
 
@@ -37,3 +39,4 @@ Base `c4b0266`. Una tarea por PR ≤400 líneas a `dev`; aceptación del fundado
 - L2: numeración del fundador: «42 entrada, 43 Mis avisos, 44 Editar Avisos y 45 Importar Cartera».
 - L3 (2026-10-27): G1 decidido por el fundador: «1. Campo en la pantalla de importar». El contacto se pide antes de subir el archivo, se valida con `publicationContactSchema` (36.14), la vista previa no escribe nada y «crear» lo guarda como predeterminado en `user.contact_*`; la próxima vez aparece prellenado. Sin migración ni pantalla de cuenta. Worktree `rentoru-phase45-task-45-2`, rama `feat/importar-contacto-predeterminado`, base `7ca36aa`.
 - L4 (2026-10-28): 45.2 aceptada por el fundador en local («si lo acepto»). Unidad A `1d679c8` (caso de uso, adaptador, integración); unidad B `0b86f07` + `d365163` (ruta, pantalla, foco al resultado tras «le doy a revisar y no hace nada… no mueve la pantalla a los errores»). Unidad 3854/3854; integración 30/30 en base desechable; 13 mutaciones atrapadas. Hallazgos: (1) «crear» da 500 en local porque `neon-http-proxy` no traduce el WebSocket de `getTransactionalDatabase`; se prueba en el preview. (2) Ante un 500 la pantalla dice «Revisa la conexión», que culpa a la red: mejora aparte. (3) El contacto se guarda antes de crear los avisos; si la creación falla queda guardado (dato válido y confirmado). (4) El archivo del fundador traía ciudades «Cabimas», «Caracas», «Santa Rita» que la validación rechaza; la plantilla servida hoy trae «Distrito Capital»: revisar en 45.3. (5) «Fila 2» se queda con la numeración de la hoja (fundador: «dejemoslo así»).
+- L5 (2026-10-29): preview probado por el fundador: «lo creo y lo que hace es crear como borrador dentro de mis avisos». «Crear» funciona de punta a punta. Pide 45.6 (S5).
