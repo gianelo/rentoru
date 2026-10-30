@@ -12,8 +12,6 @@
    mantiene el gate mirando geometría de miniatura y no cada caja del flujo. */
 
 .shell {
-  min-block-size: 100dvh;
-  background: var(--surface);
   color: var(--ink);
 }
 
@@ -909,4 +907,10 @@
   font-size: var(--ficha-body-fs);
   line-height: var(--ficha-body-lh);
   color: var(--soft);
+}
+
+/* Aire antes del pie (fase 41.4): la última caja no toca la franja del pie.
+   48, el mismo que dejan la pantalla de error y «Listo». */
+.paginaEditar {
+  padding-block-end: 48px;
 }

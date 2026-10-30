@@ -242,7 +242,7 @@ export default async function EditarAvisoPage({
         pill={pill}
         signInHref={`/signin?callbackUrl=${encodeURIComponent(`/mis-avisos/${id}/editar`)}`}
       />
-      <main>
+      <main className={styles.paginaEditar}>
         <Container>
           <div className={styles.column}>
             {/* Se entra desde Mis avisos, así que se sale hacia ahí. */}

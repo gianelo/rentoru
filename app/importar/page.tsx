@@ -94,7 +94,7 @@ export default async function ImportarPage() {
         pill={pill}
         signInHref="/signin?callbackUrl=%2Fimportar"
       />
-      <main>
+      <main className={styles.pagina}>
         <Container>
           {/* La vuelta que dibuja la lámina: importar se entra desde Mis
               avisos, así que se sale hacia ahí. */}

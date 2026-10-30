@@ -193,6 +193,15 @@ Hay exactamente dos excepciones (G2), y cada una tiene su propio rol para que la
 
 `--page` vale lo mismo que `--surface`, pero no es el mismo papel. Una hoja que pinte la pantalla entera con `--surface` vuelve a ser dueña del fondo, y la próxima decisión sobre la página ya no la alcanza. La prueba es `tests/e2e/fondo-de-pagina.spec.ts`: mide en el navegador el color pintado detrás del contenido y el del pie, con y sin JavaScript.
 
+### El pie va pegado al fondo
+
+El pie cierra todas las páginas que lo muestran, y su posición es una sola regla (fase 41.4, aceptada por el fundador: «si usemos ese estandar»):
+
+1. **Va después de todo el contenido.** En una página larga aparece al final, después de desplazarse.
+2. **Si el contenido es más corto que la pantalla, baja hasta el borde inferior.** Nunca queda blanco debajo del pie, y una pantalla no se estira sola (`min-block-size: 100dvh`) para empujarlo fuera de vista.
+
+Lo arma un solo lugar: `body` es una columna de al menos `100dvh` (`src/styles/base.css`), y el pie se empuja al final con `margin-block-start: auto` (`SiteFooter.module.css`). El flujo de publicar también lleva pie. Sólo el visor de fotos lo oculta. La prueba es `tests/e2e/pie-al-fondo.spec.ts`.
+
 ## Jerarquía de botones
 
 Tres niveles, y no deben mezclarse:

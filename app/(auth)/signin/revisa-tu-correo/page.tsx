@@ -70,7 +70,7 @@ export default async function VerifyRequestPage() {
   }
 
   return (
-    <div className={styles.screen}>
+    <div>
       <DoorBar wayOut={wait.wayOut} />
 
       <main>
