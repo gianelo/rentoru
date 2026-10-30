@@ -42,7 +42,8 @@ export type OptionalImportColumn =
   | "agua_regular"
   | "amoblado"
   | "vigilancia"
-  | "linea_blanca";
+  | "linea_blanca"
+  | "punto_referencia";
 
 export type ImportColumnHeader = RequiredImportColumn | OptionalImportColumn;
 
@@ -75,6 +76,8 @@ export const IMPORT_COLUMN_ALLOWLIST: readonly ImportColumnDefinition[] = [
   { header: "amoblado", field: "isFurnished", required: false },
   { header: "vigilancia", field: "hasSecurity", required: false },
   { header: "linea_blanca", field: "hasAppliances", required: false },
+  // tasks.md 45.3: publish's «punto de referencia» (paso 2), same length rule.
+  { header: "punto_referencia", field: "reference", required: false },
 ] as const;
 
 export const REQUIRED_IMPORT_COLUMNS: readonly RequiredImportColumn[] =

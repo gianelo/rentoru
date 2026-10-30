@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CuratedZone } from "../../listing-publication/domain/publishable-listing";
+import { MAX_REFERENCE_CHARACTERS } from "../../listing-publication/domain/publishable-listing";
 import type { ImportRow } from "./csv-import-rows";
 import { type ImportAccountContact, validateImportRows } from "./import-row-validation";
 
@@ -210,5 +211,29 @@ describe("validateImportRows — reuses validatePublishableListing for every rul
         { rowNumber: 2, reasons: ["hasPowerPlant.invalid"] },
       ]);
     });
+  });
+});
+
+// tasks.md 45.3: punto_referencia is publish's «punto de referencia», with
+// publish's own length rule.
+describe("validateImportRows — punto_referencia", () => {
+  it("carries it into the listing", () => {
+    const { validRows } = validateImportRows(
+      [validRow({ reference: "Frente a la plaza" })],
+      ZONES,
+      CONTACT,
+    );
+
+    expect(validRows[0]?.listing.reference).toBe("Frente a la plaza");
+  });
+
+  it("refuses it past publish's maximum", () => {
+    const { errors } = validateImportRows(
+      [validRow({ reference: "x".repeat(MAX_REFERENCE_CHARACTERS + 1) })],
+      ZONES,
+      CONTACT,
+    );
+
+    expect(errors[0]?.reasons).toEqual(["reference.tooLong"]);
   });
 });
