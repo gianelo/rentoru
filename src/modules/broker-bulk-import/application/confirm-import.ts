@@ -136,6 +136,7 @@ export async function confirmImport(
         hasSecurity: row.listing.hasSecurity ?? false,
         hasAppliances: row.listing.hasAppliances ?? false,
         parkingSpots: row.listing.parkingSpots ?? 0,
+        reference: row.listing.reference,
         contactMethod: row.listing.contactMethod,
         contactValue: row.listing.contactValue,
         status: "draft",

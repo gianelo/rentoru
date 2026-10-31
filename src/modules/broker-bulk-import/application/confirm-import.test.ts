@@ -343,4 +343,25 @@ describe("confirmImport", () => {
       expect(contact.saveAccountContact).not.toHaveBeenCalled();
     });
   });
+
+  // tasks.md 45.3: the punto de referencia reaches the saved draft.
+  it("saves punto_referencia with the draft", async () => {
+    const save = vi.fn().mockResolvedValue({ id: "new-id" });
+
+    await confirmImport(
+      sourceFromText(
+        `${REQUIRED_HEADER},punto_referencia\n${validRowLine("REF-1")},Frente a la plaza`,
+      ),
+      {
+        sessionPort: sessionPortReturning(SESSION),
+        accounts: accountsReturning({ bulkImportEnabled: true }),
+        contact: fakeContact(),
+        zones: fakeZones(),
+        catalogue: fakeCatalogue(),
+        listings: { save },
+      },
+    );
+
+    expect(save.mock.calls[0]?.[0]).toMatchObject({ reference: "Frente a la plaza" });
+  });
 });

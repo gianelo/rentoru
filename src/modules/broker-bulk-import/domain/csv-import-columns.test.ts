@@ -19,8 +19,8 @@ import {
  */
 
 describe("IMPORT_COLUMN_ALLOWLIST", () => {
-  it("has exactly 16 columns: the spec's 6 required plus the founder's 10 optional", () => {
-    expect(IMPORT_COLUMN_ALLOWLIST).toHaveLength(16);
+  it("has exactly 17 columns: the spec's 6 required, the founder's 10 optional and punto_referencia (45.3)", () => {
+    expect(IMPORT_COLUMN_ALLOWLIST).toHaveLength(17);
   });
 
   it("required columns are exactly the spec's six, in the spec's own header names", () => {
