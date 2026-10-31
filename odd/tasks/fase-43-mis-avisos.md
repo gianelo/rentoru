@@ -10,6 +10,8 @@ Base `c4b0266`. Una tarea por PR ≤400 líneas a `dev`; aceptación del fundado
 - S3 ([borradores](https://github.com/gianelo/rentoru/issues/290#issuecomment-6459348279)): «Creo que el filtro borrador dentro de mis avisos desaparecer porque sólo podemos tener un borrador en publicar… al menos que ese filtro sea cuando se cargan avisos de forma masiva… hay que definir eso bien».
 - S4 ([ocultar o eliminar](https://github.com/gianelo/rentoru/issues/290#issuecomment-6459379629)): «Desde la acción mis avisos tenemos que poder eliminar avisos o ocultar avisos».
 - S5 ([renovar](https://github.com/gianelo/rentoru/issues/290#issuecomment-6459457513)): «un aviso vencido… no es la opción de renovarlo o de republicarlo… debemos crearla».
+- S6 (al aceptar la 41.4, 2026-10-31): «cuando tienes activos el importar cartera que sale en el modal del perfil no sale en todos lados solo sale cuando estas en mis avisos. eso quiere decir que ese componente no esta separado?» y «crear una tarea para corregir eso».
+- S7 (mismo mensaje): «otro error de ese modal que cuando estoy en mis avisos no marca bien donde estoy».
 
 ## Hechos verificados en `c4b0266`
 
@@ -29,6 +31,9 @@ Base `c4b0266`. Una tarea por PR ≤400 líneas a `dev`; aceptación del fundado
 - [ ] **43.4 Renovar y volver a publicar.** Implementar la **9.31** con sesión, no con token, y alinear el texto de `renovar/route.ts:70`.
 - [ ] **43.5 Ocultar o eliminar un aviso propio.** Definir con el fundador (G3) qué significa cada acción, distinguiendo el oculto por el dueño del oculto por reportes, y coordinarlo con la conservación de datos de la fase 39.
 - [ ] **43.6 Cabecera y cierre de sesión.** Quitar el «Mis avisos» duplicado del disparador y llevar «Cerrar sesión» al menú, en todas las pantallas; coordinar con 28.6.
+- [ ] **43.8 Menú de la cuenta: «Importar cartera» en todas las pantallas y la pantalla actual marcada.** Dos defectos que el fundador vio al aceptar la 41.4 (S6, S7).
+  - *Importar sólo en Mis avisos.* `resolveNavAccount` (`src/modules/identity/domain/nav-account.ts:68`) recibe `bulkImportEnabled` como argumento **opcional**, y sólo lo pasan Mis avisos, editar e importar. `readNavAccountFlags` (`app/_lib/nav-account.ts:32–38`), que usan inicio, resultados, ficha y reportar, devuelve sólo `hasListings`; ayuda y legales llaman `resolveNavAccount(null)`. Es la forma de defecto que `AGENTS.md` §1 ya nombra (un argumento opcional que nadie pasa). Corrección: que el lector de banderas traiga también `bulkImportEnabled`, y una prueba sobre el HTML servido de al menos una pantalla pública con sesión de importador que muestre el ítem. Revisar en la misma tarea si ayuda y legales deben conocer la sesión.
+  - *La pantalla actual no se marca.* El menú (`components/organisms/AccountMenu.tsx`) no marca ningún ítem como actual (no hay `aria-current`), y «Publicar» lleva siempre el énfasis de acento, que puede leerse como «estás aquí». Confirmar con el fundador qué ve antes de corregir; la corrección esperada es `aria-current="page"` en el ítem de la ruta actual, con el estilo del sistema para «seleccionado».
 - [ ] **43.7 Aceptación integrada** en los tres anchos, con y sin JavaScript.
 
 ## Gates
