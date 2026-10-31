@@ -1,7 +1,6 @@
 /* Shared /ayuda typography in the existing 600px FormShell.
    The category/title/section hierarchy follows the approved legal pattern. */
 .page {
-  background: var(--surface);
   color: var(--ink);
   padding: 32px 0 120px;
 }

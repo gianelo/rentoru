@@ -9,6 +9,8 @@
    second one-off horizontal-padding mechanism just for this component. */
 
 .footer {
+  /* Empuja el pie al fondo de la columna que arma `body` (base.css). */
+  margin-block-start: auto;
   background: var(--footer-bg);
   border-top: 1px solid var(--line);
   color: var(--ink);

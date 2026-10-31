@@ -279,3 +279,9 @@
 .resultado h2:focus:not(:focus-visible) {
   outline: none;
 }
+
+/* Aire antes del pie (fase 41.4): la última caja no toca la franja del pie.
+   48, el mismo que dejan la pantalla de error y «Listo». */
+.pagina {
+  padding-block-end: 48px;
+}
