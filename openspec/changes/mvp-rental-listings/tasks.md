@@ -3130,6 +3130,7 @@ Plan: `odd/tasks/fase-43-mis-avisos.md`. Sale de [#290](https://github.com/giane
 - [ ] 43.5 Ocultar o eliminar un aviso propio, coordinado con la fase 39 (G3).
 - [ ] 43.6 Cabecera de cuenta sin «Mis avisos» duplicado y «Cerrar sesión» dentro del menú.
 - [ ] 43.7 Aceptación integrada.
+- [ ] 43.8 Menú de la cuenta: «Importar cartera» en todas las pantallas (hoy sólo donde se pasa `bulkImportEnabled`) y la pantalla actual marcada con `aria-current`.
 
 ## Fase 44 — Editar un aviso
 
