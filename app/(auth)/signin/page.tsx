@@ -58,7 +58,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
   }
 
   return (
-    <div className={styles.screen}>
+    <div>
       <DoorBar wayOut={page.wayOut} />
 
       <main>

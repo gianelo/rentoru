@@ -3104,8 +3104,8 @@ Plan, hechos verificados y gates: `odd/tasks/fase-41-fondos.md`. Hoy cada pantal
 - [x] 41.1 Inventario medido en Chromium del color pintado detrás del contenido, por pantalla, a 390 y 1440 px y en los dos temas. Evidencia: matriz en `odd/tasks/fase-41-fondos.md` («Inventario medido (41.1)»): 9 pantallas muestran `--bg` del `body`; ficha, reportar, ayuda, legales, entrar, espera y el flujo de publicar pintan `--surface` a pantalla completa; el visor es la única excepción intencional. Verificado localmente; sin publicar hasta su PR.
 - [x] 41.2 Decisión del fondo único (G1): el fundador eligió el blanco `--surface` con cajas bordeadas `--line`, como en publicar, para todo el sitio (2026-10-28). Sin lámina comparativa: decidió sobre el flujo real. Verificado localmente; sin publicar hasta su PR.
 - [x] 41.3 Roles `--page` (blanco liso) y `--footer-bg` (pie azulado) en los dos temas; `body` pinta la página una sola vez; regla en `SISTEMA.md`. Evidencia: `tests/e2e/fondo-de-pagina.spec.ts` (chromium y crawlability, RED/GREEN y dos mutaciones), `lint:tokens`, `typecheck` y 3834 unitarias en verde. Aceptado por el fundador en el navegador (2026-10-28). Verificado localmente; publicación según su PR.
-- [ ] 41.4 Publicar (pasos, revisar, «Listo»), entrar y espera sin fondo propio.
-- [ ] 41.5 Inicio, resultados, ficha, Mis avisos, importar, ayuda y legales.
+- [x] 41.4 Sin fondos propios de pantalla completa y pie pegado al fondo en todo el sitio (absorbe 41.5); Mis avisos, editar e importar con 48 px antes del pie. Evidencia: `tests/e2e/pie-al-fondo.spec.ts` RED/GREEN y capturas antes/después de 16 pantallas. Aceptado por el fundador (2026-10-30). Verificado localmente; publicación según su PR.
+- [x] 41.5 Hecho dentro de 41.4.
 - [ ] 41.6 Aceptación integrada en los dos temas, `crawlability` y `lint:tokens`.
 
 ## Fase 42 — Entrar

@@ -4,7 +4,6 @@
    to diverge without coordination. Same tokens, same reason: long-form
    text in the same 600px form shell publish already uses. */
 .page {
-  background: var(--surface);
   color: var(--ink);
   padding: 32px 0 120px;
 }
