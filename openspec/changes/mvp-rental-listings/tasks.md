@@ -3137,7 +3137,8 @@ Plan: `odd/tasks/fase-43-mis-avisos.md`. Sale de [#290](https://github.com/giane
 Plan: `odd/tasks/fase-44-editar-aviso.md`. Sale de [#290](https://github.com/gianelo/rentoru/issues/290). G1 (lámina) es decisión del fundador.
 
 - [ ] 44.1 Lámina derivada del flujo de publicar (G1).
-- [ ] 44.2 Ante un rechazo, conservar lo escrito.
+- [x] 44.2a El formulario de editar en su propio componente cliente (`EditarForm.tsx`), sin cambiar el HTML servido (G2). Evidencia: volcado antes/después idéntico, `editar-servido.test.tsx` 95/95, typecheck, biome, `lint:tokens` y build. Excepción de tamaño del fundador (movimiento mecánico, 685 líneas). Publicado en el PR #494 (pendiente de merge).
+- [ ] 44.2 Ante un rechazo, conservar lo escrito: la acción devuelve valores y errores con `useActionState` (G2); la descripción no viaja por la URL (18.19).
 - [ ] 44.3 Precio vacío como error visible.
 - [ ] 44.4 Quitar fotos recién al guardar, con aviso y estado de espera (alto riesgo: borra en R2).
 - [ ] 44.5 Portada y orden de fotos en editar.
