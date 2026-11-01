@@ -537,14 +537,20 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
   /**
    * La contraparte de la primera, y la única forma de fijar a QUÉ se envía el
    * formulario sin un empaquetador de por medio: es una relación entre dos
-   * archivos, que es el caso en el que este repositorio ya lee el fuente.
+   * archivos —desde la fase 44, `EditarForm.tsx` y `actions.ts`—, que es el
+   * caso en el que este repositorio ya lee el fuente. Que la página dibuje ese
+   * formulario lo fijan las pruebas sobre el HTML servido, no ésta.
+   *
+   * **Lo prohibido es un manejador que intercepte el envío**, no la directiva:
+   * `EditarForm.tsx` es de cliente a propósito (G2) para que la 44.2 devuelva
+   * lo rechazado con `useActionState`, y sigue enviando por `<form>` nativo.
    */
   it("el formulario envía a la acción de servidor, nunca a un manejador de cliente", () => {
-    const fuente = readFileSync(new URL("./page.tsx", import.meta.url), "utf8");
+    const fuente = readFileSync(new URL("./EditarForm.tsx", import.meta.url), "utf8");
 
     expect(fuente).toContain("<form action={guardarEdicion}");
     expect(fuente).not.toContain("onClick");
-    expect(fuente).not.toContain('"use client"');
+    expect(fuente).not.toContain("onSubmit");
   });
 
   it("la salida vuelve a la lista, con un enlace de verdad", async () => {
