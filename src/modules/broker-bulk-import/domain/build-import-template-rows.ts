@@ -76,6 +76,7 @@ const CELL_BY_FIELD: Record<
   isFurnished: () => "si",
   hasSecurity: () => "no",
   hasAppliances: () => "si",
+  reference: () => "Frente a la plaza",
 };
 
 function buildRow(city: CatalogueCity, zone: CatalogueZone, index: number): string[] {

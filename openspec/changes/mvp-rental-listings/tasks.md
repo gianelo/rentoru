@@ -3103,10 +3103,10 @@ Plan, hechos verificados y gates: `odd/tasks/fase-41-fondos.md`. Hoy cada pantal
 
 - [x] 41.1 Inventario medido en Chromium del color pintado detrás del contenido, por pantalla, a 390 y 1440 px y en los dos temas. Evidencia: matriz en `odd/tasks/fase-41-fondos.md` («Inventario medido (41.1)»): 9 pantallas muestran `--bg` del `body`; ficha, reportar, ayuda, legales, entrar, espera y el flujo de publicar pintan `--surface` a pantalla completa; el visor es la única excepción intencional. Verificado localmente; sin publicar hasta su PR.
 - [x] 41.2 Decisión del fondo único (G1): el fundador eligió el blanco `--surface` con cajas bordeadas `--line`, como en publicar, para todo el sitio (2026-10-28). Sin lámina comparativa: decidió sobre el flujo real. Verificado localmente; sin publicar hasta su PR.
-- [ ] 41.3 Rol de fondo de página en `tokens.css` y `base.css`, regla en `SISTEMA.md` y prueba que impida fondos de pantalla completa fuera de las excepciones (G2).
-- [ ] 41.4 Publicar (pasos, revisar, «Listo»), entrar y espera sin fondo propio.
-- [ ] 41.5 Inicio, resultados, ficha, Mis avisos, importar, ayuda y legales.
-- [ ] 41.6 Aceptación integrada en los dos temas, `crawlability` y `lint:tokens`.
+- [x] 41.3 Roles `--page` (blanco liso) y `--footer-bg` (pie azulado) en los dos temas; `body` pinta la página una sola vez; regla en `SISTEMA.md`. Evidencia: `tests/e2e/fondo-de-pagina.spec.ts` (chromium y crawlability, RED/GREEN y dos mutaciones), `lint:tokens`, `typecheck` y 3834 unitarias en verde. Aceptado por el fundador en el navegador (2026-10-28). Verificado localmente; publicación según su PR.
+- [x] 41.4 Sin fondos propios de pantalla completa y pie pegado al fondo en todo el sitio (absorbe 41.5); Mis avisos, editar e importar con 48 px antes del pie. Evidencia: `tests/e2e/pie-al-fondo.spec.ts` RED/GREEN y capturas antes/después de 16 pantallas. Aceptado por el fundador (2026-10-30). Verificado localmente; publicación según su PR.
+- [x] 41.5 Hecho dentro de 41.4.
+- [x] 41.6 Aceptación integrada sobre `dev` (`67d2240`, build de producción). Evidencia: `lint:tokens`, `typecheck`, `tests/e2e/fondo-de-pagina.spec.ts` y `tests/e2e/pie-al-fondo.spec.ts` (10 pruebas, `chromium` y `crawlability`); `crawlability` completo 69 en verde contra `rentas-pg`, más `publicar-entrada`, `ficha-contacto-revelacion` y `reporte-con-motivo` en verde contra una base propia de la tarea (`paginacion-catalogo` sólo en su pierna de CI). Aceptado por el fundador en el tema menta (2026-10-31): «si aceptado... todo esta bien». Corrección: el tema oscuro queda pendiente de su revisión («el oscuro lo veo luego»); los roles existen en ambos temas y `lint:tokens` los exige. Fase 41 cerrada; publicación según su PR.
 
 ## Fase 42 — Entrar
 
@@ -3130,6 +3130,7 @@ Plan: `odd/tasks/fase-43-mis-avisos.md`. Sale de [#290](https://github.com/giane
 - [ ] 43.5 Ocultar o eliminar un aviso propio, coordinado con la fase 39 (G3).
 - [ ] 43.6 Cabecera de cuenta sin «Mis avisos» duplicado y «Cerrar sesión» dentro del menú.
 - [ ] 43.7 Aceptación integrada.
+- [ ] 43.8 Menú de la cuenta: «Importar cartera» en todas las pantallas (hoy sólo donde se pasa `bulkImportEnabled`) y la pantalla actual marcada con `aria-current`.
 
 ## Fase 44 — Editar un aviso
 
@@ -3147,8 +3148,10 @@ Plan: `odd/tasks/fase-44-editar-aviso.md`. Sale de [#290](https://github.com/gia
 
 Plan: `odd/tasks/fase-45-importar-cartera.md`. Sale de [#290](https://github.com/gianelo/rentoru/issues/290). G1 (de dónde sale el contacto) es decisión del fundador.
 
-- [ ] 45.1 Decidir si el contacto predeterminado se configura en la cuenta o va en el CSV (G1).
-- [ ] 45.2 Implementarlo, con prueba de integración.
-- [ ] 45.3 Prueba que compara la plantilla con los campos de publicar.
-- [ ] 45.4 Completar la prueba manual pendiente del issue.
+- [x] 45.1 Decidir si el contacto predeterminado se configura en la cuenta o va en el CSV (G1). Decidido 2026-10-27: campo en la pantalla de importar (design.md, «Prueba manual 5/6»).
+- [x] 45.2 Implementarlo, con prueba de integración. `run-import-validation.test.ts` («uses the contact submitted…», «refuses an invalid submitted contact…»), `confirm-import.test.ts` («with a contact submitted from the import screen»), `tests/integration/broker-bulk-import-confirm.test.ts` («imports with the submitted contact and stores it as the account default»), `route.test.ts` («el contacto de la pantalla»), `importar-contract.test.tsx` («Importar · contacto de los avisos»), `importar-cliente.test.tsx` (envío, error en el campo y foco al resultado). Aceptado por el fundador en navegador local el 2026-10-28; «crear» no corre en local porque el proxy HTTP no traduce el WebSocket transaccional, probado en el preview el 2026-10-29: crea los borradores y aparecen en Mis avisos. Publicación: #482 a `dev` y #483 hijo de pantalla; merge pendiente.
+- [x] 45.3 Prueba que compara la plantilla con los campos de publicar. `src/modules/broker-bulk-import/domain/template-publish-parity.test.ts`: cada campo de `DraftListing` es columna o exclusión con motivo (contacto, tipo de publicador, fotos), y un campo nuevo de publicar rompe el typecheck. La comparación encontró el «punto de referencia» sin columna: se agregó `punto_referencia` opcional, con la misma regla de largo que publicar (`import-row-validation.test.ts` «punto_referencia», `confirm-import.test.ts` «saves punto_referencia with the draft»). Las ciudades inválidas del archivo del fundador venían de `rentas-pg` con la siembra vieja, no de la plantilla. Verificación local; publicado en #489 a `dev` (2026-10-31), merge pendiente.
+- [x] 45.4 Completar la prueba manual pendiente del issue. Probada por el fundador en local el 2026-11-01 (formato, error por fila y motivo, vista previa); «crear» y Mis avisos vistos en el preview el 2026-10-29. Hallazgos: la vista previa no lista las filas válidas (pasa a 45.6) y las sugerencias de zona no se pueden elegir (45.7). Evidencia: `odd/tasks/fase-45-importar-cartera.md` L8.
 - [ ] 45.5 Aceptación integrada.
+- [ ] 45.7 Zonas tolerantes al importar (S6): hoy la zona del CSV tiene que coincidir exacta y el buscador encuentra por palabras. Decidir cómo sugerir o elegir la zona correcta desde la vista previa.
+- [ ] 45.6 Mejorar el flujo de importar: pantalla de éxito tras crear, estado de carga al revisar y crear, vista previa que liste también las filas válidas, y un mensaje honesto ante un error del servidor (hoy dice «Revisa la conexión»). El sistema no define un estado de carga: se extiende `SISTEMA.md` antes de dibujarlo.

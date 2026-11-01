@@ -114,7 +114,7 @@ export default async function MisAvisosPage({
         pill={pill}
         signInHref="/signin?callbackUrl=%2Fmis-avisos"
       />
-      <main>
+      <main className={styles.pagina}>
         <Container>
           <h1 className={styles.titulo}>Mis avisos</h1>
           {/* «88 en total · 38 no se ven todavía» — el encabezado de 14d.

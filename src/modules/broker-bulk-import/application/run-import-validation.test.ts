@@ -4,7 +4,11 @@ import type { ZoneCataloguePort } from "../../listing-publication/application/po
 import type { AccountDefaultContact } from "../domain/import-account-contact";
 import type { ImportAccountContactPort } from "./ports/import-account-contact.port";
 import type { ImportFileSourcePort } from "./ports/import-file-source.port";
-import { ImportMissingAccountContactError, runImportValidation } from "./run-import-validation";
+import {
+  ImportInvalidContactError,
+  ImportMissingAccountContactError,
+  runImportValidation,
+} from "./run-import-validation";
 
 /**
  * broker-bulk-import spec, "Whole-File Validation Before Any Write" (tasks.md
@@ -91,6 +95,94 @@ describe("runImportValidation", () => {
         zones: zonesReturningAllCurated(),
         catalogue: fakeCatalogue(),
       }),
+    ).rejects.toBeInstanceOf(ImportMissingAccountContactError);
+  });
+
+  // tasks.md 45.2 (G1): the contact typed on the import screen is the one the
+  // drafts carry, validated by the same schema publish uses (36.14).
+  it("uses the contact submitted with the file when the account has none", async () => {
+    const text = `${REQUIRED_HEADER}\n${validRowLine("REF-1")}`;
+
+    const result = await runImportValidation(
+      "broker-1",
+      sourceFromText(text),
+      {
+        contact: contactPortReturning(null),
+        zones: zonesReturningAllCurated(),
+        catalogue: fakeCatalogue(),
+      },
+      { contactMethod: "email", contactValue: "cartera@inmobiliaria.com" },
+    );
+
+    expect(result.contact).toEqual({
+      contactMethod: "email",
+      contactValue: "cartera@inmobiliaria.com",
+    });
+    expect(result.validRows[0]?.listing.contactMethod).toBe("email");
+    expect(result.validRows[0]?.listing.contactValue).toBe("cartera@inmobiliaria.com");
+  });
+
+  it("prefers the submitted contact over the account default", async () => {
+    const text = `${REQUIRED_HEADER}\n${validRowLine("REF-1")}`;
+
+    const result = await runImportValidation(
+      "broker-1",
+      sourceFromText(text),
+      {
+        contact: contactPortReturning(FULL_CONTACT),
+        zones: zonesReturningAllCurated(),
+        catalogue: fakeCatalogue(),
+      },
+      { contactMethod: "telefono", contactValue: "02122223344" },
+    );
+
+    expect(result.contact.contactMethod).toBe("telefono");
+    expect(result.validRows[0]?.listing.contactMethod).toBe("telefono");
+  });
+
+  it.each([
+    [{ contactMethod: "whatsapp", contactValue: "hola" }, "contactValue.invalid", "contactValue"],
+    [{ contactMethod: "whatsapp", contactValue: "  " }, "contactValue.required", "contactValue"],
+    [{ contactValue: "04121234567" }, "contactMethod.required", "contactMethod"],
+    [
+      { contactMethod: "fax", contactValue: "04121234567" },
+      "contactMethod.required",
+      "contactMethod",
+    ],
+  ])(
+    "refuses an invalid submitted contact %j before parsing the file",
+    async (submitted, violation, field) => {
+      const catalogue = fakeCatalogue();
+
+      const outcome = runImportValidation(
+        "broker-1",
+        sourceFromText(`${REQUIRED_HEADER}\n${validRowLine("REF-1")}`),
+        {
+          contact: contactPortReturning(FULL_CONTACT),
+          zones: zonesReturningAllCurated(),
+          catalogue,
+        },
+        submitted,
+      );
+
+      await expect(outcome).rejects.toBeInstanceOf(ImportInvalidContactError);
+      await expect(outcome).rejects.toMatchObject({ violation, field });
+      expect(catalogue.listCities).not.toHaveBeenCalled();
+    },
+  );
+
+  it("falls back to the account rule when the submitted contact is entirely blank", async () => {
+    await expect(
+      runImportValidation(
+        "broker-1",
+        sourceFromText(`${REQUIRED_HEADER}\n${validRowLine("REF-1")}`),
+        {
+          contact: contactPortReturning(null),
+          zones: zonesReturningAllCurated(),
+          catalogue: fakeCatalogue(),
+        },
+        { contactMethod: "", contactValue: "" },
+      ),
     ).rejects.toBeInstanceOf(ImportMissingAccountContactError);
   });
 

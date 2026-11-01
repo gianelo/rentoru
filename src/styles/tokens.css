@@ -613,6 +613,15 @@
   --ctl: #f0f5f9;
   --bg: #f0f5f9;
   --surface: #ffffff;
+  /* **El fondo de la página** (fase 41, G1): blanco liso en todas las
+     pantallas, pintado una sola vez por `body` en base.css. Las pantallas no
+     pintan su fondo; los bloques se separan con el borde `--line` o con el
+     relleno `--bg`. Vale lo mismo que `--surface`, pero es otro papel: una
+     hoja que pinte la página con `--surface` vuelve a ser dueña del fondo.
+     **El pie** (G2) es la única franja que conserva el azulado, con su rol
+     propio para que no se lea como un resto de `--bg`. */
+  --page: #ffffff;
+  --footer-bg: #f0f5f9;
   --line: #e1e4e6;
   --strong: #788189;
   --ink: #1e2022;
@@ -677,6 +686,8 @@
   --ctl: var(--dark-ctl);
   --bg: var(--dark-bg);
   --surface: var(--dark-surface);
+  --page: var(--dark-surface);
+  --footer-bg: var(--dark-bg);
   --line: var(--dark-line);
   --strong: var(--dark-strong);
   --ink: var(--dark-ink);

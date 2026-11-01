@@ -3,10 +3,6 @@
    marca en el móvil sin un segundo marcado, y el 420 se escribe literal por lo
    mismo que `DetailSplit` — SISTEMA.md ya lo fija, y un segundo nombre para un
    valor existente hace discrepar la paleta. Quiebre 768, el de `Container`. */
-.screen {
-  min-block-size: 100dvh;
-  background: var(--surface);
-}
 .bar {
   border-bottom: 1px solid var(--line);
 }
