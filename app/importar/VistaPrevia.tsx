@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import { ActionButton, NeutralButton } from "../../components/atoms/buttons";
 import styles from "./importar.module.css";
-import type { FilaConProblema, NombreDeCelda, VistaPreviaResultado } from "./preview";
+import type { CeldasDeFila, FilaLista, NombreDeCelda, VistaPreviaResultado } from "./preview";
 
 /**
  * Lámina 14g — "Revisá antes de crear".
@@ -26,6 +26,14 @@ import type { FilaConProblema, NombreDeCelda, VistaPreviaResultado } from "./pre
  * **Sin filas listas no se dibuja el botón de crear.** Un botón que crea cero
  * miente sobre lo que va a pasar; lo que hace falta es corregir el archivo, y
  * ése queda como único camino (AGENTS.md §7).
+ *
+ * **Las filas listas también se ven (tasks.md 45.6).** Con un archivo sin
+ * fallos la previa mostraba sólo el contador y se podía confirmar sin ver qué
+ * se iba a crear (#290, L8). SISTEMA.md §6 dibuja la tabla con todas las
+ * filas y, en móvil, «un resumen de las correctas»: por eso van en un
+ * `<details>` nativo —el resumen es la línea cerrada, la lista está a un
+ * toque y funciona sin JavaScript— con la misma anatomía de fila que las
+ * erróneas, sin color de error y sin nada resaltado.
  */
 export function VistaPrevia({
   preview,
@@ -93,6 +101,26 @@ export function VistaPrevia({
         </ul>
       ) : null}
 
+      {hayQueCrear ? (
+        <details className={styles.listas}>
+          <summary className={styles.listasResumen}>{etiquetaListas(preview.listas)}</summary>
+          <ul className={styles.listasFilas}>
+            {preview.filas.map((fila) => (
+              <li key={fila.fila} className={styles.lista}>
+                <span className={styles.problemaFila}>
+                  Fila {fila.fila}
+                  {fila.celdas.referencia === "" ? null : ` · ${fila.celdas.referencia}`}
+                </span>
+                {fila.celdas.titulo === "" ? null : (
+                  <span className={styles.problemaTitulo}>{fila.celdas.titulo}</span>
+                )}
+                <span className={styles.problemaCeldas}>{meta(fila)}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      ) : null}
+
       <div className={styles.acciones}>
         {hayQueCrear ? (
           <ActionButton onClick={onCrear} disabled={enviando}>
@@ -109,7 +137,18 @@ export function VistaPrevia({
 
 /** El texto del botón, para que la pantalla y su prueba lo lean del mismo lugar. */
 export function etiquetaCrear(listas: number): string {
-  return `Crear las ${listas} propiedades`;
+  return listas === 1 ? "Crear la propiedad" : `Crear las ${listas} propiedades`;
+}
+
+/** El resumen cerrado del `<details>` de filas listas. */
+export function etiquetaListas(listas: number): string {
+  return listas === 1 ? "Ver la fila lista" : `Ver las ${listas} filas listas`;
+}
+
+/** Lo que `Celda` y `meta` necesitan de una fila, tenga problema o no. */
+interface FilaDibujable {
+  readonly celdas: CeldasDeFila;
+  readonly resaltadas?: readonly NombreDeCelda[];
 }
 
 /**
@@ -124,16 +163,16 @@ function Celda({
   nombre,
   children,
 }: {
-  readonly error: FilaConProblema;
+  readonly error: FilaDibujable;
   readonly nombre: NombreDeCelda;
   readonly children: string;
 }) {
-  if (!error.resaltadas.includes(nombre)) return <>{children}</>;
+  if (!error.resaltadas?.includes(nombre)) return <>{children}</>;
   return <mark className={styles.celdaResaltada}>{children}</mark>;
 }
 
 /** Las tres celdas del renglón del medio, separadas por «·», sin las vacías. */
-function meta(error: FilaConProblema) {
+function meta(error: FilaDibujable | FilaLista) {
   const partes = [
     error.celdas.precio === "" ? null : (
       <Celda key="precio" error={error} nombre="precio">

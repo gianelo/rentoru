@@ -15,8 +15,14 @@ import {
   type SubmittedImportContact,
 } from "../../../src/modules/broker-bulk-import/application/run-import-validation";
 import { validateImport } from "../../../src/modules/broker-bulk-import/application/validate-import";
-import type { ImportRowCellName } from "../../../src/modules/broker-bulk-import/domain/import-row-cells";
-import type { ImportRowError } from "../../../src/modules/broker-bulk-import/domain/import-row-validation";
+import type {
+  ImportRowCellName,
+  ImportRowCells,
+} from "../../../src/modules/broker-bulk-import/domain/import-row-cells";
+import type {
+  ImportRowError,
+  ValidImportRow,
+} from "../../../src/modules/broker-bulk-import/domain/import-row-validation";
 import { DrizzleBulkImportAccounts } from "../../../src/modules/broker-bulk-import/infrastructure/drizzle-bulk-import-account";
 import { DrizzleImportAccountContact } from "../../../src/modules/broker-bulk-import/infrastructure/drizzle-import-account-contact";
 import { UnauthenticatedError } from "../../../src/modules/identity/application/require-authenticated-session";
@@ -31,7 +37,12 @@ import {
 import { db } from "../../../src/shared/db/client";
 import { getTransactionalDatabase } from "../../../src/shared/db/transactional-client";
 import { importRowReasonText } from "../../importar/import-copy";
-import type { FilaConProblema, NombreDeCelda } from "../../importar/preview";
+import type {
+  CeldasDeFila,
+  FilaConProblema,
+  FilaLista,
+  NombreDeCelda,
+} from "../../importar/preview";
 import { PUBLISH_VIOLATION_COPY } from "../../publicar/violation-copy";
 
 /**
@@ -167,6 +178,25 @@ const NOMBRE_DE_CELDA: Readonly<Record<ImportRowCellName, NombreDeCelda>> = {
   title: "titulo",
 };
 
+function celdasDe(cells: ImportRowCells): CeldasDeFila {
+  return {
+    referencia: cells.externalReference,
+    precio: cells.priceUsd,
+    zona: cells.zone,
+    habitaciones: cells.rooms,
+    titulo: cells.title,
+  };
+}
+
+/**
+ * tasks.md 45.6: las filas listas viajan con sus celdas, sin razón ni
+ * resaltado. La previa dejaba confirmar sin mostrar QUÉ iba a crear (#290,
+ * L8); el contador `listas` se conserva para quien sólo necesita el número.
+ */
+function filasPara(rows: readonly ValidImportRow[]): readonly FilaLista[] {
+  return rows.map((row) => ({ fila: row.rowNumber, celdas: celdasDe(row.cells) }));
+}
+
 function erroresPara(errors: readonly ImportRowError[]): readonly FilaConProblema[] {
   return errors.map((error) => ({
     fila: error.rowNumber,
@@ -176,13 +206,7 @@ function erroresPara(errors: readonly ImportRowError[]): readonly FilaConProblem
     // razón** (tasks.md 9.29) porque son lo que le pone el número a «la
     // descripción tiene 61 caracteres».
     razones: error.reasons.map((reason) => importRowReasonText(reason, error.cells)),
-    celdas: {
-      referencia: error.cells.externalReference,
-      precio: error.cells.priceUsd,
-      zona: error.cells.zone,
-      habitaciones: error.cells.rooms,
-      titulo: error.cells.title,
-    },
+    celdas: celdasDe(error.cells),
     resaltadas: error.offendingCells.map((cell) => NOMBRE_DE_CELDA[cell]),
   }));
 }
@@ -218,6 +242,7 @@ export async function POST(request: Request): Promise<Response> {
           estado: "vista-previa",
           totalFilas: preview.totalRows,
           listas: preview.validRows.length,
+          filas: filasPara(preview.validRows),
           errores: erroresPara(preview.errors),
         },
         200,

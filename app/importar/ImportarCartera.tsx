@@ -73,6 +73,17 @@ async function enviar(
   cuerpo.set("contactValue", contacto.contactValue);
 
   const respuesta = await fetch("/api/bulk-import", { method: "POST", body: cuerpo });
+  if (respuesta.status >= 500) {
+    // tasks.md 45.6: un 500 llega con un cuerpo que no es JSON y antes caía
+    // en el mismo mensaje que la red, culpando a la conexión de quien importa.
+    // La creación es transaccional (L4), así que «no se creó nada» es verdad.
+    return {
+      estado: "rechazado",
+      motivo: "servidor",
+      mensaje:
+        "El servidor falló al procesar el archivo. No se creó ningún aviso. Prueba de nuevo en un momento.",
+    };
+  }
   const datos = (await respuesta.json()) as ResultadoImportacion & { error?: string };
 
   if (datos.error) {

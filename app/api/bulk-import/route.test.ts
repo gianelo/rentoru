@@ -125,6 +125,14 @@ describe("POST /api/bulk-import — revisar", () => {
         rowNumber: index + 2,
         externalReference: `REF-${index}`,
         listing: {},
+        cells: {
+          externalReference: `REF-${index}`,
+          priceUsd: "450",
+          zone: "Chacao",
+          rooms: "2",
+          title: `Apto ${index}`,
+          descriptionLength: 300,
+        },
       })),
       errors: [
         {
@@ -150,6 +158,18 @@ describe("POST /api/bulk-import — revisar", () => {
       estado: "vista-previa",
       totalFilas: 42,
       listas: 38,
+      // tasks.md 45.6: las filas listas viajan con sus celdas, sin razón ni
+      // resaltado, para que la previa muestre QUÉ va a crear y no sólo cuántas.
+      filas: Array.from({ length: 38 }, (_, index) => ({
+        fila: index + 2,
+        celdas: {
+          referencia: `REF-${index}`,
+          precio: "450",
+          zona: "Chacao",
+          habitaciones: "2",
+          titulo: `Apto ${index}`,
+        },
+      })),
       // La copia se resuelve en el servidor: la pantalla nunca ve un código.
       // Las celdas viajan crudas (tasks.md 9.29): son el texto del archivo,
       // que es justamente lo que 14g muestra.

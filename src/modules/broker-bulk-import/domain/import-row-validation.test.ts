@@ -214,6 +214,27 @@ describe("validateImportRows — reuses validatePublishableListing for every rul
   });
 });
 
+// tasks.md 45.6: the preview lists the valid rows too, with the cells the
+// file brought — the zone AS WRITTEN, not its id, because by the time this
+// runs `applyResolvedLocations` already replaced it in `rows`.
+describe("validateImportRows — valid rows carry their cells", () => {
+  it("takes them from the source rows, zone as the broker wrote it", () => {
+    const prepared = validRow({ zone: "chacao" });
+    const source = validRow({ zone: "Chacao" });
+
+    const { validRows } = validateImportRows([prepared], ZONES, CONTACT, [source]);
+
+    expect(validRows[0]?.cells).toEqual({
+      externalReference: "REF-1",
+      priceUsd: "450",
+      zone: "Chacao",
+      rooms: "2",
+      title: "Apartamento en Chacao",
+      descriptionLength: VALID_DESCRIPTION.length,
+    });
+  });
+});
+
 // tasks.md 45.3: punto_referencia is publish's «punto de referencia», with
 // publish's own length rule.
 describe("validateImportRows — punto_referencia", () => {

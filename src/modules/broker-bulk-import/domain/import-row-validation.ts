@@ -102,6 +102,12 @@ export interface ValidImportRow {
   readonly rowNumber: number;
   readonly externalReference: string;
   readonly listing: ImportListingCandidate;
+  /**
+   * tasks.md 45.6: the cells the preview draws, as the file brought them.
+   * `listing` carries ids and numbers; the broker reviewing the preview
+   * wants to read the zone they wrote, not its id.
+   */
+  readonly cells: ImportRowCells;
 }
 
 export interface ImportRowValidationOutcome {
@@ -228,6 +234,7 @@ export function validateImportRows(
     validRows.push({
       rowNumber,
       externalReference,
+      cells: importRowCells(sourceRows[index] ?? row),
       listing: {
         publisherType: "broker",
         propertyType: draft.propertyType as PropertyType,

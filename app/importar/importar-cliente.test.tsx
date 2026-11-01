@@ -46,8 +46,8 @@ async function pulsar(label: string) {
   expect(button).toBeDefined();
   await act(async () => button?.click());
 }
-function responder(body: unknown) {
-  fetchMock.mockResolvedValueOnce({ json: async () => body });
+function responder(body: unknown, status = 200) {
+  fetchMock.mockResolvedValueOnce({ ok: status < 400, status, json: async () => body });
 }
 
 it("F35.6: revisa filas mixtas con razón real, confirma y conserva resumen y duplicados", async () => {
@@ -67,6 +67,28 @@ it("F35.6: revisa filas mixtas con razón real, confirma y conserva resumen y du
     estado: "vista-previa",
     totalFilas: 3,
     listas: 2,
+    filas: [
+      {
+        fila: 2,
+        celdas: {
+          referencia: "A-1",
+          precio: "450",
+          zona: "Chacao",
+          habitaciones: "2",
+          titulo: "Uno",
+        },
+      },
+      {
+        fila: 3,
+        celdas: {
+          referencia: "A-2",
+          precio: "300",
+          zona: "Chacao",
+          habitaciones: "1",
+          titulo: "Dos",
+        },
+      },
+    ],
     errores: [
       {
         fila: 4,
@@ -173,6 +195,28 @@ it.each([
   expect(container.textContent).not.toContain("Crear las");
 });
 
+// tasks.md 45.6 (L4 hallazgo 2): un 500 no es «la conexión». Next responde
+// con un cuerpo que no es JSON, y antes eso caía en el mismo mensaje de red
+// que culpa a quien importa. La creación es transaccional (L4), así que
+// «no se creó ningún aviso» es verdad y se dice.
+it("un 500 dice que falló el servidor y que no se creó nada, sin culpar a la red", async () => {
+  fetchMock.mockResolvedValueOnce({
+    ok: false,
+    status: 500,
+    json: async () => {
+      throw new SyntaxError("Unexpected token <");
+    },
+  });
+  await pulsar("Revisar el archivo");
+
+  const alerta = container.querySelector('[role="alert"]')?.textContent ?? "";
+  expect(alerta).toBe(
+    "No pudimos usar ese archivoEl servidor falló al procesar el archivo. No se creó ningún aviso. Prueba de nuevo en un momento.",
+  );
+  expect(alerta).not.toContain("conexión");
+  expect(container.textContent).not.toContain("Crear las");
+});
+
 // tasks.md 45.2 (G1): el contacto prellenado viaja con el archivo, y su error
 // se dibuja en el campo, no como un archivo rechazado.
 it("manda el contacto junto con el archivo", async () => {
@@ -202,7 +246,10 @@ it("un contacto inválido se muestra en su campo y no como archivo rechazado", a
 
 // #290: el resultado sale debajo del formulario; sin mover el foco nadie lo ve.
 it.each([
-  [{ estado: "vista-previa", totalFilas: 1, listas: 1, errores: [] }, "Revisa antes de crear"],
+  [
+    { estado: "vista-previa", totalFilas: 1, listas: 1, filas: [], errores: [] },
+    "Revisa antes de crear",
+  ],
   [{ estado: "rechazado", motivo: "codificacion", mensaje: "x" }, "No pudimos usar ese archivo"],
 ])("lleva el foco al resultado de revisar (%#)", async (body, titulo) => {
   responder(body);
