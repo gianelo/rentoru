@@ -14,8 +14,7 @@
 
 .paso,
 .previa,
-.rechazo,
-.creado {
+.rechazo {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -236,12 +235,72 @@
   gap: var(--gap);
 }
 
+/* Pantalla de éxito (tasks.md 45.6-B), derivada de «Publicar · Listo»:
+   encabezado centrado con la ✓ sobre --tint y sus propios roles --done-mark-*,
+   una sola primaria y volver como enlace de texto. */
+.exito {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.exitoMarca {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: var(--done-mark-size);
+  block-size: var(--done-mark-size);
+  border-radius: var(--rs);
+  background: var(--tint);
+  color: var(--accent);
+  font-size: var(--done-mark-fs);
+  line-height: 1;
+}
+
+.exitoTitulo {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--title-fs);
+  font-weight: var(--title-fw);
+  line-height: var(--title-lh);
+}
+
+.exitoAcciones {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-block-start: 12px;
+}
+
+.exitoVolver {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--target-min);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: var(--control-fs);
+  cursor: pointer;
+}
+
 @media (min-width: 768px) {
   .paso,
   .previa,
-  .rechazo,
-  .creado {
+  .rechazo {
     padding: 24px;
+  }
+
+  .exito {
+    padding: 48px 24px;
   }
 }
 
