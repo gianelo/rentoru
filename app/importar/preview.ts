@@ -37,10 +37,22 @@ export interface FilaConProblema {
   readonly resaltadas: readonly NombreDeCelda[];
 }
 
+/**
+ * tasks.md 45.6: una fila que sí se va a crear, con las mismas celdas que la
+ * fila con problema y nada más. La previa dejaba confirmar sin mostrar qué
+ * iba a crear (#290, L8); SISTEMA.md §6 dibuja la tabla con todas las filas.
+ */
+export interface FilaLista {
+  readonly fila: number;
+  readonly celdas: CeldasDeFila;
+}
+
 export interface VistaPreviaResultado {
   readonly estado: "vista-previa";
   readonly totalFilas: number;
+  /** Cuántas son `filas`: el número viaja aparte para quien sólo lo necesita a él. */
   readonly listas: number;
+  readonly filas: readonly FilaLista[];
   readonly errores: readonly FilaConProblema[];
 }
 

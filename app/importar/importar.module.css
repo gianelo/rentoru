@@ -199,6 +199,37 @@
   font-size: var(--ficha-body-fs);
 }
 
+/* Las filas listas (tasks.md 45.6): misma anatomía que la fila con problema,
+   borde neutro en vez del par de error, plegadas bajo su resumen. */
+.listas {
+  align-self: stretch;
+}
+
+.listasResumen {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: var(--ficha-body-fs);
+  font-weight: var(--badge-fw);
+}
+
+.listasFilas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-thumb);
+}
+
 .acciones {
   display: flex;
   flex-wrap: wrap;

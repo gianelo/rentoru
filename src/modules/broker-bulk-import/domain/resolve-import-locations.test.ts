@@ -311,6 +311,14 @@ describe("mergeLocationResolutionErrors", () => {
         {
           rowNumber: 2,
           externalReference: "REF-1",
+          cells: {
+            externalReference: "REF-1",
+            priceUsd: "450",
+            zone: "Los Palos Grandes",
+            rooms: "2",
+            title: "t",
+            descriptionLength: 1,
+          },
           listing: {
             publisherType: "broker",
             propertyType: "apartamento",
