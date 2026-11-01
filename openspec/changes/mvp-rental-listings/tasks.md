@@ -3106,7 +3106,7 @@ Plan, hechos verificados y gates: `odd/tasks/fase-41-fondos.md`. Hoy cada pantal
 - [x] 41.3 Roles `--page` (blanco liso) y `--footer-bg` (pie azulado) en los dos temas; `body` pinta la página una sola vez; regla en `SISTEMA.md`. Evidencia: `tests/e2e/fondo-de-pagina.spec.ts` (chromium y crawlability, RED/GREEN y dos mutaciones), `lint:tokens`, `typecheck` y 3834 unitarias en verde. Aceptado por el fundador en el navegador (2026-10-28). Verificado localmente; publicación según su PR.
 - [x] 41.4 Sin fondos propios de pantalla completa y pie pegado al fondo en todo el sitio (absorbe 41.5); Mis avisos, editar e importar con 48 px antes del pie. Evidencia: `tests/e2e/pie-al-fondo.spec.ts` RED/GREEN y capturas antes/después de 16 pantallas. Aceptado por el fundador (2026-10-30). Verificado localmente; publicación según su PR.
 - [x] 41.5 Hecho dentro de 41.4.
-- [ ] 41.6 Aceptación integrada en los dos temas, `crawlability` y `lint:tokens`.
+- [x] 41.6 Aceptación integrada sobre `dev` (`67d2240`, build de producción). Evidencia: `lint:tokens`, `typecheck`, `tests/e2e/fondo-de-pagina.spec.ts` y `tests/e2e/pie-al-fondo.spec.ts` (10 pruebas, `chromium` y `crawlability`); `crawlability` completo 69 en verde contra `rentas-pg`, más `publicar-entrada`, `ficha-contacto-revelacion` y `reporte-con-motivo` en verde contra una base propia de la tarea (`paginacion-catalogo` sólo en su pierna de CI). Aceptado por el fundador en el tema menta (2026-10-31): «si aceptado... todo esta bien». Corrección: el tema oscuro queda pendiente de su revisión («el oscuro lo veo luego»); los roles existen en ambos temas y `lint:tokens` los exige. Fase 41 cerrada; publicación según su PR.
 
 ## Fase 42 — Entrar
 

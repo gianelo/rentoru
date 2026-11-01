@@ -30,7 +30,13 @@ Base `8e5d020`; numeración 41 por pedido del fundador (39 y 40 las está usando
   - Texto original: Quitar los fondos propios de pantalla completa de publicar (pasos, revisar, «Listo»), entrar y espera; los paneles interiores conservan su rol. Aceptación del fundador.
 - [x] **41.5 Resto del sitio.** Hecho dentro de 41.4 (ver arriba).
   - Texto original: Inicio, resultados, ficha, Mis avisos, importar, ayuda y legales según la matriz de 41.1. Aceptación del fundador.
-- [ ] **41.6 Aceptación integrada.** Recorrido en los dos temas, `crawlability` y `lint:tokens`; cierre en este documento, `tasks.md` y Engram.
+- [x] **41.6 Aceptación integrada.** Hecho sobre `dev` en `67d2240` (todas las tareas anteriores integradas: #477, #480, #484 y #487), con build de producción y `next start` en `localhost:3000` contra `rentas-pg` por el proxy local. Checks en verde: `lint:tokens` (329 hojas, sin literales), `typecheck`, `fondo-de-pagina.spec.ts` y `pie-al-fondo.spec.ts` en `chromium` y `crawlability` (10/10), `crawlability` completo (69 en verde, 15 omitidas por diseño). Las 4 que escriben datos exigen una base propia: `publicar-entrada` (8/8), `ficha-contacto-revelacion` y `reporte-con-motivo` pasaron contra un Postgres de la tarea en `127.0.0.1:55431/55433` con app en `:3001`; `paginacion-catalogo` (29.2) necesita además su base efímera dedicada y queda cubierta por su pierna de CI. Aceptado por el fundador en el tema menta (L9). Corrección: el recorrido en tema oscuro queda pendiente de su revisión («el oscuro lo veo luego»); los roles `--page` y `--footer-bg` existen en ambos temas y `lint:tokens` exige valores en los dos. Verificado localmente; publicación según su PR.
+  - Texto original: Recorrido en los dos temas, `crawlability` y `lint:tokens`; cierre en este documento, `tasks.md` y Engram.
+
+## Seguimientos fuera de la fase
+
+- `scripts/seed-e2e.ts` y `scripts/seed-pagination-e2e.ts` no corren en Windows: su guardia de «invocado directamente» (comparar `import.meta.url` con `file://` más `process.argv[1]`) compara `file:///C:/...` con `file://C:\...` y nunca coincide, así que `pnpm db:test:seed:e2e` termina en silencio sin sembrar. En 41.6 se invocó `seedE2e()` por `tsx -e`. Arreglo sugerido: `pathToFileURL(process.argv[1]).href`.
+- El aire de 48 px antes del pie en Mis avisos, editar e importar sigue sin prueba en el repositorio (ver 41.4).
 
 ## Inventario medido (41.1)
 
@@ -70,3 +76,4 @@ Límites de la medición: sin borrador, `/publicar/paso/fotos`, `quien` y `revis
 - L6 (2026-10-28): «sino usamos blanco blanco sino algo como de papel osea un color papel de libro algo asi. puedes mostrarme algunas pantallas para ver como se veria.» Tras ver la galería de tonos: «si por ahora blanco queda mejor y no le podemos dar textura a ese blanco de laguna forma para que se vea como si fuese papel».
 - L7 (2026-10-28): tras ver la galería de grano sutil y marcado: «blanco liso».
 - L8 (2026-10-28): ante la propuesta «el visor de fotos oscuro y el pie azulado», con el pie en su propio rol de color: «si claro asi exactamente. confirmo los dos».
+- L9 (2026-10-31): «recuerda que para hacer tus pruebas aca debes usar la abse de datos local». Tras el recorrido integrado en `localhost:3000`: «si aceptado el oscuro lo veo luego. todo esta bien».
