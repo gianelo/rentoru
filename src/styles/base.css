@@ -23,10 +23,15 @@
 
 body {
   margin: 0;
-  /* The page owns the full viewport height so the themed background reaches
-     the bottom on short pages instead of stopping at the content. */
-  min-block-size: 100vh;
-  background: var(--bg);
+  /* El pie va pegado al fondo (fase 41.4): la página mide al menos la
+     pantalla y se apila en columna, y el pie se empuja al final con
+     `margin-block-start: auto` en SiteFooter. Con contenido largo el pie
+     cierra la página; con contenido corto baja hasta el borde inferior, sin
+     blanco debajo ni una pantalla que se estire sola para esconderlo. */
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+  background: var(--page);
   color: var(--ink);
   font-family: var(--sans);
   font-size: var(--fp);

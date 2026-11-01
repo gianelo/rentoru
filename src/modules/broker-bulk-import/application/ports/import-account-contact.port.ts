@@ -1,4 +1,7 @@
-import type { AccountDefaultContact } from "../../domain/import-account-contact";
+import type {
+  AccountDefaultContact,
+  ResolvedImportContact,
+} from "../../domain/import-account-contact";
 
 /**
  * The one fact `runImportValidation` needs about the importing account's
@@ -8,4 +11,13 @@ import type { AccountDefaultContact } from "../../domain/import-account-contact"
  */
 export interface ImportAccountContactPort {
   findAccountContact(userId: string): Promise<AccountDefaultContact | null>;
+}
+
+/**
+ * The write beside the read (AGENTS.md §3), not a widened read port: only
+ * `confirmImport` receives it, so the preview cannot write even by mistake
+ * (tasks.md 45.2). It stores a contact `runImportValidation` already validated.
+ */
+export interface ImportAccountContactWriterPort {
+  saveAccountContact(userId: string, contact: ResolvedImportContact): Promise<void>;
 }

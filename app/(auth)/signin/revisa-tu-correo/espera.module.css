@@ -3,10 +3,6 @@
    medida estructural que SISTEMA.md fija, no una de las cuatro categorías que
    D16 tokeniza, y un segundo nombre para un valor existente hace discrepar la
    paleta. Quiebre 768, el de `Container`. */
-.screen {
-  min-block-size: 100dvh;
-  background: var(--surface);
-}
 .column {
   margin-inline: auto;
   max-inline-size: 520px;

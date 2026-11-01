@@ -9,7 +9,6 @@
    Concatenar "toda la izquierda y después toda la derecha" enterraría el
    precio debajo del párrafo que casi nadie lee entero. */
 .page {
-  background: var(--surface);
   color: var(--ink);
 }
 

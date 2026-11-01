@@ -332,4 +332,29 @@ describe("confirmImport — against real Postgres", () => {
     );
     expect(count.rows[0]?.n).toBe(0);
   });
+
+  // tasks.md 45.2 (G1): the same account stops being refused once the import
+  // screen supplies the contact, and keeps it as its default.
+  it("imports with the submitted contact and stores it as the account default", async () => {
+    const userId = randomUUID();
+    USER_IDS.push(userId);
+    await insertUser(userId, { bulkImportEnabled: true }); // no contact columns set
+    const submitted = { contactMethod: "email", contactValue: "cartera@inmobiliaria.com" };
+
+    const result = await confirmImport(
+      sourceFromText(`${REQUIRED_HEADER}\n${rowLine("PG-SUBMITTED-CONTACT")}`),
+      { sessionPort: sessionFor(userId), accounts, contact, zones, catalogue, listings },
+      submitted,
+    );
+
+    expect(result.createdCount).toBe(1);
+    expect(await contact.findAccountContact(userId)).toEqual(submitted);
+    const listing = await pool.query(
+      `SELECT contact_method, contact_value FROM "listing" WHERE publisher_id = $1`,
+      [userId],
+    );
+    expect(listing.rows).toEqual([
+      { contact_method: "email", contact_value: "cartera@inmobiliaria.com" },
+    ]);
+  });
 });

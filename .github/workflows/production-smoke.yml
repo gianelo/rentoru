@@ -1,0 +1,27 @@
+name: Production smoke
+
+# CI/CD plan task 12: after Vercel reports a successful Production deployment,
+# check the real domain with GETs only (.github/scripts/production-smoke.sh).
+# A red run means production is serving something broken; the rollback
+# procedure is in docs/production-rollback.md.
+#
+# Vercel also reports Preview deployments; those runs are skipped by `if`.
+# This job is informational and must not become a required check: required
+# checks are evaluated on pull requests, and this one never runs on them.
+
+on: deployment_status
+
+permissions: {}
+
+jobs:
+  production-smoke:
+    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the production domain
+        env:
+          SMOKE_BASE_URL: https://rentoru.com
+        run: bash .github/scripts/production-smoke.sh

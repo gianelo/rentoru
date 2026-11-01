@@ -50,8 +50,13 @@ import {
   ImportFileTooLargeError,
   ImportTooManyRowsError,
 } from "../../../src/modules/broker-bulk-import/application/read-bounded-import-file";
-import { ImportMissingAccountContactError } from "../../../src/modules/broker-bulk-import/application/run-import-validation";
+import {
+  ImportInvalidContactError,
+  ImportMissingAccountContactError,
+} from "../../../src/modules/broker-bulk-import/application/run-import-validation";
 import { UnauthenticatedError } from "../../../src/modules/identity/application/require-authenticated-session";
+import { contactFeedback } from "../../../src/modules/listing-publication/domain/contact-feedback";
+import { PUBLISH_VIOLATION_COPY } from "../../publicar/violation-copy";
 import { POST } from "./route";
 
 /**
@@ -69,8 +74,13 @@ beforeEach(() => {
   confirmImport.mockReset();
 });
 
-function request(accion: string, contenido = "referencia_externa\nCH-0118\n"): Request {
+function request(
+  accion: string,
+  contenido = "referencia_externa\nCH-0118\n",
+  campos: Record<string, string> = {},
+): Request {
   const body = new FormData();
+  for (const [name, value] of Object.entries(campos)) body.set(name, value);
   body.set("archivo", new File([contenido], "cartera-agosto.csv", { type: "text/csv" }));
   body.set("accion", accion);
   return new Request("http://localhost/api/bulk-import", { method: "POST", body });
@@ -305,7 +315,7 @@ describe("POST /api/bulk-import — los rechazos de 14f", () => {
       "cuenta sin contacto",
       () => new ImportMissingAccountContactError(),
       "cuenta-sin-contacto",
-      "Tu cuenta no tiene un método de contacto predeterminado configurado. Configura un método de contacto y su valor en tu cuenta antes de importar: un borrador importado sin un contacto que mostrar no se puede activar.",
+      "Indica cómo te contactan antes de revisar el archivo: un borrador importado sin un contacto que mostrar no se puede activar.",
     ],
   ])("%s devuelve 422 y su motivo", async (_nombre, build, motivo, mensaje) => {
     validateImport.mockRejectedValueOnce(build());
@@ -315,5 +325,40 @@ describe("POST /api/bulk-import — los rechazos de 14f", () => {
     expect(response.status).toBe(422);
     await expect(response.json()).resolves.toEqual({ estado: "rechazado", motivo, mensaje });
     expect(confirmImport).not.toHaveBeenCalled();
+  });
+});
+
+// tasks.md 45.2 (G1): el contacto viaja con el archivo en las dos acciones.
+describe("POST /api/bulk-import — el contacto de la pantalla", () => {
+  const CONTACTO = { contactMethod: "email", contactValue: "cartera@inmobiliaria.com" };
+
+  it.each([
+    ["revisar", validateImport],
+    ["crear", confirmImport],
+  ])("%s le pasa el contacto al caso de uso", async (accion, casoDeUso) => {
+    casoDeUso.mockRejectedValueOnce(new ImportMissingAccountContactError());
+
+    await post(request(accion, undefined, CONTACTO));
+
+    expect(casoDeUso.mock.calls[0]?.[2]).toEqual(CONTACTO);
+  });
+
+  it("un contacto inválido devuelve 422 con el campo y el mismo texto que publicar", async () => {
+    const submitted = { contactMethod: "whatsapp", contactValue: "hola" };
+    validateImport.mockRejectedValueOnce(
+      new ImportInvalidContactError("contactValue.invalid", submitted),
+    );
+
+    const response = await post(request("revisar", undefined, submitted));
+
+    expect(response.status).toBe(422);
+    await expect(response.json()).resolves.toEqual({
+      estado: "rechazado",
+      motivo: "contacto-invalido",
+      campo: "contactValue",
+      mensaje: PUBLISH_VIOLATION_COPY["contactValue.invalid"].message({
+        contact: contactFeedback("whatsapp", "hola"),
+      }),
+    });
   });
 });

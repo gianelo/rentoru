@@ -93,6 +93,7 @@ export interface ImportListingCandidate {
   readonly isFurnished?: boolean;
   readonly hasSecurity?: boolean;
   readonly hasAppliances?: boolean;
+  readonly reference?: string;
   readonly contactMethod: ContactMethod;
   readonly contactValue: string;
 }
@@ -209,6 +210,7 @@ export function validateImportRows(
       isFurnished: booleanValues.isFurnished,
       hasSecurity: booleanValues.hasSecurity,
       hasAppliances: booleanValues.hasAppliances,
+      reference: orUndefined(row.reference),
     };
 
     reasons.push(...validatePublishableListing(draft, curatedZones, "draft"));
@@ -243,6 +245,7 @@ export function validateImportRows(
         isFurnished: draft.isFurnished,
         hasSecurity: draft.hasSecurity,
         hasAppliances: draft.hasAppliances,
+        reference: draft.reference,
         contactMethod: contact.contactMethod,
         contactValue:
           contactValueForWrite(contact.contactMethod, contact.contactValue) ?? contact.contactValue,

@@ -5,7 +5,6 @@
    el relleno `--bg` y el radio `--r` que el sistema le da a todo bloque, y
    los espacios salen de la escala 4·8·12·16·24·32·48. */
 .page {
-  background: var(--surface);
   color: var(--ink);
   padding: 48px 0;
 }

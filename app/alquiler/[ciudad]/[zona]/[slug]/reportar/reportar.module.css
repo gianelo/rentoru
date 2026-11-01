@@ -9,7 +9,6 @@
    columna de 600px). Esta hoja no aporta ni un valor propio: es la tipografía
    de la ficha aplicada a una columna. */
 .page {
-  background: var(--surface);
   color: var(--ink);
   padding: 24px 0 40px;
 }

@@ -269,3 +269,19 @@
     font-size: var(--ficha-body-fs-desktop);
   }
 }
+
+/* #290: sólo envuelve el resultado para poder llevarle el foco; los
+   títulos enfocados por código no muestran anillo si no vino del teclado. */
+.resultado {
+  display: contents;
+}
+
+.resultado h2:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Aire antes del pie (fase 41.4): la última caja no toca la franja del pie.
+   48, el mismo que dejan la pantalla de error y «Listo». */
+.pagina {
+  padding-block-end: 48px;
+}
