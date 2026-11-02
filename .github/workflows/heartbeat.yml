@@ -5,18 +5,19 @@ name: Heartbeat
 # que `.github/workflows/ci.yml` es el único que existía, y no tenía ni
 # `schedule` ni `workflow_dispatch`.
 #
-# **Cadencia: cada 5 minutos** (decisión del fundador, 2026-09-07),
-# recalculada tras la 27.1 contra los 5 GB del plan Free de Neon:
+# **Cadencia real: cada 2 a 7 horas, no cada 5 minutos.** El cron pide
+# `*/5` (decisión del fundador, 2026-09-07), pero GitHub no garantiza los
+# horarios programados. Medido el 2026-11-01: 40 corridas en 7,7 días, con
+# separaciones de 119 a 433 minutos (mediana 276). Ésta es la única
+# vigilancia periódica de la base; la de la aplicación cada 5 minutos es el
+# monitor externo sobre /api/live (docs/production-rollback.md).
 #
-#   /api/health toca listCities() — 5 filas, 349 bytes medidos (tasks.md
-#   27.1) — en vez de una vista de página completa. 8.640 corridas/mes ×
-#   349 B ≈ 3,0 MB/mes, el 0,06 % del presupuesto de 5 GB.
-#
-# La tabla original de la 27.5 (679 kB por listZones(), 5,9 GB/mes a esta
-# cadencia — más del 100% del presupuesto) medía el costo ANTES de la 27.1 y
-# antes de decidir qué ruta golpear; queda en tasks.md como registro
-# histórico de por qué la cadencia estuvo atada de manos hasta ahora, no
-# como el costo real de este workflow.
+# **No conviene que corra de verdad cada 5 minutos.** Cada corrida despierta
+# el cómputo de Neon, que en el plan Free se suspende tras 5 minutos sin
+# uso. A esa cadencia quedaría despierto todo el mes (~180 CU-h, más que las
+# 100 del plan) y sólo por vigilar. Así cayó producción el 2026-10-26. El
+# costo en datos sí es despreciable: /api/health toca listCities(), 5 filas
+# y 349 bytes (tasks.md 27.1).
 #
 # `workflow_dispatch` está para lo que un workflow sólo-programado no puede
 # dar: verificarlo a mano sin esperar la próxima corrida.
