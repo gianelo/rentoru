@@ -544,11 +544,15 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
    * **Lo prohibido es un manejador que intercepte el envío**, no la directiva:
    * `EditarForm.tsx` es de cliente a propósito (G2) para que la 44.2 devuelva
    * lo rechazado con `useActionState`, y sigue enviando por `<form>` nativo.
+   * Desde la 44.2 el `action` es la acción que devuelve `useActionState`, así
+   * que se fijan los dos eslabones: el hook envuelve a `guardarEdicion` y el
+   * formulario envía a lo que el hook devolvió.
    */
   it("el formulario envía a la acción de servidor, nunca a un manejador de cliente", () => {
     const fuente = readFileSync(new URL("./EditarForm.tsx", import.meta.url), "utf8");
 
-    expect(fuente).toContain("<form action={guardarEdicion}");
+    expect(fuente).toContain("useActionState(guardarEdicion, estadoInicial)");
+    expect(fuente).toContain("<form action={accion}");
     expect(fuente).not.toContain("onClick");
     expect(fuente).not.toContain("onSubmit");
   });

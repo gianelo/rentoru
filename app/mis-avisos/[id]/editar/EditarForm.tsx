@@ -1,5 +1,6 @@
 "use client";
 
+import { useActionState } from "react";
 import type { EditableListing } from "@/modules/listing-publication/application/ports/listing-edit.port";
 import { editablePublisherTypes } from "@/modules/listing-publication/domain/listing-edit";
 import type { ChangedField } from "@/modules/listing-publication/domain/publication-steps";
@@ -25,30 +26,33 @@ import { FEATURES_DECLARED_FIELD } from "../../../publicar/step-values";
 import {
   listingEditViolationMessage,
   PUBLISHER_TYPE_ONE_WAY_NOTICE,
-  type PublishCopyContext,
 } from "../../../publicar/violation-copy";
 import { guardarEdicion } from "../../actions";
+import type { EstadoDeEdicion } from "../../editar-estado";
 
 /**
- * El formulario de «Guardar cambios», sacado tal cual de `page.tsx` en la
- * fase 44 (G2): `useActionState` sólo vive en un componente de cliente, y la
- * 44.2 lo necesita para devolver lo escrito. Este movimiento no cambia un byte
- * del HTML servido.
+ * El formulario de «Guardar cambios», sacado de `page.tsx` en la fase 44 (G2)
+ * para que `useActionState` devuelva lo escrito (44.2, S4).
  *
- * Las props cruzan la frontera del servidor, así que son datos planos: los
- * códigos crudos de la dirección y no el reparto ya hecho (un `Map` no cruza).
- * El reparto lo vuelve a contestar el MISMO dominio que usa la página.
+ * **Una sola fuente**: el estado. La página lo siembra desde la dirección
+ * —así los enlaces viejos con `?motivos=` siguen valiendo— y cada negativa
+ * del dominio lo reemplaza con los códigos, las medidas y los valores que se
+ * enviaron. React lo dibuja antes de hidratar y Next lo vuelve a servir ante
+ * un POST sin JavaScript. Las props cruzan la frontera del servidor, así que
+ * son datos planos: los códigos crudos y no el reparto (un `Map` no cruza).
  */
 export function EditarForm({
   aviso,
-  motivos,
-  medidas,
+  estadoInicial,
 }: {
   readonly aviso: EditableListing;
-  readonly motivos: readonly string[];
-  readonly medidas: PublishCopyContext;
+  readonly estadoInicial: EstadoDeEdicion;
 }) {
-  const negativas = placeListingEditViolations(motivos);
+  const [estado, accion] = useActionState(guardarEdicion, estadoInicial);
+  const { medidas, valores } = estado;
+  // **Dónde va cada negativa lo decide el dominio** (tasks.md 18.22): acá sólo
+  // se dibuja lo que ya viene repartido.
+  const negativas = placeListingEditViolations(estado.motivos);
 
   const mensaje = (field: ListingField): string | undefined => {
     const codigo = negativas.byField.get(field);
@@ -65,10 +69,27 @@ export function EditarForm({
   const publisherTypes = editablePublisherTypes(aviso.publisherType);
 
   return (
-    <form action={guardarEdicion} method="post" className={styles.form}>
+    <form action={accion} method="post" className={styles.form}>
       {/* La acción vuelve a acotarlo a la sesión: que este campo diga
           un id no es una afirmación sobre de quién es. */}
       <input type="hidden" name="listingId" value={aviso.id} />
+
+      {/*
+        **Sólo las que no tienen campo en esta pantalla.** Las demás se leen
+        al lado del control que las produjo, como hace publicar. Este bloque
+        queda para lo que una edición no manda —fotos, zona, ciudad— y para un
+        código inventado en la dirección: tragárselas dejaría un formulario que
+        se niega a guardar sin decir por qué (AGENTS.md §7). Vive acá y no en
+        la página porque depende del estado que devuelve la acción.
+      */}
+      {negativas.elsewhere.length === 0 ? null : (
+        <p className={styles.error} role="alert">
+          No se pudo guardar:{" "}
+          {negativas.elsewhere
+            .map((motivo) => listingEditViolationMessage(motivo, medidas))
+            .join(" · ")}
+        </p>
+      )}
 
       <div>
         {/* `FieldError` es el MISMO de los nueve pasos, movido a su
@@ -83,7 +104,7 @@ export function EditarForm({
           name="title"
           type="text"
           className={`${styles.control}${claseControl("title")}`}
-          defaultValue={aviso.title}
+          defaultValue={valores?.title ?? aviso.title}
           maxLength={MAX_TITLE_CHARACTERS * 2}
           {...invalido("title")}
         />
@@ -99,7 +120,7 @@ export function EditarForm({
           name="description"
           rows={8}
           className={`${styles.control} ${styles.textarea}${claseControl("description")}`}
-          defaultValue={aviso.description}
+          defaultValue={valores?.description ?? aviso.description}
           {...invalido("description")}
         />
         <p className={styles.help}>Mínimo {MIN_DESCRIPTION_CHARACTERS} caracteres.</p>
@@ -118,7 +139,7 @@ export function EditarForm({
           type="text"
           inputMode="numeric"
           className={`${styles.control}${claseControl("priceUsd")}`}
-          defaultValue={aviso.priceUsd}
+          defaultValue={valores?.priceUsd ?? aviso.priceUsd}
           {...invalido("priceUsd")}
         />
       </div>
@@ -145,7 +166,7 @@ export function EditarForm({
               type="text"
               inputMode="numeric"
               className={`${styles.control} ${styles.numberControl}${claseControl(name)}`}
-              defaultValue={value}
+              defaultValue={valores?.[name] ?? value}
               {...invalido(name)}
             />
           </div>
@@ -172,7 +193,7 @@ export function EditarForm({
               type="radio"
               name="propertyType"
               value={value}
-              defaultChecked={aviso.propertyType === value}
+              defaultChecked={(valores?.propertyType ?? aviso.propertyType) === value}
             />
             <span>{label}</span>
           </label>
@@ -189,7 +210,7 @@ export function EditarForm({
           name="reference"
           type="text"
           className={`${styles.control}${claseControl("reference")}`}
-          defaultValue={aviso.reference ?? ""}
+          defaultValue={valores?.reference ?? aviso.reference ?? ""}
           {...invalido("reference")}
         />
         {/* Y se dice que se puede vaciar: es el único campo del aviso
@@ -217,7 +238,9 @@ export function EditarForm({
               className={styles.choiceInput}
               type="checkbox"
               name={field}
-              defaultChecked={aviso[field]}
+              // Marcada viaja en el `FormData` y destildada no viaja, así
+              // que después de un envío la presencia ES la respuesta.
+              defaultChecked={valores ? field in valores : aviso[field]}
             />
             <span>{label}</span>
           </label>
@@ -248,7 +271,7 @@ export function EditarForm({
               type="radio"
               name="contactMethod"
               value={value}
-              defaultChecked={aviso.contactMethod === value}
+              defaultChecked={(valores?.contactMethod ?? aviso.contactMethod) === value}
             />
             <span>{CONTACT_METHOD_LABEL[value]}</span>
           </label>
@@ -265,7 +288,7 @@ export function EditarForm({
           name="contactValue"
           type="text"
           className={`${styles.control}${claseControl("contactValue")}`}
-          defaultValue={aviso.contactValue}
+          defaultValue={valores?.contactValue ?? aviso.contactValue}
           {...invalido("contactValue")}
         />
         {/* «El que reveló, reveló. Si entra de nuevo que vea el
@@ -306,7 +329,7 @@ export function EditarForm({
                 type="radio"
                 name="publisherType"
                 value={value}
-                defaultChecked={aviso.publisherType === value}
+                defaultChecked={(valores?.publisherType ?? aviso.publisherType) === value}
               />
               <span>{PUBLISHER_TYPE_LABEL[value]}</span>
             </label>

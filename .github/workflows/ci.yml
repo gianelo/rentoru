@@ -407,8 +407,8 @@ jobs:
           PLAYWRIGHT_WEB_COMMAND: pnpm start --port 3001
         run: |
           DATABASE_URL=postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require pnpm build
-          env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts --project=chromium --workers=1 --retries=0
-          env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts --project=crawlability --workers=1 --retries=0
+          env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts tests/e2e/editar-conserva-lo-escrito.spec.ts --project=chromium --workers=1 --retries=0
+          env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts tests/e2e/editar-conserva-lo-escrito.spec.ts --project=crawlability --workers=1 --retries=0
 
       # Always exercise the seeded job-owned app, not the remote deployment.
       - name: E2E + crawlability
@@ -473,7 +473,7 @@ jobs:
           # runs, so both the loop and the "no tests yet" tolerance below would
           # be dead code and one real failure would skip the remaining project.
           for project in chromium crawlability; do
-            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:|30\.7:|publication entry:' 2>&1); then
+            if output=$(pnpm exec playwright test --project="$project" --grep-invert='29\.2:|30\.2:|30\.3|30\.4b2:|30\.5b2c:|30\.6c:|30\.7:|44\.2:|publication entry:' 2>&1); then
               echo "$output"
             else
               echo "$output"

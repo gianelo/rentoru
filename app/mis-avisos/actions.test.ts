@@ -111,6 +111,7 @@ import {
   pedirDestinoDeFotoDelAviso,
   quitarFotoDelAviso,
 } from "./actions";
+import { SIN_NEGATIVAS } from "./editar-estado";
 
 beforeEach(() => {
   activateListing.mockReset();
@@ -261,7 +262,9 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
   it("llama a editListing con el id del formulario y los once campos editables, y vuelve a la lista", async () => {
     editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
 
-    await expect(guardarEdicion(edicionDe(CAMPOS))).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
+    await expect(guardarEdicion(SIN_NEGATIVAS, edicionDe(CAMPOS))).rejects.toThrow(
+      "NEXT_REDIRECT:/mis-avisos",
+    );
 
     expect(editListing).toHaveBeenCalledTimes(1);
     expect(editListing.mock.calls[0]?.[0]).toEqual({
@@ -295,6 +298,7 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
 
     await expect(
       guardarEdicion(
+        SIN_NEGATIVAS,
         edicionDe({
           ...CAMPOS,
           featuresDeclared: "1",
@@ -321,7 +325,9 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
   it("sin la marca los cinco viajan ausentes, jamás en false", async () => {
     editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
 
-    await expect(guardarEdicion(edicionDe(CAMPOS))).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
+    await expect(guardarEdicion(SIN_NEGATIVAS, edicionDe(CAMPOS))).rejects.toThrow(
+      "NEXT_REDIRECT:/mis-avisos",
+    );
 
     const [pedido] = editListing.mock.calls[0] as [{ edit: Record<string, unknown> }];
 
@@ -344,9 +350,9 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
   it("un campo vacío viaja como ausente y nunca como cero", async () => {
     editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
 
-    await expect(guardarEdicion(edicionDe({ ...CAMPOS, priceUsd: "", rooms: "" }))).rejects.toThrow(
-      "NEXT_REDIRECT:/mis-avisos",
-    );
+    await expect(
+      guardarEdicion(SIN_NEGATIVAS, edicionDe({ ...CAMPOS, priceUsd: "", rooms: "" })),
+    ).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
 
     const [pedido] = editListing.mock.calls[0] as [{ edit: Record<string, unknown> }];
     const edit = pedido.edit;
@@ -364,9 +370,9 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
   it("un tipo de publicador que llegue en el POST viaja al dominio, que es quien decide", async () => {
     editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
 
-    await expect(guardarEdicion(edicionDe({ ...CAMPOS, publisherType: "broker" }))).rejects.toThrow(
-      "NEXT_REDIRECT:/mis-avisos",
-    );
+    await expect(
+      guardarEdicion(SIN_NEGATIVAS, edicionDe({ ...CAMPOS, publisherType: "broker" })),
+    ).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
 
     const [pedido] = editListing.mock.calls[0] as [{ edit: Record<string, unknown> }];
     const edit = pedido.edit;
@@ -382,15 +388,15 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
    */
   it("la referencia en blanco viaja como cadena vacía, y ausente del POST viaja como ausente", async () => {
     editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
-    await expect(guardarEdicion(edicionDe({ ...CAMPOS, reference: "  " }))).rejects.toThrow(
-      "NEXT_REDIRECT:/mis-avisos",
-    );
+    await expect(
+      guardarEdicion(SIN_NEGATIVAS, edicionDe({ ...CAMPOS, reference: "  " })),
+    ).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
     const [primero] = editListing.mock.calls[0] as [{ edit: ListingEdit }];
     expect(primero.edit.reference).toBe("");
 
     editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
     const { reference: _sin, ...sinReferencia } = CAMPOS;
-    await expect(guardarEdicion(edicionDe(sinReferencia))).rejects.toThrow(
+    await expect(guardarEdicion(SIN_NEGATIVAS, edicionDe(sinReferencia))).rejects.toThrow(
       "NEXT_REDIRECT:/mis-avisos",
     );
     const [segundo] = editListing.mock.calls[1] as [{ edit: ListingEdit }];
@@ -402,63 +408,80 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
   it("dejar los puestos en blanco viaja como cero, no como «no contestó»", async () => {
     editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
 
-    await expect(guardarEdicion(edicionDe({ ...CAMPOS, parkingSpots: "" }))).rejects.toThrow(
-      "NEXT_REDIRECT:/mis-avisos",
-    );
+    await expect(
+      guardarEdicion(SIN_NEGATIVAS, edicionDe({ ...CAMPOS, parkingSpots: "" })),
+    ).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
 
     const [pedido] = editListing.mock.calls[0] as [{ edit: ListingEdit }];
     expect(pedido.edit.parkingSpots).toBe(0);
   });
 
-  it("una negativa del dominio vuelve a la pantalla de editar con los códigos, no con la frase", async () => {
+  /**
+   * Fase 44 (S4) — **la negativa vuelve a la misma pantalla con lo escrito.**
+   * «le di a guardar aviso y ahí se reinició todo»: antes esto redirigía con
+   * los códigos y la página volvía a pintar la base. Ahora la acción DEVUELVE
+   * el estado y `useActionState` lo dibuja, con y sin JavaScript; los valores
+   * vuelven crudos, tal cual se escribieron, y sin el `listingId`.
+   */
+  it("una negativa del dominio devuelve los códigos, las medidas y lo escrito, sin redirigir", async () => {
     editListing.mockRejectedValueOnce(
       new EditListingRejectedError(["publisherType.immutable", "priceUsd.invalid"]),
     );
+    const enviado = { ...CAMPOS, priceUsd: "abc", featuresDeclared: "1", hasSecurity: "on" };
 
-    await expect(guardarEdicion(edicionDe(CAMPOS))).rejects.toThrow(
-      "NEXT_REDIRECT:/mis-avisos/aviso-1/editar?motivos=publisherType.immutable%2CpriceUsd.invalid&largoTitulo=37&largoDescripcion=67",
+    await expect(guardarEdicion(SIN_NEGATIVAS, edicionDe(enviado))).resolves.toEqual({
+      motivos: ["publisherType.immutable", "priceUsd.invalid"],
+      medidas: { titleLength: 37, descriptionLength: 67 },
+      valores: enviado,
+    });
+    expect(redirect).not.toHaveBeenCalled();
+    expect(revalidatePath).toHaveBeenCalledWith("/mis-avisos");
+  });
+
+  it("guardar bien sigue volviendo a la lista, no a un estado", async () => {
+    editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
+
+    await expect(guardarEdicion(SIN_NEGATIVAS, edicionDe(CAMPOS))).rejects.toThrow(
+      "NEXT_REDIRECT:/mis-avisos",
     );
+    expect(redirect).toHaveBeenCalledWith("/mis-avisos");
   });
 
   /**
-   * tasks.md 18.25 — **la negativa vuelve con la medida de lo que se envió.**
-   *
-   * El contador decía «Vas 0» sobre una descripción de 24 caracteres porque lo
-   * único que volvía eran los códigos, y la corrección obvia —leer la
-   * descripción guardada— habría dicho el largo de otra. Vuelve el número, que
-   * es lo único que la frase dibuja, y por eso cabe en una dirección: es la
-   * misma asimetría que la 18.19 midió del otro lado.
+   * tasks.md 18.25 — **el contador cuenta lo que se envió.** Leer la
+   * descripción guardada habría dicho el largo de otra; la medida sale de lo
+   * que el validador acaba de rechazar.
    */
-  it("la negativa lleva la medida de lo que se envió, jamás el texto", async () => {
-    const description = "Corta, muy corta de más.";
+  it("la negativa lleva la medida de lo que se envió", async () => {
     editListing.mockRejectedValueOnce(new EditListingRejectedError(["description.tooShort"]));
 
-    await expect(guardarEdicion(edicionDe({ ...CAMPOS, description }))).rejects.toThrow(
-      "NEXT_REDIRECT:/mis-avisos/aviso-1/editar?motivos=description.tooShort&largoTitulo=37&largoDescripcion=24",
+    const estado = await guardarEdicion(
+      SIN_NEGATIVAS,
+      edicionDe({ ...CAMPOS, description: "Corta, muy corta de más." }),
     );
 
-    const [destino] = redirect.mock.calls.at(-1) as [string];
-    expect(destino).not.toContain("Corta");
-    expect(destino.length).toBeLessThan(120);
+    expect(estado.medidas).toEqual({ titleLength: 37, descriptionLength: 24 });
   });
 
   it("mide en puntos de código, igual que el validador que la rechazó", async () => {
     editListing.mockRejectedValueOnce(new EditListingRejectedError(["description.tooShort"]));
 
-    await expect(
-      guardarEdicion(edicionDe({ ...CAMPOS, description: "🏠".repeat(10) })),
-    ).rejects.toThrow("largoDescripcion=10");
+    const estado = await guardarEdicion(
+      SIN_NEGATIVAS,
+      edicionDe({ ...CAMPOS, description: "🏠".repeat(10) }),
+    );
+
+    expect(estado.medidas.descriptionLength).toBe(10);
   });
 
   it("un campo vacío no manda una medida, porque no se envió ninguno", async () => {
     editListing.mockRejectedValueOnce(new EditListingRejectedError(["description.required"]));
 
-    const [destino] = await guardarEdicion(edicionDe({ ...CAMPOS, description: "" }))
-      .then(() => [""])
-      .catch(() => redirect.mock.calls.at(-1) as [string]);
+    const estado = await guardarEdicion(SIN_NEGATIVAS, edicionDe({ ...CAMPOS, description: "" }));
 
-    expect(destino).toContain("motivos=description.required");
-    expect(destino).not.toContain("largoDescripcion");
+    expect(estado.motivos).toEqual(["description.required"]);
+    expect(estado.medidas.descriptionLength).toBeUndefined();
+    expect(estado.medidas.titleLength).toBe(37);
   });
 
   /**
@@ -469,7 +492,7 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
   it("un aviso ajeno o inexistente sube, y no se convierte en una explicación", async () => {
     editListing.mockRejectedValueOnce(new EditListingNotFoundError("aviso-1"));
 
-    await expect(guardarEdicion(edicionDe(CAMPOS))).rejects.toBeInstanceOf(
+    await expect(guardarEdicion(SIN_NEGATIVAS, edicionDe(CAMPOS))).rejects.toBeInstanceOf(
       EditListingNotFoundError,
     );
     expect(redirect).not.toHaveBeenCalled();
