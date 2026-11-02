@@ -3138,7 +3138,7 @@ Plan: `odd/tasks/fase-44-editar-aviso.md`. Sale de [#290](https://github.com/gia
 
 - [ ] 44.1 Lámina derivada del flujo de publicar (G1).
 - [x] 44.2a El formulario de editar en su propio componente cliente (`EditarForm.tsx`), sin cambiar el HTML servido (G2). Evidencia: volcado antes/después idéntico, `editar-servido.test.tsx` 95/95, typecheck, biome, `lint:tokens` y build. Excepción de tamaño del fundador (movimiento mecánico, 685 líneas). Publicado en el PR #494 (pendiente de merge).
-- [ ] 44.2 Ante un rechazo, conservar lo escrito: la acción devuelve valores y errores con `useActionState` (G2); la descripción no viaja por la URL (18.19).
+- [x] 44.2 Ante un rechazo, conservar lo escrito: `guardarEdicion` devuelve `{ motivos, medidas, valores }` y `EditarForm` lo pinta con `useActionState` (G2); la descripción no viaja por la URL (18.19). Evidencia: `app/mis-avisos/actions.test.ts` y `EditarForm.test.tsx` (RED/GREEN, 2 mutaciones), 101/101 en `app/mis-avisos`, `tests/e2e/editar-conserva-lo-escrito.spec.ts` en la pierna de publicar del CI (sin correr en local: puerto 3001 ocupado por otra tarea). Aceptado por el fundador (2026-11-01). Decisión del mismo día: los errores van arriba del campo en todo el sitio; se corrigió la especificación de publicar. Publicado en el PR #498 (pendiente de merge).
 - [ ] 44.3 Precio vacío como error visible.
 - [ ] 44.4 Quitar fotos recién al guardar, con aviso y estado de espera (alto riesgo: borra en R2).
 - [ ] 44.5 Portada y orden de fotos en editar.

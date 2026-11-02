@@ -16,9 +16,10 @@ const own = steps.find((step) => step.name === ownName);
 const general = steps.find((step) => step.name === "E2E + crawlability");
 const build =
   "DATABASE_URL=postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require pnpm build";
-const runner = "env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts";
+const runner =
+  "env -u DATABASE_URL pnpm exec playwright test tests/e2e/publicar-entrada.spec.ts tests/e2e/editar-conserva-lo-escrito.spec.ts";
 const exclusions =
-  "29\\.2:|30\\.2:|30\\.3|30\\.4b2:|30\\.5b2c:|30\\.6c:|30\\.7:|publication entry:";
+  "29\\.2:|30\\.2:|30\\.3|30\\.4b2:|30\\.5b2c:|30\\.6c:|30\\.7:|44\\.2:|publication entry:";
 
 function dedicated(): Step {
   expect(own, "publication entry must have its own local CI step").toBeDefined();

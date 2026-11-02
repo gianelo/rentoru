@@ -37,6 +37,7 @@ import { DrizzlePhotoHash } from "@/modules/listing-trust/infrastructure/drizzle
 import { db } from "@/shared/db/client";
 import { getTransactionalDatabase } from "@/shared/db/transactional-client";
 import { FEATURES_DECLARED_FIELD, formChecked, formCount, formText } from "../publicar/step-values";
+import type { EstadoDeEdicion } from "./editar-estado";
 
 /**
  * tasks.md 9.28 — **las dos llamadas que no existían.**
@@ -359,20 +360,26 @@ function leerAtributos(formData: FormData): Partial<ListingEdit> {
  *
  * La regla (`planListingEdit`), el caso de uso (`editListing`), el puerto y el
  * adaptador shipearon enteros y probados sin un solo llamador. Esto es el
- * llamador, con la misma forma que `activarBorrador`: un `<form>` de verdad,
- * así que llega como `FormData` y funciona con el script apagado.
+ * llamador: un `<form>` de verdad, así que llega como `FormData` y funciona con
+ * el script apagado.
  *
  * **Ninguna regla vive acá.** Qué campos puede tocar una edición y con qué
  * reglas se validan lo contesta el dominio; este archivo elige adaptadores y
- * traduce la respuesta a una dirección.
+ * traduce la respuesta.
  *
- * **La negativa viaja como código, nunca como frase**, igual que la de activar:
- * la copia se decide en una tabla (`listingEditViolationMessage`), y una URL
- * con castellano adentro sería una segunda tabla que nadie mantiene. Un aviso
- * ajeno o inexistente no produce ninguna dirección: sube, porque decirle a un
+ * **Fase 44 (S4): una negativa ya no redirige, devuelve.** «le di a guardar
+ * aviso y ahí se reinició todo»: la dirección sólo podía llevar códigos, y la
+ * página volvía a pintar la base. Ahora vuelve un `EstadoDeEdicion` por
+ * `useActionState`, que React dibuja antes de hidratar y Next vuelve a servir
+ * ante un POST sin JavaScript. La negativa sigue viajando como código y nunca
+ * como frase: la copia la decide `listingEditViolationMessage`. Un aviso ajeno
+ * o inexistente no produce ningún estado: sube, porque decirle a un
  * desconocido «ese aviso no es tuyo» ya sería contarle que existe.
  */
-export async function guardarEdicion(formData: FormData): Promise<void> {
+export async function guardarEdicion(
+  _estadoAnterior: EstadoDeEdicion,
+  formData: FormData,
+): Promise<EstadoDeEdicion> {
   const listingId = String(formData.get("listingId") ?? "");
   const edicion = leerEdicion(formData);
 
@@ -393,39 +400,39 @@ export async function guardarEdicion(formData: FormData): Promise<void> {
 
   revalidatePath("/mis-avisos");
 
+  if (violations !== null) {
+    return {
+      motivos: violations,
+      /**
+       * tasks.md 18.25 — **el contador cuenta lo que se envió, o no cuenta.**
+       * «Vas N» tiene que ser el largo de lo que se acaba de rechazar, no el
+       * de la guardada, que es otra. Se mide acá porque `formText` ya recortó
+       * los espacios igual que el validador, y en puntos de código como él. Un
+       * campo ausente no manda medida: la frase sale sin contador antes que
+       * con un cero (AGENTS.md §7).
+       */
+      medidas: {
+        titleLength: measureOf(edicion.title),
+        descriptionLength: measureOf(edicion.description),
+      },
+      valores: valoresEnviados(formData),
+    };
+  }
+
   // Fuera del `try`: `redirect` funciona tirando, y atraparlo adentro lo
   // convertiria en «un error inesperado» silenciosamente.
-  redirect(violations === null ? "/mis-avisos" : refusalPath(listingId, violations, edicion));
+  redirect("/mis-avisos");
 }
 
 /**
- * tasks.md 18.25 — **la dirección de una negativa, con la medida de lo que se
- * envió y sin una letra de lo que se escribió.**
- *
- * El contador del diseño dice «Vas 24», y esa N tiene que ser la de la
- * descripción que se acaba de rechazar: la pantalla sólo tenía los códigos, así
- * que decía «Vas 0», y leer la guardada habría dicho el largo de otra — las dos
- * son un número que nadie escribió. Volver el texto entero no es una opción y
- * está medido: son 1.200 caracteres que codificados pasan de 7 KB de dirección
- * (18.19). Vuelve el número, que es lo único que la frase dibuja.
- *
- * **Un campo ausente no manda medida**, y por eso la frase sale sin contador en
- * vez de con un cero (AGENTS.md §7). Contar acá y no en la pantalla es lo que
- * hace que la medida sea la de lo enviado: `formText` ya recortó los espacios,
- * igual que el validador que la rechazó.
+ * Lo escrito, de vuelta tal cual: cadenas crudas, nunca leídas — el «abc» del
+ * precio vuelve «abc». El `listingId` no vuelve porque el formulario ya lo
+ * dibuja desde el aviso.
  */
-function refusalPath(
-  listingId: string,
-  violations: readonly string[],
-  edicion: ListingEdit,
-): string {
-  const params = new URLSearchParams({ motivos: violations.join(",") });
-  for (const [name, medida] of [
-    ["largoTitulo", measureOf(edicion.title)],
-    ["largoDescripcion", measureOf(edicion.description)],
-  ] as const) {
-    if (medida !== undefined) params.set(name, String(medida));
+function valoresEnviados(formData: FormData): Record<string, string> {
+  const valores: Record<string, string> = {};
+  for (const [name, value] of formData) {
+    if (name !== "listingId" && typeof value === "string") valores[name] = value;
   }
-
-  return `/mis-avisos/${encodeURIComponent(listingId)}/editar?${params.toString()}`;
+  return valores;
 }

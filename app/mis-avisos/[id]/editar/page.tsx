@@ -14,7 +14,6 @@ import { loadListingPhotosForEdit } from "@/modules/listing-publication/applicat
 import { readCarriedMeasure } from "@/modules/listing-publication/domain/carried-value";
 import { COVER_PHOTO_INDEX } from "@/modules/listing-publication/domain/draft-photo-actions";
 import { MAX_PHOTOS_PER_LISTING } from "@/modules/listing-publication/domain/publishable-listing";
-import { placeListingEditViolations } from "@/modules/listing-publication/domain/violation-field";
 import {
   DrizzleListingEdit,
   DrizzleListingPhotoSet,
@@ -33,11 +32,8 @@ import {
   photoRemovalRefusalMessage,
 } from "../../../publicar/photo-action-copy";
 import styles from "../../../publicar/publish-steps.module.css";
-import {
-  listingEditViolationMessage,
-  type PublishCopyContext,
-} from "../../../publicar/violation-copy";
 import { adjuntarFotoAlAviso, pedirDestinoDeFotoDelAviso, quitarFotoDelAviso } from "../../actions";
+import type { EstadoDeEdicion } from "../../editar-estado";
 import { SubirFoto } from "../../SubirFoto";
 import { EditarForm } from "./EditarForm";
 
@@ -91,8 +87,8 @@ export const dynamic = "force-dynamic";
  *
  * **Dónde se lee cada negativa lo decide el dominio** (tasks.md 18.22): antes
  * del campo que la produjo y anunciada, como hacen los nueve pasos, con el
- * MISMO `FieldError`. El bloque de arriba queda sólo para lo que una edición no
- * manda y para un código inventado en la dirección.
+ * MISMO `FieldError`. Desde la 44.2 las dibuja `EditarForm`, porque vuelven
+ * en el estado de la acción; esta página sólo siembra el inicial.
  */
 export default async function EditarAvisoPage({
   params,
@@ -171,33 +167,23 @@ export default async function EditarAvisoPage({
     state: { kind: "empty" },
   };
 
-  // Códigos, nunca frases: es lo que vuelve en la dirección cuando el dominio
-  // se niega y no hay JavaScript donde devolver un valor.
-  const motivos = (query.motivos ?? "").split(",").filter((motivo) => motivo !== "");
-
-  // **Dónde va cada negativa lo decide el dominio** (tasks.md 18.22), no esta
-  // pantalla: `placeListingEditViolations` reparte entre los campos que un
-  // pedido de edición manda y las que no tienen ninguno. Acá sólo se dibuja lo
-  // que ya viene decidido.
-  const negativas = placeListingEditViolations(motivos);
-
   /**
-   * **El contador cuenta lo que se envió, o no cuenta** (tasks.md 18.25).
+   * **El estado inicial del formulario, desde la dirección** (44.2). Desde la
+   * fase 44 una negativa vuelve por `useActionState` y no por acá; leer la
+   * dirección igual es lo que mantiene válidos los enlaces viejos con
+   * `?motivos=`, y sembrar el estado con ella deja una sola fuente.
    *
-   * Antes esto era `{ title: aviso.title }` y el «Vas N» de la descripción
-   * salía 0, porque lo que se acababa de escribir no volvía. Pasarle
-   * `aviso.description` habría dicho el largo de la GUARDADA, que tampoco es la
-   * que se rechazó: las dos son un número que nadie escribió. Lo que vuelve es
-   * la medida de lo enviado, que es lo único que la frase dibuja y lo único que
-   * cabe en una dirección (18.19).
-   *
-   * **Un parámetro es una afirmación de afuera** (AGENTS.md §7):
-   * `readCarriedMeasure` devuelve nada ante lo ausente y ante lo inventado, y
-   * la frase sale sin contador antes que con un número falso.
+   * Códigos, nunca frases. **Y una medida es una afirmación de afuera**
+   * (AGENTS.md §7): `readCarriedMeasure` devuelve nada ante lo ausente y ante
+   * lo inventado, y la frase sale sin contador antes que con un número falso
+   * (tasks.md 18.25).
    */
-  const medidas: PublishCopyContext = {
-    titleLength: readCarriedMeasure(query.largoTitulo),
-    descriptionLength: readCarriedMeasure(query.largoDescripcion),
+  const estadoInicial: EstadoDeEdicion = {
+    motivos: (query.motivos ?? "").split(",").filter((motivo) => motivo !== ""),
+    medidas: {
+      titleLength: readCarriedMeasure(query.largoTitulo),
+      descriptionLength: readCarriedMeasure(query.largoDescripcion),
+    },
   };
   return (
     <>
@@ -216,23 +202,6 @@ export default async function EditarAvisoPage({
             <p className={styles.help}>
               Los cambios se ven enseguida en tu aviso. Quien ya vio tu contacto no lo pierde.
             </p>
-
-            {/*
-              **Sólo las que no tienen campo en esta pantalla.** Las demás se
-              leen al lado del control que las produjo, como hace publicar. Este
-              bloque queda para lo que una edición no manda —fotos, zona,
-              ciudad, tipo de inmueble, puestos— y para un código inventado en la
-              dirección: tragárselas dejaría un formulario que se niega a guardar
-              sin decir por qué (AGENTS.md §7).
-            */}
-            {negativas.elsewhere.length === 0 ? null : (
-              <p className={styles.error} role="alert">
-                No se pudo guardar:{" "}
-                {negativas.elsewhere
-                  .map((motivo) => listingEditViolationMessage(motivo, medidas))
-                  .join(" · ")}
-              </p>
-            )}
 
             {/*
               **Las fotos, antes del formulario y fuera de él.** Cada una lleva
@@ -352,7 +321,7 @@ export default async function EditarAvisoPage({
               />
             </section>
 
-            <EditarForm aviso={aviso} motivos={motivos} medidas={medidas} />
+            <EditarForm aviso={aviso} estadoInicial={estadoInicial} />
           </div>
         </Container>
       </main>
