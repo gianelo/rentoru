@@ -1,6 +1,22 @@
-# Production: detecting a bad release and rolling it back
+# Production runbook: releasing, detecting a bad release and rolling it back
 
-CI/CD plan task 12. Three signals watch production, each answering a different question:
+CI/CD plan tasks 12 and 14. Releasing is described first, then how to tell that something is wrong, how to roll back, what a rollback cannot undo, and a drill to rehearse it all.
+
+## Releasing
+
+Every change reaches production through `dev → staging → main`, and only that way. The founder performs every merge, always as a normal merge (no squash, no rebase).
+
+1. **Into `dev`.** Feature PRs target `dev`. The PR runs the basic jobs (lint, types, tokens, unit/coverage, integration, build). The push to `dev` runs the critical e2e profile, and Vercel deploys the Dev preview, which applies migrations to the Dev database.
+2. **`dev → staging`.** Open a PR with head `dev` and base `staging`. A promotion carries everything merged since the last one, so it usually exceeds the 400-line review budget and needs the founder's explicit exception, written in the PR body. After the merge, the push to `staging` runs the full validation: e2e and crawlability, measure, budgets, and Lighthouse on the Staging preview. Vercel applies the migrations to the Staging database **before production sees them**.
+3. **Wait for staging green.** A red staging run is reported, not re-run. The cause is understood first, then fixed through a new PR into `dev`.
+4. **`staging → main`.** Open a PR with head `staging` and base `main`. The required `release-gate` check passes only when the head is the current `staging` HEAD, that SHA's staging CI run succeeded, and the merge tree equals the validated tree.
+5. **After the merge,** Vercel builds Production (`vercel-build` runs `deploy-migrate`, then `next build`), and `Production smoke` checks the real domain. A green smoke run closes the release.
+
+If a release includes a migration, read it in the staging PR before merging into `main` (see [Migrations](#migrations-must-stay-backward-compatible)).
+
+## Watching production
+
+Three signals watch production, each answering a different question:
 
 | Signal | Asks | Cadence | Touches the database |
 |---|---|---|---|
@@ -27,6 +43,26 @@ Create an HTTP monitor in any free uptime service (UptimeRobot, Better Stack): U
 4. **Fix forward through the normal path.** The fix goes `dev → staging → main`. The release gate refuses any pull request into `main` that is not the validated `staging` head, so there is no direct hotfix.
 5. **Undo the rollback** once the fixed deployment exists: Vercel → **Undo Rollback**, choose the new deployment → Confirm (CLI: `vercel promote <deployment-url>`). This restores automatic promotion. The new deployment's `Production smoke` run must be green.
 
-## What a rollback cannot undo
+## Migrations must stay backward compatible
 
-**Database migrations.** They run forward during the build and stay applied after a rollback, so the previous build runs against the newer schema. `deploy-migrate` refuses destructive statements unless a migration is marked `deploy-migrate: allow-destructive` with a reason (or `ALLOW_DESTRUCTIVE_MIGRATION` is set), so migrations are normally additive and an older build keeps working against them. Before rolling back past a release, check whether it shipped such a migration: one that is not backward compatible makes rollback unsafe, and the answer is to fix forward.
+A rollback cannot undo **database migrations**. They run forward during the build and stay applied after a rollback, so the previous build runs against the newer schema. A release is only safely reversible when the previous build still works against that schema.
+
+`deploy-migrate` refuses destructive statements unless a migration is marked `deploy-migrate: allow-destructive` with a reason (or `ALLOW_DESTRUCTIVE_MIGRATION` is set), so migrations are normally additive. Keep them that way:
+
+- **Additive is safe.** A new table, a new nullable column, or a new column with a default: the older build ignores it.
+- **Removing or renaming takes two releases.** First, a release whose code stops using the column. Then, a later release that drops it, with the `allow-destructive` marker and its reason. Never do both in one release.
+- **A new `NOT NULL` without a default,** or a tightened constraint, breaks the older build's inserts. Add it as nullable or with a default, backfill, and tighten in a later release.
+
+Before rolling back past a release, check whether it shipped a migration. If that migration is not backward compatible, a rollback is unsafe and the answer is to fix forward.
+
+## Incident drill
+
+Rehearse once, and again after any change to this runbook, so the first real incident is not the first time anyone reads it. None of these steps changes production.
+
+1. **Alerting.** Run the `Heartbeat` workflow by hand (Actions → Heartbeat → Run workflow) and confirm it is green. To check that its alert mail arrives, point the external monitor at a URL that does not exist for one interval, confirm the email, then restore `/api/live`.
+2. **Smoke.** Re-run the last `Production smoke` run and confirm the three `ok` lines.
+3. **Rollback, read-only.** In Vercel, open Production Deployment → Instant Rollback and confirm which deployment is eligible, then **cancel**. Note how long it took to find.
+4. **Migrations.** Pick the latest migration in `drizzle/` and decide, using the rules above, whether a rollback past it would be safe.
+5. **Record** the date, what was slow or unclear, and any fix to this document.
+
+Performing a real Instant Rollback is a separate, explicit founder decision. It stops automatic promotion until it is undone.
