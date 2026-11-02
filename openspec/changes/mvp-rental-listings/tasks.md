@@ -3070,7 +3070,7 @@ Plan, specs, hechos verificados y gates: `odd/tasks/fase-37-publicar-listo.md`. 
 
 Plan, hechos verificados y gates: `odd/tasks/fase-38-correos.md`. La 35.10 cambió los textos; esta fase cambia la forma de los cinco correos sin tocar lo que dicen ni el texto plano. Una tarea por PR ≤400 líneas a `dev`; G1 (lámina), G2 (correos internos) y G3 (entorno de prueba real) son decisiones del fundador.
 
-- [ ] 38.1 Lámina de correo derivada del sistema para los tres correos al usuario, claro y oscuro (G1).
+- [x] 38.1 Lámina de correo derivada del sistema para los tres correos al usuario (G1). `design/pantallas/Rentoru - Correo-v1.html` y `correo-v1.css`, seis marcos (390/640 px), sólo claro por decisión del fundador; enlace de respaldo entero y textos cortos que 38.3/38.4 llevan al dominio. Medida en Chromium sin desborde; `lint:tokens` PASS. G1 aprobado el 2026-11-02: «si ahora si». Publicación y merge pendientes.
 - [ ] 38.2 Un solo renderizador en lugar de las cuatro copias, con los valores del sistema resueltos y comparados contra `tokens.css`.
 - [ ] 38.3 Enlace para entrar con botón, enlace de respaldo y vigencia visibles.
 - [ ] 38.4 Vencimiento y purga con título, fecha y botón de renovar.
