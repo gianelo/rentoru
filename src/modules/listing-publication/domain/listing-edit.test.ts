@@ -298,6 +298,41 @@ describe("planListingEdit — edita con las MISMAS reglas con las que se publica
     );
   });
 
+  /**
+   * Fase 44 (S5): «hizo como si se guardara pero no se guardó». Un precio
+   * enviado en blanco es una respuesta —vacía—, no «no lo toqué»: si cayera en
+   * el `?? current`, la edición devolvería éxito con el precio de ayer.
+   */
+  it("un precio enviado en blanco se rechaza como obligatorio, y no deja el de ayer", () => {
+    const plan = planListingEdit(published({ priceUsd: 610 }), ZONES, { priceUsd: null });
+
+    expect(plan.ok).toBe(false);
+    expect(rejectionOf(plan)).toContain("priceUsd.required");
+  });
+
+  it("precio, habitaciones, baños y metros² en blanco devuelven los cuatro obligatorios", () => {
+    const plan = planListingEdit(published(), ZONES, {
+      priceUsd: null,
+      rooms: null,
+      bathrooms: null,
+      areaM2: null,
+    });
+
+    expect([...rejectionOf(plan)].sort()).toEqual([
+      "areaM2.required",
+      "bathrooms.required",
+      "priceUsd.required",
+      "rooms.required",
+    ]);
+  });
+
+  it("un precio que no viaja sigue siendo «no lo toqué», y deja el de ayer", () => {
+    expect(
+      writeOf(planListingEdit(published({ priceUsd: 610 }), ZONES, { priceUsd: undefined }))
+        .priceUsd,
+    ).toBe(610);
+  });
+
   it("un título más largo que el máximo se rechaza al editar", () => {
     expect(rejectionOf(planListingEdit(published(), ZONES, { title: "a".repeat(91) }))).toContain(
       "title.tooLong",

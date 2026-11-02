@@ -136,6 +136,31 @@ describe("EditarForm — lo escrito vuelve después de una negativa (44.2)", () 
     expect(html).not.toContain('role="alert"');
   });
 
+  /**
+   * 44.3 (S5): «hizo como si se guardara pero no se guardó». Un numérico en
+   * blanco ya no se traga: vuelve como `X.required`, y esta prueba fija que
+   * el HTML servido lo dice al lado de CADA uno de los cuatro, con el campo
+   * vacío tal como se envió y no con el valor de ayer.
+   */
+  it("precio, habitaciones, baños y metros en blanco se anuncian obligatorios junto a su campo", () => {
+    const html = dibujar({
+      motivos: ["priceUsd.required", "rooms.required", "bathrooms.required", "areaM2.required"],
+      medidas: {},
+      valores: { priceUsd: "", rooms: "", bathrooms: "", areaM2: "" },
+    });
+
+    for (const name of ["priceUsd", "rooms", "bathrooms", "areaM2"]) {
+      expect(html, name).toContain(`id="${name}-error"`);
+      expect(control(html, name), name).toContain('aria-invalid="true"');
+      expect(control(html, name), name).toContain('value=""');
+    }
+    expect(html).toContain("Pon el alquiler mensual en dólares");
+    expect(html).toContain("¿Cuántas habitaciones tiene?");
+    expect(html).toContain("¿Cuántos metros cuadrados tiene?");
+    expect(html).not.toContain('value="610"');
+    expect(html).not.toContain('role="alert"');
+  });
+
   it("una negativa sin campo se dice en el bloque de arriba, anunciada", () => {
     const html = dibujar({ motivos: ["photos.required"], medidas: {} });
 

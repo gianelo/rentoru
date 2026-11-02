@@ -344,20 +344,24 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
 
   /**
    * `Number("")` es 0, y ese cero silencioso es la diferencia entre no tocar
-   * el precio y publicar un alquiler gratis. Los lectores se reusan de
-   * `step-values.ts` justamente para no volver a escribir esta decisión.
+   * el precio y publicar un alquiler gratis. Fase 44 (S5): tampoco viaja como
+   * ausente, porque ausente es «no lo toqué» y la edición se daba por buena con
+   * el precio de ayer. En blanco es `null` y lo rechaza el dominio.
    */
-  it("un campo vacío viaja como ausente y nunca como cero", async () => {
+  it("un numérico en blanco viaja como null, ausente del POST viaja como ausente, y nunca como cero", async () => {
     editListing.mockResolvedValueOnce({ listingId: "aviso-1" });
+    const { areaM2: _sinMetros, ...sinMetros } = CAMPOS;
 
     await expect(
-      guardarEdicion(SIN_NEGATIVAS, edicionDe({ ...CAMPOS, priceUsd: "", rooms: "" })),
+      guardarEdicion(SIN_NEGATIVAS, edicionDe({ ...sinMetros, priceUsd: "", rooms: "" })),
     ).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
 
     const [pedido] = editListing.mock.calls[0] as [{ edit: Record<string, unknown> }];
     const edit = pedido.edit;
-    expect(edit.priceUsd).toBeUndefined();
-    expect(edit.rooms).toBeUndefined();
+    expect(edit.priceUsd).toBeNull();
+    expect(edit.rooms).toBeNull();
+    expect(edit.areaM2).toBeUndefined();
+    expect(edit.bathrooms).toBe(2);
   });
 
   /**
