@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="menta" data-layout="compacto">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Correo · lámina v1 — Rentoru</title>
+    <link rel="stylesheet" href="../../src/styles/tokens.css">
+    <link rel="stylesheet" href="correo-v1.css">
+  </head>
+  <body>
+    <aside class="design-note" aria-label="Contexto de la lámina">
+      <p><strong>Correo · v1 · propuesta sin aprobar (fase 38.1, gate G1)</strong></p>
+      <p>Referencia estática, sin JavaScript: los tres correos al usuario, cada uno a 390 px (móvil) y 640 px (escritorio),
+        sólo en claro (fundador, L6). Los textos son la propuesta corta de L5; el enlace, el aviso y las fechas son muestras.</p>
+    </aside>
+    <h2 class="row-label" id="row-entrar">Enlace para entrar <span>identity · asunto: «Tu enlace para entrar a Rentoru»</span></h2>
+    <div class="boards" role="list" aria-labelledby="row-entrar">
+      <figure class="board" role="listitem" aria-labelledby="board-entrar-m">
+        <figcaption class="board-label" id="board-entrar-m">Móvil · 390 px</figcaption>
+        <div class="frame frame-mobile" data-theme="menta" data-layout="compacto">
+          <div class="mail">
+            <article class="card" aria-labelledby="entrar-m">
+              <header class="mail-head"><span class="brand">Rentoru</span></header>
+              <div class="mail-body">
+              <h1 id="entrar-m">Entra a Rentoru</h1>
+              <p>Toca el botón para entrar. No necesitas contraseña.</p>
+              <a class="action" href="#design-notes">Entrar a Rentoru</a>
+              <p class="fallback">O copia este enlace en tu navegador:
+                <a href="#design-notes">https://rentoru.com/api/auth/callback/resend?token=8f3a2c9d7e1b4f60a5c3e9d2b7f1a4c8&email=maria%40ejemplo.com</a></p>
+              <section class="fact" aria-label="Vigencia del enlace">
+                <h2>Vale por</h2>
+                <p class="fact-date">15 minutos</p>
+                <p class="fact-note">Se usa una sola vez.</p>
+              </section>
+              <p>¿No pediste entrar? Ignora este correo.</p>
+              </div>
+              <footer class="mail-foot">
+                <p>Te escribimos porque pediste entrar a Rentoru con este correo.</p>
+            <p>Rentoru · alquileres en Distrito Capital y Maracaibo</p>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </figure>
+      <figure class="board" role="listitem" aria-labelledby="board-entrar-d">
+        <figcaption class="board-label" id="board-entrar-d">Escritorio · 640 px</figcaption>
+        <div class="frame frame-desktop" data-theme="menta" data-layout="compacto">
+          <div class="mail">
+            <article class="card" aria-labelledby="entrar-d">
+              <header class="mail-head"><span class="brand">Rentoru</span></header>
+              <div class="mail-body">
+              <h1 id="entrar-d">Entra a Rentoru</h1>
+              <p>Toca el botón para entrar. No necesitas contraseña.</p>
+              <a class="action" href="#design-notes">Entrar a Rentoru</a>
+              <p class="fallback">O copia este enlace en tu navegador:
+                <a href="#design-notes">https://rentoru.com/api/auth/callback/resend?token=8f3a2c9d7e1b4f60a5c3e9d2b7f1a4c8&email=maria%40ejemplo.com</a></p>
+              <section class="fact" aria-label="Vigencia del enlace">
+                <h2>Vale por</h2>
+                <p class="fact-date">15 minutos</p>
+                <p class="fact-note">Se usa una sola vez.</p>
+              </section>
+              <p>¿No pediste entrar? Ignora este correo.</p>
+              </div>
+              <footer class="mail-foot">
+                <p>Te escribimos porque pediste entrar a Rentoru con este correo.</p>
+            <p>Rentoru · alquileres en Distrito Capital y Maracaibo</p>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </figure>
+    </div>
+    <h2 class="row-label" id="row-vence">Aviso por vencer <span>listing-lifecycle · asunto: «Tu aviso vence en 3 días»</span></h2>
+    <div class="boards" role="list" aria-labelledby="row-vence">
+      <figure class="board" role="listitem" aria-labelledby="board-vence-m">
+        <figcaption class="board-label" id="board-vence-m">Móvil · 390 px</figcaption>
+        <div class="frame frame-mobile" data-theme="menta" data-layout="compacto">
+          <div class="mail">
+            <article class="card" aria-labelledby="vence-m">
+              <header class="mail-head"><span class="brand">Rentoru</span></header>
+              <div class="mail-body">
+              <h1 id="vence-m">Tu aviso vence en 3 días</h1>
+              <section class="fact fact-warn" aria-label="Qué vence y cuándo">
+                <p class="listing-title">«Apartamento 2 habitaciones con puesto de estacionamiento»</p>
+                <h2>Vence el</h2>
+                <p class="fact-date"><time datetime="2026-11-22">22 de noviembre de 2026</time></p>
+              </section>
+              <p>¿Sigue disponible? Renuévalo y queda 30 días más.</p>
+              <a class="action" href="#design-notes">Renovar mi aviso</a>
+              <p class="fallback">O copia este enlace en tu navegador:
+                <a href="#design-notes">https://rentoru.com/renovar/5b7e1c4a9d2f4e80b6a1c3d7e9f2a5b8</a></p>
+              <p>Si no lo renuevas, deja de verse en las búsquedas. Puedes activarlo después.</p>
+              </div>
+              <footer class="mail-foot">
+                <p>Te escribimos porque publicaste este aviso en Rentoru.</p>
+            <p>Rentoru · alquileres en Distrito Capital y Maracaibo</p>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </figure>
+      <figure class="board" role="listitem" aria-labelledby="board-vence-d">
+        <figcaption class="board-label" id="board-vence-d">Escritorio · 640 px</figcaption>
+        <div class="frame frame-desktop" data-theme="menta" data-layout="compacto">
+          <div class="mail">
+            <article class="card" aria-labelledby="vence-d">
+              <header class="mail-head"><span class="brand">Rentoru</span></header>
+              <div class="mail-body">
+              <h1 id="vence-d">Tu aviso vence en 3 días</h1>
+              <section class="fact fact-warn" aria-label="Qué vence y cuándo">
+                <p class="listing-title">«Apartamento 2 habitaciones con puesto de estacionamiento»</p>
+                <h2>Vence el</h2>
+                <p class="fact-date"><time datetime="2026-11-22">22 de noviembre de 2026</time></p>
+              </section>
+              <p>¿Sigue disponible? Renuévalo y queda 30 días más.</p>
+              <a class="action" href="#design-notes">Renovar mi aviso</a>
+              <p class="fallback">O copia este enlace en tu navegador:
+                <a href="#design-notes">https://rentoru.com/renovar/5b7e1c4a9d2f4e80b6a1c3d7e9f2a5b8</a></p>
+              <p>Si no lo renuevas, deja de verse en las búsquedas. Puedes activarlo después.</p>
+              </div>
+              <footer class="mail-foot">
+                <p>Te escribimos porque publicaste este aviso en Rentoru.</p>
+            <p>Rentoru · alquileres en Distrito Capital y Maracaibo</p>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </figure>
+    </div>
+    <h2 class="row-label" id="row-purga">Purga de fotos <span>listing-lifecycle · asunto: «Las fotos de tu aviso se borran pronto»</span></h2>
+    <div class="boards" role="list" aria-labelledby="row-purga">
+      <figure class="board" role="listitem" aria-labelledby="board-purga-m">
+        <figcaption class="board-label" id="board-purga-m">Móvil · 390 px</figcaption>
+        <div class="frame frame-mobile" data-theme="menta" data-layout="compacto">
+          <div class="mail">
+            <article class="card" aria-labelledby="purga-m">
+              <header class="mail-head"><span class="brand">Rentoru</span></header>
+              <div class="mail-body">
+              <h1 id="purga-m">Las fotos de tu aviso se borran pronto</h1>
+              <section class="fact fact-warn" aria-label="Qué se borra y cuándo">
+                <p class="listing-title">«Apartamento 2 habitaciones con puesto de estacionamiento»</p>
+                <p class="fact-note">Venció el <time datetime="2026-10-22">22 de octubre de 2026</time>.</p>
+                <h2>Las fotos se borran el</h2>
+                <p class="fact-date"><time datetime="2026-11-21">21 de noviembre de 2026</time></p>
+              </section>
+              <p>Renuévalo antes de esa fecha y conservas las fotos.</p>
+              <a class="action" href="#design-notes">Renovar mi aviso</a>
+              <p class="fallback">O copia este enlace en tu navegador:
+                <a href="#design-notes">https://rentoru.com/renovar/5b7e1c4a9d2f4e80b6a1c3d7e9f2a5b8</a></p>
+              <p>Pasada esa fecha, las fotos no se pueden recuperar.</p>
+              </div>
+              <footer class="mail-foot">
+                <p>Te escribimos porque publicaste este aviso en Rentoru.</p>
+            <p>Rentoru · alquileres en Distrito Capital y Maracaibo</p>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </figure>
+      <figure class="board" role="listitem" aria-labelledby="board-purga-d">
+        <figcaption class="board-label" id="board-purga-d">Escritorio · 640 px</figcaption>
+        <div class="frame frame-desktop" data-theme="menta" data-layout="compacto">
+          <div class="mail">
+            <article class="card" aria-labelledby="purga-d">
+              <header class="mail-head"><span class="brand">Rentoru</span></header>
+              <div class="mail-body">
+              <h1 id="purga-d">Las fotos de tu aviso se borran pronto</h1>
+              <section class="fact fact-warn" aria-label="Qué se borra y cuándo">
+                <p class="listing-title">«Apartamento 2 habitaciones con puesto de estacionamiento»</p>
+                <p class="fact-note">Venció el <time datetime="2026-10-22">22 de octubre de 2026</time>.</p>
+                <h2>Las fotos se borran el</h2>
+                <p class="fact-date"><time datetime="2026-11-21">21 de noviembre de 2026</time></p>
+              </section>
+              <p>Renuévalo antes de esa fecha y conservas las fotos.</p>
+              <a class="action" href="#design-notes">Renovar mi aviso</a>
+              <p class="fallback">O copia este enlace en tu navegador:
+                <a href="#design-notes">https://rentoru.com/renovar/5b7e1c4a9d2f4e80b6a1c3d7e9f2a5b8</a></p>
+              <p>Pasada esa fecha, las fotos no se pueden recuperar.</p>
+              </div>
+              <footer class="mail-foot">
+                <p>Te escribimos porque publicaste este aviso en Rentoru.</p>
+            <p>Rentoru · alquileres en Distrito Capital y Maracaibo</p>
+              </footer>
+            </article>
+          </div>
+        </div>
+      </figure>
+    </div>
+    <aside class="design-note" id="design-notes" tabindex="-1" aria-label="Notas fuera del diseño">
+      <p><strong>Fuera de la interfaz · no envía nada.</strong> Los enlaces de esta lámina llevan a esta nota; en el correo real
+        el botón y el enlace de respaldo apuntan a la misma URL de un solo uso. <strong>El enlace se escribe entero</strong>,
+        sin recortar, para que quien no toca el botón pueda seleccionarlo y copiarlo (L5).</p>
+      <p>Anatomía, derivada de SISTEMA.md: cabecera con la marca (la palabra «Rentoru», sin logotipo), cuerpo con un título,
+        <strong>una sola acción primaria</strong> (nivel Acción: relleno <code>--accent</code>, 46 px, radio <code>--r</code>),
+        enlace de respaldo en texto, un bloque de apoyo con el dato que importa (relleno <code>--bg</code>; ámbar
+        <code>--warn</code>/<code>--warn-bg</code> cuando es una fecha límite, el mismo par de «vence pronto»),
+        y un pie que dice por qué llega el correo. Tarjeta <code>--surface</code> con borde <code>--line</code> sobre la página
+        blanca lisa (fase 41); máximo 600 px, el ancho que los clientes de correo respetan.</p>
+      <p>Textos: frases cortas, sin tecnicismos, pensadas para leerse sin esfuerzo (L5). Cambian respecto de 35.10;
+        38.3 y 38.4 llevan el mismo texto al dominio y al texto plano, con sus pruebas.</p>
+      <p>Valores: ninguno nuevo. Sin tokens propios de correo; 38.2 resuelve estos mismos roles a sus valores de <code>tokens.css</code>
+        y los escribe en línea, porque un cliente de correo no entiende <code>var()</code>.</p>
+    </aside>
+  </body>
+</html>

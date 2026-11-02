@@ -1,0 +1,175 @@
+/* Lámina Correo v1 (38.1): roles de tokens.css, sin reglas de producto. Cada marco
+   es un contenedor (container queries); sólo tema claro (L6). Un cliente de correo
+   no entiende var(): 38.2 escribe estos mismos valores resueltos, en línea. */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--ficha-body-fs);
+  line-height: var(--ficha-body-lh);
+}
+a { color: var(--accent); }
+a:focus-visible,
+#design-notes:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.design-note {
+  max-inline-size: 1100px;
+  padding: 16px;
+  color: var(--soft);
+  font-size: var(--meta-fs);
+  line-height: var(--secondary-lh);
+}
+.design-note p, .design-note ul { margin: 0 0 8px; }
+.row-label {
+  margin: 24px 16px 8px;
+  font-size: var(--ficha-title-fs);
+  font-weight: var(--ficha-title-fw);
+}
+.row-label span {
+  color: var(--soft);
+  font-family: var(--meta);
+  font-size: var(--meta-fs);
+  font-weight: var(--meta-fw);
+}
+.boards {
+  display: flex;
+  align-items: flex-start;
+  gap: 48px;
+  padding: 0 16px 24px;
+  overflow-x: auto;
+}
+.board { flex: none; margin: 0; }
+.board-label {
+  margin: 0 0 8px;
+  color: var(--soft);
+  font-family: var(--meta);
+  font-size: var(--meta-fs);
+}
+.frame {
+  container-type: inline-size;
+  outline: 1px solid var(--line);
+  background: var(--page);
+  color: var(--ink);
+}
+.frame-mobile { inline-size: 390px; }
+.frame-desktop { inline-size: 640px; }
+
+/* ---------- El correo ---------- */
+.mail { padding: 16px; }
+.card {
+  display: grid;
+  max-inline-size: 600px;
+  margin-inline: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--surface);
+  overflow: hidden;
+}
+.mail-head {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--brandbar-h);
+  padding-inline: 16px;
+  border-block-end: 1px solid var(--line);
+}
+.brand {
+  color: var(--ink);
+  font-family: var(--disp);
+  font-size: var(--card-price-fs);
+  font-weight: var(--title-fw);
+  letter-spacing: var(--brand-ls);
+  text-decoration: none;
+}
+.mail-body {
+  display: grid;
+  gap: 16px;
+  padding: 24px 16px;
+}
+h1 {
+  margin: 0;
+  font-size: var(--title-fs);
+  font-weight: var(--title-fw);
+  line-height: var(--title-lh);
+  text-wrap: pretty;
+}
+.mail-body p, .fact p, .mail-foot p { margin: 0; }
+.listing-title {
+  font-size: var(--ficha-title-fs);
+  font-weight: var(--ficha-title-fw);
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+/* Bloque de apoyo como «Activo hasta» en Listo; ámbar cuando es fecha límite. */
+.fact {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-radius: var(--r);
+  background: var(--bg);
+}
+.fact-warn { background: var(--warn-bg); }
+.fact h2 {
+  margin: 0;
+  color: var(--soft);
+  font-family: var(--meta);
+  font-size: var(--meta-fs);
+  font-weight: var(--meta-fw);
+}
+.fact-warn h2,
+.fact-warn .fact-date { color: var(--warn); }
+.fact-date { font-size: var(--ficha-title-fs); font-weight: var(--ficha-title-fw); }
+.fact-note { color: var(--soft); }
+/* Una sola primaria por correo (nivel Acción). */
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--action-h);
+  padding: 8px 24px;
+  border-radius: var(--r);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: var(--meta-fw);
+  text-decoration: none;
+}
+.fallback {
+  color: var(--soft);
+  font-size: var(--meta-fs);
+  line-height: var(--secondary-lh);
+}
+.fallback a { display: block; font-family: var(--meta); overflow-wrap: anywhere; }
+.mail-foot {
+  display: grid;
+  gap: 4px;
+  padding: 16px;
+  border-block-start: 1px solid var(--line);
+  color: var(--soft);
+  font-size: var(--meta-fs);
+  line-height: var(--secondary-lh);
+}
+
+/* ---------- Escritorio: desde 600px de ancho del cliente ---------- */
+@container (min-width: 600px) {
+  .mail {
+    padding: 24px;
+    font-size: var(--ficha-body-fs-desktop);
+    line-height: var(--ficha-body-lh-desktop);
+  }
+  .mail-head {
+    min-block-size: var(--brandbar-h-desktop);
+    padding-inline: 24px;
+  }
+  .mail-body {
+    padding: 32px 24px;
+  }
+  .listing-title {
+    font-size: var(--ficha-title-fs-desktop);
+  }
+  .action {
+    justify-self: start;
+  }
+  .mail-foot {
+    padding: 16px 24px;
+  }
+}
