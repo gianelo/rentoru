@@ -153,10 +153,19 @@ export interface EditableListingSnapshot extends ListingFeatures {
 export interface ListingEdit extends Partial<ListingFeatures> {
   readonly title?: string;
   readonly description?: string;
-  readonly priceUsd?: number;
-  readonly rooms?: number;
-  readonly bathrooms?: number;
-  readonly areaM2?: number;
+  /**
+   * **Los cuatro números obligatorios tienen dos ausencias, igual que la
+   * referencia** (fase 44, S5): `undefined` es «no lo contesté» y deja el valor
+   * de ayer; `null` es «me lo mandaron en blanco» y se rechaza como
+   * `X.required`. Sin esa diferencia, borrar el precio y guardar «hizo como si
+   * se guardara pero no se guardó»: el `?? current` se quedaba con el viejo y
+   * la edición volvía aceptada. Los puestos no están acá porque cero es su
+   * respuesta.
+   */
+  readonly priceUsd?: number | null;
+  readonly rooms?: number | null;
+  readonly bathrooms?: number | null;
+  readonly areaM2?: number | null;
   readonly parkingSpots?: number;
   readonly propertyType?: PropertyType;
   /**
@@ -253,6 +262,13 @@ export function planListingEdit(
   ) {
     violations.push("publisherType.immutable");
   }
+
+  // En blanco es una respuesta vacía, no «no lo toqué»: `writeFor` lo leería
+  // como ausente y se quedaría con el de ayer, así que se rechaza acá.
+  if (edit.priceUsd === null) violations.push("priceUsd.required");
+  if (edit.rooms === null) violations.push("rooms.required");
+  if (edit.bathrooms === null) violations.push("bathrooms.required");
+  if (edit.areaM2 === null) violations.push("areaM2.required");
 
   const write = writeFor(current, edit);
 

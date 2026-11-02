@@ -296,8 +296,9 @@ export async function activarBorrador(formData: FormData): Promise<void> {
  * Lo que el formulario de editar posteó, en el vocabulario del dominio.
  *
  * **Nada se decide acá.** Los dos lectores vienen de `step-values.ts`, así que
- * un precio vacío sale `undefined` (no 0) y uno escrito «quinientos» sale
- * `NaN`, que `validatePublishableListing` ya rechaza como `priceUsd.invalid`.
+ * un precio vacío sale `null` (no 0, ver `formCountOrBlank`) y uno escrito
+ * «quinientos» sale `NaN`, que `validatePublishableListing` ya rechaza como
+ * `priceUsd.invalid`.
  * Lo único que esta capa resuelve es la forma: `FormData` habla en cadenas.
  *
  * **`publisherType` se lee aunque la pantalla no lo dibuje**, y esa es la
@@ -317,10 +318,10 @@ function leerEdicion(formData: FormData): ListingEdit {
   return {
     title: formText(formData, "title"),
     description: formText(formData, "description"),
-    priceUsd: formCount(formData, "priceUsd"),
-    rooms: formCount(formData, "rooms"),
-    bathrooms: formCount(formData, "bathrooms"),
-    areaM2: formCount(formData, "areaM2"),
+    priceUsd: formCountOrBlank(formData, "priceUsd"),
+    rooms: formCountOrBlank(formData, "rooms"),
+    bathrooms: formCountOrBlank(formData, "bathrooms"),
+    areaM2: formCountOrBlank(formData, "areaM2"),
     // El unico campo numerico del aviso donde el vacio ES una respuesta, igual
     // que en el paso 4: un anexo sin puesto es un aviso normal, y nadie deberia
     // tener que escribir un cero para corregirlo.
@@ -340,6 +341,19 @@ function leerEdicion(formData: FormData): ListingEdit {
     publisherType: formText(formData, "publisherType") as ListingEdit["publisherType"],
     ...leerAtributos(formData),
   };
+}
+
+/**
+ * Fase 44 (S5) — **la misma diferencia que la referencia, para los cuatro
+ * números obligatorios.** `formCount` colapsa «en blanco» y «no viajó» en
+ * `undefined`, y el dominio lee eso como «no lo toqué»: borrar el precio y
+ * guardar se daba por bueno con el de ayer. Acá sólo se conserva lo que el
+ * formulario mandó —`null` en blanco, `undefined` ausente—; rechazarlo lo
+ * decide `planListingEdit`.
+ */
+function formCountOrBlank(formData: FormData, name: string): number | null | undefined {
+  if (formData.has(name) && formText(formData, name) === undefined) return null;
+  return formCount(formData, name);
 }
 
 /** Los cinco de la F6, o ninguno. **La marca es la respuesta**, no las casillas. */
