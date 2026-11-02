@@ -281,6 +281,16 @@ Concurrency keeps one group per workflow and ref; a newer run cancels a stale on
 
 **Production smoke and liveness (CI/CD plan task 12).** `.github/workflows/production-smoke.yml` runs `.github/scripts/production-smoke.sh` after every successful Production `deployment_status`: GET-only checks of `/api/live`, `/api/health` and `/` (HTML) on `https://rentoru.com`, five attempts 15 s apart, failing closed on the first check that never passes. The five-minute uptime signal is an external monitor on `/api/live`, which never loads the database client: on Neon Free a database check at that cadence keeps the compute awake permanently and spent the monthly quota (outage of 2026-10-26). Database health stays on the GitHub heartbeat, whose real cadence is every few hours. Rollback procedure: `docs/production-rollback.md`.
 
+**Trigger matrix review (CI/CD plan task 13): nothing retired.** On 2026-11-01 one identical tree (`9cb2810`) went dev → staging → main, so its runs were measured end to end. The six basic jobs (lint, types, lint-tokens, test, build, integration; about 4 job-minutes) ran three times: on the feature PR into `dev`, on PR #492 into `staging` and on PR #493 into `main`. Push e2e ran twice, critical on `dev` and full on `staging`. Those are different suites, not duplicates. Every other workflow ran once per event: `release-gate` on the PR into `main`, `production-smoke` after the Production deployment and `heartbeat` on schedule.
+
+The repetition is kept on purpose:
+
+- **The PR into `main` is the only place the basic jobs run on the tree that reaches production.** Pushes to `staging` run only the heavy jobs, and `release-gate` checks the staging push run plus tree equality, not unit or integration results. Removing that trigger would need the basic jobs moved onto `staging` pushes and re-proved, which is a change to the gate's coverage.
+- **The PR into `staging` is the only pre-merge signal for a promotion.** Branch protection on `staging` requires no checks.
+- **Removing them saves almost nothing.** The repository is public, so Actions minutes cost nothing, and promotion latency is bound by the ~16-minute staging run, not by these parallel 1–2-minute jobs.
+
+`production-smoke` also records one skipped run per Preview `deployment_status`. GitHub cannot filter that event by environment in `on:`, so this is noise, not redundancy. Revisit the matrix only if the repository becomes private or the basic jobs get significantly slower.
+
 | Gate | Command | Needs |
 |---|---|---|
 | Lint + format | `pnpm biome ci` | — |
