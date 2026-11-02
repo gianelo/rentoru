@@ -4,7 +4,10 @@ import type {
   CatalogueZoneCategory,
   CatalogueZoneKind,
 } from "../../listing-catalogue/domain/catalogue";
-import { normalize as normalizeLocationName } from "../../listing-catalogue/domain/suggest-filters";
+import {
+  normalize as normalizeLocationName,
+  suggestFilters,
+} from "../../listing-catalogue/domain/suggest-filters";
 import type { ImportRow } from "./csv-import-rows";
 import { type ImportRowCellName, importRowCells, offendingCellsFor } from "./import-row-cells";
 import type {
@@ -84,6 +87,51 @@ const ZONE_CATEGORY_LABEL: Record<CatalogueZoneCategory, string> = {
 /** "el municipio Chacao (dentro de Distrito Capital)" — enough to tell two
  * same-named candidates apart without inventing a syntax to disambiguate
  * them in the file. */
+/** tasks.md 45.7: how many similar zones a refusal names before it stops. */
+const MAX_ZONE_HINTS = 5;
+
+/**
+ * tasks.md 45.7 (S6, founder 2026-11-01: text-only hints). The search finds
+ * «bella vista» by words; the import refuses anything but the exact name, and
+ * the founder wanted the gap closed without the import picking for anyone.
+ * So the refusal stays, and names the zones of the SAME city that
+ * `suggestFilters` — the search's own criterion, not a second one — would
+ * have offered for that text. Ranked by how many of the typed words each
+ * name contains, then as the catalogue orders them; capped so a one-word
+ * input does not paste half a city into the row.
+ */
+function similarZonesHint(
+  zoneInput: string,
+  city: CatalogueCity,
+  zones: readonly CatalogueZone[],
+): string {
+  const cityZones = zones.filter((zone) => zone.cityId === city.id);
+  const byId = new Map(cityZones.map((zone) => [zone.id, zone]));
+  const words = normalizeLocationName(zoneInput).split("-");
+  const score = (zone: CatalogueZone): number => {
+    const target = normalizeLocationName(zone.name);
+    return words.filter((word) => word.length >= 3 && target.includes(word)).length;
+  };
+
+  const similar = suggestFilters(zoneInput, { cities: [], zones: cityZones, aliases: [] })
+    .flatMap((suggestion) => {
+      const zone = byId.get(suggestion.id);
+      return zone ? [zone] : [];
+    })
+    .map((zone, index) => ({ zone, index, score: score(zone) }))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .slice(0, MAX_ZONE_HINTS)
+    .map(({ zone }) => {
+      const parentClause = zone.parentName ? ` (dentro de ${zone.parentName})` : "";
+      return `«${zone.name}»${parentClause}`;
+    });
+
+  if (similar.length === 0) return "";
+  const last = similar.pop() as string;
+  const list = similar.length === 0 ? last : `${similar.join(", ")} o ${last}`;
+  return ` ¿Quisiste decir ${list}?`;
+}
+
 function describeZone(zone: CatalogueZone): string {
   const label =
     zone.kind === "elemento" && zone.category
@@ -178,7 +226,9 @@ export function resolveImportRowLocation(
     return {
       cityId: city.id,
       zoneId: "",
-      errorMessages: [`«${zoneInput}» no existe en ${city.name}.`],
+      errorMessages: [
+        `«${zoneInput}» no existe en ${city.name}.${similarZonesHint(zoneInput, city, zones)}`,
+      ],
     };
   }
 
