@@ -85,6 +85,23 @@ describe("Importar · vista previa (14g)", () => {
     estado: "vista-previa" as const,
     totalFilas: 42,
     listas: 38,
+    // tasks.md 45.6: dos de las 38 listas, con sus celdas tal como venían.
+    filas: [
+      {
+        fila: 2,
+        celdas: {
+          referencia: "MB-0001",
+          precio: "450",
+          zona: "Los Palos Grandes",
+          habitaciones: "2",
+          titulo: "Apartamento con vista al Ávila",
+        },
+      },
+      {
+        fila: 3,
+        celdas: { referencia: "MB-0002", precio: "", zona: "Chacao", habitaciones: "", titulo: "" },
+      },
+    ],
     errores: [
       {
         fila: 7,
@@ -198,6 +215,38 @@ describe("Importar · vista previa (14g)", () => {
     expect(html).toContain("Crear las 38 propiedades");
   });
 
+  /**
+   * tasks.md 45.6 (#290, L8): con un archivo sin fallos la previa mostraba
+   * sólo el contador, y se podía confirmar sin ver qué se iba a crear.
+   * SISTEMA.md §6 dibuja la tabla con TODAS las filas; en móvil, «un resumen
+   * de las correctas»: por eso van dentro de un `<details>` nativo que abre
+   * la lista, con la misma anatomía de fila que las erróneas y sin resaltar.
+   */
+  it("lista las filas listas con sus celdas, plegadas bajo su resumen y sin resaltar", () => {
+    const html = renderToStaticMarkup(<VistaPrevia preview={preview} archivo="cartera.csv" />);
+
+    expect(html).toMatch(/<details[^>]*>\s*<summary[^>]*>Ver las 38 filas listas<\/summary>/);
+    expect(html).toContain("Fila 2 · MB-0001");
+    expect(html).toContain("Apartamento con vista al Ávila");
+    expect(html).toContain("$450 · Los Palos Grandes · 2 hab");
+    // Celdas vacías: ni separador colgando ni título vacío.
+    expect(html).toContain("Fila 3 · MB-0002");
+    expect(html).not.toContain("$ ·");
+    expect(html).not.toMatch(/<mark[^>]*>Los Palos Grandes<\/mark>/);
+  });
+
+  it("con una sola fila lista el resumen habla en singular", () => {
+    const html = renderToStaticMarkup(
+      <VistaPrevia
+        preview={{ ...preview, listas: 1, filas: preview.filas.slice(0, 1) }}
+        archivo="cartera.csv"
+      />,
+    );
+
+    expect(html).toContain("Ver la fila lista");
+    expect(html).toContain("Crear la propiedad");
+  });
+
   it("el botón de crear dice cuántas va a crear — no «Confirmar»", () => {
     const html = renderToStaticMarkup(<VistaPrevia preview={preview} archivo="cartera.csv" />);
 
@@ -211,13 +260,17 @@ describe("Importar · vista previa (14g)", () => {
    */
   it("con cero filas listas NO hay botón de crear", () => {
     const html = renderToStaticMarkup(
-      <VistaPrevia preview={{ ...preview, listas: 0, totalFilas: 2 }} archivo="cartera.csv" />,
+      <VistaPrevia
+        preview={{ ...preview, listas: 0, filas: [], totalFilas: 2 }}
+        archivo="cartera.csv"
+      />,
     );
 
     expect(html).toContain(
       "Ninguna fila quedó lista para crear. Corrige los problemas de abajo y vuelve a subir el archivo completo.",
     );
     expect(html).not.toContain("Crear las");
+    expect(html).not.toContain("<details");
     expect(html).toContain("Corregir el archivo");
   });
 });

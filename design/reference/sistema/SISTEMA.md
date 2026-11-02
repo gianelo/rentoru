@@ -176,6 +176,8 @@ Roles nuevos: `--loading-ring-width: 3px` para el trazo, `--loading-duration: 1.
 
 En el buscador de zona de Publicar, el aro inline usa `--loading-inline-size: 1em`, el mismo trazo, duración, colores y radio `--rs`, sin R ni tarjeta. Ocupa el extremo del input con espacio reservado y sin capturar eventos; sólo durante la búsqueda oculta la × nativa. Estado polite «Buscando zonas…», sin giro con movimiento reducido y sin indicador inicial en el HTML de servidor.
 
+**Cuál de los dos va en cada caso (fundador, 2026-11-01, fase 45):** la tarjeta global es para las esperas grandes, las que bloquean lo que la persona vino a hacer —revisar o crear una cartera importada, entrar a publicar—; el aro inline es para lo pequeño que pasa dentro de un control mientras se sigue usando la pantalla, como las sugerencias de un buscador. No se mezclan: una pantalla no dibuja su propio aro junto a un botón cuando lo que espera es la tarjeta.
+
 Esta base reutilizable no es un diálogo ni activa carga de publicación: activación, plazo y gestión de foco quedan pendientes de integración. La salida nativa útil se conserva: añade altura respecto de la demo aprobada, sin prometer una altura de tarjeta idéntica.
 
 ### Publicar · Listo — fase 37
@@ -352,6 +354,8 @@ El color aparece solo en los dos estados que piden algo. Activa y vencida son ne
 **Layout móvil:** la tabla se convierte en tarjetas de error, una por fila con problema, más un resumen de las filas correctas. No es una tabla con scroll.
 
 **Acciones:** "Crear las 38 propiedades" (acción) y "Corregir el archivo y volver a subir" (neutro).
+
+**Derivación implementada (fase 45, tasks.md 45.6):** las filas listas van en un `<details>` nativo con el resumen «Ver las N filas listas» —el «resumen de las correctas» de móvil, con la lista a un toque— y la misma anatomía que la fila con problema, borde `--line` y sin resaltado. Revisar y crear muestran la tarjeta global de carga (arriba) con «Revisando el archivo…» / «Creando los avisos…» y la salida «Dejar de esperar». Después de crear, una pantalla de éxito reemplaza al formulario, derivada de «Publicar · Listo»: ✓ con `--done-mark-*`, el título de 14h («Ninguna se ve todavía»), una sola primaria «Ir a Mis avisos» e «Importar otro archivo» como enlace de texto. Un error del servidor dice que falló el servidor y que no se creó nada; «Revisa la conexión» queda sólo para la red.
 
 ### 8. Entrar — la pantalla con su propia dirección
 

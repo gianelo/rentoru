@@ -186,6 +186,63 @@ describe("resolveImportRowLocation — unknown names, said in plain language", (
   });
 });
 
+/**
+ * tasks.md 45.7 (S6): «yo pongo bella vista salen todo lo que tenga bella
+ * vista pero en el CSV hay que ponerlo exacto». The founder chose text-only
+ * hints (2026-11-01): the message keeps refusing, and names up to five zones
+ * of the SAME city that the search would have offered for that text, via
+ * `suggestFilters` — one criterion, not a second one. Nothing is picked for
+ * the broker; the CSV still has to say the exact name.
+ */
+describe("resolveImportRowLocation — an unknown zone names similar zones of its city (45.7)", () => {
+  it("suggests the zones the search would find for that text, scoped to the row's city", () => {
+    const outcome = resolveImportRowLocation(
+      rowOf("Distrito Capital", "Palos Grandes"),
+      CITIES,
+      ZONES,
+    );
+
+    expect(outcome.zoneId).toBe("");
+    expect(outcome.errorMessages).toEqual([
+      "«Palos Grandes» no existe en Distrito Capital. ¿Quisiste decir «Los Palos Grandes» (dentro de Chacao)?",
+    ]);
+  });
+
+  it("never suggests a zone of another city, even when the words match", () => {
+    const outcome = resolveImportRowLocation(rowOf("Maracaibo", "Palos Grandes"), CITIES, ZONES);
+
+    expect(outcome.errorMessages).toEqual(["«Palos Grandes» no existe en Maracaibo."]);
+  });
+
+  it("caps the hints at five, the ones matching more words first", () => {
+    const many: CatalogueZone[] = ["A", "B", "C", "D", "E", "F"].map((letter) => ({
+      id: `zone-vista-${letter}`,
+      name: `Vista ${letter}`,
+      cityId: CARACAS.id,
+      kind: "elemento",
+      category: "urbanizacion",
+      parentName: null,
+    }));
+    const best: CatalogueZone = {
+      ...(many[0] as CatalogueZone),
+      id: "zone-bella-vista",
+      name: "Bella Vista Alta",
+    };
+
+    const outcome = resolveImportRowLocation(
+      rowOf("Distrito Capital", "Bella Vista Norte"),
+      CITIES,
+      [...ZONES, ...many, best],
+    );
+
+    const [message] = outcome.errorMessages;
+    expect(message).toMatch(
+      /^«Bella Vista Norte» no existe en Distrito Capital\. ¿Quisiste decir «Bella Vista Alta», /,
+    );
+    expect(message?.match(/«[^»]+»/g)).toHaveLength(1 + 5);
+  });
+});
+
 describe("resolveImportRowLocation — aliases are deliberately NOT accepted", () => {
   it("refuses a value that is not a real zone.name even if it would match a zone alias elsewhere in the product", () => {
     // "La Castellana" is a common informal alias in this product's real
@@ -311,6 +368,14 @@ describe("mergeLocationResolutionErrors", () => {
         {
           rowNumber: 2,
           externalReference: "REF-1",
+          cells: {
+            externalReference: "REF-1",
+            priceUsd: "450",
+            zone: "Los Palos Grandes",
+            rooms: "2",
+            title: "t",
+            descriptionLength: 1,
+          },
           listing: {
             publisherType: "broker",
             propertyType: "apartamento",

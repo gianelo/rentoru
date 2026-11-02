@@ -2,7 +2,9 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { AppLink } from "../../components/atoms/AppLink";
+import buttons from "../../components/atoms/Button.module.css";
 import { ActionButton } from "../../components/atoms/buttons";
+import { LoadingOverlay } from "../../components/molecules/LoadingOverlay";
 import {
   MAX_IMPORT_FILE_SIZE_BYTES,
   MAX_IMPORT_ROW_COUNT,
@@ -73,6 +75,17 @@ async function enviar(
   cuerpo.set("contactValue", contacto.contactValue);
 
   const respuesta = await fetch("/api/bulk-import", { method: "POST", body: cuerpo });
+  if (respuesta.status >= 500) {
+    // tasks.md 45.6: un 500 llega con un cuerpo que no es JSON y antes caía
+    // en el mismo mensaje que la red, culpando a la conexión de quien importa.
+    // La creación es transaccional (L4), así que «no se creó nada» es verdad.
+    return {
+      estado: "rechazado",
+      motivo: "servidor",
+      mensaje:
+        "El servidor falló al procesar el archivo. No se creó ningún aviso. Prueba de nuevo en un momento.",
+    };
+  }
   const datos = (await respuesta.json()) as ResultadoImportacion & { error?: string };
 
   if (datos.error) {
@@ -99,11 +112,14 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
   const entrada = useRef<HTMLInputElement>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
   const [resultado, setResultado] = useState<ResultadoImportacion | null>(null);
-  const [enviando, setEnviando] = useState(false);
+  // tasks.md 45.6-B: qué está en vuelo, no sólo si algo lo está: el estado de
+  // carga dice «Revisando…» o «Creando…» según cuál sea.
+  const [enCurso, setEnCurso] = useState<"revisar" | "crear" | null>(null);
+  const enviando = enCurso !== null;
 
   async function correr(accion: "revisar" | "crear") {
     if (!archivo) return;
-    setEnviando(true);
+    setEnCurso(accion);
     try {
       setResultado(await enviar(archivo, accion, contacto));
     } catch {
@@ -113,7 +129,7 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
         mensaje: "No pudimos subir el archivo. Revisa la conexión y prueba de nuevo.",
       });
     } finally {
-      setEnviando(false);
+      setEnCurso(null);
     }
   }
 
@@ -124,6 +140,7 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
   }
 
   const previa = resultado?.estado === "vista-previa" ? (resultado as VistaPreviaResultado) : null;
+  const creado = resultado?.estado === "creado" ? resultado : null;
   const resultadoRef = useRef<HTMLDivElement>(null);
   const errorDeContacto =
     resultado?.estado === "rechazado" && resultado.motivo === "contacto-invalido"
@@ -148,8 +165,60 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
     titulo.focus();
   }, [resultado, errorDeContacto]);
 
+  // tasks.md 45.6-B (S5): lo que acaba de pasar no es un pie de página. La
+  // pantalla de éxito reemplaza al formulario, derivada de «Publicar · Listo»
+  // (SISTEMA.md): la ✓ del sistema, una sola primaria y volver como texto.
+  if (creado) {
+    const una = creado.creadas === 1;
+    return (
+      <div ref={resultadoRef} className={styles.flujo}>
+        <section className={styles.exito} aria-labelledby="importar-exito">
+          <span className={styles.exitoMarca} aria-hidden="true">
+            ✓
+          </span>
+          {/* 14h: "no dice «listo»: dice «ninguna se ve todavía»". */}
+          <h2 id="importar-exito" className={styles.exitoTitulo}>
+            {una
+              ? "Se creó 1 propiedad. Todavía no se ve."
+              : `Se crearon ${creado.creadas} propiedades. Ninguna se ve todavía.`}
+          </h2>
+          <p className={styles.explicacion}>
+            {una
+              ? "Le falta lo único que no venía en el archivo: al menos una foto. Hasta entonces queda como borrador y no aparece en las búsquedas."
+              : "Les falta lo único que no venía en el archivo: al menos una foto cada una. Hasta entonces quedan como borradores y no aparecen en las búsquedas."}
+          </p>
+          {creado.yaEstaban.length > 0 ? (
+            <p className={styles.explicacion}>
+              {creado.yaEstaban.length} ya las habías importado antes y no se duplicaron:{" "}
+              {creado.yaEstaban.map((fila) => fila.referencia).join(", ")}.
+            </p>
+          ) : null}
+          <nav className={styles.exitoAcciones} aria-label="Qué puedes hacer ahora">
+            <AppLink className={`${buttons.base} ${buttons.action}`} href="/mis-avisos">
+              Ir a Mis avisos
+            </AppLink>
+            <button type="button" className={styles.exitoVolver} onClick={volverAEmpezar}>
+              Importar otro archivo
+            </button>
+          </nav>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.flujo}>
+      {/* tasks.md 45.6-B (S5): el indicador global del sistema (F36.3), no uno
+          propio. La salida es un enlace real a esta misma pantalla: recargar
+          abandona la espera del lado del cliente; una creación ya enviada
+          termina sola en el servidor, en una transacción. */}
+      {enCurso ? (
+        <LoadingOverlay
+          label={enCurso === "revisar" ? "Revisando el archivo…" : "Creando los avisos…"}
+          href="/importar"
+          exitLabel="Dejar de esperar"
+        />
+      ) : null}
       <section className={styles.paso}>
         <p className={styles.pasoNumero}>Paso 1</p>
         <h2 className={styles.tituloSeccion}>Descarga la plantilla</h2>
@@ -291,28 +360,6 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
               a exportar como CSV UTF-8", "partilo en dos"— y la lámina 14f
               pide exactamente eso, no una explicación de qué pasó. */}
             <p className={styles.explicacion}>{resultado.mensaje}</p>
-          </section>
-        ) : null}
-
-        {resultado?.estado === "creado" ? (
-          <section className={styles.creado}>
-            {/* 14h: "no dice «listo»: dice «ninguna se ve todavía»". */}
-            <h2 className={styles.tituloSeccion}>
-              Se crearon {resultado.creadas} propiedades. Ninguna se ve todavía.
-            </h2>
-            <p className={styles.explicacion}>
-              Les falta lo único que no venía en el archivo: al menos una foto cada una. Hasta
-              entonces quedan como borradores y no aparecen en las búsquedas.
-            </p>
-            {resultado.yaEstaban.length > 0 ? (
-              <p className={styles.explicacion}>
-                {resultado.yaEstaban.length} ya las habías importado antes y no se duplicaron:{" "}
-                {resultado.yaEstaban.map((fila) => fila.referencia).join(", ")}.
-              </p>
-            ) : null}
-            <AppLink className={styles.bajarPlantilla} href="/mis-avisos">
-              Ir a mis avisos
-            </AppLink>
           </section>
         ) : null}
       </div>
