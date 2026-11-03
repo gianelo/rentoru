@@ -202,9 +202,13 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
     const owner = await insertUser();
     const { listingId, photoIds } = await insertListing(owner, 3, "expired");
 
-    const outcome = await listings.applyEditRemovingPhotos(listingId, owner, WRITE, [
-      photoIds[0] as string,
-    ]);
+    const outcome = await listings.applyEditRemovingPhotos(
+      listingId,
+      owner,
+      WRITE,
+      [photoIds[0] as string],
+      photoIds,
+    );
 
     expect(outcome).toEqual({ applied: false, reason: "listing" });
     expect(await positionsOf(listingId)).toEqual(
@@ -219,9 +223,13 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
     const stranger = await insertUser();
     const { listingId, photoIds } = await insertListing(owner, 2);
 
-    const outcome = await listings.applyEditRemovingPhotos(listingId, stranger, WRITE, [
-      photoIds[1] as string,
-    ]);
+    const outcome = await listings.applyEditRemovingPhotos(
+      listingId,
+      stranger,
+      WRITE,
+      [photoIds[1] as string],
+      photoIds,
+    );
 
     expect(outcome).toEqual({ applied: false, reason: "listing" });
     expect(await positionsOf(listingId)).toHaveLength(2);
@@ -234,10 +242,13 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
     const propio = await insertListing(owner, 3);
     const otro = await insertListing(owner, 2);
 
-    const outcome = await listings.applyEditRemovingPhotos(propio.listingId, owner, WRITE, [
-      propio.photoIds[0] as string,
-      otro.photoIds[0] as string,
-    ]);
+    const outcome = await listings.applyEditRemovingPhotos(
+      propio.listingId,
+      owner,
+      WRITE,
+      [propio.photoIds[0] as string, otro.photoIds[0] as string],
+      propio.photoIds,
+    );
 
     expect(outcome).toEqual({ applied: false, reason: "photos" });
     expect(await positionsOf(propio.listingId)).toEqual(
@@ -246,5 +257,51 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
     expect(await positionsOf(otro.listingId)).toHaveLength(2);
     expect(await derivativeCountOf([...propio.photoIds, ...otro.photoIds])).toBe(25);
     expect(await priceOf(propio.listingId)).toBe(610);
+  });
+
+  it("una marcada propia que ya no está revierte la otra que sí se borró", async () => {
+    const owner = await insertUser();
+    const { listingId, photoIds } = await insertListing(owner, 3);
+    const [a, b, c] = photoIds as [string, string, string];
+    await pool.query(`DELETE FROM "listing_photo" WHERE id = $1`, [c]);
+
+    const outcome = await listings.applyEditRemovingPhotos(
+      listingId,
+      owner,
+      WRITE,
+      [a, c],
+      photoIds,
+    );
+
+    expect(outcome).toEqual({ applied: false, reason: "photos" });
+    expect(await positionsOf(listingId)).toEqual([
+      { id: a, position: 0 },
+      { id: b, position: 1 },
+    ]);
+    expect(await priceOf(listingId)).toBe(610);
+  });
+
+  /**
+   * El defecto que el piso en memoria no puede ver (verificador, punto 8): dos
+   * guardados a la vez sobre un aviso de dos fotos, cada uno marcando una
+   * distinta, pasan los dos el plan. El candado sobre la fila del aviso los
+   * pone en fila, y el segundo encuentra un conjunto que ya no es el que
+   * planificó.
+   */
+  it("dos guardados simultáneos que marcan fotos distintas no dejan el aviso sin fotos", async () => {
+    const owner = await insertUser();
+    const { listingId, photoIds } = await insertListing(owner, 2);
+    const [a, b] = photoIds as [string, string];
+
+    const outcomes = await Promise.all([
+      listings.applyEditRemovingPhotos(listingId, owner, WRITE, [a], photoIds),
+      listings.applyEditRemovingPhotos(listingId, owner, WRITE, [b], photoIds),
+    ]);
+
+    expect(outcomes.filter((outcome) => outcome.applied)).toHaveLength(1);
+    expect(outcomes.filter((outcome) => !outcome.applied)).toEqual([
+      { applied: false, reason: "photos" },
+    ]);
+    expect(await positionsOf(listingId)).toHaveLength(1);
   });
 });

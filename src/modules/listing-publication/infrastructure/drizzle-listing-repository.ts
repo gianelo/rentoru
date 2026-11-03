@@ -373,9 +373,36 @@ export class DrizzleListingEdit implements ListingEditPort, ListingEditWithPhoto
     publisherId: string,
     write: ListingEditWrite,
     photoIds: readonly string[],
+    expectedPhotoIds: readonly string[],
   ): Promise<EditRemovingPhotosOutcome> {
     try {
       const derivativeKeys = await this.db.transaction(async (tx) => {
+        // **El candado primero** (verificador, punto 8): sin él, dos guardados
+        // sobre un aviso de dos fotos, cada uno marcando una, pasan el piso
+        // en memoria y lo dejan sin ninguna. `FOR UPDATE` pone en fila a los
+        // dos y también a un adjuntar, cuya clave foránea pide `KEY SHARE`.
+        const locked = await tx
+          .select({ id: listings.id })
+          .from(listings)
+          .where(
+            and(
+              eq(listings.id, listingId),
+              eq(listings.publisherId, publisherId),
+              eq(listings.status, "active"),
+            ),
+          )
+          .for("update");
+        if (locked.length === 0) throw new EditRolledBack("listing");
+
+        // Ya en fila: el conjunto tiene que ser el que el dominio planeó.
+        const current = await photoIdsInOrderOf(tx, listingId);
+        if (
+          current.length !== expectedPhotoIds.length ||
+          current.some((id, index) => id !== expectedPhotoIds[index])
+        ) {
+          throw new EditRolledBack("photos");
+        }
+
         const keys: string[] = [];
         for (const photoId of photoIds) {
           // ANTES del borrado: el cascade se lleva las derivadas con la fila.
@@ -484,13 +511,7 @@ export class DrizzleListingPhotoSet
    * elegiría por dónde quedó en el disco.
    */
   async listPhotoIdsInOrder(listingId: string): Promise<readonly string[]> {
-    const rows = await this.db
-      .select({ id: listingPhotos.id })
-      .from(listingPhotos)
-      .where(eq(listingPhotos.listingId, listingId))
-      .orderBy(asc(listingPhotos.position));
-
-    return rows.map((row) => row.id);
+    return photoIdsInOrderOf(this.db, listingId);
   }
 
   /**
@@ -577,6 +598,17 @@ export class DrizzleListingPhotoSet
   async detachPhoto(listingId: string, photoId: string): Promise<boolean> {
     return this.db.transaction((tx) => detachAndRenumber(tx, listingId, photoId));
   }
+}
+
+/** El cuerpo de `listPhotoIdsInOrder`, sobre la base o sobre un `tx`. */
+async function photoIdsInOrderOf(db: PublicationDatabase, listingId: string): Promise<string[]> {
+  const rows = await db
+    .select({ id: listingPhotos.id })
+    .from(listingPhotos)
+    .where(eq(listingPhotos.listingId, listingId))
+    .orderBy(asc(listingPhotos.position));
+
+  return rows.map((row) => row.id);
 }
 
 /** El cuerpo de `listDerivativeKeys`, sobre la base o sobre un `tx`. */

@@ -31,11 +31,18 @@ export interface ListingEditWithPhotosPort {
    * renumerar, y el `UPDATE` guardado por `publisher_id` y `status = 'active'`.
    * Cualquier faltante revierte todo. Las claves vuelven sólo tras el commit,
    * así que quien las borre de R2 nunca borra las de una foto que sigue.
+   *
+   * **`expectedPhotoIds` es el conjunto sobre el que el dominio planeó**, en
+   * orden. Con la fila del aviso bloqueada, si las fotos ya no son ésas vuelve
+   * `photos` sin escribir: el piso se decidió sobre otro aviso, y dos guardados
+   * a la vez no pueden dejarlo sin fotos. Comparar no es decidir; el piso lo
+   * sigue contestando `planPhotosRemoval`.
    */
   applyEditRemovingPhotos(
     listingId: string,
     publisherId: string,
     write: ListingEditWrite,
     photoIds: readonly string[],
+    expectedPhotoIds: readonly string[],
   ): Promise<EditRemovingPhotosOutcome>;
 }
