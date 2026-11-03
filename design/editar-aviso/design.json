@@ -1,26 +1,12 @@
 {
   "title": "Editar aviso",
-  "brief": "Rediseñar /mis-avisos/[id]/editar a la altura del flujo de publicar (#290): una sola pantalla que edita un aviso publicado, con los estados de rechazo, foto marcada para quitar, guardando, portada y orden, y validación viva. Resuelve también cómo se ve un error en las filas numéricas. Tres anchos: 390, 768 y 1440, en los temas menta y oscuro.",
+  "brief": "Rediseñar /mis-avisos/[id]/editar a la altura del flujo de publicar (#290): una sola pantalla que edita un aviso publicado, con los estados de rechazo, foto marcada para quitar, guardando, portada y orden, y validación viva. El error va debajo del control (decisión del 2026-11-02). Tres anchos: 390, 768 y 1440, en los temas menta y oscuro. Elegida por el fundador el 2026-11-02 (gate G1); las dos alternativas descartadas se describen en odd/tasks/fase-44-editar-aviso.md (L9) y no se publicaron.",
   "feature": "odd/tasks/fase-44-editar-aviso.md",
   "artboards": [
     {
       "file": "01-pagina-por-secciones.html",
-      "title": "Una página, por secciones",
+      "title": "Una página, por secciones (elegida)",
       "tradeoff": "Todo visible y recorrible en un solo scroll, con resumen y acciones fijas a la derecha; larga en móvil",
-      "width": 1440,
-      "height": 2400
-    },
-    {
-      "file": "02-revisar-y-cambiar.html",
-      "title": "Revisar y cambiar",
-      "tradeoff": "Corta y tranquila, igual que el paso Revisar de publicar; un toque extra para editar cada campo",
-      "width": 1440,
-      "height": 2400
-    },
-    {
-      "file": "03-riel-de-secciones.html",
-      "title": "Riel de secciones, como publicar",
-      "tradeoff": "Máximo parecido con publicar y el error se ubica desde el riel; más cromo, y en móvil el riel se reduce a una tira",
       "width": 1440,
       "height": 2400
     }
