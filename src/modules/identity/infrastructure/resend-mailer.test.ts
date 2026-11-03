@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
+import { expectedMailHtml, P } from "../../../shared/email/mail-html.fixture";
 import { buildEmailProvider } from "./email-provider";
 import {
   AuthMailerNotConfiguredError,
   AuthMailerSendError,
   ResendMailer,
   readAuthMailerConfig,
-  renderAuthMailHtml,
 } from "./resend-mailer";
 
 /**
@@ -90,9 +90,7 @@ describe("el envío", () => {
   });
 });
 
-describe("el correo final que recibe Resend (35.10)", () => {
-  const OPEN = `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">`;
-
+describe("el correo final que recibe Resend (35.10, diseño de la 38.2)", () => {
   // Proveedor → composeMagicLinkEmail → ResendMailer: las tres salidas
   // compuestas, con un enlace sintético que el HTML tiene que escapar.
   it("sale en español neutro, con el enlace intacto en texto y escapado en HTML", async () => {
@@ -112,22 +110,24 @@ describe("el correo final que recibe Resend (35.10)", () => {
         "Vale por 15 minutos y se puede usar una sola vez. Si no lo pediste, ignora este correo.",
     );
     expect(payload.html).toBe(
-      `${OPEN}<p>Entra con este enlace:<br />` +
-        "https://rentoru.test/api/auth/callback/email?token=a&quot;b&amp;email=&lt;c&gt;</p>" +
-        "<p>Vale por 15 minutos y se puede usar una sola vez. Si no lo pediste, ignora este correo.</p></div>",
+      expectedMailHtml(
+        "Tu enlace para entrar a Rentoru",
+        `${P}Entra con este enlace:<br />` +
+          "https://rentoru.test/api/auth/callback/email?token=a&quot;b&amp;email=&lt;c&gt;</p>" +
+          `${P}Vale por 15 minutos y se puede usar una sola vez. Si no lo pediste, ignora este correo.</p>`,
+      ),
     );
   });
 });
 
 describe("el HTML, que es presentación y no redacción", () => {
-  it("parte el cuerpo en párrafos sin agregar ni una palabra", () => {
-    const html = renderAuthMailHtml(MESSAGE.body);
-
-    expect(html).toContain("Entra con este enlace:");
-  });
-
-  it("escapa lo que viene del cuerpo", () => {
-    const html = renderAuthMailHtml('<script>alert("x")</script>');
+  it("escapa lo que viene del cuerpo", async () => {
+    const { send, client } = fakeResend({ error: null });
+    await new ResendMailer("re_loquesea", "ingresa@rentoru.com", client).send({
+      ...MESSAGE,
+      body: '<script>alert("x")</script>',
+    });
+    const html: string = send.mock.calls[0]?.[0].html;
 
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");

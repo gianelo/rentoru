@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { paragraphsFromBody } from "../../../shared/email/mail-content";
+import { renderMailHtml } from "../../../shared/email/render-mail";
 import type { MailerPort, MailMessage } from "../application/ports/mailer.port";
 
 /**
@@ -7,8 +9,8 @@ import type { MailerPort, MailMessage } from "../application/ports/mailer.port";
  * Es el mismo mecanismo que `resend-lifecycle-mailer.ts` — mismo proveedor,
  * misma clave de cuenta— pero un adaptador propio: ver
  * `application/ports/mailer.port.ts` para la razón de no compartir el puerto.
- * El dominio (`domain/magic-link.ts`) redacta; esto sólo envuelve en el HTML
- * mínimo, sin decidir ni una palabra de lo que dice.
+ * El dominio (`domain/magic-link.ts`) redacta; esto sólo lo dibuja con el
+ * diseño compartido (`src/shared/email/`, 38.2), sin decidir ni una palabra.
  */
 
 const FROM_ENV = "AUTH_MAIL_FROM";
@@ -55,25 +57,6 @@ export function readAuthMailerConfig(
   return { apiKey, from };
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-export function renderAuthMailHtml(body: string): string {
-  const paragraphs = body
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter((block) => block !== "")
-    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, "<br />")}</p>`)
-    .join("");
-
-  return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">${paragraphs}</div>`;
-}
-
 /**
  * Falla cerrado al construirse, igual que `ResendLifecycleMailer`: sin clave
  * o sin remitente, tira acá en vez de aceptar un envío que va a rebotar.
@@ -100,7 +83,10 @@ export class ResendMailer implements MailerPort {
       to: message.to,
       subject: message.subject,
       text: message.body,
-      html: renderAuthMailHtml(message.body),
+      html: renderMailHtml({
+        subject: message.subject,
+        blocks: paragraphsFromBody(message.body),
+      }),
     });
 
     if (error) {

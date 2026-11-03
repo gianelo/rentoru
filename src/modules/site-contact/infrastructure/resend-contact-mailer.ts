@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { paragraphsFromBody } from "../../../shared/email/mail-content";
+import { renderMailHtml } from "../../../shared/email/render-mail";
 import type { ContactMailerPort, ContactMessage } from "../application/ports/contact-mailer.port";
 
 /**
@@ -45,25 +47,6 @@ export class ContactMailerSendError extends Error {
   }
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-export function renderContactHtml(body: string): string {
-  const paragraphs = body
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter((block) => block !== "")
-    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, "<br />")}</p>`)
-    .join("");
-
-  return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">${paragraphs}</div>`;
-}
-
 export class ResendContactMailer implements ContactMailerPort {
   private readonly client: Resend;
   private readonly from: string;
@@ -91,7 +74,11 @@ export class ResendContactMailer implements ContactMailerPort {
       replyTo: message.replyTo,
       subject: message.subject,
       text: message.body,
-      html: renderContactHtml(message.body),
+      // Nombre y mensaje los escribió el visitante: el renderizador los escapa.
+      html: renderMailHtml({
+        subject: message.subject,
+        blocks: paragraphsFromBody(message.body),
+      }),
     });
 
     if (error) {

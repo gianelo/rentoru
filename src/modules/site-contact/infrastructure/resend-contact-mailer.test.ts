@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import { expectedMailHtml, P } from "../../../shared/email/mail-html.fixture";
 import { composeContactNotice } from "../domain/contact-message";
 import {
   ContactMailerNotConfiguredError,
   ContactMailerSendError,
   ResendContactMailer,
-  renderContactHtml,
 } from "./resend-contact-mailer";
 
 /**
@@ -96,10 +96,13 @@ describe("el envío", () => {
     expect(payload.text).toBe(
       'Ana & "Bea" <ana@example.com> escribió desde "Escríbenos":\n\nHola <b>¿hay cupo?</b>',
     );
+    // Diseño de la 38.2 (G2: el mismo que los correos al usuario).
     expect(payload.html).toBe(
-      `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">` +
-        "<p>Ana &amp; &quot;Bea&quot; &lt;ana@example.com&gt; escribió desde &quot;Escríbenos&quot;:</p>" +
-        "<p>Hola &lt;b&gt;¿hay cupo?&lt;/b&gt;</p></div>",
+      expectedMailHtml(
+        "Escríbenos: mensaje de Ana &amp; &quot;Bea&quot;",
+        `${P}Ana &amp; &quot;Bea&quot; &lt;ana@example.com&gt; escribió desde &quot;Escríbenos&quot;:</p>` +
+          `${P}Hola &lt;b&gt;¿hay cupo?&lt;/b&gt;</p>`,
+      ),
     );
     expect(payload.replyTo).toBe("ana@example.com");
   });
@@ -119,15 +122,16 @@ describe("el envío", () => {
 });
 
 describe("el HTML, que es presentación y no redacción", () => {
-  it("parte el cuerpo en párrafos sin agregar ni una palabra", () => {
-    const html = renderContactHtml(MESSAGE.body);
-
-    expect(html).toContain("<p>Hola, una pregunta.</p>");
-  });
-
   /** El nombre y el mensaje los escribió quien completó el formulario. */
-  it("escapa lo que escribió el visitante", () => {
-    const html = renderContactHtml('Mensaje: <script>alert("x")</script>');
+  it("escapa lo que escribió el visitante", async () => {
+    const { send, client } = fakeResend({ error: null });
+    await new ResendContactMailer(
+      "re_loquesea",
+      "ingresa@rentoru.com",
+      "hola@rentoru.com",
+      client,
+    ).send({ ...MESSAGE, body: 'Mensaje: <script>alert("x")</script>' });
+    const html: string = send.mock.calls[0]?.[0].html;
 
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
