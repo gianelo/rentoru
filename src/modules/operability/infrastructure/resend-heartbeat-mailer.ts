@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { paragraphsFromBody } from "../../../shared/email/mail-content";
+import { renderMailHtml } from "../../../shared/email/render-mail";
 import type {
   HeartbeatMailerPort,
   HeartbeatMessage,
@@ -18,7 +20,8 @@ import type {
  * los otros: cada módulo tiene su propio remitente y su propia decisión de
  * cuándo falla cerrado. Sumarle una abstracción compartida ahora acoplaría
  * cuatro módulos que hoy no se conocen entre sí, por ahorrarse un archivo de
- * cuarenta líneas que ya se prueba solo.
+ * cuarenta líneas que ya se prueba solo. El HTML sí es compartido desde la
+ * 38.2 (`src/shared/email/`): el diseño del correo es uno solo (G2).
  */
 
 const FROM_ENV = "HEARTBEAT_MAIL_FROM";
@@ -36,25 +39,6 @@ export class HeartbeatMailerSendError extends Error {
     super(`resend-heartbeat-mailer: no se pudo enviar a ${to} — ${cause}`);
     this.name = "HeartbeatMailerSendError";
   }
-}
-
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-export function renderHeartbeatHtml(body: string): string {
-  const paragraphs = body
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter((block) => block !== "")
-    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, "<br />")}</p>`)
-    .join("");
-
-  return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">${paragraphs}</div>`;
 }
 
 /**
@@ -84,7 +68,10 @@ export class ResendHeartbeatMailer implements HeartbeatMailerPort {
       to: message.to,
       subject: message.subject,
       text: message.body,
-      html: renderHeartbeatHtml(message.body),
+      html: renderMailHtml({
+        subject: message.subject,
+        blocks: paragraphsFromBody(message.body),
+      }),
     });
 
     if (error) {

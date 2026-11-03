@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import { expectedMailHtml, P } from "../../../shared/email/mail-html.fixture";
 import { composeHeartbeatFailureNotice } from "../domain/heartbeat";
 import {
   HeartbeatMailerNotConfiguredError,
   HeartbeatMailerSendError,
   ResendHeartbeatMailer,
-  renderHeartbeatHtml,
 } from "./resend-heartbeat-mailer";
 
 /**
@@ -92,24 +92,25 @@ describe("el correo final que recibe Resend (35.10)", () => {
     const payload = send.mock.calls[0]?.[0];
     expect(payload.subject).toBe("El latido no encontró la base viva");
     expect(payload.text).toBe(`${url} respondió con 503 el ${when} (UTC).\n\n${tail}`);
+    // Diseño de la 38.2 (G2: el mismo que los correos al usuario).
     expect(payload.html).toBe(
-      `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">` +
-        "<p>https://rentoru.test/api/health?a=1&amp;b=&quot;2&quot; respondió con 503 el " +
-        `${when} (UTC).</p><p>${tail}</p></div>`,
+      expectedMailHtml(
+        "El latido no encontró la base viva",
+        `${P}https://rentoru.test/api/health?a=1&amp;b=&quot;2&quot; respondió con 503 el ` +
+          `${when} (UTC).</p>${P}${tail}</p>`,
+      ),
     );
   });
 });
 
 describe("el HTML, que es presentación y no redacción", () => {
-  it("parte el cuerpo en párrafos sin agregar ni una palabra", () => {
-    const html = renderHeartbeatHtml(MESSAGE.body);
-
-    expect(html).toContain("<p>https://rentoru.com/api/health respondió con 503.</p>");
-    expect(html).toContain("Revisa el panel de Neon.");
-  });
-
-  it("escapa lo que traería un status inesperado", () => {
-    const html = renderHeartbeatHtml('respondió <script>alert("x")</script>');
+  it("escapa lo que traería un status inesperado", async () => {
+    const { send, client } = fakeResend({ error: null });
+    await new ResendHeartbeatMailer("re_loquesea", "latido@rentoru.com", client).send({
+      ...MESSAGE,
+      body: 'respondió <script>alert("x")</script>',
+    });
+    const html: string = send.mock.calls[0]?.[0].html;
 
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");

@@ -1,4 +1,6 @@
 import { Resend } from "resend";
+import { paragraphsFromBody } from "../../../shared/email/mail-content";
+import { renderMailHtml } from "../../../shared/email/render-mail";
 import type {
   LifecycleMailerPort,
   LifecycleMessage,
@@ -18,9 +20,9 @@ import type {
  * sacarla del dominio — que es exactamente la regla permanente que este
  * repositorio no rompe.
  *
- * Lo que sí hace este archivo es **presentación sin redacción**: envuelve el
- * cuerpo del dominio en el HTML mínimo para que el correo no se lea como uno
- * de 1998, sin decidir ni una palabra de lo que dice.
+ * Lo que sí hace este archivo es **presentación sin redacción**: dibuja el
+ * cuerpo del dominio con el diseño compartido (`src/shared/email/`, 38.2),
+ * sin decidir ni una palabra de lo que dice.
  */
 
 /** Sin esto, cualquier cosa que se mande sale rebotada por Resend. */
@@ -39,30 +41,6 @@ export class LifecycleMailerSendError extends Error {
     super(`resend-lifecycle-mailer: no se pudo enviar a ${to} — ${cause}`);
     this.name = "LifecycleMailerSendError";
   }
-}
-
-/**
- * El cuerpo llega como texto del dominio, con saltos de línea. Cada línea es
- * un párrafo y el escape es obligatorio: el título del aviso lo escribió una
- * persona y viaja adentro de este HTML.
- */
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-export function renderLifecycleHtml(body: string): string {
-  const paragraphs = body
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter((block) => block !== "")
-    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, "<br />")}</p>`)
-    .join("");
-
-  return `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">${paragraphs}</div>`;
 }
 
 /**
@@ -95,7 +73,11 @@ export class ResendLifecycleMailer implements LifecycleMailerPort {
       // Los dos: el texto plano es el del dominio sin tocar, y es lo que ve
       // quien lee el correo en una terminal o con las imágenes apagadas.
       text: message.body,
-      html: renderLifecycleHtml(message.body),
+      // El título del aviso lo escribió una persona: el renderizador lo escapa.
+      html: renderMailHtml({
+        subject: message.subject,
+        blocks: paragraphsFromBody(message.body),
+      }),
     });
 
     // **Resend devuelve el error, no lo tira.** Un `await` sin mirar `error`

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
+import { expectedMailHtml, P } from "../../../shared/email/mail-html.fixture";
 import { composeNotice, type NoticeKind } from "../domain/lifecycle-notice";
 import {
   LifecycleMailerNotConfiguredError,
   LifecycleMailerSendError,
   ResendLifecycleMailer,
-  renderLifecycleHtml,
 } from "./resend-lifecycle-mailer";
 
 /**
@@ -84,8 +84,7 @@ describe("el envío", () => {
   });
 });
 
-describe("el correo final que recibe Resend (35.10)", () => {
-  const OPEN = `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.5;color:#101010">`;
+describe("el correo final que recibe Resend (35.10, diseño de la 38.2)", () => {
   const LISTING = {
     id: "l-1",
     title: 'Casa <b>"A&B"</b>',
@@ -112,8 +111,8 @@ describe("el correo final que recibe Resend (35.10)", () => {
       "Tu aviso vence en 3 días",
       `${TITLE_TEXT} vence el 31 de agosto de 2026.\n\n` +
         `Renuévalo por 30 días más desde aquí:\n${URL}\n\n${KEEP}`,
-      `<p>${TITLE_HTML} vence el 31 de agosto de 2026.</p>` +
-        `<p>Renuévalo por 30 días más desde aquí:<br />${URL_HTML}</p><p>${KEEP}</p>`,
+      `${P}${TITLE_HTML} vence el 31 de agosto de 2026.</p>` +
+        `${P}Renuévalo por 30 días más desde aquí:<br />${URL_HTML}</p>${P}${KEEP}</p>`,
     ],
     [
       "vencimiento en 1 día, en singular",
@@ -122,8 +121,8 @@ describe("el correo final que recibe Resend (35.10)", () => {
       "Tu aviso vence en 1 día",
       `${TITLE_TEXT} vence el 31 de agosto de 2026.\n\n` +
         `Renuévalo por 30 días más desde aquí:\n${URL}\n\n${KEEP}`,
-      `<p>${TITLE_HTML} vence el 31 de agosto de 2026.</p>` +
-        `<p>Renuévalo por 30 días más desde aquí:<br />${URL_HTML}</p><p>${KEEP}</p>`,
+      `${P}${TITLE_HTML} vence el 31 de agosto de 2026.</p>` +
+        `${P}Renuévalo por 30 días más desde aquí:<br />${URL_HTML}</p>${P}${KEEP}</p>`,
     ],
     [
       "purga de fotos",
@@ -133,10 +132,10 @@ describe("el correo final que recibe Resend (35.10)", () => {
       `${TITLE_TEXT} venció el 31 de agosto de 2026 y sus fotos se borran el ` +
         "15 de septiembre de 2026.\n\n" +
         `Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:\n${URL}\n\n${PURGE_TAIL}`,
-      `<p>${TITLE_HTML} venció el 31 de agosto de 2026 y sus fotos se borran el ` +
+      `${P}${TITLE_HTML} venció el 31 de agosto de 2026 y sus fotos se borran el ` +
         "15 de septiembre de 2026.</p>" +
-        `<p>Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:<br />${URL_HTML}</p>` +
-        `<p>${PURGE_TAIL}</p>`,
+        `${P}Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:<br />${URL_HTML}</p>` +
+        `${P}${PURGE_TAIL}</p>`,
     ],
   ])("%s", async (_name, kind, now, subject, text, html) => {
     const { send, client } = fakeResend({ error: null });
@@ -150,33 +149,25 @@ describe("el correo final que recibe Resend (35.10)", () => {
     const payload = send.mock.calls[0]?.[0];
     expect(payload.subject).toBe(subject);
     expect(payload.text).toBe(text);
-    expect(payload.html).toBe(`${OPEN}${html}</div>`);
+    expect(payload.html).toBe(expectedMailHtml(subject, html));
   });
 });
 
 describe("el HTML, que es presentación y no redacción", () => {
-  it("parte el cuerpo en párrafos sin agregar ni una palabra", () => {
-    const html = renderLifecycleHtml(MESSAGE.body);
-
-    expect(html).toContain("<p>Hola.</p>");
-    expect(html).toContain("Renuévalo aquí.");
-    // Los saltos simples quedan dentro del mismo párrafo.
-    expect(html).toContain("<br />");
-  });
-
   /**
    * **El título del aviso lo escribió una persona y viaja adentro de este
    * HTML.** Sin escapar, quien publica decide qué se dibuja en el correo de
    * otro — y el correo sale con nuestro remitente.
    */
-  it("escapa lo que viene del aviso", () => {
-    const html = renderLifecycleHtml('Tu aviso <script>alert("x")</script> vence');
+  it("escapa lo que viene del aviso", async () => {
+    const { send, client } = fakeResend({ error: null });
+    await new ResendLifecycleMailer("re_loquesea", "avisos@rentoru.com", client).send({
+      ...MESSAGE,
+      body: 'Tu aviso <script>alert("x")</script> vence',
+    });
+    const html: string = send.mock.calls[0]?.[0].html;
 
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
-  });
-
-  it("no deja párrafos vacíos cuando el dominio separa con varios saltos", () => {
-    expect(renderLifecycleHtml("Uno.\n\n\n\nDos.")).toBe(renderLifecycleHtml("Uno.\n\nDos."));
   });
 });
