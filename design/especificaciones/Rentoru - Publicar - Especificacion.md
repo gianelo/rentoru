@@ -268,7 +268,7 @@ Paleta Menta, idéntica al resto del producto.
 ## 9. Reglas transversales
 
 1. **Obligatorio se marca con `✱` y la palabra "obligatorio"**, nunca solo con color.
-2. **Campo en error:** borde de 2 px y mensaje propio **arriba** del campo, antes de su etiqueta, para que se anuncie antes de llegar al control (18.22; confirmado por el fundador el 2026-11-01 para todo el sitio, publicar y editar). El mensaje dice qué hacer, no qué pasó.
+2. **Campo en error:** borde de 2 px y mensaje propio **debajo** del control, antes de la ayuda: etiqueta, control, error, ayuda. Decisión del fundador del 2026-11-02 para todo el sitio, que reemplaza la del 2026-11-01 («arriba», 18.22): «es mejor abajo… unificar todo». El control sigue anunciándolo con `aria-invalid` y `aria-describedby`. El mensaje dice qué hacer, no qué pasó.
 3. **Si el control ya lo dice, el texto sobra.** El campo dice "Buscá tu zona": no hace falta un subtítulo que repita "escribí las primeras letras".
 4. **Un mínimo se muestra como progreso, no como castigo.** La descripción usa barra y "te faltan 14 caracteres".
 5. **Áreas táctiles de 44 px en móvil**, 40 px en escritorio. Incluidas las flechas de volver.

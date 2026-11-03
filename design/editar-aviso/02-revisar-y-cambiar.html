@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Editar aviso · Dirección 02 · Revisar y cambiar</title>
+<style>
+/* Token block copied verbatim from design/system.html (:root, .t-menta, .t-oscuro). */
+:root {
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --disp: var(--mono);
+  --meta: var(--mono);
+  --target-min: 44px;
+  --target-min-desktop: 44px;
+  --control-fs: 15px;
+  --meta-fs: 12px;
+  --meta-fs-sm: 11px;
+  --meta-fw: 600;
+  --badge-fs: 11px;
+  --badge-fw: 700;
+  --badge-ls: 0.06em;
+  --title-fs: 20px;
+  --title-fw: 700;
+  --title-lh: 1.25;
+  --ficha-body-fs-desktop: 16px;
+  --ficha-body-lh-desktop: 1.65;
+  --ficha-price-fs-desktop: 34px;
+  --ficha-price-fw: 700;
+  --fp: 15px;
+  --gap: 8px;
+  --r-thumb: 6px;
+  --door-r: 18px;
+  --door-shadow: 0 24px 64px rgba(30, 32, 34, 0.34);
+  --door-sheet-shadow: 0 -8px 28px rgba(30, 32, 34, 0.16);
+  --brand-ls: -0.02em;
+  --footer-brand-fs-desktop: 19px;
+  --footer-tagline-fs-desktop: 13px;
+  --footer-heading-fs: 10px;
+  --footer-link-fs-desktop: 13.5px;
+  --footer-legal-fs: 11px;
+}
+.t-menta {
+  --r: 12px; --rs: 999px;
+  --ctl: #f0f5f9; --bg: #f0f5f9; --surface: #ffffff; --page: #ffffff; --footer-bg: #f0f5f9;
+  --line: #e1e4e6; --strong: #788189; --ink: #1e2022; --soft: #52616b;
+  --accent: #272343; --accent-ink: #ffffff; --tint: #e3f6f5;
+  --scrim: rgba(30, 32, 34, 0.55);
+  --warn: #8a5a00; --warn-bg: #faf2e1; --err: #9c2b20; --err-bg: #fbecea;
+  --shadow-raised: 0 2px 6px rgba(30, 32, 34, 0.1);
+  --thumb: repeating-linear-gradient(135deg, #bae8e8 0 7px, #e3f6f5 7px 14px);
+}
+.t-oscuro {
+  --r: 12px; --rs: 999px;
+  --ctl: #332e52; --bg: #1b1830; --surface: #272343; --page: #272343; --footer-bg: #1b1830;
+  --line: #3b3663; --strong: #788e98; --ink: #f0f5f9; --soft: #9ba8b4;
+  --accent: #bae8e8; --accent-ink: #272343; --tint: #332e52;
+  --scrim: rgba(0, 0, 0, 0.66);
+  --warn: #e0b464; --warn-bg: #2c2517; --err: #f0a39a; --err-bg: #43283a;
+  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --thumb: repeating-linear-gradient(135deg, #3b3663 0 7px, #332e52 7px 14px);
+}
+
+/* Additional production tokens this artboard needs. Every value is listed in
+   design/system.md (source: src/styles/tokens.css); none is new. */
+:root {
+  --ficha-body-fs: 15px;
+  --ficha-body-lh: 1.6;
+  --secondary-lh: 1.6;
+  --ficha-price-fs: 30px;
+  --nav-h: 60px;
+  --nav-h-desktop: 68px;
+  --nav-brand-fs: 17px;
+  --nav-brand-fs-desktop: 19px;
+  --nav-action-fs: 13.5px;
+  --footer-brand-fs: 18px;
+  --footer-tagline-fs: 13.5px;
+  --card-photo-ratio: 4 / 3;
+  --twd: 64px;
+  --action-h: 46px;
+  --loading-duration: 1.2s;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font-family: var(--sans); font-size: var(--fp); line-height: 1.55; }
+p { margin: 0; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- board chrome (not part of the screen) ---------- */
+.board { width: 1440px; margin: 0 auto; padding-bottom: 48px; }
+.board-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; padding: 32px 48px 0; }
+.board-title { font-size: var(--title-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0 0 8px; }
+.board-lede { color: var(--soft); max-width: 820px; }
+.board-lede b { color: var(--ink); }
+.kicker { font-family: var(--meta); font-size: var(--badge-fs); font-weight: var(--badge-fw); letter-spacing: var(--badge-ls); text-transform: uppercase; color: var(--soft); margin: 0 0 8px; }
+.toggle { display: flex; align-items: center; gap: 8px; flex: none; }
+.toggle-label { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); }
+.toggle .btn[aria-pressed="true"] { background: var(--tint); color: var(--accent); border-color: var(--accent); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 24px; list-style: none; margin: 24px 0 0; padding: 0 48px; color: var(--soft); font-size: var(--meta-fs); }
+.legend b { color: var(--ink); font-family: var(--meta); }
+.stage { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line); }
+.stage-title { font-size: var(--title-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0 0 16px; padding: 0 48px; }
+.frames { display: flex; align-items: flex-start; gap: 24px; padding: 0 48px; }
+.frame-label { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); margin: 0 0 8px; }
+.frame-label b { color: var(--ink); font-weight: var(--meta-fw); }
+.frame-full > .frame-label { padding: 0 48px; }
+.strip { display: flex; align-items: flex-start; gap: 24px; margin-top: 24px; }
+.frame-full + .strip { padding: 0 48px; }
+.piece { border: 1px dashed var(--strong); border-radius: var(--r); padding: 16px; background: var(--page); }
+.piece.p520 { width: 568px; }
+.piece.p390 { width: 390px; padding: 0; overflow: clip; }
+.piece.p390 > .open { margin: 16px 20px; }
+.piece.p390 > .frame-label { padding: 12px 20px 0; }
+.strip.stack { flex-direction: column; }
+/* State tag: board annotation, pinned to the block it describes */
+.tagged { position: relative; }
+.st { position: absolute; top: -10px; right: 8px; z-index: 1; padding: 0 8px; border: 1px dashed var(--strong); border-radius: var(--rs); background: var(--surface); color: var(--soft); font-family: var(--meta); font-size: var(--meta-fs-sm); line-height: 1.6; }
+
+/* ---------- the screen: fixed-width frames in real CSS pixels ---------- */
+.screen { display: flex; flex-direction: column; background: var(--page); color: var(--ink); border: 1px solid var(--line); overflow: clip; }
+.w390 { width: 390px; }
+.w768 { width: 768px; }
+.w1440 { width: 1440px; }
+/* 390: the frame is a real viewport that scrolls, so the bar sticks to its edge */
+.vp { height: 1520px; overflow-y: auto; overflow-x: clip; }
+
+/* Buttons: Button.module.css levels, plus the spec §8 waiting look */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: var(--target-min); padding: 8px 16px; border-radius: var(--r); font: inherit; cursor: pointer; text-decoration: none; }
+.btn-action { background: var(--accent); color: var(--accent-ink); border: none; min-height: var(--action-h); }
+.btn-neutral { background: none; color: var(--ink); border: 1px solid var(--strong); min-height: var(--action-h); }
+.btn-neutral:focus-visible { outline: 2px solid var(--strong); outline-offset: 2px; }
+.btn-wait { background: var(--line); color: var(--soft); border: none; cursor: default; animation: wait var(--loading-duration) ease-in-out infinite alternate; }
+@keyframes wait { from { color: var(--soft); } to { color: var(--ink); } }
+@media (prefers-reduced-motion: reduce) { .btn-wait { animation: none; } }
+/* Level 3 as text only: «Cambiar», «Listo», photo actions */
+.txt { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 8px; border: none; background: none; color: var(--ink); font: inherit; font-weight: var(--meta-fw); text-decoration: underline; cursor: pointer; white-space: nowrap; }
+.txt:focus-visible { outline: 2px solid var(--strong); outline-offset: 2px; }
+
+/* Nav (Nav.module.css) */
+.nav { background: var(--surface); border-bottom: 1px solid var(--line); height: var(--nav-h); flex: none; }
+.wide .nav { height: var(--nav-h-desktop); }
+.nav-in { display: flex; align-items: center; justify-content: space-between; height: 100%; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+.wide .nav-in { padding: 0 24px; }
+.brand { font-family: var(--mono); font-weight: 700; font-size: var(--nav-brand-fs); letter-spacing: var(--brand-ls); color: var(--ink); text-decoration: none; }
+.wide .brand { font-size: var(--nav-brand-fs-desktop); }
+.nav-link { display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 16px; border: 1px solid var(--strong); border-radius: var(--rs); font-size: var(--nav-action-fs); font-weight: 600; color: var(--ink); text-decoration: none; }
+
+/* Page shell: publish .layout / .column */
+.page { flex: 1 0 auto; }
+.col { padding: 24px 20px 32px; }
+.wide .col { max-width: 520px; margin: 0 auto; padding: 32px 0 48px; }
+.desk .wrap { display: grid; grid-template-columns: 520px 260px; gap: 48px; justify-content: center; align-items: start; max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+.desk .col { margin: 0; padding: 0; }
+.head { display: flex; flex-direction: column; gap: 8px; padding-bottom: 16px; }
+.back { display: inline-flex; align-items: center; align-self: flex-start; min-height: var(--target-min); font-weight: var(--meta-fw); text-decoration: none; }
+.h1 { font-size: var(--ficha-price-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0; }
+.wide .h1 { font-size: var(--ficha-price-fs-desktop); }
+.lede { color: var(--soft); font-size: var(--ficha-body-fs); line-height: var(--ficha-body-lh); }
+.wide .lede { font-size: var(--ficha-body-fs-desktop); line-height: var(--ficha-body-lh-desktop); }
+
+/* Review rows: publish .reviewRow (1fr auto; ≥768: 200px 1fr auto) */
+.rrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.rk { grid-column: 1; grid-row: 1; font-family: var(--meta); font-size: var(--badge-fs); font-weight: var(--badge-fw); letter-spacing: var(--badge-ls); text-transform: uppercase; color: var(--soft); }
+.rv { grid-column: 1; grid-row: 2; min-width: 0; }
+.rrow > .txt { grid-column: 2; grid-row: 1 / 3; }
+.wide .rrow { grid-template-columns: 200px minmax(0, 1fr) auto; }
+.wide .rrow > .rv { grid-column: 2; grid-row: 1; }
+.wide .rrow > .txt { grid-column: 3; grid-row: 1; }
+.hint { display: block; color: var(--soft); font-size: var(--meta-fs); line-height: 1.5; }
+.price { font-family: var(--disp); font-weight: var(--ficha-price-fw); font-variant-numeric: tabular-nums; }
+
+/* Expanded row: field anatomy label → control → error → help/counter, then «Listo» */
+.open { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; padding: 16px; border: 1px solid var(--strong); border-radius: var(--r); }
+.open > .rk { display: block; margin-bottom: 2px; }
+.req { color: var(--err); }
+.open-foot { display: flex; justify-content: flex-end; margin: 2px -8px -8px 0; }
+.control { display: block; width: 100%; min-height: 56px; padding: 0 14px; border: 1px solid var(--strong); border-radius: var(--r); background: var(--surface); color: var(--ink); font-family: var(--sans); font-size: var(--control-fs); }
+.wide .control { min-height: 52px; }
+textarea.control { padding: 12px 14px; min-height: 160px; line-height: var(--secondary-lh); resize: vertical; }
+.invalid { border: 2px solid var(--err); }
+.error { color: var(--err); font-size: var(--ficha-body-fs); }
+.wide .error { font-size: var(--ficha-body-fs-desktop); }
+.counterLine { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); }
+.counterShort { color: var(--warn); font-weight: var(--meta-fw); }
+.numbers { display: flex; flex-direction: column; gap: 12px; }
+.ncell { display: flex; flex-direction: column; gap: 6px; }
+.nrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.nrow label { font-size: var(--control-fs); font-weight: var(--meta-fw); }
+.num { width: 120px; text-align: center; font-family: var(--disp); font-variant-numeric: tabular-nums; }
+
+/* Photos: the first row group (publish .photoRow) */
+.pgroup { display: flex; flex-direction: column; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.pgroup-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.count { font-family: var(--meta); font-size: var(--meta-fs-sm); color: var(--soft); margin-left: 8px; letter-spacing: 0; text-transform: none; }
+.prow { display: grid; grid-template-columns: var(--twd) minmax(0, 1fr); gap: 0 12px; align-items: center; padding: 8px 12px; border: 1px solid var(--strong); border-radius: var(--r); }
+.thumb { grid-row: 1 / 3; width: var(--twd); aspect-ratio: var(--card-photo-ratio); background: var(--thumb); border: 1px solid var(--line); border-radius: var(--r-thumb); }
+.pinfo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding-top: 4px; }
+.pname { font-weight: var(--meta-fw); }
+.pacts { display: flex; flex-wrap: wrap; margin-left: -8px; }
+.cover { display: inline-flex; padding: 0 8px; background: var(--tint); color: var(--accent); border: 1px solid var(--accent); border-radius: var(--rs); font-family: var(--meta); font-size: var(--badge-fs); font-weight: var(--badge-fw); letter-spacing: var(--badge-ls); text-transform: uppercase; }
+/* Marked for removal: dimmed by colour and a dashed edge, never opacity (spec §8) */
+.marked { background: var(--warn-bg); border-style: dashed; }
+.marked .pname { color: var(--soft); text-decoration: line-through; }
+.marked-note { color: var(--warn); font-size: var(--meta-fs); font-weight: var(--meta-fw); }
+
+/* Save area at the end of the list, and the 390 bottom bar */
+.acts { display: flex; flex-direction: column; gap: 12px; padding-top: 24px; }
+.notice { padding: 12px 16px; border-radius: var(--r); font-size: var(--control-fs); line-height: var(--secondary-lh); }
+.n-warn { background: var(--warn-bg); color: var(--ink); }
+.n-err { background: var(--err-bg); color: var(--ink); }
+.n-err b { color: var(--err); }
+.btns { display: flex; gap: 12px; }
+.btns .btn-action, .btns .btn-wait { flex: 1; }
+.wide .btns .btn-action, .wide .btns .btn-wait { flex: none; }
+.bar { position: sticky; bottom: 0; z-index: 2; display: flex; flex-direction: column; gap: 8px; padding: 12px 20px; background: var(--surface); border-top: 1px solid var(--line); }
+.bar.static { position: static; }
+.bar-note { color: var(--warn); font-size: var(--meta-fs); font-weight: var(--meta-fw); line-height: 1.5; }
+
+/* Sticky side card (1440): what changed since load */
+.card { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: var(--r); }
+.card p { font-size: var(--control-fs); line-height: var(--secondary-lh); }
+.card .rk { display: block; }
+.card p.hint { font-size: var(--meta-fs); line-height: 1.5; }
+.card-sep { border-top: 1px solid var(--line); padding-top: 12px; display: flex; flex-direction: column; gap: 4px; }
+.card-links { display: flex; gap: 0 8px; flex-wrap: wrap; }
+.card-links a { display: inline-flex; align-items: center; min-height: var(--target-min); font-weight: var(--meta-fw); }
+
+/* Footer (SiteFooter.module.css, condensed) */
+.footer { background: var(--footer-bg); border-top: 1px solid var(--line); color: var(--ink); }
+.f-top { display: flex; flex-direction: column; gap: 8px; padding: 24px 20px; }
+.wide .f-top { max-width: 1100px; margin: 0 auto; flex-direction: row; justify-content: space-between; align-items: baseline; padding: 36px 26px; }
+.wordmark { font-family: var(--mono); font-weight: 700; font-size: var(--footer-brand-fs); letter-spacing: var(--brand-ls); color: var(--ink); text-decoration: none; }
+.wide .wordmark { font-size: var(--footer-brand-fs-desktop); }
+.tagline { font-size: var(--footer-tagline-fs); line-height: 1.55; color: var(--soft); }
+.wide .tagline { font-size: var(--footer-tagline-fs-desktop); }
+.f-strip { padding: 16px 20px; border-top: 1px solid var(--line); }
+.wide .f-strip { max-width: 1100px; margin: 0 auto; padding: 16px 26px; }
+.legal { font-family: var(--meta); font-size: var(--footer-legal-fs); line-height: 1.6; color: var(--soft); }
+</style>
+</head>
+<body class="t-menta">
+<main class="board">
+
+  <header class="board-head">
+    <div>
+      <p class="kicker">Fase 44 · Editar aviso · Dirección 02</p>
+      <h1 class="board-title">Revisar y cambiar</h1>
+      <p class="board-lede">La pantalla abre como el paso «Revisar» de publicar: una lista de filas con el dato actual y un «Cambiar» a la derecha. «Cambiar» abre esa fila en su lugar con su campo (etiqueta → control → error → ayuda) y «Listo» la cierra. Las fotos son el primer grupo. En escritorio, una tarjeta fija de 260 px dice qué cambiaste desde que abriste. <b>A cambio:</b> corta y tranquila, pero cada campo pide un toque más para editarlo.</p>
+    </div>
+    <div class="toggle" role="group" aria-label="Tema de la lámina">
+      <span class="toggle-label">Tema</span>
+      <button class="btn btn-neutral" type="button" data-theme-set="menta" aria-pressed="true">menta</button>
+      <button class="btn btn-neutral" type="button" data-theme-set="oscuro" aria-pressed="false">oscuro</button>
+    </div>
+  </header>
+  <ol class="legend" aria-label="Estados dibujados">
+    <li><b>1</b> Por defecto: filas cerradas con su dato</li>
+    <li><b>2</b> Guardado rechazado: error debajo del control</li>
+    <li><b>3</b> Foto marcada para quitar, con «Deshacer»</li>
+    <li><b>4</b> Guardando…</li>
+    <li><b>5</b> Portada y orden</li>
+    <li><b>6</b> Contador vivo</li>
+  </ol>
+
+  <!-- ================= 1440 ================= -->
+  <section class="stage" aria-labelledby="s1-title">
+    <h2 class="stage-title" id="s1-title">Escritorio</h2>
+    <article class="frame-full" aria-labelledby="d-label">
+      <p class="frame-label" id="d-label"><b>1440 px</b> · contenedor 1100 · lista 520 + tarjeta fija 260 · estados 1, 2, 3, 5 y 6</p>
+      <div class="screen w1440 wide desk">
+        <header class="nav"><nav class="nav-in" aria-label="Principal (1440)"><a class="brand" href="#d-label">Rentoru</a><a class="nav-link" href="#d-label">Mis avisos</a></nav></header>
+        <div class="page">
+          <div class="wrap">
+            <form class="col" method="post" action="#" aria-labelledby="d-h1">
+              <div class="head">
+                <a class="back" href="#d-label">← Mis avisos</a>
+                <h1 class="h1" id="d-h1">Editar aviso</h1>
+                <p class="lede">Revisa tu aviso y toca «Cambiar» en lo que quieras corregir. Nada cambia hasta que guardes.</p>
+              </div>
+              <div class="list">
+                <div class="pgroup tagged">
+                  <span class="st" aria-hidden="true">5 · portada y orden · 3 · foto marcada</span>
+                  <div class="pgroup-head"><span class="rk">Fotos<span class="count">3 de 6</span></span><button class="txt" type="button">+ Agregar foto</button></div>
+                  <div class="prow"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 1 (portada)</span><span class="cover">Portada</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Bajar la foto 1">↓ Bajar</button><button class="txt" type="button" aria-label="Quitar la foto 1">Quitar</button></div>
+                  </div>
+                  <div class="prow marked"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 2</span><span class="marked-note">Se quitará al guardar</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Deshacer: conservar la foto 2">Deshacer</button></div>
+                  </div>
+                  <div class="prow"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 3</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Hacer portada la foto 3">Hacer portada</button><button class="txt" type="button" aria-label="Subir la foto 3">↑ Subir</button><button class="txt" type="button" aria-label="Quitar la foto 3">Quitar</button></div>
+                  </div>
+                </div>
+                <div class="rrow tagged"><span class="st" aria-hidden="true">1 · por defecto · 6</span><span class="rk">Título</span><span class="rv">Apartamento amoblado en La Castellana<span class="hint counterLine">Vas 37 · máximo 90</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar título">Cambiar</button></div>
+                <div class="open tagged" id="d-desc-panel">
+                  <span class="st" aria-hidden="true">2 · rechazado · 6 · contador</span>
+                  <label class="rk" for="d-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                  <textarea class="control invalid" id="d-desc" name="description" aria-invalid="true" aria-describedby="d-desc-error d-desc-count">Apartamento con buena vista</textarea>
+                  <p class="error" id="d-desc-error">✱ Mínimo 120 caracteres. Vas 27.</p>
+                  <p class="counterLine" id="d-desc-count"><span class="counterShort">Vas 27</span> · mínimo 120</p>
+                  <div class="open-foot"><button class="txt" type="button" aria-expanded="true" aria-controls="d-desc-panel">Listo</button></div>
+                </div>
+                <div class="rrow"><span class="rk">Precio</span><span class="rv"><span class="price">610</span> USD al mes</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar precio">Cambiar</button></div>
+                <div class="open tagged" id="d-num-panel">
+                  <span class="st" aria-hidden="true">2 · rechazado</span>
+                  <span class="rk">La propiedad</span>
+                  <div class="numbers">
+                    <div class="nrow"><label for="d-hab">Habitaciones</label><input class="control num" id="d-hab" name="bedrooms" inputmode="numeric" value="3"></div>
+                    <div class="ncell">
+                      <div class="nrow"><label for="d-banos">Baños <span class="req">✱ obligatorio</span></label><input class="control num invalid" id="d-banos" name="bathrooms" inputmode="numeric" value="" aria-invalid="true" aria-describedby="d-banos-error"></div>
+                      <p class="error" id="d-banos-error">✱ obligatorio. ¿Cuántos baños tiene?</p>
+                    </div>
+                    <div class="nrow"><label for="d-puestos">Puestos de auto</label><input class="control num" id="d-puestos" name="parking" inputmode="numeric" value="1" aria-describedby="d-puestos-help"></div>
+                    <p class="hint" id="d-puestos-help">Puestos de auto permite cero.</p>
+                    <div class="nrow"><label for="d-m2">Metros cuadrados</label><input class="control num" id="d-m2" name="area" inputmode="numeric" value="128"></div>
+                  </div>
+                  <div class="open-foot"><button class="txt" type="button" aria-expanded="true" aria-controls="d-num-panel">Listo</button></div>
+                </div>
+                <div class="rrow"><span class="rk">Tipo de propiedad</span><span class="rv">Apartamento</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar tipo de propiedad">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Zona y ciudad</span><span class="rv">Altamira · Caracas<span class="hint">No se cambia aquí: es parte de la dirección del aviso.</span></span></div>
+                <div class="rrow"><span class="rk">Referencia</span><span class="rv">Frente a la panadería La Castellana<span class="hint">Opcional</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar referencia">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Lo que tiene</span><span class="rv">Planta eléctrica · Amoblado · Vigilancia 24 h</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar lo que tiene la propiedad">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Cómo te contactan</span><span class="rv">WhatsApp · 0412 123 4567</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar cómo te contactan">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Quién publica</span><span class="rv">Dueño<span class="hint">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar quién publica">Cambiar</button></div>
+              </div>
+              <div class="acts tagged">
+                <span class="st" aria-hidden="true">2 · 3 · aviso junto a Guardar</span>
+                <p class="notice n-err" role="alert"><b>✱ No se guardó.</b> Corrige la descripción y los baños. Lo demás que escribiste sigue aquí.</p>
+                <p class="notice n-warn">Recuerda: la foto marcada se eliminará al guardar.</p>
+                <div class="btns"><button class="btn btn-action" type="submit">Guardar cambios</button><a class="btn btn-neutral" href="#d-label">Cancelar</a></div>
+              </div>
+            </form>
+            <aside class="card" aria-labelledby="d-card-title">
+              <span class="rk" id="d-card-title">Sin guardar</span>
+              <p>Cambiaste: la descripción, baños</p>
+              <p>Se quitará al guardar: Foto 2</p>
+              <div class="card-sep">
+                <span class="rk">Por corregir</span>
+                <div class="card-links"><a href="#d-desc">Descripción</a><a href="#d-banos">Baños</a></div>
+              </div>
+              <p class="hint">Tu aviso publicado no cambia hasta que toques «Guardar cambios».</p>
+            </aside>
+          </div>
+        </div>
+        <footer class="footer">
+          <div class="f-top"><a class="wordmark" href="#d-label">Rentoru</a><p class="tagline">Alquileres de largo plazo en Distrito Capital y Maracaibo. Publicar y buscar es gratis.</p></div>
+          <div class="f-strip"><p class="legal">Rentoru no cobra comisión, no guarda dinero y no redacta contratos.</p></div>
+        </footer>
+      </div>
+    </article>
+    <div class="strip" role="group" aria-label="Estados 1 y 4 a 1440 px">
+      <div class="piece p520 wide">
+        <p class="frame-label"><b>1 · Por defecto</b> · Descripción abierta, sin error · 6 · contador al día</p>
+        <div class="open" id="v1-desc-panel">
+          <label class="rk" for="v1-desc">Descripción <span class="req">✱ obligatorio</span></label>
+          <textarea class="control" id="v1-desc" name="description" aria-describedby="v1-desc-count">Apartamento de tres habitaciones en piso alto, con vista abierta y mucha luz natural. La cocina está equipada y el edificio tiene vigilancia 24 h con acceso controlado. Queda a cinco minutos a pie del metro de Altamira.</textarea>
+          <p class="counterLine" id="v1-desc-count">Vas 219 · máximo 1 200</p>
+          <div class="open-foot"><button class="txt" type="button" aria-expanded="true" aria-controls="v1-desc-panel">Listo</button></div>
+        </div>
+      </div>
+      <div class="piece p520 wide">
+        <p class="frame-label"><b>4 · Guardando…</b> · el botón espera, sin imagen de carga</p>
+        <div class="acts">
+          <p class="notice n-warn">Recuerda: la foto marcada se eliminará al guardar.</p>
+          <div class="btns"><button class="btn btn-wait" type="button" aria-disabled="true" aria-describedby="v2-status">Guardando…</button><a class="btn btn-neutral" href="#d-label">Cancelar</a></div>
+          <p class="vh" id="v2-status" role="status">Guardando tus cambios. No cierres esta página.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 768 + 390 ================= -->
+  <section class="stage" aria-labelledby="s2-title">
+    <h2 class="stage-title" id="s2-title">Tableta y móvil</h2>
+    <div class="frames">
+
+      <article aria-labelledby="t-label">
+        <p class="frame-label" id="t-label"><b>768 px</b> · lista 520 centrada · estados 1, 4, 5 y 6</p>
+        <div class="screen w768 wide">
+          <header class="nav"><nav class="nav-in" aria-label="Principal (768)"><a class="brand" href="#t-label">Rentoru</a><a class="nav-link" href="#t-label">Mis avisos</a></nav></header>
+          <div class="page">
+            <form class="col" method="post" action="#" aria-labelledby="t-h1">
+              <div class="head">
+                <a class="back" href="#t-label">← Mis avisos</a>
+                <h1 class="h1" id="t-h1">Editar aviso</h1>
+                <p class="lede">Revisa tu aviso y toca «Cambiar» en lo que quieras corregir. Nada cambia hasta que guardes.</p>
+              </div>
+              <div class="list">
+                <div class="pgroup tagged">
+                  <span class="st" aria-hidden="true">5 · portada y orden</span>
+                  <div class="pgroup-head"><span class="rk">Fotos<span class="count">3 de 6</span></span><button class="txt" type="button">+ Agregar foto</button></div>
+                  <div class="prow"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 1 (portada)</span><span class="cover">Portada</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Bajar la foto 1">↓ Bajar</button><button class="txt" type="button" aria-label="Quitar la foto 1">Quitar</button></div>
+                  </div>
+                  <div class="prow"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 2</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Hacer portada la foto 2">Hacer portada</button><button class="txt" type="button" aria-label="Subir la foto 2">↑ Subir</button><button class="txt" type="button" aria-label="Bajar la foto 2">↓ Bajar</button><button class="txt" type="button" aria-label="Quitar la foto 2">Quitar</button></div>
+                  </div>
+                  <div class="prow"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 3</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Hacer portada la foto 3">Hacer portada</button><button class="txt" type="button" aria-label="Subir la foto 3">↑ Subir</button><button class="txt" type="button" aria-label="Quitar la foto 3">Quitar</button></div>
+                  </div>
+                </div>
+                <div class="rrow tagged"><span class="st" aria-hidden="true">1 · por defecto</span><span class="rk">Título</span><span class="rv">Apartamento amoblado en La Castellana<span class="hint counterLine">Vas 37 · máximo 90</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar título">Cambiar</button></div>
+                <div class="open tagged" id="t-desc-panel">
+                  <span class="st" aria-hidden="true">6 · contador al día</span>
+                  <label class="rk" for="t-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                  <textarea class="control" id="t-desc" name="description" aria-describedby="t-desc-count">Apartamento de tres habitaciones en piso alto, con vista abierta y mucha luz natural. La cocina está equipada y el edificio tiene vigilancia 24 h con acceso controlado. Queda a cinco minutos a pie del metro de Altamira.</textarea>
+                  <p class="counterLine" id="t-desc-count">Vas 219 · máximo 1 200</p>
+                  <div class="open-foot"><button class="txt" type="button" aria-expanded="true" aria-controls="t-desc-panel">Listo</button></div>
+                </div>
+                <div class="rrow"><span class="rk">Precio</span><span class="rv"><span class="price">610</span> USD al mes</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar precio">Cambiar</button></div>
+                <div class="open" id="t-num-panel">
+                  <span class="rk">La propiedad</span>
+                  <div class="numbers">
+                    <div class="nrow"><label for="t-hab">Habitaciones</label><input class="control num" id="t-hab" name="bedrooms" inputmode="numeric" value="3"></div>
+                    <div class="nrow"><label for="t-banos">Baños <span class="req">✱ obligatorio</span></label><input class="control num" id="t-banos" name="bathrooms" inputmode="numeric" value="2"></div>
+                    <div class="nrow"><label for="t-puestos">Puestos de auto</label><input class="control num" id="t-puestos" name="parking" inputmode="numeric" value="1" aria-describedby="t-puestos-help"></div>
+                    <p class="hint" id="t-puestos-help">Puestos de auto permite cero.</p>
+                    <div class="nrow"><label for="t-m2">Metros cuadrados</label><input class="control num" id="t-m2" name="area" inputmode="numeric" value="128"></div>
+                  </div>
+                  <div class="open-foot"><button class="txt" type="button" aria-expanded="true" aria-controls="t-num-panel">Listo</button></div>
+                </div>
+                <div class="rrow"><span class="rk">Tipo de propiedad</span><span class="rv">Apartamento</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar tipo de propiedad">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Zona y ciudad</span><span class="rv">Altamira · Caracas<span class="hint">No se cambia aquí: es parte de la dirección del aviso.</span></span></div>
+                <div class="rrow"><span class="rk">Referencia</span><span class="rv">Frente a la panadería La Castellana<span class="hint">Opcional</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar referencia">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Lo que tiene</span><span class="rv">Planta eléctrica · Amoblado · Vigilancia 24 h</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar lo que tiene la propiedad">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Cómo te contactan</span><span class="rv">WhatsApp · 0412 123 4567</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar cómo te contactan">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Quién publica</span><span class="rv">Dueño<span class="hint">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar quién publica">Cambiar</button></div>
+              </div>
+              <div class="acts tagged">
+                <span class="st" aria-hidden="true">4 · guardando</span>
+                <div class="btns"><button class="btn btn-wait" type="button" aria-disabled="true" aria-describedby="t-status">Guardando…</button><a class="btn btn-neutral" href="#t-label">Cancelar</a></div>
+                <p class="vh" id="t-status" role="status">Guardando tus cambios. No cierres esta página.</p>
+              </div>
+            </form>
+          </div>
+          <footer class="footer">
+            <div class="f-top"><a class="wordmark" href="#t-label">Rentoru</a><p class="tagline">Alquileres de largo plazo en Distrito Capital y Maracaibo.</p></div>
+            <div class="f-strip"><p class="legal">Rentoru no cobra comisión, no guarda dinero y no redacta contratos.</p></div>
+          </footer>
+        </div>
+      </article>
+
+      <article aria-labelledby="m-label">
+        <p class="frame-label" id="m-label"><b>390 px</b> · viewport real con scroll · barra pegada al borde · estados 1, 2, 3, 5 y 6</p>
+        <div class="screen w390 vp">
+          <header class="nav"><nav class="nav-in" aria-label="Principal (390)"><a class="brand" href="#m-label">Rentoru</a><a class="nav-link" href="#m-label">Mis avisos</a></nav></header>
+          <div class="page">
+            <form class="col" method="post" action="#" aria-labelledby="m-h1" id="m-form">
+              <div class="head">
+                <a class="back" href="#m-label">← Mis avisos</a>
+                <h1 class="h1" id="m-h1">Editar aviso</h1>
+                <p class="lede">Toca «Cambiar» en lo que quieras corregir. Nada cambia hasta que guardes.</p>
+              </div>
+              <p class="notice n-err" role="alert"><b>✱ No se guardó.</b> Corrige la descripción y los baños. Lo demás que escribiste sigue aquí.</p>
+              <div class="list">
+                <div class="pgroup tagged">
+                  <span class="st" aria-hidden="true">5 · 3</span>
+                  <div class="pgroup-head"><span class="rk">Fotos<span class="count">3 de 6</span></span><button class="txt" type="button">+ Agregar</button></div>
+                  <div class="prow"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 1 (portada)</span><span class="cover">Portada</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Bajar la foto 1">↓ Bajar</button><button class="txt" type="button" aria-label="Quitar la foto 1">Quitar</button></div>
+                  </div>
+                  <div class="prow marked"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 2</span><span class="marked-note">Se quitará al guardar</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Deshacer: conservar la foto 2">Deshacer</button></div>
+                  </div>
+                  <div class="prow"><span class="thumb" aria-hidden="true"></span>
+                    <div class="pinfo"><span class="pname">Foto 3</span></div>
+                    <div class="pacts"><button class="txt" type="button" aria-label="Hacer portada la foto 3">Hacer portada</button><button class="txt" type="button" aria-label="Subir la foto 3">↑ Subir</button><button class="txt" type="button" aria-label="Quitar la foto 3">Quitar</button></div>
+                  </div>
+                </div>
+                <div class="rrow tagged"><span class="st" aria-hidden="true">1 · 6</span><span class="rk">Título</span><span class="rv">Apartamento amoblado en La Castellana<span class="hint counterLine">Vas 37 · máximo 90</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar título">Cambiar</button></div>
+                <div class="open tagged" id="m-desc-panel">
+                  <span class="st" aria-hidden="true">2 · 6</span>
+                  <label class="rk" for="m-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                  <textarea class="control invalid" id="m-desc" name="description" aria-invalid="true" aria-describedby="m-desc-error m-desc-count">Apartamento con buena vista</textarea>
+                  <p class="error" id="m-desc-error">✱ Mínimo 120 caracteres. Vas 27.</p>
+                  <p class="counterLine" id="m-desc-count"><span class="counterShort">Vas 27</span> · mínimo 120</p>
+                  <div class="open-foot"><button class="txt" type="button" aria-expanded="true" aria-controls="m-desc-panel">Listo</button></div>
+                </div>
+                <div class="rrow"><span class="rk">Precio</span><span class="rv"><span class="price">610</span> USD al mes</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar precio">Cambiar</button></div>
+                <div class="open tagged" id="m-num-panel">
+                  <span class="st" aria-hidden="true">2</span>
+                  <span class="rk">La propiedad</span>
+                  <div class="numbers">
+                    <div class="nrow"><label for="m-hab">Habitaciones</label><input class="control num" id="m-hab" name="bedrooms" inputmode="numeric" value="3"></div>
+                    <div class="ncell">
+                      <div class="nrow"><label for="m-banos">Baños <span class="req">✱ obligatorio</span></label><input class="control num invalid" id="m-banos" name="bathrooms" inputmode="numeric" value="" aria-invalid="true" aria-describedby="m-banos-error"></div>
+                      <p class="error" id="m-banos-error">✱ obligatorio. ¿Cuántos baños tiene?</p>
+                    </div>
+                    <div class="nrow"><label for="m-puestos">Puestos de auto</label><input class="control num" id="m-puestos" name="parking" inputmode="numeric" value="1" aria-describedby="m-puestos-help"></div>
+                    <p class="hint" id="m-puestos-help">Puestos de auto permite cero.</p>
+                    <div class="nrow"><label for="m-m2">Metros cuadrados</label><input class="control num" id="m-m2" name="area" inputmode="numeric" value="128"></div>
+                  </div>
+                  <div class="open-foot"><button class="txt" type="button" aria-expanded="true" aria-controls="m-num-panel">Listo</button></div>
+                </div>
+                <div class="rrow"><span class="rk">Tipo de propiedad</span><span class="rv">Apartamento</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar tipo de propiedad">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Zona y ciudad</span><span class="rv">Altamira · Caracas<span class="hint">No se cambia aquí: es parte de la dirección del aviso.</span></span></div>
+                <div class="rrow"><span class="rk">Referencia</span><span class="rv">Frente a la panadería La Castellana<span class="hint">Opcional</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar referencia">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Lo que tiene</span><span class="rv">Planta eléctrica · Amoblado · Vigilancia 24 h</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar lo que tiene la propiedad">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Cómo te contactan</span><span class="rv">WhatsApp · 0412 123 4567</span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar cómo te contactan">Cambiar</button></div>
+                <div class="rrow"><span class="rk">Quién publica</span><span class="rv">Dueño<span class="hint">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</span></span><button class="txt" type="button" aria-expanded="false" aria-label="Cambiar quién publica">Cambiar</button></div>
+              </div>
+            </form>
+          </div>
+          <!-- Bottom bar: sticky to the frame's viewport edge, before the footer -->
+          <div class="bar tagged">
+            <span class="st" aria-hidden="true">3 · aviso junto a Guardar</span>
+            <p class="bar-note">Recuerda: la foto marcada se eliminará al guardar.</p>
+            <div class="btns"><a class="btn btn-neutral" href="#m-label">Cancelar</a><button class="btn btn-action" type="submit" form="m-form">Guardar cambios</button></div>
+          </div>
+          <footer class="footer">
+            <div class="f-top"><a class="wordmark" href="#m-label">Rentoru</a><p class="tagline">Alquileres de largo plazo en Distrito Capital y Maracaibo.</p></div>
+            <div class="f-strip"><p class="legal">Rentoru no cobra comisión ni guarda dinero.</p></div>
+          </footer>
+        </div>
+
+        <div class="strip stack" role="group" aria-label="Estados 1 y 4 a 390 px">
+          <div class="piece p390">
+            <p class="frame-label"><b>1 · Por defecto</b> · Descripción abierta, sin error · 6</p>
+            <div class="open" id="vm-desc-panel">
+              <label class="rk" for="vm-desc">Descripción <span class="req">✱ obligatorio</span></label>
+              <textarea class="control" id="vm-desc" name="description" aria-describedby="vm-desc-count">Apartamento de tres habitaciones en piso alto, con vista abierta y mucha luz natural. La cocina está equipada y el edificio tiene vigilancia 24 h con acceso controlado. Queda a cinco minutos a pie del metro de Altamira.</textarea>
+              <p class="counterLine" id="vm-desc-count">Vas 219 · máximo 1 200</p>
+              <div class="open-foot"><button class="txt" type="button" aria-expanded="true" aria-controls="vm-desc-panel">Listo</button></div>
+            </div>
+          </div>
+          <div class="piece p390">
+            <p class="frame-label"><b>4 · Guardando…</b> · la barra pegada abajo, esperando</p>
+            <div class="bar static">
+              <p class="bar-note">Recuerda: la foto marcada se eliminará al guardar.</p>
+              <div class="btns"><a class="btn btn-neutral" href="#m-label">Cancelar</a><button class="btn btn-wait" type="button" aria-disabled="true" aria-describedby="vm-status">Guardando…</button></div>
+              <p class="vh" id="vm-status" role="status">Guardando tus cambios. No cierres esta página.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+</main>
+<script>
+  // Artboard only: theme toggle, and forms never leave the page.
+  document.querySelectorAll('[data-theme-set]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      document.body.className = 't-' + button.getAttribute('data-theme-set');
+      document.querySelectorAll('[data-theme-set]').forEach(function (other) {
+        other.setAttribute('aria-pressed', String(other === button));
+      });
+    });
+  });
+  document.querySelectorAll('form').forEach(function (form) {
+    form.addEventListener('submit', function (event) { event.preventDefault(); });
+  });
+</script>
+</body>
+</html>
