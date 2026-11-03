@@ -2,11 +2,6 @@ import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { photoAltText, photoUrl } from "@/modules/listing-discovery/domain/listing-photo-view";
-import {
-  coverChangedNotice,
-  PHOTO_ACTION_COPY,
-  PHOTO_REMOVAL_REFUSAL_COPY,
-} from "../../../publicar/photo-action-copy";
 import { FEATURES_DECLARED_FIELD } from "../../../publicar/step-values";
 import { PUBLISHER_TYPE_ONE_WAY_NOTICE } from "../../../publicar/violation-copy";
 
@@ -67,15 +62,6 @@ vi.mock("../../actions", () => ({
   guardarEdicion: Object.assign(vi.fn(), {
     $$FORM_ACTION: () => ({
       name: "$ACTION_ID_edit-test",
-      method: "post",
-      action: "/mis-avisos/aviso-1/editar",
-      encType: "multipart/form-data",
-      data: null,
-    }),
-  }),
-  quitarFotoDelAviso: Object.assign(vi.fn(), {
-    $$FORM_ACTION: () => ({
-      name: "$ACTION_ID_remove-photo-test",
       method: "post",
       action: "/mis-avisos/aviso-1/editar",
       encType: "multipart/form-data",
@@ -223,9 +209,8 @@ function atributos(html: string): string {
   return html.slice(html.lastIndexOf("<fieldset", legend), html.indexOf("</fieldset>", legend));
 }
 
-/** El formulario que guarda, acotado por su botón. **`lastIndexOf` y no
- *  `indexOf`**: la ayuda de las fotos cita «Guardar cambios» para decir que
- *  ellas NO esperan a ese botón, así que la primera aparición está afuera. */
+/** El formulario que guarda, acotado por su botón: desde su `<form>` hasta
+ *  «Guardar cambios». */
 function guardado(html: string): string {
   const boton = html.lastIndexOf("Guardar cambios");
   expect(boton).toBeGreaterThan(-1);
@@ -609,30 +594,23 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
  * `draft-photo-actions.test.ts`; que la puerta refuse un aviso ajeno lo prueba
  * `edit-listing-photos.test.ts`; que renumerar no choque contra el índice
  * único lo prueba `tests/integration/listing-photo-editing.test.ts`.
+ *
+ * **Desde la 44.4b quitar ya no es inmediato** (S2): cada foto lleva una
+ * casilla dentro del formulario que guarda, y no queda ningún formulario por
+ * foto. Que las marcas vuelvan tras una negativa lo prueba `EditarForm.test.tsx`.
  */
-describe("/mis-avisos/[id]/editar — las fotos (18.21)", () => {
-  it("cada foto trae un formulario real para quitarla, con su id y el del aviso adentro", async () => {
+describe("/mis-avisos/[id]/editar — las fotos (18.21, 44.4b)", () => {
+  it("cada foto trae su casilla «Quitar al guardar» dentro del formulario que guarda", async () => {
     const html = await dibujar();
 
-    expect(html).toContain('name="photoId" value="foto-a"');
-    expect(html).toContain('name="photoId" value="foto-b"');
-    expect(html).toContain('name="photoId" value="foto-c"');
-    expect(html).toContain(PHOTO_ACTION_COPY.remove.label);
-
-    // **Ninguna anidada.** Un `<form>` adentro de otro es marcado inválido, y
-    // el navegador lo resuelve mandando la edición entera al tocar «Quitar».
-    // Cada foto cierra su formulario antes de que se abra cualquier otro...
     for (const foto of ["foto-a", "foto-b", "foto-c"]) {
-      const desde = html.indexOf(`value="${foto}"`);
-      const cierra = html.indexOf("</form>", desde);
-      const abre = html.indexOf("<form", desde);
-      expect(cierra).toBeGreaterThan(-1);
-      expect(cierra).toBeLessThan(abre === -1 ? Number.MAX_SAFE_INTEGER : abre);
+      expect(guardado(html)).toMatch(
+        new RegExp(`<input[^>]*type="checkbox"[^>]*name="quitarFoto"[^>]*value="${foto}"`),
+      );
     }
-    // ...y el formulario de guardar empieza después de que todas cerraron.
-    expect(html.indexOf('name="title"')).toBeGreaterThan(
-      html.indexOf("</form>", html.lastIndexOf('value="foto-c"')),
-    );
+    // Ningún formulario por foto: quitar ya no se envía al tocarlo.
+    expect(html).not.toContain('name="photoId"');
+    expect(html).not.toContain("Quitar del aviso");
   });
 
   it("nombra la portada, y sólo a la portada", async () => {
@@ -643,52 +621,31 @@ describe("/mis-avisos/[id]/editar — las fotos (18.21)", () => {
     expect(html).toContain("Foto 3");
   });
 
-  it.each([{}, { foto: "lastPhoto" }])("sirve la copia aprobada de fotos con %j", async (query) => {
-    const html = await conParametros(query);
+  it("sirve la copia aprobada de fotos y la de subir", async () => {
+    const html = await dibujar();
     const input = html.match(/<input\b[^>]*\btype="file"[^>]*>/)?.[0];
     const inputId = input?.match(/\bid="([^"]+)"/)?.[1];
     expect(input).toContain('accept="image/jpeg,image/png,image/webp"');
     expect(html).toMatch(new RegExp(`for="${inputId}"[^>]*>Elegir fotos</label>`));
     expect(html.split("Es la foto principal de tu aviso")).toHaveLength(2);
-    expect(html).not.toMatch(/no borra la foto de tu teléfono/i);
-    expect(html).not.toContain("se ve en la lista y arriba del aviso");
-    expect(html).toContain('aria-label="Quitar del aviso: Foto 2"');
-    expect(html).toContain('name="photoId" value="foto-b"');
-    expect(html).toContain('method="post"');
+    expect(html).toContain('aria-label="Quitar al guardar: Foto 2"');
   });
 
-  it("cuando quitar se negó, dice por qué y ofrece la salida", async () => {
-    const html = await conParametros({ foto: "lastPhoto" });
-
-    expect(html).toContain(PHOTO_REMOVAL_REFUSAL_COPY.lastPhoto);
-  });
-
-  it("sin negativa de foto no dibuja ninguna, que es el par de la anterior", async () => {
+  it("dice que las marcadas se quitan al guardar, y ya no que las fotos no esperan", async () => {
     const html = await dibujar();
 
-    expect(html).not.toContain(PHOTO_REMOVAL_REFUSAL_COPY.lastPhoto);
-    expect(html).not.toContain(PHOTO_REMOVAL_REFUSAL_COPY.notFound);
+    expect(html).toContain("las que marques se quitan al guardar");
+    expect(html).not.toContain("sin esperar a «Guardar cambios»");
+    expect(guardado(html)).toContain("Recuerda: la foto marcada se eliminará al guardar.");
   });
 
-  it("un código de foto inventado no dibuja «undefined» ni rompe la pantalla", async () => {
-    const html = await conParametros({ foto: "inventado" });
+  it("la negativa de quitar fotos se lee debajo de la lista, antes de los campos", async () => {
+    const html = await dibujar("photosToRemove.lastPhoto");
+    const error = html.indexOf('id="photosToRemove-error"');
 
-    expect(html).toContain("inventado");
-    expect(html).not.toContain("undefined");
-  });
-
-  it("cuando la portada cambió al quitar, lo anuncia con nombre", async () => {
-    const html = await conParametros({ portada: "1" });
-
-    expect(html).toContain(coverChangedNotice("Foto 1"));
-  });
-
-  it("sin cambio de portada no lo anuncia, que es el par de la anterior", async () => {
-    expect(await dibujar()).not.toContain(coverChangedNotice("Foto 1"));
-  });
-
-  it("dice que las fotos no esperan a «Guardar cambios», porque no lo hacen", async () => {
-    expect(await dibujar()).toContain("Guardar cambios»");
+    expect(html).toContain("No puedes quitar todas las fotos: el aviso necesita al menos una.");
+    expect(error).toBeGreaterThan(html.lastIndexOf('name="quitarFoto"'));
+    expect(error).toBeLessThan(html.indexOf('name="title"'));
   });
 });
 
@@ -769,7 +726,7 @@ describe("/mis-avisos/[id]/editar — la foto dibujada (18.26)", () => {
    * renglón es el único camino para quitarla, así que se queda con su nombre y
    * su botón; lo que no se emite es una `<img>` cuyo `src` no existe.
    */
-  it("una foto sin miniatura conserva su renglón y su botón, sin imagen rota", async () => {
+  it("una foto sin miniatura conserva su renglón y su casilla, sin imagen rota", async () => {
     loadListingPhotosForEdit.mockResolvedValueOnce([
       { photoId: "foto-a", thumbKey: null },
       { photoId: "foto-b", thumbKey: "promoted/foto-b/thumb.webp" },
@@ -777,7 +734,7 @@ describe("/mis-avisos/[id]/editar — la foto dibujada (18.26)", () => {
 
     const html = await dibujar();
 
-    expect(html).toContain('name="photoId" value="foto-a"');
+    expect(html).toMatch(/name="quitarFoto"[^>]*value="foto-a"/);
     expect(html).toContain("Foto 1 (portada)");
     expect(html).toContain(`src="${photoUrl(BASE, "promoted/foto-b/thumb.webp")}"`);
     // Ni una `<img>` sin fuente, ni un `src` vacío, ni la palabra que delata

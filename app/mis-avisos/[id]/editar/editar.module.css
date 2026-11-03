@@ -1,0 +1,50 @@
+/* Fase 44 (44.4b, S2) — la foto marcada para quitar al guardar, derivada de
+   la lámina `design/editar-aviso/01-pagina-por-secciones.html` (estado 3).
+
+   **Sin JavaScript**: la marca es una casilla y su aspecto sale de
+   `:has(:checked)`, así que destildarla ES el «Deshacer». **Sin transparencia**:
+   la lámina atenúa con borde punteado, fondo `--bg` y texto `--soft`, para que
+   todo siga pasando AA. Sólo tokens (`pnpm lint:tokens`). */
+
+.foto:has(.quitar:checked) {
+  border-style: dashed;
+  background: var(--bg);
+}
+
+.foto:has(.quitar:checked) img {
+  filter: grayscale(1);
+}
+
+.foto:has(.quitar:checked) .nombre {
+  color: var(--soft);
+  text-decoration: line-through;
+}
+
+/* «Se quitará al guardar»: sólo cuando la casilla está marcada. */
+.marcada {
+  display: none;
+  color: var(--err);
+  font-size: var(--meta-fs);
+  font-weight: var(--meta-fw);
+}
+
+.foto:has(.quitar:checked) .marcada {
+  display: block;
+}
+
+/* El aviso junto a Guardar, visible en cuanto hay una marcada. */
+.recuerda {
+  display: none;
+  margin: 0;
+  padding: 12px 16px;
+  background: var(--warn-bg);
+  color: var(--ink);
+  border-left: 3px solid var(--warn);
+  border-radius: var(--r);
+  font-size: var(--control-fs);
+  line-height: var(--secondary-lh);
+}
+
+.conFotos:has(.quitar:checked) .recuerda {
+  display: block;
+}
