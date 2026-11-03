@@ -1,6 +1,5 @@
 import { Resend } from "resend";
-import { paragraphsFromBody } from "../../../shared/email/mail-content";
-import { renderMailHtml } from "../../../shared/email/render-mail";
+import { renderMailHtml, renderMailText } from "../../../shared/email/render-mail";
 import type { MailerPort, MailMessage } from "../application/ports/mailer.port";
 
 /**
@@ -10,7 +9,8 @@ import type { MailerPort, MailMessage } from "../application/ports/mailer.port";
  * misma clave de cuenta— pero un adaptador propio: ver
  * `application/ports/mailer.port.ts` para la razón de no compartir el puerto.
  * El dominio (`domain/magic-link.ts`) redacta; esto sólo lo dibuja con el
- * diseño compartido (`src/shared/email/`, 38.2), sin decidir ni una palabra.
+ * diseño compartido (`src/shared/email/`, 38.2), sin decidir ni una palabra:
+ * el HTML y el texto plano salen de los mismos bloques (38.3).
  */
 
 const FROM_ENV = "AUTH_MAIL_FROM";
@@ -81,12 +81,9 @@ export class ResendMailer implements MailerPort {
     const { error } = await this.client.emails.send({
       from: this.from,
       to: message.to,
-      subject: message.subject,
-      text: message.body,
-      html: renderMailHtml({
-        subject: message.subject,
-        blocks: paragraphsFromBody(message.body),
-      }),
+      subject: message.content.subject,
+      text: renderMailText(message.content),
+      html: renderMailHtml(message.content),
     });
 
     if (error) {

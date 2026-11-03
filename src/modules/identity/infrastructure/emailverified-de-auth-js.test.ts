@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import NextAuth, { customFetch } from "next-auth";
 import type { Adapter, AdapterUser } from "next-auth/adapters";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { renderMailText } from "../../../shared/email/render-mail";
 import { buildEmailProvider } from "./email-provider";
 import { buildProviderEmailVerificationEvent } from "./provider-email-verification-event";
 
@@ -83,7 +84,7 @@ function puertaDelCorreo(cuentaExistente: AdapterUser | null) {
         readConfig: () => ({ apiKey: "clave", from: "hola@rentoru.test" }),
         createMailer: () => ({
           async send(message) {
-            enviado.url = /https?:\/\/\S+/.exec(message.body)?.[0];
+            enviado.url = /https?:\/\/\S+/.exec(renderMailText(message.content))?.[0];
           },
         }),
       }),

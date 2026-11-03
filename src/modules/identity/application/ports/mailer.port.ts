@@ -1,3 +1,5 @@
+import type { MailContent } from "../../../../shared/email/mail-content";
+
 /**
  * Por dónde sale el enlace mágico (tasks.md 15.2).
  *
@@ -15,7 +17,11 @@
  * regla es la misma: no ensanchar un puerto ajeno para que sirva a un dueño
  * distinto. Un puerto propio, angosto, al lado.
  *
- * La duplicación de forma (`to`/`subject`/`body`) es el costo aceptado por
+ * Desde la 38.3 el mensaje lleva el contenido en bloques (`MailContent`, de
+ * `src/shared/email/`): eso no es un puerto ajeno sino el vocabulario común
+ * del diseño de los correos, que el adaptador dibuja en HTML y texto plano.
+ *
+ * La duplicación de forma (`to` + contenido) es el costo aceptado por
  * esa independencia: si algún día ambos módulos necesitan de verdad
  * compartir el mecanismo de envío, promoverlo a `src/shared/` es un
  * refactor mecánico. Deshacer el acoplamiento inverso —una vez que otro
@@ -23,8 +29,7 @@
  */
 export interface MailMessage {
   readonly to: string;
-  readonly subject: string;
-  readonly body: string;
+  readonly content: MailContent;
 }
 
 export interface MailerPort {

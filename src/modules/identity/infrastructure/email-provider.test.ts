@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { action } from "../../../shared/email/mail-content";
 import { buildEmailProvider } from "./email-provider";
 import { AuthMailerNotConfiguredError } from "./resend-mailer";
 
@@ -51,8 +52,10 @@ describe("sendVerificationRequest", () => {
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
         to: PARAMS.identifier,
-        subject: expect.stringContaining("enlace"),
-        body: expect.stringContaining(PARAMS.url),
+        content: expect.objectContaining({
+          subject: expect.stringContaining("enlace"),
+          blocks: expect.arrayContaining([action("Entrar a Rentoru", PARAMS.url)]),
+        }),
       }),
     );
   });
