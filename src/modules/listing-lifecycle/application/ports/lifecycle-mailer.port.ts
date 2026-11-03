@@ -1,8 +1,10 @@
+import type { MailContent } from "../../../../shared/email/mail-content";
+
 /**
  * Por dónde salen los dos correos del ciclo de vida (tasks.md 7.11).
  *
- * El puerto no sabe de plantillas ni de HTML: recibe un asunto y un cuerpo que
- * `composeNotice` ya compuso en el dominio. Un puerto que recibiera «el aviso
+ * El puerto no sabe de plantillas ni de HTML: recibe los bloques (asunto
+ * incluido) que `composeNotice` ya compuso en el dominio (38.4). Un puerto que recibiera «el aviso
  * y el tipo de correo» pondría la redacción del lado del proveedor, y cambiar
  * de Resend a otra cosa se llevaría el texto puesto.
  *
@@ -12,8 +14,7 @@
  */
 export interface LifecycleMessage {
   readonly to: string;
-  readonly subject: string;
-  readonly body: string;
+  readonly content: MailContent;
 }
 
 export interface LifecycleMailerPort {

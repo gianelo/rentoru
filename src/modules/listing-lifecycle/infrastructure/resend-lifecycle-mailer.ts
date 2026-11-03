@@ -1,6 +1,5 @@
 import { Resend } from "resend";
-import { paragraphsFromBody } from "../../../shared/email/mail-content";
-import { renderMailHtml } from "../../../shared/email/render-mail";
+import { renderMailHtml, renderMailText } from "../../../shared/email/render-mail";
 import type {
   LifecycleMailerPort,
   LifecycleMessage,
@@ -12,7 +11,7 @@ import type {
  * los dos.
  *
  * **No hay plantilla de React Email, y es una decisión y no un atajo.** El
- * puerto ya la había descartado por escrito: recibe un asunto y un cuerpo que
+ * puerto ya la había descartado por escrito: recibe los bloques que
  * `composeNotice` compuso en el dominio, porque «un puerto que recibiera el
  * aviso y el tipo de correo pondría la redacción del lado del proveedor, y
  * cambiar de Resend a otra cosa se llevaría el texto puesto». Una plantilla
@@ -20,8 +19,8 @@ import type {
  * sacarla del dominio — que es exactamente la regla permanente que este
  * repositorio no rompe.
  *
- * Lo que sí hace este archivo es **presentación sin redacción**: dibuja el
- * cuerpo del dominio con el diseño compartido (`src/shared/email/`, 38.2),
+ * Lo que sí hace este archivo es **presentación sin redacción**: dibuja los
+ * bloques del dominio con el diseño compartido (`src/shared/email/`, 38.2),
  * sin decidir ni una palabra de lo que dice.
  */
 
@@ -69,15 +68,12 @@ export class ResendLifecycleMailer implements LifecycleMailerPort {
     const { error } = await this.client.emails.send({
       from: this.from,
       to: message.to,
-      subject: message.subject,
-      // Los dos: el texto plano es el del dominio sin tocar, y es lo que ve
+      subject: message.content.subject,
+      // Los dos desde los mismos bloques (38.4): el texto plano es lo que ve
       // quien lee el correo en una terminal o con las imágenes apagadas.
-      text: message.body,
+      text: renderMailText(message.content),
       // El título del aviso lo escribió una persona: el renderizador lo escapa.
-      html: renderMailHtml({
-        subject: message.subject,
-        blocks: paragraphsFromBody(message.body),
-      }),
+      html: renderMailHtml(message.content),
     });
 
     // **Resend devuelve el error, no lo tira.** Un `await` sin mirar `error`

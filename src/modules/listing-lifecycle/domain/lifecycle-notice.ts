@@ -1,5 +1,16 @@
 import {
+  action,
+  fact,
+  fallback,
+  footer,
+  heading,
+  MAIL_BRAND_LINE,
+  type MailContent,
+  paragraph,
+} from "../../../shared/email/mail-content";
+import {
   EXPIRY_NOTICE_WINDOW_DAYS,
+  LISTING_LIFETIME_DAYS,
   PURGE_NOTICE_LEAD_DAYS,
   purgeDueAt,
   wholeDaysBetween,
@@ -15,7 +26,8 @@ import {
  * único que la vuelve anunciada en vez de sorpresiva (19.8).
  *
  * **Quién recibe qué y qué dice se decide acá**, no en la ruta ni en la
- * plantilla. La plantilla dibuja un asunto y un cuerpo que llegan hechos.
+ * plantilla. La plantilla dibuja los bloques que llegan hechos (38.4): el HTML
+ * y el texto plano salen de `src/shared/email/render-mail.ts`.
  */
 
 export type NoticeKind = "expiry" | "purge";
@@ -24,11 +36,6 @@ export interface NoticeListing {
   readonly id: string;
   readonly title: string;
   readonly expiresAt: Date;
-}
-
-export interface Notice {
-  readonly subject: string;
-  readonly body: string;
 }
 
 /**
@@ -70,32 +77,66 @@ function plural(days: number): string {
   return days === 1 ? "1 día" : `${days} días`;
 }
 
+/** El botón, el enlace entero para copiar (S2) y el pie: iguales en los dos. */
+function renewal(renewalUrl: string) {
+  return {
+    action: action("Renovar mi aviso", renewalUrl),
+    fallback: fallback("O copia este enlace en tu navegador:", renewalUrl),
+    footer: footer("Te escribimos porque publicaste este aviso en Rentoru.", MAIL_BRAND_LINE),
+  };
+}
+
+/**
+ * Los bloques de la lámina v1 (38.4), con los textos cortos de L5. La fecha
+ * límite va en un dato `warn`; el título, que lo escribió quien publica, lo
+ * escapa el renderizador.
+ */
 export function composeNotice(
   kind: NoticeKind,
   listing: NoticeListing,
   now: Date,
   renewalUrl: string,
-): Notice {
+): MailContent {
+  const title = `«${listing.title}»`;
+  const renew = renewal(renewalUrl);
+
   if (kind === "expiry") {
-    const remaining = plural(wholeDaysBetween(now, listing.expiresAt));
+    const subject = `Tu aviso vence en ${plural(wholeDaysBetween(now, listing.expiresAt))}`;
     return {
-      subject: `Tu aviso vence en ${remaining}`,
-      body:
-        `«${listing.title}» vence el ${spellDate(listing.expiresAt)}.\n\n` +
-        `Renuévalo por 30 días más desde aquí:\n${renewalUrl}\n\n` +
-        "Si no lo renuevas, el aviso sale de la búsqueda pero no se borra: " +
-        "puedes volver a activarlo después.",
+      subject,
+      blocks: [
+        heading(subject),
+        fact({
+          label: "Vence el",
+          value: spellDate(listing.expiresAt),
+          note: title,
+          tone: "warn",
+        }),
+        paragraph(`¿Sigue disponible? Renuévalo y queda ${LISTING_LIFETIME_DAYS} días más.`),
+        renew.action,
+        renew.fallback,
+        paragraph("Si no lo renuevas, deja de verse en las búsquedas. Puedes activarlo después."),
+        renew.footer,
+      ],
     };
   }
 
-  const purgeAt = purgeDueAt(listing.expiresAt);
+  const subject = "Las fotos de tu aviso se borran pronto";
   return {
-    subject: "Las fotos de tu aviso se borran pronto",
-    body:
-      `«${listing.title}» venció el ${spellDate(listing.expiresAt)} y sus fotos ` +
-      `se borran el ${spellDate(purgeAt)}.\n\n` +
-      `Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:\n${renewalUrl}\n\n` +
-      "Después de esa fecha el aviso sigue existiendo, pero para volver a " +
-      "publicarlo vas a tener que subir las fotos de nuevo. Esto no se deshace.",
+    subject,
+    blocks: [
+      heading(subject),
+      fact({
+        label: "Las fotos se borran el",
+        value: spellDate(purgeDueAt(listing.expiresAt)),
+        note: `${title} venció el ${spellDate(listing.expiresAt)}.`,
+        tone: "warn",
+      }),
+      paragraph("Renuévalo antes de esa fecha y conservas las fotos."),
+      renew.action,
+      renew.fallback,
+      paragraph("Pasada esa fecha, las fotos no se pueden recuperar."),
+      renew.footer,
+    ],
   };
 }

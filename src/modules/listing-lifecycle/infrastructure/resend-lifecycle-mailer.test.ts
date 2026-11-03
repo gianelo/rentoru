@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { expectedMailHtml, P } from "../../../shared/email/mail-html.fixture";
+import { paragraph } from "../../../shared/email/mail-content";
+import { expectedMailHtml, FIXTURE_FONTS, P } from "../../../shared/email/mail-html.fixture";
 import { composeNotice, type NoticeKind } from "../domain/lifecycle-notice";
 import {
   LifecycleMailerNotConfiguredError,
@@ -21,8 +22,10 @@ function fakeResend(result: { error: { message: string } | null }) {
 
 const MESSAGE = {
   to: "duenio@ejemplo.com",
-  subject: "Tu aviso vence en 3 días",
-  body: "Hola.\n\nTu aviso «Apartamento en Chacao» vence pronto.\nRenuévalo aquí.",
+  content: {
+    subject: "Tu aviso vence en 3 días",
+    blocks: [paragraph("Hola."), paragraph("Chau.")],
+  },
 };
 
 describe("configuración", () => {
@@ -50,7 +53,7 @@ describe("configuración", () => {
 });
 
 describe("el envío", () => {
-  it("manda el asunto y el cuerpo que compuso el dominio, sin reescribirlos", async () => {
+  it("manda el asunto y el texto plano de los bloques que compuso el dominio", async () => {
     const { send, client } = fakeResend({ error: null });
 
     await new ResendLifecycleMailer("re_loquesea", "avisos@rentoru.com", client).send(MESSAGE);
@@ -59,10 +62,10 @@ describe("el envío", () => {
       expect.objectContaining({
         from: "avisos@rentoru.com",
         to: MESSAGE.to,
-        subject: MESSAGE.subject,
-        // El texto plano es el del dominio tal cual: es lo que ve quien lee
-        // el correo en una terminal o con las imágenes apagadas.
-        text: MESSAGE.body,
+        subject: MESSAGE.content.subject,
+        // El texto plano sale de los mismos bloques que el HTML (S2 corregida):
+        // es lo que ve quien lee el correo con las imágenes apagadas.
+        text: "Hola.\n\nChau.",
       }),
     );
   });
@@ -84,7 +87,7 @@ describe("el envío", () => {
   });
 });
 
-describe("el correo final que recibe Resend (35.10, diseño de la 38.2)", () => {
+describe("el correo final que recibe Resend (lámina v1, 38.4)", () => {
   const LISTING = {
     id: "l-1",
     title: 'Casa <b>"A&B"</b>',
@@ -94,62 +97,87 @@ describe("el correo final que recibe Resend (35.10, diseño de la 38.2)", () => 
   const TITLE_TEXT = '«Casa <b>"A&B"</b>»';
   const TITLE_HTML = "«Casa &lt;b&gt;&quot;A&amp;B&quot;&lt;/b&gt;»";
   const URL_HTML = "https://rentoru.test/renovar/t?a=1&amp;b=2";
-  const KEEP =
-    "Si no lo renuevas, el aviso sale de la búsqueda pero no se borra: " +
-    "puedes volver a activarlo después.";
-  const PURGE_TAIL =
-    "Después de esa fecha el aviso sigue existiendo, pero para volver a publicarlo " +
-    "vas a tener que subir las fotos de nuevo. Esto no se deshace.";
+  const WHY = "Te escribimos porque publicaste este aviso en Rentoru.";
+  const BRAND = "Rentoru · alquileres en Distrito Capital y Maracaibo";
+  const { SANS, MONO, TABLE } = FIXTURE_FONTS;
+  const box = `<table ${TABLE} width="100%" style="margin:0 0 16px"><tr>`;
+  const line = (text: string) => `<p style="margin:0 0 4px">${text}</p>`;
 
   // composeNotice → ResendLifecycleMailer: asunto, texto y HTML exactos, con
   // título y enlace sintéticos que llegan intactos al texto y escapados al HTML.
-  it.each<[string, NoticeKind, string, string, string, string]>([
+  it.each<[string, NoticeKind, string, string, string, string, string, string, string]>([
     [
       "vencimiento en 3 días",
       "expiry",
       "2026-08-28T10:00:00.000Z",
       "Tu aviso vence en 3 días",
-      `${TITLE_TEXT} vence el 31 de agosto de 2026.\n\n` +
-        `Renuévalo por 30 días más desde aquí:\n${URL}\n\n${KEEP}`,
-      `${P}${TITLE_HTML} vence el 31 de agosto de 2026.</p>` +
-        `${P}Renuévalo por 30 días más desde aquí:<br />${URL_HTML}</p>${P}${KEEP}</p>`,
+      "Vence el",
+      "31 de agosto de 2026",
+      "",
+      "¿Sigue disponible? Renuévalo y queda 30 días más.",
+      "Si no lo renuevas, deja de verse en las búsquedas. Puedes activarlo después.",
     ],
     [
       "vencimiento en 1 día, en singular",
       "expiry",
       "2026-08-30T10:00:00.000Z",
       "Tu aviso vence en 1 día",
-      `${TITLE_TEXT} vence el 31 de agosto de 2026.\n\n` +
-        `Renuévalo por 30 días más desde aquí:\n${URL}\n\n${KEEP}`,
-      `${P}${TITLE_HTML} vence el 31 de agosto de 2026.</p>` +
-        `${P}Renuévalo por 30 días más desde aquí:<br />${URL_HTML}</p>${P}${KEEP}</p>`,
+      "Vence el",
+      "31 de agosto de 2026",
+      "",
+      "¿Sigue disponible? Renuévalo y queda 30 días más.",
+      "Si no lo renuevas, deja de verse en las búsquedas. Puedes activarlo después.",
     ],
     [
       "purga de fotos",
       "purge",
       "2026-09-10T10:00:00.000Z",
       "Las fotos de tu aviso se borran pronto",
-      `${TITLE_TEXT} venció el 31 de agosto de 2026 y sus fotos se borran el ` +
-        "15 de septiembre de 2026.\n\n" +
-        `Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:\n${URL}\n\n${PURGE_TAIL}`,
-      `${P}${TITLE_HTML} venció el 31 de agosto de 2026 y sus fotos se borran el ` +
-        "15 de septiembre de 2026.</p>" +
-        `${P}Renuévalo antes de esa fecha y el aviso vuelve con sus fotos:<br />${URL_HTML}</p>` +
-        `${P}${PURGE_TAIL}</p>`,
+      "Las fotos se borran el",
+      "15 de septiembre de 2026",
+      " venció el 31 de agosto de 2026.",
+      "Renuévalo antes de esa fecha y conservas las fotos.",
+      "Pasada esa fecha, las fotos no se pueden recuperar.",
     ],
-  ])("%s", async (_name, kind, now, subject, text, html) => {
+  ])("%s", async (_name, kind, now, subject, label, value, noteTail, intro, outro) => {
     const { send, client } = fakeResend({ error: null });
-    const notice = composeNotice(kind, LISTING, new Date(now), URL);
+    const content = composeNotice(kind, LISTING, new Date(now), URL);
 
     await new ResendLifecycleMailer("re_loquesea", "avisos@rentoru.com", client).send({
       to: "duenio@ejemplo.com",
-      ...notice,
+      content,
     });
 
     const payload = send.mock.calls[0]?.[0];
     expect(payload.subject).toBe(subject);
-    expect(payload.text).toBe(text);
-    expect(payload.html).toBe(expectedMailHtml(subject, html));
+    expect(payload.text).toBe(
+      `${subject}\n\n${label}: ${value}\n${TITLE_TEXT}${noteTail}\n\n${intro}\n\n` +
+        `Renovar mi aviso:\n${URL}\n\n${outro}\n\n${WHY}\n${BRAND}`,
+    );
+    expect(payload.html).toBe(
+      expectedMailHtml(
+        subject,
+        '<h1 style="margin:0 0 16px;font-size:20px;font-weight:700;line-height:1.25;color:#1e2022">' +
+          `${subject}</h1>` +
+          `${box}<td bgcolor="#faf2e1" style="padding:16px;border-radius:12px;` +
+          `background-color:#faf2e1;font-family:${SANS}">` +
+          `<p style="margin:0 0 4px;font-family:${MONO};font-size:12px;font-weight:600;color:#8a5a00">` +
+          `${label}</p><p style="margin:0;font-size:17px;font-weight:600;color:#8a5a00">${value}</p>` +
+          `<p style="margin:4px 0 0;color:#52616b">${TITLE_HTML}${noteTail}</p></td></tr></table>` +
+          `${P}${intro}</p>` +
+          `${box}<td align="center" bgcolor="#272343" style="border-radius:12px;background-color:#272343">` +
+          `<a href="${URL_HTML}" style="display:block;padding:0 24px;line-height:46px;font-family:${SANS};` +
+          'font-size:15px;font-weight:600;color:#ffffff;text-decoration:none">Renovar mi aviso</a>' +
+          "</td></tr></table>" +
+          '<p style="margin:0 0 16px;font-size:12px;line-height:1.6;color:#52616b">' +
+          `O copia este enlace en tu navegador:<br /><a href="${URL_HTML}" ` +
+          `style="font-family:${MONO};color:#272343;word-break:break-all">${URL_HTML}</a></p>` +
+          `${P}${outro}</p>`,
+        '<tr><td style="padding:16px 16px 12px;border-top:1px solid #e1e4e6;' +
+          `font-family:${SANS};font-size:12px;line-height:1.6;color:#52616b">` +
+          `${line(WHY)}${line(BRAND)}</td></tr>`,
+      ),
+    );
   });
 });
 
@@ -159,15 +187,25 @@ describe("el HTML, que es presentación y no redacción", () => {
    * HTML.** Sin escapar, quien publica decide qué se dibuja en el correo de
    * otro — y el correo sale con nuestro remitente.
    */
-  it("escapa lo que viene del aviso", async () => {
+  it("escapa el título que escribió quien publica", async () => {
     const { send, client } = fakeResend({ error: null });
+    const listing = {
+      id: "l-1",
+      title: '<script>alert("x")</script>',
+      expiresAt: new Date("2026-08-31T10:00:00.000Z"),
+    };
     await new ResendLifecycleMailer("re_loquesea", "avisos@rentoru.com", client).send({
-      ...MESSAGE,
-      body: 'Tu aviso <script>alert("x")</script> vence',
+      to: "duenio@ejemplo.com",
+      content: composeNotice(
+        "expiry",
+        listing,
+        new Date("2026-08-28T10:00:00.000Z"),
+        "https://r.t",
+      ),
     });
     const html: string = send.mock.calls[0]?.[0].html;
 
     expect(html).not.toContain("<script>");
-    expect(html).toContain("&lt;script&gt;");
+    expect(html).toContain("«&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;»");
   });
 });

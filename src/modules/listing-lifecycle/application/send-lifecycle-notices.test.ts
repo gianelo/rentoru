@@ -95,7 +95,11 @@ describe("sendLifecycleNotices", () => {
     expect(result.remindersSent).toBe(1);
     expect(sent).toHaveLength(1);
     expect(sent[0]?.to).toBe("maria@example.com");
-    expect(sent[0]?.body).toContain(`${BASE_URL}/renovar/`);
+    expect(sent[0]?.content.blocks).toContainEqual({
+      kind: "action",
+      label: "Renovar mi aviso",
+      href: expect.stringMatching(`^${BASE_URL}/renovar/.+`),
+    });
   });
 
   // **La mutación que carga el peso.** Dos corridas seguidas sobre el mismo
@@ -129,7 +133,7 @@ describe("sendLifecycleNotices", () => {
 
     expect(purgeRun.remindersSent).toBe(1);
     expect(sent).toHaveLength(2);
-    expect(sent[1]?.subject.toLowerCase()).toContain("foto");
+    expect(sent[1]?.content.subject.toLowerCase()).toContain("foto");
   });
 
   it("marca vencidos antes de mirar a quién avisar", async () => {
