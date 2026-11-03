@@ -14,6 +14,10 @@ import type {
   ListingActivationPort,
 } from "../application/ports/listing-activation.port";
 import type { EditableListing, ListingEditPort } from "../application/ports/listing-edit.port";
+import type {
+  EditRemovingPhotosOutcome,
+  ListingEditWithPhotosPort,
+} from "../application/ports/listing-edit-with-photos.port";
 import type { ListingPhotoAttachmentPort } from "../application/ports/listing-photo-attachment.port";
 import type {
   ListingPhotoDerivativeKeysPort,
@@ -279,7 +283,7 @@ export class DrizzleListingActivation implements ListingActivationPort, ListingP
  * por reportes, y son justo los dos estados que una edición no debe poder
  * volver a encender.
  */
-export class DrizzleListingEdit implements ListingEditPort {
+export class DrizzleListingEdit implements ListingEditPort, ListingEditWithPhotosPort {
   constructor(private readonly db: PublicationDatabase) {}
 
   async findEditableById(listingId: string, publisherId: string): Promise<EditableListing | null> {
@@ -353,46 +357,99 @@ export class DrizzleListingEdit implements ListingEditPort {
     publisherId: string,
     write: ListingEditWrite,
   ): Promise<boolean> {
-    const updated = await this.db
-      .update(listings)
-      .set({
-        title: write.title,
-        description: write.description,
-        priceUsd: write.priceUsd,
-        rooms: write.rooms,
-        bathrooms: write.bathrooms,
-        areaM2: write.areaM2,
-        parkingSpots: write.parkingSpots,
-        propertyType: write.propertyType,
-        // De vuelta a `null`, que es lo que la columna nulable guarda: escribir
-        // `undefined` en un `set` de Drizzle sería no tocar la columna, o sea un
-        // borrado que no borra (18.27).
-        reference: write.reference ?? null,
-        contactMethod: write.contactMethod,
-        contactValue: write.contactValue,
-        // 18.38: solo puede venir cambiado hacia `broker`; la unica direccion
-        // cerrada la refuso `planListingEdit` antes de llegar aca.
-        publisherType: write.publisherType,
-        // Los cinco SIEMPRE se escriben, incluso los `false` (18.37): el plan
-        // ya resolvio cuales vienen del pedido, y omitir los `false` dejaria un
-        // atributo imposible de sacar.
-        hasPowerPlant: write.hasPowerPlant,
-        hasRegularWater: write.hasRegularWater,
-        isFurnished: write.isFurnished,
-        hasSecurity: write.hasSecurity,
-        hasAppliances: write.hasAppliances,
-      })
-      .where(
-        and(
-          eq(listings.id, listingId),
-          eq(listings.publisherId, publisherId),
-          eq(listings.status, "active"),
-        ),
-      )
-      .returning({ id: listings.id });
-
-    return updated.length > 0;
+    return updateEditable(this.db, listingId, publisherId, write);
   }
+
+  /**
+   * Fase 44 (44.4, G3/D1) — **las marcadas y la edición, o nada.** Las mismas
+   * tres piezas que `listDerivativeKeys`, `detachPhoto` y `applyEdit`, ahora
+   * sobre un solo `tx`. **El `UPDATE` va al final a propósito**: si su
+   * compare-and-swap refusa, los borrados ya hechos se revierten con él, y es
+   * esa reversión la que la integración prueba. Un faltante tira adentro para
+   * que Postgres revierta; afuera se traduce a un resultado, nunca a un éxito.
+   */
+  async applyEditRemovingPhotos(
+    listingId: string,
+    publisherId: string,
+    write: ListingEditWrite,
+    photoIds: readonly string[],
+  ): Promise<EditRemovingPhotosOutcome> {
+    try {
+      const derivativeKeys = await this.db.transaction(async (tx) => {
+        const keys: string[] = [];
+        for (const photoId of photoIds) {
+          // ANTES del borrado: el cascade se lleva las derivadas con la fila.
+          keys.push(...(await derivativeKeysOf(tx, listingId, photoId)));
+          if (!(await detachAndRenumber(tx, listingId, photoId))) {
+            throw new EditRolledBack("photos");
+          }
+        }
+        if (!(await updateEditable(tx, listingId, publisherId, write))) {
+          throw new EditRolledBack("listing");
+        }
+        return keys;
+      });
+      return { applied: true, derivativeKeys };
+    } catch (error) {
+      if (error instanceof EditRolledBack) return { applied: false, reason: error.reason };
+      throw error;
+    }
+  }
+}
+
+/** El faltante que revierte la transacción de `applyEditRemovingPhotos`. */
+class EditRolledBack extends Error {
+  constructor(readonly reason: "listing" | "photos") {
+    super(`applyEditRemovingPhotos: rolled back (${reason}).`);
+  }
+}
+
+/** El cuerpo de `applyEdit`, sobre la base o sobre un `tx`. Su porqué vive allá. */
+async function updateEditable(
+  db: PublicationDatabase,
+  listingId: string,
+  publisherId: string,
+  write: ListingEditWrite,
+): Promise<boolean> {
+  const updated = await db
+    .update(listings)
+    .set({
+      title: write.title,
+      description: write.description,
+      priceUsd: write.priceUsd,
+      rooms: write.rooms,
+      bathrooms: write.bathrooms,
+      areaM2: write.areaM2,
+      parkingSpots: write.parkingSpots,
+      propertyType: write.propertyType,
+      // De vuelta a `null`, que es lo que la columna nulable guarda: escribir
+      // `undefined` en un `set` de Drizzle sería no tocar la columna, o sea un
+      // borrado que no borra (18.27).
+      reference: write.reference ?? null,
+      contactMethod: write.contactMethod,
+      contactValue: write.contactValue,
+      // 18.38: solo puede venir cambiado hacia `broker`; la unica direccion
+      // cerrada la refuso `planListingEdit` antes de llegar aca.
+      publisherType: write.publisherType,
+      // Los cinco SIEMPRE se escriben, incluso los `false` (18.37): el plan
+      // ya resolvio cuales vienen del pedido, y omitir los `false` dejaria un
+      // atributo imposible de sacar.
+      hasPowerPlant: write.hasPowerPlant,
+      hasRegularWater: write.hasRegularWater,
+      isFurnished: write.isFurnished,
+      hasSecurity: write.hasSecurity,
+      hasAppliances: write.hasAppliances,
+    })
+    .where(
+      and(
+        eq(listings.id, listingId),
+        eq(listings.publisherId, publisherId),
+        eq(listings.status, "active"),
+      ),
+    )
+    .returning({ id: listings.id });
+
+  return updated.length > 0;
 }
 
 /**
@@ -488,13 +545,7 @@ export class DrizzleListingPhotoSet
    * `detachPhoto`: la clave de la foto de un aviso ajeno no se lee ni por error.
    */
   async listDerivativeKeys(listingId: string, photoId: string): Promise<readonly string[]> {
-    const rows = await this.db
-      .select({ key: listingPhotoDerivatives.key })
-      .from(listingPhotoDerivatives)
-      .innerJoin(listingPhotos, eq(listingPhotos.id, listingPhotoDerivatives.photoId))
-      .where(and(eq(listingPhotos.listingId, listingId), eq(listingPhotos.id, photoId)));
-
-    return rows.map((row) => row.key);
+    return derivativeKeysOf(this.db, listingId, photoId);
   }
 
   /**
@@ -524,28 +575,54 @@ export class DrizzleListingPhotoSet
    * conocer R2, que es lo que lo deja probable contra Postgres solo.
    */
   async detachPhoto(listingId: string, photoId: string): Promise<boolean> {
-    return this.db.transaction(async (tx) => {
-      const removed = await tx
-        .delete(listingPhotos)
-        .where(and(eq(listingPhotos.listingId, listingId), eq(listingPhotos.id, photoId)))
-        .returning({ position: listingPhotos.position });
-
-      const gap = removed[0]?.position;
-      if (gap === undefined) return false;
-
-      await tx
-        .update(listingPhotos)
-        .set({ position: sql`-${listingPhotos.position} - 1` })
-        .where(and(eq(listingPhotos.listingId, listingId), gt(listingPhotos.position, gap)));
-
-      await tx
-        .update(listingPhotos)
-        .set({ position: sql`-${listingPhotos.position} - 2` })
-        .where(and(eq(listingPhotos.listingId, listingId), lt(listingPhotos.position, 0)));
-
-      return true;
-    });
+    return this.db.transaction((tx) => detachAndRenumber(tx, listingId, photoId));
   }
+}
+
+/** El cuerpo de `listDerivativeKeys`, sobre la base o sobre un `tx`. */
+async function derivativeKeysOf(
+  db: PublicationDatabase,
+  listingId: string,
+  photoId: string,
+): Promise<string[]> {
+  const rows = await db
+    .select({ key: listingPhotoDerivatives.key })
+    .from(listingPhotoDerivatives)
+    .innerJoin(listingPhotos, eq(listingPhotos.id, listingPhotoDerivatives.photoId))
+    .where(and(eq(listingPhotos.listingId, listingId), eq(listingPhotos.id, photoId)));
+
+  return rows.map((row) => row.key);
+}
+
+/**
+ * El cuerpo de `detachPhoto`, **siempre dentro de un `tx` que pone quien
+ * llama**: borrar y renumerar sueltos dejarían un hueco visible. El porqué del
+ * rodeo por los negativos vive en `detachPhoto`.
+ */
+async function detachAndRenumber(
+  tx: PublicationDatabase,
+  listingId: string,
+  photoId: string,
+): Promise<boolean> {
+  const removed = await tx
+    .delete(listingPhotos)
+    .where(and(eq(listingPhotos.listingId, listingId), eq(listingPhotos.id, photoId)))
+    .returning({ position: listingPhotos.position });
+
+  const gap = removed[0]?.position;
+  if (gap === undefined) return false;
+
+  await tx
+    .update(listingPhotos)
+    .set({ position: sql`-${listingPhotos.position} - 1` })
+    .where(and(eq(listingPhotos.listingId, listingId), gt(listingPhotos.position, gap)));
+
+  await tx
+    .update(listingPhotos)
+    .set({ position: sql`-${listingPhotos.position} - 2` })
+    .where(and(eq(listingPhotos.listingId, listingId), lt(listingPhotos.position, 0)));
+
+  return true;
 }
 
 export class DrizzleZoneCatalogue implements ZoneCataloguePort {
