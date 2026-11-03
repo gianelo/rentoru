@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Rentoru — design system artboard (compacto + menta / oscuro)</title>
+<style>
+/* Values copied from src/styles/tokens.css (:root, [data-layout="compacto"],
+   [data-theme="menta"], [data-theme="oscuro"]). Self-contained: no external
+   URL, no webfont, no script. See design/system.md for sources. */
+:root {
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --disp: var(--mono);
+  --meta: var(--mono);
+  --target-min: 44px;
+  --target-min-desktop: 44px;
+  --control-fs: 15px;
+  --meta-fs: 12px;
+  --meta-fs-sm: 11px;
+  --meta-fw: 600;
+  --badge-fs: 11px;
+  --badge-fw: 700;
+  --badge-ls: 0.06em;
+  --title-fs: 20px;
+  --title-fw: 700;
+  --title-lh: 1.25;
+  --ficha-body-fs-desktop: 16px;
+  --ficha-body-lh-desktop: 1.65;
+  --ficha-price-fs-desktop: 34px;
+  --ficha-price-fw: 700;
+  --fp: 15px;
+  --gap: 8px;
+  --r-thumb: 6px;
+  --door-r: 18px;
+  --door-shadow: 0 24px 64px rgba(30, 32, 34, 0.34);
+  --door-sheet-shadow: 0 -8px 28px rgba(30, 32, 34, 0.16);
+  --brand-ls: -0.02em;
+  --footer-brand-fs-desktop: 19px;
+  --footer-tagline-fs-desktop: 13px;
+  --footer-heading-fs: 10px;
+  --footer-link-fs-desktop: 13.5px;
+  --footer-legal-fs: 11px;
+}
+.t-menta {
+  --r: 12px; --rs: 999px;
+  --ctl: #f0f5f9; --bg: #f0f5f9; --surface: #ffffff; --page: #ffffff; --footer-bg: #f0f5f9;
+  --line: #e1e4e6; --strong: #788189; --ink: #1e2022; --soft: #52616b;
+  --accent: #272343; --accent-ink: #ffffff; --tint: #e3f6f5;
+  --scrim: rgba(30, 32, 34, 0.55);
+  --warn: #8a5a00; --warn-bg: #faf2e1; --err: #9c2b20; --err-bg: #fbecea;
+  --shadow-raised: 0 2px 6px rgba(30, 32, 34, 0.1);
+  --thumb: repeating-linear-gradient(135deg, #bae8e8 0 7px, #e3f6f5 7px 14px);
+}
+.t-oscuro {
+  --r: 12px; --rs: 999px;
+  --ctl: #332e52; --bg: #1b1830; --surface: #272343; --page: #272343; --footer-bg: #1b1830;
+  --line: #3b3663; --strong: #788e98; --ink: #f0f5f9; --soft: #9ba8b4;
+  --accent: #bae8e8; --accent-ink: #272343; --tint: #332e52;
+  --scrim: rgba(0, 0, 0, 0.66);
+  --warn: #e0b464; --warn-bg: #2c2517; --err: #f0a39a; --err-bg: #43283a;
+  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --thumb: repeating-linear-gradient(135deg, #3b3663 0 7px, #332e52 7px 14px);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--fp);
+  line-height: 1.55;
+}
+.board { width: 1440px; margin: 0 auto; padding: 48px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+h1 { font-size: var(--title-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0 0 8px; }
+h2 {
+  font-family: var(--meta); font-size: var(--badge-fs); font-weight: var(--badge-fw);
+  letter-spacing: var(--badge-ls); text-transform: uppercase; color: var(--soft);
+  margin: 0 0 16px; padding-top: 16px; border-top: 1px solid var(--line);
+}
+h3 { font-size: var(--control-fs); font-weight: var(--meta-fw); margin: 0 0 12px; }
+.lede { margin: 0 0 32px; color: var(--soft); max-width: 760px; }
+section { margin-bottom: 48px; }
+.tok { font-family: var(--mono); font-size: var(--meta-fs); color: var(--soft); }
+.tok b { color: var(--ink); font-weight: var(--meta-fw); }
+.src { font-family: var(--mono); font-size: var(--meta-fs-sm); color: var(--soft); margin: 0 0 16px; }
+
+/* ---------- colour table ---------- */
+.colors { width: 100%; border-collapse: collapse; }
+.colors th, .colors td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.colors th { font-family: var(--meta); font-size: var(--meta-fs-sm); font-weight: var(--meta-fw); color: var(--soft); text-transform: uppercase; letter-spacing: var(--badge-ls); }
+.sw { display: flex; align-items: center; gap: 12px; }
+.chip { flex: none; width: 64px; height: 32px; border-radius: var(--r-thumb); border: 1px solid #788189; }
+.colors td.usage { color: var(--soft); font-size: var(--meta-fs); }
+
+/* ---------- scale blocks ---------- */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; }
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.type-row { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.space-row { display: flex; align-items: center; gap: 16px; padding: 6px 0; }
+.space-bar { height: 16px; background: var(--accent); }
+.radius-box { width: 120px; height: 80px; background: var(--tint); border: 1px solid var(--accent); }
+.shadow-box { height: 96px; border-radius: 12px; background: var(--surface); display: grid; place-items: center; }
+
+/* ---------- theme panels: the components ---------- */
+.panels { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+.panel {
+  background: var(--page); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--r);
+  overflow: hidden;
+}
+.panel-head { padding: 16px 24px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; }
+.panel-body { padding: 24px; display: flex; flex-direction: column; gap: 32px; }
+.panel .tok, .panel .src, .panel h2 { color: var(--soft); }
+.panel h2 { border-top-color: var(--line); }
+
+/* Button.module.css */
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.base {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: var(--target-min-desktop); padding: 8px 16px; border-radius: var(--r);
+  font: inherit; cursor: pointer;
+}
+.action { background: var(--accent); color: var(--accent-ink); border: none; }
+.action:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.selection { background: var(--tint); color: var(--accent); border: 1px solid var(--accent); }
+.selection:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.neutral { background: none; color: var(--ink); border: 1px solid var(--strong); }
+.neutral:focus-visible { outline: 2px solid var(--strong); outline-offset: 2px; }
+
+/* publish-steps.module.css (desktop step, ≥768) */
+.form { display: flex; flex-direction: column; gap: 16px; max-width: 520px; }
+.label { display: block; font-size: var(--control-fs); font-weight: var(--meta-fw); margin: 0 0 6px; }
+.req { font-weight: 400; }
+.control {
+  width: 100%; min-height: 52px; padding: 0 14px;
+  border: 1px solid var(--strong); border-radius: var(--r);
+  background: var(--surface); color: var(--ink);
+  font-family: var(--sans); font-size: var(--control-fs);
+}
+.control:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.controlInvalid { border-width: 2px; border-color: var(--err); }
+.help { color: var(--soft); font-size: var(--ficha-body-fs-desktop); line-height: var(--ficha-body-lh-desktop); margin: 6px 0 0; }
+.error { color: var(--err); font-size: var(--ficha-body-fs-desktop); margin: 6px 0 0; }
+
+.numbers { display: flex; flex-direction: column; gap: 12px; }
+.numberRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.numberRow .label { margin: 0; }
+.numberControl { width: 120px; min-height: 52px; text-align: center; font-family: var(--disp); font-variant-numeric: tabular-nums; }
+
+.choices { display: flex; flex-direction: column; gap: 8px; border: 0; padding: 0; margin: 0; }
+.legend { padding: 0; margin-bottom: 8px; font-size: var(--control-fs); font-weight: var(--meta-fw); }
+.choice {
+  display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 0 16px;
+  border: 1px solid var(--strong); border-radius: var(--r);
+  font-size: var(--control-fs); cursor: pointer;
+}
+.choice:has(input:checked) { background: var(--tint); border-color: var(--accent); color: var(--accent); font-weight: var(--meta-fw); }
+.choice:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.choice input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); }
+.choice input:focus-visible { outline: none; }
+
+/* SiteFooter.module.css (≥1100 layout) */
+.footer { background: var(--footer-bg); border-top: 1px solid var(--line); color: var(--ink); font-family: var(--sans); }
+.f-top { display: flex; gap: 40px; padding: 36px 24px 26px; }
+.f-brand { flex: 0 0 200px; display: flex; flex-direction: column; gap: 10px; }
+.wordmark { font-family: var(--mono); font-weight: 700; font-size: var(--footer-brand-fs-desktop); letter-spacing: var(--brand-ls); color: var(--ink); text-decoration: none; }
+.tagline { margin: 0; font-size: var(--footer-tagline-fs-desktop); line-height: 1.55; color: var(--soft); }
+.f-col { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.f-heading { margin: 0; font-family: var(--meta); font-weight: 700; font-size: var(--footer-heading-fs); letter-spacing: 0.05em; text-transform: uppercase; color: var(--soft); }
+.f-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.f-link { font-size: var(--footer-link-fs-desktop); color: var(--ink); text-decoration: none; }
+.f-link:hover { text-decoration: underline; }
+.f-strip { display: flex; justify-content: space-between; gap: 24px; padding: 16px 24px; border-top: 1px solid var(--line); }
+.legal { margin: 0; font-family: var(--meta); font-size: var(--footer-legal-fs); line-height: 1.6; color: var(--soft); }
+</style>
+</head>
+<body class="t-menta">
+<main class="board">
+  <header>
+    <h1>Rentoru — design system</h1>
+    <p class="lede">Structure <code>compacto</code>, palette <code>menta</code> (shipped default), and the shipped dark theme <code>oscuro</code>. The values are copied from <code>src/styles/tokens.css</code>. The rules are in <code>design/reference/sistema/SISTEMA.md</code> and summarised in <code>design/system.md</code>.</p>
+  </header>
+
+  <!-- ===================== COLOUR ===================== -->
+  <section aria-labelledby="h-color">
+    <h2 id="h-color">Colour · menta / oscuro</h2>
+    <p class="src">src/styles/tokens.css — [data-theme="menta"], [data-theme="oscuro"]</p>
+    <table class="colors">
+      <thead>
+        <tr><th scope="col">Token</th><th scope="col">menta</th><th scope="col">oscuro</th><th scope="col">Usage</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row" class="tok"><b>--accent</b></th><td><span class="sw"><span class="chip" style="background:#272343"></span><span class="tok">#272343</span></span></td><td><span class="sw"><span class="chip" style="background:#bae8e8"></span><span class="tok">#bae8e8</span></span></td><td class="usage">Primary action fill, links</td></tr>
+        <tr><th scope="row" class="tok"><b>--accent-ink</b></th><td><span class="sw"><span class="chip" style="background:#ffffff"></span><span class="tok">#ffffff</span></span></td><td><span class="sw"><span class="chip" style="background:#272343"></span><span class="tok">#272343</span></span></td><td class="usage">Text on accent</td></tr>
+        <tr><th scope="row" class="tok"><b>--surface</b></th><td><span class="sw"><span class="chip" style="background:#ffffff"></span><span class="tok">#ffffff</span></span></td><td><span class="sw"><span class="chip" style="background:#272343"></span><span class="tok">#272343</span></span></td><td class="usage">Cards and panels</td></tr>
+        <tr><th scope="row" class="tok"><b>--page</b></th><td><span class="sw"><span class="chip" style="background:#ffffff"></span><span class="tok">#ffffff</span></span></td><td><span class="sw"><span class="chip" style="background:#272343"></span><span class="tok">#272343</span></span></td><td class="usage">Page background, painted only by <code>body</code></td></tr>
+        <tr><th scope="row" class="tok"><b>--footer-bg</b></th><td><span class="sw"><span class="chip" style="background:#f0f5f9"></span><span class="tok">#f0f5f9</span></span></td><td><span class="sw"><span class="chip" style="background:#1b1830"></span><span class="tok">#1b1830</span></span></td><td class="usage">Site footer band</td></tr>
+        <tr><th scope="row" class="tok"><b>--bg</b></th><td><span class="sw"><span class="chip" style="background:#f0f5f9"></span><span class="tok">#f0f5f9</span></span></td><td><span class="sw"><span class="chip" style="background:#1b1830"></span><span class="tok">#1b1830</span></span></td><td class="usage">Block background, control fill</td></tr>
+        <tr><th scope="row" class="tok"><b>--ctl</b></th><td><span class="sw"><span class="chip" style="background:#f0f5f9"></span><span class="tok">#f0f5f9</span></span></td><td><span class="sw"><span class="chip" style="background:#332e52"></span><span class="tok">#332e52</span></span></td><td class="usage">Field and input fill</td></tr>
+        <tr><th scope="row" class="tok"><b>--line</b></th><td><span class="sw"><span class="chip" style="background:#e1e4e6"></span><span class="tok">#e1e4e6</span></span></td><td><span class="sw"><span class="chip" style="background:#3b3663"></span><span class="tok">#3b3663</span></span></td><td class="usage">Separators, thumbnail borders</td></tr>
+        <tr><th scope="row" class="tok"><b>--strong</b></th><td><span class="sw"><span class="chip" style="background:#788189"></span><span class="tok">#788189</span></span></td><td><span class="sw"><span class="chip" style="background:#788e98"></span><span class="tok">#788e98</span></span></td><td class="usage">Field border, neutral button border, agency badge</td></tr>
+        <tr><th scope="row" class="tok"><b>--ink</b></th><td><span class="sw"><span class="chip" style="background:#1e2022"></span><span class="tok">#1e2022</span></span></td><td><span class="sw"><span class="chip" style="background:#f0f5f9"></span><span class="tok">#f0f5f9</span></span></td><td class="usage">Main text, price</td></tr>
+        <tr><th scope="row" class="tok"><b>--soft</b></th><td><span class="sw"><span class="chip" style="background:#52616b"></span><span class="tok">#52616b</span></span></td><td><span class="sw"><span class="chip" style="background:#9ba8b4"></span><span class="tok">#9ba8b4</span></span></td><td class="usage">Secondary text, metadata</td></tr>
+        <tr><th scope="row" class="tok"><b>--tint</b></th><td><span class="sw"><span class="chip" style="background:#e3f6f5"></span><span class="tok">#e3f6f5</span></span></td><td><span class="sw"><span class="chip" style="background:#332e52"></span><span class="tok">#332e52</span></span></td><td class="usage">Selected state, contribution block</td></tr>
+        <tr><th scope="row" class="tok"><b>--warn</b></th><td><span class="sw"><span class="chip" style="background:#8a5a00"></span><span class="tok">#8a5a00</span></span></td><td><span class="sw"><span class="chip" style="background:#e0b464"></span><span class="tok">#e0b464</span></span></td><td class="usage">"vence pronto", counter in deficit</td></tr>
+        <tr><th scope="row" class="tok"><b>--warn-bg</b></th><td><span class="sw"><span class="chip" style="background:#faf2e1"></span><span class="tok">#faf2e1</span></span></td><td><span class="sw"><span class="chip" style="background:#2c2517"></span><span class="tok">#2c2517</span></span></td><td class="usage">"vence pronto" background</td></tr>
+        <tr><th scope="row" class="tok"><b>--err</b></th><td><span class="sw"><span class="chip" style="background:#9c2b20"></span><span class="tok">#9c2b20</span></span></td><td><span class="sw"><span class="chip" style="background:#f0a39a"></span><span class="tok">#f0a39a</span></span></td><td class="usage">Validation error, hidden state</td></tr>
+        <tr><th scope="row" class="tok"><b>--err-bg</b></th><td><span class="sw"><span class="chip" style="background:#fbecea"></span><span class="tok">#fbecea</span></span></td><td><span class="sw"><span class="chip" style="background:#43283a"></span><span class="tok">#43283a</span></span></td><td class="usage">Error background</td></tr>
+        <tr><th scope="row" class="tok"><b>--scrim</b></th><td><span class="sw"><span class="chip" style="background:linear-gradient(rgba(30,32,34,.55),rgba(30,32,34,.55)),#ffffff"></span><span class="tok">rgba(30, 32, 34, 0.55)</span></span></td><td><span class="sw"><span class="chip" style="background:linear-gradient(rgba(0,0,0,.66),rgba(0,0,0,.66)),#272343"></span><span class="tok">rgba(0, 0, 0, 0.66)</span></span></td><td class="usage">Modal veil, shown here over <code>--page</code></td></tr>
+        <tr><th scope="row" class="tok"><b>--thumb</b></th><td><span class="sw"><span class="chip" style="background:repeating-linear-gradient(135deg,#bae8e8 0 7px,#e3f6f5 7px 14px)"></span><span class="tok">#bae8e8 / #e3f6f5</span></span></td><td><span class="sw"><span class="chip" style="background:repeating-linear-gradient(135deg,#3b3663 0 7px,#332e52 7px 14px)"></span><span class="tok">#3b3663 / #332e52</span></span></td><td class="usage">Placeholder photo hatch</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:24px">Theme-independent: photo viewer (<code>:root</code>)</h3>
+    <div class="grid4" style="grid-template-columns:repeat(5,1fr)">
+      <div class="sw"><span class="chip" style="background:#131517"></span><span class="tok"><b>--viewer-bg</b><br>#131517</span></div>
+      <div class="sw"><span class="chip" style="background:#f2f3f3"></span><span class="tok"><b>--viewer-ink</b><br>#f2f3f3</span></div>
+      <div class="sw"><span class="chip" style="background:linear-gradient(rgba(242,243,243,.62),rgba(242,243,243,.62)),#131517"></span><span class="tok"><b>--viewer-soft</b><br>rgba(242,243,243,.62)</span></div>
+      <div class="sw"><span class="chip" style="background:linear-gradient(rgba(242,243,243,.24),rgba(242,243,243,.24)),#131517"></span><span class="tok"><b>--viewer-line</b><br>rgba(242,243,243,.24)</span></div>
+      <div class="sw"><span class="chip" style="background:linear-gradient(rgba(19,21,23,.72),rgba(19,21,23,.72)),#ffffff"></span><span class="tok"><b>--viewer-scrim</b><br>rgba(19,21,23,.72)</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== TYPE ===================== -->
+  <section aria-labelledby="h-type">
+    <h2 id="h-type">Typography · system stack, no webfont</h2>
+    <p class="src">src/styles/tokens.css · SISTEMA.md "Tipografía" · --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif · --mono: ui-monospace, SFMono-Regular, Menlo, monospace · --disp / --meta = var(--mono) under compacto</p>
+    <div lang="es">
+      <div class="type-row"><span class="tok"><b>--home-hero-fs</b> 27 / 36 / 46 · 700 · 1.17</span><span style="font-size:46px;font-weight:700;line-height:1.17">Alquila sin comisión</span></div>
+      <div class="type-row"><span class="tok"><b>--ficha-price-fs</b> 30 / 34 · 700 · 1.1 · mono</span><span style="font-family:var(--mono);font-size:34px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums">$450</span></div>
+      <div class="type-row"><span class="tok"><b>--door-title-fs</b> 22 / 28</span><span style="font-size:28px;font-weight:700">Entra para continuar</span></div>
+      <div class="type-row"><span class="tok"><b>--title-fs</b> 20 · 700 · 1.25</span><span style="font-size:20px;font-weight:700;line-height:1.25">Alquiler en Chacao</span></div>
+      <div class="type-row"><span class="tok"><b>--ficha-title-fs</b> 17 / 19 · 600 · 1.35</span><span style="font-size:19px;font-weight:600;line-height:1.35">Apartamento 2 habitaciones con puesto de estacionamiento</span></div>
+      <div class="type-row"><span class="tok"><b>--card-price-fs</b> 16 / 17 · 700 · 1.15 · mono</span><span style="font-family:var(--mono);font-size:17px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums">$520</span></div>
+      <div class="type-row"><span class="tok"><b>--ficha-body-fs</b> 15 / 16 · 1.6 / 1.65</span><span style="font-size:16px;line-height:1.65;max-width:520px">Planta eléctrica, vigilancia 24 horas y agua regular. Depósito de dos meses.</span></div>
+      <div class="type-row"><span class="tok"><b>--control-fs</b> 15 · <b>--fp</b> 15 · 700</span><span style="font-size:15px">Texto de control <span style="font-family:var(--mono);font-weight:700">$380</span></span></div>
+      <div class="type-row"><span class="tok"><b>--card-title-fs</b> 12.5 / 13 · 400 · 1.35</span><span style="font-size:13px;line-height:1.35">Estudio en Altamira, ideal para una persona</span></div>
+      <div class="type-row"><span class="tok"><b>--meta-fs</b> 12 · 600 · 1.4 · --soft</span><span style="font-size:12px;font-weight:600;line-height:1.4;color:var(--soft)">Chacao · 2 hab · 78 m²</span></div>
+      <div class="type-row"><span class="tok"><b>--badge-fs</b> 11 · 700 · .06em · uppercase</span><span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">Dueño</span></div>
+      <div class="type-row"><span class="tok"><b>--meta-fs-sm</b> 11 · mono</span><span style="font-family:var(--mono);font-size:11px;font-weight:600;color:var(--soft)">4 / 9</span></div>
+      <div class="type-row"><span class="tok"><b>--card-meta-fs</b> 10.5 / 11 · 400 · sans</span><span style="font-size:11px;line-height:1.4;color:var(--soft)">Chacao · 2 hab · 78 m²</span></div>
+    </div>
+  </section>
+
+  <!-- ===================== SPACING / RADIUS / SHADOW ===================== -->
+  <div class="grid2">
+    <section aria-labelledby="h-space">
+      <h2 id="h-space">Spacing</h2>
+      <p class="src">SISTEMA.md "Espaciado": 4 · 8 · 12 · 16 · 24 · 32 · 48. Tokens: --gap 8 · --rowpad 7px 12px · --card-gap 12 · --home-invite-outer-gap 16 / 24</p>
+      <div class="space-row"><span class="space-bar" style="width:4px"></span><span class="tok">4</span></div>
+      <div class="space-row"><span class="space-bar" style="width:8px"></span><span class="tok">8 · <b>--gap</b></span></div>
+      <div class="space-row"><span class="space-bar" style="width:12px"></span><span class="tok">12 · <b>--card-gap</b></span></div>
+      <div class="space-row"><span class="space-bar" style="width:16px"></span><span class="tok">16 · <b>--home-invite-outer-gap</b></span></div>
+      <div class="space-row"><span class="space-bar" style="width:24px"></span><span class="tok">24 · <b>--home-invite-outer-gap-desktop</b></span></div>
+      <div class="space-row"><span class="space-bar" style="width:32px"></span><span class="tok">32</span></div>
+      <div class="space-row"><span class="space-bar" style="width:48px"></span><span class="tok">48</span></div>
+    </section>
+    <section aria-labelledby="h-radius">
+      <h2 id="h-radius">Radius</h2>
+      <p class="src">src/styles/tokens.css · identical in menta and oscuro</p>
+      <div class="grid4">
+        <div><div class="radius-box" style="border-radius:12px"></div><p class="tok"><b>--r</b> 12px</p></div>
+        <div><div class="radius-box" style="border-radius:999px"></div><p class="tok"><b>--rs</b> 999px</p></div>
+        <div><div class="radius-box" style="border-radius:6px"></div><p class="tok"><b>--r-thumb</b> 6px</p></div>
+        <div><div class="radius-box" style="border-radius:18px"></div><p class="tok"><b>--door-r</b> 18px</p></div>
+      </div>
+    </section>
+  </div>
+
+  <section aria-labelledby="h-shadow">
+    <h2 id="h-shadow">Shadows</h2>
+    <p class="src">src/styles/tokens.css</p>
+    <div class="grid4">
+      <div class="t-menta" style="background:var(--bg);padding:24px;border-radius:12px"><div class="shadow-box" style="box-shadow:0 2px 6px rgba(30,32,34,.1)"><span class="tok"><b>--shadow-raised</b> · menta</span></div></div>
+      <div class="t-oscuro" style="background:var(--bg);padding:24px;border-radius:12px"><div class="shadow-box" style="box-shadow:0 2px 6px rgba(0,0,0,.45)"><span class="tok"><b>--shadow-raised</b> · oscuro</span></div></div>
+      <div class="t-menta" style="background:var(--bg);padding:24px;border-radius:12px"><div class="shadow-box" style="box-shadow:0 24px 64px rgba(30,32,34,.34)"><span class="tok"><b>--door-shadow</b></span></div></div>
+      <div class="t-menta" style="background:var(--bg);padding:24px;border-radius:12px"><div class="shadow-box" style="box-shadow:0 -8px 28px rgba(30,32,34,.16)"><span class="tok"><b>--door-sheet-shadow</b></span></div></div>
+    </div>
+  </section>
+
+  <!-- ===================== COMPONENTS ===================== -->
+  <section aria-labelledby="h-comp">
+    <h2 id="h-comp">Components · menta and oscuro side by side</h2>
+    <p class="src">components/atoms/Button.module.css · app/publicar/publish-steps.module.css (≥768 sizes) · app/publicar/FieldError.tsx · components/organisms/SiteFooter.module.css (≥1100 layout)</p>
+    <div class="panels">
+
+      <!-- ===== menta ===== -->
+      <article class="panel t-menta" aria-labelledby="p-menta" lang="es">
+        <div class="panel-head"><h3 id="p-menta" style="margin:0">menta</h3><span class="tok" lang="en">data-theme="menta" · default</span></div>
+        <div class="panel-body">
+          <div>
+            <h2 lang="en">Three-button hierarchy</h2>
+            <div class="btn-row">
+              <button type="button" class="base action">Publicar aviso</button>
+              <button type="button" class="base selection" aria-pressed="true">Dueño</button>
+              <button type="button" class="base neutral">Cancelar</button>
+            </div>
+            <p class="tok" lang="en" style="margin:8px 0 0">1 Acción · 2 Selección / estado · 3 Neutro — never mixed</p>
+          </div>
+
+          <form class="form" action="#" method="get">
+            <h2 lang="en">Text field · normal</h2>
+            <div>
+              <label class="label" for="m-ref">Referencia <span class="req">(opcional)</span></label>
+              <input class="control" id="m-ref" name="ref" type="text" value="Frente a la plaza" aria-describedby="m-ref-help">
+              <p class="help" id="m-ref-help">Sólo se muestra en la ficha.</p>
+            </div>
+
+            <h2 lang="en">Text field · error (message below the control, 2026-11-02)</h2>
+            <div>
+              <label class="label" for="m-desc">Descripción <span class="req">✱ obligatorio</span></label>
+              <input class="control controlInvalid" id="m-desc" name="desc" type="text" value="Apartamento con puesto." aria-invalid="true" aria-describedby="m-desc-error">
+              <p class="error" id="m-desc-error">✱ Mínimo 120 caracteres. Vas 24.</p>
+            </div>
+
+            <h2 lang="en">Numeric rows (.numbers)</h2>
+            <div class="numbers">
+              <div class="numberRow"><label class="label" for="m-rooms">Habitaciones</label><input class="control numberControl" id="m-rooms" name="rooms" type="text" inputmode="numeric" value="2"></div>
+              <div class="numberRow"><label class="label" for="m-baths">Baños</label><input class="control numberControl" id="m-baths" name="baths" type="text" inputmode="numeric" value="1"></div>
+              <div class="numberRow"><label class="label" for="m-park">Puestos de auto</label><input class="control numberControl" id="m-park" name="park" type="text" inputmode="numeric" value="0"></div>
+              <div class="numberRow"><label class="label" for="m-area">Metros cuadrados</label><input class="control numberControl" id="m-area" name="area" type="text" inputmode="numeric" value="78"></div>
+            </div>
+
+            <fieldset class="choices">
+              <legend class="legend">¿Quién publica?</legend>
+              <label class="choice"><input type="radio" name="m-publisher" value="dueno" checked><span>Dueño</span></label>
+              <label class="choice"><input type="radio" name="m-publisher" value="inmobiliaria"><span>Inmobiliaria</span></label>
+            </fieldset>
+
+            <fieldset class="choices">
+              <legend class="legend">¿Qué tiene?</legend>
+              <label class="choice"><input type="checkbox" name="m-planta" checked><span>Planta eléctrica</span></label>
+              <label class="choice"><input type="checkbox" name="m-vigilancia"><span>Vigilancia 24 horas</span></label>
+            </fieldset>
+          </form>
+        </div>
+
+        <footer class="footer" aria-label="Pie del sitio (muestra menta)">
+          <div class="f-top">
+            <div class="f-brand"><a class="wordmark" href="#p-menta">Rentoru</a><p class="tagline">Alquiler residencial en Distrito Capital y Maracaibo. Gratis y sin comisión.</p></div>
+            <nav class="f-col" aria-label="Ayuda (menta)"><p class="f-heading">Ayuda</p><ul class="f-list"><li><a class="f-link" href="#p-menta">Cómo publicar</a></li><li><a class="f-link" href="#p-menta">Preguntas frecuentes</a></li></ul></nav>
+            <nav class="f-col" aria-label="Legal (menta)"><p class="f-heading">Legal</p><ul class="f-list"><li><a class="f-link" href="#p-menta">Términos</a></li><li><a class="f-link" href="#p-menta">Privacidad</a></li></ul></nav>
+          </div>
+          <div class="f-strip"><p class="legal">Rentoru no participa en la negociación.</p><p class="legal" lang="en">background: --footer-bg · border-top: --line</p></div>
+        </footer>
+      </article>
+
+      <!-- ===== oscuro ===== -->
+      <article class="panel t-oscuro" aria-labelledby="p-oscuro" lang="es">
+        <div class="panel-head"><h3 id="p-oscuro" style="margin:0">oscuro</h3><span class="tok" lang="en">data-theme="oscuro" · never automatic</span></div>
+        <div class="panel-body">
+          <div>
+            <h2 lang="en">Three-button hierarchy</h2>
+            <div class="btn-row">
+              <button type="button" class="base action">Publicar aviso</button>
+              <button type="button" class="base selection" aria-pressed="true">Dueño</button>
+              <button type="button" class="base neutral">Cancelar</button>
+            </div>
+            <p class="tok" lang="en" style="margin:8px 0 0">1 Acción · 2 Selección / estado · 3 Neutro — never mixed</p>
+          </div>
+
+          <form class="form" action="#" method="get">
+            <h2 lang="en">Text field · normal</h2>
+            <div>
+              <label class="label" for="o-ref">Referencia <span class="req">(opcional)</span></label>
+              <input class="control" id="o-ref" name="ref" type="text" value="Frente a la plaza" aria-describedby="o-ref-help">
+              <p class="help" id="o-ref-help">Sólo se muestra en la ficha.</p>
+            </div>
+
+            <h2 lang="en">Text field · error (message below the control, 2026-11-02)</h2>
+            <div>
+              <label class="label" for="o-desc">Descripción <span class="req">✱ obligatorio</span></label>
+              <input class="control controlInvalid" id="o-desc" name="desc" type="text" value="Apartamento con puesto." aria-invalid="true" aria-describedby="o-desc-error">
+              <p class="error" id="o-desc-error">✱ Mínimo 120 caracteres. Vas 24.</p>
+            </div>
+
+            <h2 lang="en">Numeric rows (.numbers)</h2>
+            <div class="numbers">
+              <div class="numberRow"><label class="label" for="o-rooms">Habitaciones</label><input class="control numberControl" id="o-rooms" name="rooms" type="text" inputmode="numeric" value="2"></div>
+              <div class="numberRow"><label class="label" for="o-baths">Baños</label><input class="control numberControl" id="o-baths" name="baths" type="text" inputmode="numeric" value="1"></div>
+              <div class="numberRow"><label class="label" for="o-park">Puestos de auto</label><input class="control numberControl" id="o-park" name="park" type="text" inputmode="numeric" value="0"></div>
+              <div class="numberRow"><label class="label" for="o-area">Metros cuadrados</label><input class="control numberControl" id="o-area" name="area" type="text" inputmode="numeric" value="78"></div>
+            </div>
+
+            <fieldset class="choices">
+              <legend class="legend">¿Quién publica?</legend>
+              <label class="choice"><input type="radio" name="o-publisher" value="dueno" checked><span>Dueño</span></label>
+              <label class="choice"><input type="radio" name="o-publisher" value="inmobiliaria"><span>Inmobiliaria</span></label>
+            </fieldset>
+
+            <fieldset class="choices">
+              <legend class="legend">¿Qué tiene?</legend>
+              <label class="choice"><input type="checkbox" name="o-planta" checked><span>Planta eléctrica</span></label>
+              <label class="choice"><input type="checkbox" name="o-vigilancia"><span>Vigilancia 24 horas</span></label>
+            </fieldset>
+          </form>
+        </div>
+
+        <footer class="footer" aria-label="Pie del sitio (muestra oscuro)">
+          <div class="f-top">
+            <div class="f-brand"><a class="wordmark" href="#p-oscuro">Rentoru</a><p class="tagline">Alquiler residencial en Distrito Capital y Maracaibo. Gratis y sin comisión.</p></div>
+            <nav class="f-col" aria-label="Ayuda (oscuro)"><p class="f-heading">Ayuda</p><ul class="f-list"><li><a class="f-link" href="#p-oscuro">Cómo publicar</a></li><li><a class="f-link" href="#p-oscuro">Preguntas frecuentes</a></li></ul></nav>
+            <nav class="f-col" aria-label="Legal (oscuro)"><p class="f-heading">Legal</p><ul class="f-list"><li><a class="f-link" href="#p-oscuro">Términos</a></li><li><a class="f-link" href="#p-oscuro">Privacidad</a></li></ul></nav>
+          </div>
+          <div class="f-strip"><p class="legal">Rentoru no participa en la negociación.</p><p class="legal" lang="en">background: --footer-bg · border-top: --line</p></div>
+        </footer>
+      </article>
+    </div>
+  </section>
+</main>
+</body>
+</html>

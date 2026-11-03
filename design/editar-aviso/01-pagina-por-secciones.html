@@ -1,0 +1,1378 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1440">
+<title>Editar aviso · 01 · Una página, por secciones</title>
+<style>
+/* Token block copied verbatim from design/system.html (:root, .t-menta, .t-oscuro). */
+:root {
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --disp: var(--mono);
+  --meta: var(--mono);
+  --target-min: 44px;
+  --target-min-desktop: 44px;
+  --control-fs: 15px;
+  --meta-fs: 12px;
+  --meta-fs-sm: 11px;
+  --meta-fw: 600;
+  --badge-fs: 11px;
+  --badge-fw: 700;
+  --badge-ls: 0.06em;
+  --title-fs: 20px;
+  --title-fw: 700;
+  --title-lh: 1.25;
+  --ficha-body-fs-desktop: 16px;
+  --ficha-body-lh-desktop: 1.65;
+  --ficha-price-fs-desktop: 34px;
+  --ficha-price-fw: 700;
+  --fp: 15px;
+  --gap: 8px;
+  --r-thumb: 6px;
+  --door-r: 18px;
+  --door-shadow: 0 24px 64px rgba(30, 32, 34, 0.34);
+  --door-sheet-shadow: 0 -8px 28px rgba(30, 32, 34, 0.16);
+  --brand-ls: -0.02em;
+  --footer-brand-fs-desktop: 19px;
+  --footer-tagline-fs-desktop: 13px;
+  --footer-heading-fs: 10px;
+  --footer-link-fs-desktop: 13.5px;
+  --footer-legal-fs: 11px;
+}
+.t-menta {
+  --r: 12px; --rs: 999px;
+  --ctl: #f0f5f9; --bg: #f0f5f9; --surface: #ffffff; --page: #ffffff; --footer-bg: #f0f5f9;
+  --line: #e1e4e6; --strong: #788189; --ink: #1e2022; --soft: #52616b;
+  --accent: #272343; --accent-ink: #ffffff; --tint: #e3f6f5;
+  --scrim: rgba(30, 32, 34, 0.55);
+  --warn: #8a5a00; --warn-bg: #faf2e1; --err: #9c2b20; --err-bg: #fbecea;
+  --shadow-raised: 0 2px 6px rgba(30, 32, 34, 0.1);
+  --thumb: repeating-linear-gradient(135deg, #bae8e8 0 7px, #e3f6f5 7px 14px);
+}
+.t-oscuro {
+  --r: 12px; --rs: 999px;
+  --ctl: #332e52; --bg: #1b1830; --surface: #272343; --page: #272343; --footer-bg: #1b1830;
+  --line: #3b3663; --strong: #788e98; --ink: #f0f5f9; --soft: #9ba8b4;
+  --accent: #bae8e8; --accent-ink: #272343; --tint: #332e52;
+  --scrim: rgba(0, 0, 0, 0.66);
+  --warn: #e0b464; --warn-bg: #2c2517; --err: #f0a39a; --err-bg: #43283a;
+  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.45);
+  --thumb: repeating-linear-gradient(135deg, #3b3663 0 7px, #332e52 7px 14px);
+}
+
+/* Additional production tokens this artboard needs. Every value is listed in
+   design/system.md (source: src/styles/tokens.css); none is new. */
+:root {
+  --ficha-body-fs: 15px;
+  --ficha-body-lh: 1.6;
+  --secondary-lh: 1.6;
+  --ficha-price-fs: 30px;
+  --nav-h: 60px;
+  --nav-h-desktop: 68px;
+  --nav-brand-fs: 17px;
+  --nav-brand-fs-desktop: 19px;
+  --nav-action-fs: 13.5px;
+  --footer-brand-fs: 18px;
+  --footer-tagline-fs: 13.5px;
+  --footer-link-fs: 14.5px;
+  --card-price-fs-desktop: 17px;
+  --card-title-fs-desktop: 13px;
+  --card-meta-fs-desktop: 11px;
+  --card-photo-ratio: 4 / 3;
+  --mis-avisos-thumb-w: 74px;
+  --action-h: 46px;
+  --loading-duration: 1.2s;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--fp);
+  line-height: 1.55;
+}
+p { margin: 0; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.vh {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ---------- board chrome (not part of the screen) ---------- */
+.board { width: 1440px; margin: 0 auto; padding-bottom: 48px; }
+.board-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 32px; padding: 32px 48px 0; }
+.board-title { font-size: var(--title-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0 0 8px; }
+.board-lede { color: var(--soft); max-width: 820px; }
+.kicker {
+  font-family: var(--meta); font-size: var(--badge-fs); font-weight: var(--badge-fw);
+  letter-spacing: var(--badge-ls); text-transform: uppercase; color: var(--soft); margin: 0 0 8px;
+}
+.toggle { display: flex; align-items: center; gap: 8px; flex: none; }
+.toggle-label { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); }
+.toggle .btn[aria-pressed="true"] { background: var(--tint); color: var(--accent); border-color: var(--accent); }
+.toggle .btn[aria-pressed="true"]:focus-visible { outline-color: var(--accent); }
+.stage { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--line); }
+.stage-head { display: grid; grid-template-columns: 420px 1fr; gap: 32px; padding: 0 48px 24px; }
+.stage-title { font-size: var(--title-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0; }
+.notes { margin: 0; padding-left: 16px; color: var(--soft); font-size: var(--control-fs); line-height: var(--secondary-lh); }
+.notes li + li { margin-top: 4px; }
+.notes b { color: var(--ink); }
+.frames { display: flex; align-items: flex-start; gap: 24px; padding: 0 48px; }
+.frames + .frames, .frame-full + .frames { margin-top: 32px; }
+.frame-label { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); margin: 0 0 8px; }
+.frame-label b { color: var(--ink); font-weight: var(--meta-fw); }
+.frame-full > .frame-label { padding: 0 48px; }
+.side-notes { flex: 1; padding-top: 24px; }
+.side-notes h3 { font-size: var(--control-fs); font-weight: var(--meta-fw); margin: 0 0 8px; }
+.side-notes .notes + h3 { margin-top: 24px; }
+
+/* ---------- the screen: a fixed-width frame in real CSS pixels ---------- */
+.screen {
+  display: flex; flex-direction: column;
+  background: var(--page); color: var(--ink);
+  border: 1px solid var(--line);
+  overflow: clip; /* clip, not hidden: keeps sticky elements working */
+}
+.w390 { width: 390px; }
+.w768 { width: 768px; }
+.w1440 { width: 1440px; }
+.crop.desk { width: 876px; } /* 828 px of content + 24 px gutters: the 1440 layout at real size */
+
+/* Buttons: Button.module.css, three levels plus the spec §8 "Inactivo" */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: var(--target-min); padding: 8px 16px; border-radius: var(--r);
+  font: inherit; cursor: pointer; text-decoration: none;
+}
+.btn-action { background: var(--accent); color: var(--accent-ink); border: none; }
+.btn-neutral { background: none; color: var(--ink); border: 1px solid var(--strong); }
+.btn-neutral:focus-visible { outline: 2px solid var(--strong); outline-offset: 2px; }
+.btn-tall { min-height: var(--action-h); }
+.btn-wait {
+  background: var(--line); color: var(--soft); border: none; cursor: default;
+  animation: wait var(--loading-duration) ease-in-out infinite alternate;
+}
+.btn-off { background: var(--line); color: var(--soft); border: none; cursor: default; }
+@keyframes wait { from { color: var(--soft); } to { color: var(--ink); } }
+@media (prefers-reduced-motion: reduce) { .btn-wait { animation: none; } }
+
+/* Nav (Nav.module.css) */
+.nav { background: var(--surface); border-bottom: 1px solid var(--line); height: var(--nav-h); flex: none; }
+.wide .nav { height: var(--nav-h-desktop); }
+.nav-in { display: flex; align-items: center; justify-content: space-between; height: 100%; padding: 0 20px; max-width: 1100px; margin: 0 auto; }
+.desk .nav-in { padding: 0 24px; }
+.brand { font-family: var(--mono); font-weight: 700; font-size: var(--nav-brand-fs); letter-spacing: var(--brand-ls); color: var(--ink); text-decoration: none; }
+.wide .brand { font-size: var(--nav-brand-fs-desktop); }
+.nav-link {
+  display: inline-flex; align-items: center; min-height: var(--target-min); padding: 0 16px;
+  border: 1px solid var(--strong); border-radius: var(--rs);
+  font-size: var(--nav-action-fs); font-weight: 600; color: var(--ink); text-decoration: none;
+}
+
+/* Page + form shell (publish-steps.module.css .layout / .column) */
+.page { flex: 1 0 auto; }
+.col { padding: 24px 20px 32px; }
+.wide .col { max-width: 520px; margin: 0 auto; padding: 32px 0 48px; }
+.desk .wrap {
+  display: grid; grid-template-columns: 520px 260px; gap: 48px; justify-content: center;
+  align-items: start; max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px;
+}
+.desk .col { max-width: none; margin: 0; padding: 0; }
+.page-head { display: flex; flex-direction: column; gap: 8px; padding-bottom: 24px; }
+.back { display: inline-flex; align-items: center; align-self: flex-start; min-height: var(--target-min); font-weight: var(--meta-fw); text-decoration: none; }
+.h1 { font-size: var(--ficha-price-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0; }
+.wide .h1 { font-size: var(--ficha-price-fs-desktop); }
+.sub { font-family: var(--meta); font-size: var(--meta-fs); font-weight: var(--meta-fw); color: var(--soft); }
+.lede { color: var(--soft); font-size: var(--ficha-body-fs); line-height: var(--ficha-body-lh); }
+.wide .lede { font-size: var(--ficha-body-fs-desktop); line-height: var(--ficha-body-lh-desktop); }
+
+/* Sections separated by a --line rule */
+.sec { display: flex; flex-direction: column; gap: 24px; padding: 24px 0; border-top: 1px solid var(--line); }
+.sec:last-child { padding-bottom: 0; }
+.sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.sec-title { font-size: var(--title-fs); font-weight: var(--title-fw); line-height: var(--title-lh); margin: 0; }
+.sec-meta { font-family: var(--meta); font-size: var(--meta-fs-sm); font-weight: var(--meta-fw); color: var(--soft); }
+
+/* Field anatomy: error → label → control → help/counter */
+.field { display: flex; flex-direction: column; }
+/* Founder decision 2026-11-02 (L8): the error sits BELOW the control, everywhere. */
+.error { color: var(--err); font-size: var(--ficha-body-fs); margin: 6px 0 0; }
+.wide .error { font-size: var(--ficha-body-fs-desktop); }
+.label { display: block; font-size: var(--control-fs); font-weight: var(--meta-fw); margin: 0 0 6px; }
+.req { font-weight: 400; }
+.control {
+  width: 100%; min-height: 56px; padding: 0 14px;
+  border: 1px solid var(--strong); border-radius: var(--r);
+  background: var(--surface); color: var(--ink);
+  font-family: var(--sans); font-size: var(--control-fs);
+}
+.wide .control { min-height: 52px; }
+.area { min-height: 160px; padding: 12px 14px; line-height: var(--secondary-lh); resize: vertical; }
+.wide .area { min-height: 160px; }
+.controlInvalid { border-width: 2px; border-color: var(--err); }
+.help { color: var(--soft); font-size: var(--ficha-body-fs); line-height: var(--ficha-body-lh); margin: 6px 0 0; }
+.wide .help { font-size: var(--ficha-body-fs-desktop); line-height: var(--ficha-body-lh-desktop); }
+.counter { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); margin: 6px 0 0; }
+.short { color: var(--warn); font-weight: var(--meta-fw); }
+
+/* Price: publish price control */
+.price-row { display: flex; align-items: center; gap: 12px; }
+.price {
+  min-height: 72px; font-family: var(--disp); font-size: var(--title-fs); font-weight: var(--title-fw);
+  font-variant-numeric: tabular-nums;
+}
+.wide .price { min-height: 68px; width: 280px; }
+.unit { flex: none; color: var(--soft); font-size: var(--control-fs); }
+
+/* Numeric rows (.numbers); a row in error stays a row, message under it */
+.numbers { display: flex; flex-direction: column; gap: 12px; }
+.numberRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.numberRow .label { margin: 0; }
+.numberControl { width: 120px; text-align: center; font-family: var(--disp); font-variant-numeric: tabular-nums; }
+/* A numeric row in error keeps its row; the message goes right under it. */
+.numberField .error { margin-block-start: 6px; }
+
+/* Choice cards */
+.choices { display: flex; flex-direction: column; gap: 8px; border: 0; padding: 0; margin: 0; min-width: 0; }
+.legend { padding: 0; margin-bottom: 8px; font-size: var(--control-fs); font-weight: var(--meta-fw); }
+.choice {
+  display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 0 16px;
+  border: 1px solid var(--strong); border-radius: var(--r);
+  font-size: var(--control-fs); cursor: pointer;
+}
+.wide .choice { min-height: 52px; }
+.choice:has(input:checked) { background: var(--tint); border-color: var(--accent); color: var(--accent); font-weight: var(--meta-fw); }
+.choice:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.choice input { width: 20px; height: 20px; margin: 0; accent-color: var(--accent); flex: none; }
+.choice input:focus-visible { outline: none; }
+
+/* Read-only zone: a --bg block, not a control */
+.readonly { background: var(--bg); border-radius: var(--r); padding: 12px 16px; }
+.readonly dt { font-size: var(--control-fs); font-weight: var(--meta-fw); }
+.readonly dd { margin: 0; }
+.readonly .value { font-size: var(--control-fs); }
+.readonly .hint { color: var(--soft); font-size: var(--meta-fs); line-height: var(--secondary-lh); margin-top: 4px; }
+
+/* Photos (rows derived from .choice / .photoRow) */
+.photos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.photo {
+  display: grid; grid-template-columns: var(--mis-avisos-thumb-w) minmax(0, 1fr); gap: 8px 12px;
+  align-items: center; padding: 12px; border: 1px solid var(--strong); border-radius: var(--r);
+}
+.thumb {
+  display: block; width: var(--mis-avisos-thumb-w); aspect-ratio: var(--card-photo-ratio);
+  background: var(--thumb); border: 1px solid var(--line); border-radius: var(--r-thumb);
+}
+.photo-name { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-weight: var(--meta-fw); }
+.photo-meta { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); }
+.photo-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-sel {
+  display: inline-flex; align-items: center; padding: 0 8px; border-radius: var(--rs);
+  background: var(--tint); border: 1px solid var(--accent); color: var(--accent);
+  font-size: var(--badge-fs); font-weight: var(--badge-fw); letter-spacing: var(--badge-ls); text-transform: uppercase;
+}
+.photo.is-marked { border-style: dashed; background: var(--bg); }
+.is-marked .thumb { filter: grayscale(1); }
+.is-marked .photo-name { color: var(--soft); text-decoration: line-through; }
+.photo-flag { color: var(--err); font-size: var(--meta-fs); font-weight: var(--meta-fw); }
+.add-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pending { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); }
+
+/* Rejected-save summary (extends the existing «No se pudo guardar» block) */
+.summary {
+  display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px;
+  padding: 12px 16px; background: var(--err-bg); border-left: 3px solid var(--err); border-radius: var(--r);
+}
+.summary-title { color: var(--err); font-weight: var(--meta-fw); }
+.summary ul { margin: 0; padding-left: 16px; }
+.summary a { display: inline-flex; align-items: center; min-height: var(--target-min); }
+
+/* Notice beside Guardar */
+.notice {
+  padding: 12px 16px; background: var(--warn-bg); color: var(--ink);
+  border-left: 3px solid var(--warn); border-radius: var(--r);
+  font-size: var(--control-fs); line-height: var(--secondary-lh);
+}
+.status { font-family: var(--meta); font-size: var(--meta-fs); color: var(--soft); }
+.status-err { color: var(--err); font-size: var(--control-fs); line-height: var(--secondary-lh); }
+
+/* Desktop: sticky summary + actions column */
+.aside { position: sticky; top: 24px; display: flex; flex-direction: column; gap: 16px; }
+.card { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: var(--r); }
+.card .kicker { margin: 0; }
+.cover { display: block; width: 100%; aspect-ratio: var(--card-photo-ratio); background: var(--thumb); border: 1px solid var(--line); border-radius: var(--r-thumb); }
+.badge-owner {
+  align-self: flex-start; padding: 0 8px; border-radius: var(--rs); background: var(--ink); color: var(--surface);
+  font-size: var(--badge-fs); font-weight: var(--badge-fw); letter-spacing: var(--badge-ls); text-transform: uppercase;
+}
+.card-price { font-family: var(--mono); font-size: var(--card-price-fs-desktop); font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.card-price span { font-family: var(--sans); font-size: var(--meta-fs); font-weight: 400; color: var(--soft); }
+.card-title { font-size: var(--card-title-fs-desktop); line-height: 1.35; }
+.card-meta { font-size: var(--card-meta-fs-desktop); line-height: 1.4; color: var(--soft); }
+.actions { display: flex; flex-direction: column; gap: 8px; }
+
+/* Mobile and tablet: action bar stuck to the viewport edge */
+.bar { position: sticky; bottom: 0; background: var(--surface); border-top: 1px solid var(--line); padding: 12px 20px; }
+.wide .bar { padding: 12px 24px; }
+.crop .bar { position: static; }
+.bar-in { display: flex; flex-direction: column; gap: 12px; }
+.wide .bar-in { max-width: 520px; margin: 0 auto; }
+.bar-row { display: flex; gap: 8px; }
+.grow { flex: 1; }
+
+/* Footer (SiteFooter.module.css) */
+.footer { margin-top: auto; background: var(--footer-bg); border-top: 1px solid var(--line); flex: none; }
+.f-top { display: flex; flex-direction: column; gap: 20px; padding: 24px 20px; }
+.desk .f-top { flex-direction: row; gap: 40px; padding: 36px 26px; max-width: 1100px; margin: 0 auto; }
+.f-brand { display: flex; flex-direction: column; gap: 8px; }
+.desk .f-brand { flex: 0 0 320px; }
+.wordmark { font-family: var(--mono); font-weight: 700; font-size: var(--footer-brand-fs); letter-spacing: var(--brand-ls); color: var(--ink); text-decoration: none; }
+.desk .wordmark { font-size: var(--footer-brand-fs-desktop); }
+.tagline { font-size: var(--footer-tagline-fs); line-height: 1.55; color: var(--soft); }
+.desk .tagline { font-size: var(--footer-tagline-fs-desktop); }
+.f-cols { display: flex; gap: 24px; flex: 1; }
+.f-col { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+.f-heading { font-family: var(--meta); font-weight: 700; font-size: var(--footer-heading-fs); letter-spacing: 0.05em; text-transform: uppercase; color: var(--soft); }
+.f-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.f-link { display: flex; align-items: center; min-height: var(--target-min); font-size: var(--footer-link-fs); color: var(--ink); text-decoration: none; }
+.desk .f-link { font-size: var(--footer-link-fs-desktop); }
+.f-strip { border-top: 1px solid var(--line); padding: 16px 20px; }
+.desk .f-strip { padding: 16px 26px; }
+.legal { font-family: var(--meta); font-size: var(--footer-legal-fs); line-height: 1.6; color: var(--soft); max-width: 1100px; margin: 0 auto; }
+</style>
+</head>
+<body class="t-menta">
+<main class="board">
+
+  <header class="board-head">
+    <div>
+      <p class="kicker">Fase 44 · tarea 44.1 · dirección 01</p>
+      <h1 class="board-title">Editar aviso · Una página, por secciones</h1>
+      <p class="board-lede">Todo el aviso en una sola columna de 520 px, partida en cinco secciones con título: Fotos, Lo básico, La propiedad, Contacto y Quién publica. En escritorio, un panel fijo de 260 px muestra cómo se ve el aviso y deja Guardar y Cancelar siempre a la vista; en móvil y tableta las acciones van en una barra pegada al borde, como en publicar. <b>A cambio:</b> se recorre de un vistazo, pero en móvil la página es larga.</p>
+    </div>
+    <div class="toggle" role="group" aria-label="Tema de la lámina">
+      <span class="toggle-label">Tema</span>
+      <button class="btn btn-neutral" type="button" data-theme-set="menta" aria-pressed="true">menta</button>
+      <button class="btn btn-neutral" type="button" data-theme-set="oscuro" aria-pressed="false">oscuro</button>
+    </div>
+  </header>
+
+  <!-- =============================== STATE 1 · DEFAULT =============================== -->
+  <section class="stage" aria-labelledby="st1">
+    <div class="stage-head">
+      <div><p class="kicker">Estado 1 de 6</p><h2 class="stage-title" id="st1">Predeterminado</h2></div>
+      <ul class="notes">
+        <li>Mismo cuerpo que publicar: campos de 52 px (56 en móvil), tarjetas de opción y filas numéricas. Cambia el armazón: sin riel de pasos, porque el aviso ya existe y se edita en desorden.</li>
+        <li>Las fotos van primero porque son lo primero que pidió el fundador (S2, S6). Cada foto trae sus acciones como texto: Hacer portada, ↑ Subir, ↓ Bajar y Quitar.</li>
+        <li>Zona y ciudad se leen pero no se editan: van en un bloque <b>--bg</b> sin borde de control, para que no parezcan un campo.</li>
+      </ul>
+    </div>
+
+    <!-- ---------- 1440 default ---------- -->
+    <article class="frame-full" aria-labelledby="d14-label">
+      <p class="frame-label" id="d14-label"><b>1440 px</b> · escritorio · contenedor 1100 · columna 520 + panel fijo 260</p>
+      <div class="screen desk wide w1440">
+        <header class="nav"><nav class="nav-in" aria-label="Principal · 1440 predeterminado"><a class="brand" href="#d14-label">Rentoru</a><a class="nav-link" href="#d14-label">Mis avisos</a></nav></header>
+        <div class="page">
+          <form class="wrap" action="#" method="get" aria-labelledby="d14-h1">
+            <div class="col">
+              <div class="page-head">
+                <a class="back" href="#d14-label">← Mis avisos</a>
+                <h1 class="h1" id="d14-h1">Editar aviso</h1>
+                <p class="sub">Apartamento amoblado en La Castellana · Activo</p>
+                <p class="lede">Lo que cambies aquí se ve en tu aviso cuando guardas. Hasta entonces, nada cambia.</p>
+              </div>
+
+              <section class="sec" aria-labelledby="d14-s1">
+                <div class="sec-head"><h2 class="sec-title" id="d14-s1">Fotos</h2><span class="sec-meta">3 de 6</span></div>
+                <ol class="photos">
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero en los resultados</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-meta">Posición 2</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 2</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3</p><p class="photo-meta">Posición 3</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                </ol>
+                <div class="add-row"><button class="btn btn-neutral" type="button">+ Agregar foto</button><span class="pending">Puedes subir 3 más</span></div>
+              </section>
+
+              <section class="sec" aria-labelledby="d14-s2">
+                <h2 class="sec-title" id="d14-s2">Lo básico</h2>
+                <div class="field">
+                  <label class="label" for="d14-title">Título <span class="req">✱ obligatorio</span></label>
+                  <input class="control" id="d14-title" name="title" type="text" maxlength="90" value="Apartamento amoblado en La Castellana" aria-describedby="d14-title-c">
+                  <p class="counter" id="d14-title-c">Vas 37 · máximo 90</p>
+                </div>
+                <div class="field">
+                  <label class="label" for="d14-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                  <textarea class="control area" id="d14-desc" name="description" rows="6" aria-describedby="d14-desc-c">Apartamento de 3 habitaciones en un piso alto, con vista abierta al Ávila y mucha luz en la mañana. La cocina está equipada con horno, campana y gabinetes, y el edificio tiene vigilancia 24 h. Queda a cinco minutos a pie del metro de Altamira, cerca de panaderías y farmacias.</textarea>
+                  <p class="counter" id="d14-desc-c">Vas 276 · mínimo 120 · máximo 1200</p>
+                </div>
+                <div class="field">
+                  <label class="label" for="d14-price">Precio al mes <span class="req">✱ obligatorio</span></label>
+                  <div class="price-row"><input class="control price" id="d14-price" name="priceUsd" type="text" inputmode="numeric" value="610" aria-describedby="d14-price-h"><span class="unit">USD al mes</span></div>
+                  <p class="help" id="d14-price-h">Sólo el número, sin puntos ni decimales.</p>
+                </div>
+              </section>
+
+              <section class="sec" aria-labelledby="d14-s3">
+                <h2 class="sec-title" id="d14-s3">La propiedad</h2>
+                <dl class="readonly"><dt>Zona y ciudad</dt><dd class="value">Altamira · Caracas</dd><dd class="hint">Van con la dirección del aviso y no se cambian al editar.</dd></dl>
+                <fieldset class="choices">
+                  <legend class="legend">Tipo de propiedad</legend>
+                  <label class="choice"><input type="radio" name="d14-type" value="apartamento" checked><span>Apartamento</span></label>
+                  <label class="choice"><input type="radio" name="d14-type" value="casa"><span>Casa</span></label>
+                  <label class="choice"><input type="radio" name="d14-type" value="anexo"><span>Anexo</span></label>
+                  <label class="choice"><input type="radio" name="d14-type" value="habitacion"><span>Habitación</span></label>
+                </fieldset>
+                <div class="numbers">
+                  <div class="numberRow"><label class="label" for="d14-rooms">Habitaciones</label><input class="control numberControl" id="d14-rooms" name="rooms" type="text" inputmode="numeric" value="3"></div>
+                  <div class="numberRow"><label class="label" for="d14-baths">Baños <span class="req">✱ obligatorio</span></label><input class="control numberControl" id="d14-baths" name="baths" type="text" inputmode="numeric" value="2"></div>
+                  <div class="numberRow"><label class="label" for="d14-park">Puestos de auto</label><input class="control numberControl" id="d14-park" name="parking" type="text" inputmode="numeric" value="1"></div>
+                  <div class="numberRow"><label class="label" for="d14-area">Metros cuadrados</label><input class="control numberControl" id="d14-area" name="area" type="text" inputmode="numeric" value="128"></div>
+                </div>
+                <fieldset class="choices">
+                  <legend class="legend">Lo que tiene la propiedad</legend>
+                  <label class="choice"><input type="checkbox" name="d14-feat" value="planta" checked><span>Planta eléctrica</span></label>
+                  <label class="choice"><input type="checkbox" name="d14-feat" value="agua"><span>Agua regular</span></label>
+                  <label class="choice"><input type="checkbox" name="d14-feat" value="amoblado" checked><span>Amoblado</span></label>
+                  <label class="choice"><input type="checkbox" name="d14-feat" value="vigilancia" checked><span>Vigilancia 24 h</span></label>
+                  <label class="choice"><input type="checkbox" name="d14-feat" value="linea-blanca"><span>Línea blanca</span></label>
+                </fieldset>
+                <div class="field">
+                  <label class="label" for="d14-ref">Referencia <span class="req">(opcional)</span></label>
+                  <input class="control" id="d14-ref" name="reference" type="text" value="Frente a la panadería La Castellana" aria-describedby="d14-ref-h">
+                  <p class="help" id="d14-ref-h">Ayuda a ubicar el inmueble sin dar la dirección exacta.</p>
+                </div>
+              </section>
+
+              <section class="sec" aria-labelledby="d14-s4">
+                <h2 class="sec-title" id="d14-s4">Contacto</h2>
+                <fieldset class="choices">
+                  <legend class="legend">Cómo te contactan</legend>
+                  <label class="choice"><input type="radio" name="d14-contact" value="whatsapp" checked><span>WhatsApp</span></label>
+                  <label class="choice"><input type="radio" name="d14-contact" value="telefono"><span>Teléfono</span></label>
+                  <label class="choice"><input type="radio" name="d14-contact" value="correo"><span>Correo</span></label>
+                </fieldset>
+                <div class="field">
+                  <label class="label" for="d14-cval">Tu dato de contacto</label>
+                  <input class="control" id="d14-cval" name="contactValue" type="text" value="0412 123 4567" aria-describedby="d14-cval-h">
+                  <p class="help" id="d14-cval-h">Sólo lo ve quien se registra para escribirte.</p>
+                </div>
+              </section>
+
+              <section class="sec" aria-labelledby="d14-s5">
+                <h2 class="sec-title" id="d14-s5">Quién publica</h2>
+                <fieldset class="choices" aria-describedby="d14-pub-h">
+                  <legend class="legend">Publicas como</legend>
+                  <label class="choice"><input type="radio" name="d14-pub" value="dueno" checked><span>Dueño</span></label>
+                  <label class="choice"><input type="radio" name="d14-pub" value="inmobiliaria"><span>Inmobiliaria</span></label>
+                </fieldset>
+                <p class="help" id="d14-pub-h">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</p>
+              </section>
+            </div>
+
+            <aside class="aside" aria-labelledby="d14-prev">
+              <div class="card">
+                <h2 class="kicker" id="d14-prev">Así se ve tu aviso</h2>
+                <span class="cover" aria-hidden="true"></span>
+                <span class="badge-owner">Dueño</span>
+                <p class="card-price">$610 <span>/mes</span></p>
+                <p class="card-title">Apartamento amoblado en La Castellana</p>
+                <p class="card-meta">Altamira · 3 hab · 128 m²</p>
+              </div>
+              <div class="actions">
+                <button class="btn btn-action btn-tall" type="button">Guardar cambios</button>
+                <a class="btn btn-neutral btn-tall" href="#d14-label">Cancelar</a>
+              </div>
+            </aside>
+          </form>
+        </div>
+        <footer class="footer" aria-label="Pie del sitio · 1440 predeterminado">
+          <div class="f-top">
+            <div class="f-brand"><a class="wordmark" href="#d14-label">Rentoru</a><p class="tagline">Alquiler residencial en Distrito Capital y Maracaibo. Gratis y sin comisión.</p></div>
+            <div class="f-cols">
+              <nav class="f-col" aria-label="Ayuda · 1440 predeterminado"><p class="f-heading">Ayuda</p><ul class="f-list"><li><a class="f-link" href="#d14-label">Cómo publicar</a></li><li><a class="f-link" href="#d14-label">Preguntas frecuentes</a></li></ul></nav>
+              <nav class="f-col" aria-label="Legal · 1440 predeterminado"><p class="f-heading">Legal</p><ul class="f-list"><li><a class="f-link" href="#d14-label">Términos</a></li><li><a class="f-link" href="#d14-label">Privacidad</a></li></ul></nav>
+            </div>
+          </div>
+          <div class="f-strip"><p class="legal">Rentoru no participa en la negociación.</p></div>
+        </footer>
+      </div>
+    </article>
+
+    <div class="frames">
+      <!-- ---------- 768 default ---------- -->
+      <article aria-labelledby="d07-label">
+        <p class="frame-label" id="d07-label"><b>768 px</b> · tableta · columna 520 centrada · barra de acciones abajo</p>
+        <div class="screen wide w768">
+          <header class="nav"><nav class="nav-in" aria-label="Principal · 768 predeterminado"><a class="brand" href="#d07-label">Rentoru</a><a class="nav-link" href="#d07-label">Mis avisos</a></nav></header>
+          <div class="page">
+            <form class="wrap" action="#" method="get" aria-labelledby="d07-h1">
+              <div class="col">
+                <div class="page-head">
+                  <a class="back" href="#d07-label">← Mis avisos</a>
+                  <h1 class="h1" id="d07-h1">Editar aviso</h1>
+                  <p class="sub">Apartamento amoblado en La Castellana · Activo</p>
+                  <p class="lede">Lo que cambies aquí se ve en tu aviso cuando guardas. Hasta entonces, nada cambia.</p>
+                </div>
+
+                <section class="sec" aria-labelledby="d07-s1">
+                  <div class="sec-head"><h2 class="sec-title" id="d07-s1">Fotos</h2><span class="sec-meta">3 de 6</span></div>
+                  <ol class="photos">
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero en los resultados</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-meta">Posición 2</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 2</span></button></div></li>
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3</p><p class="photo-meta">Posición 3</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                  </ol>
+                  <div class="add-row"><button class="btn btn-neutral" type="button">+ Agregar foto</button><span class="pending">Puedes subir 3 más</span></div>
+                </section>
+
+                <section class="sec" aria-labelledby="d07-s2">
+                  <h2 class="sec-title" id="d07-s2">Lo básico</h2>
+                  <div class="field">
+                    <label class="label" for="d07-title">Título <span class="req">✱ obligatorio</span></label>
+                    <input class="control" id="d07-title" name="title" type="text" maxlength="90" value="Apartamento amoblado en La Castellana" aria-describedby="d07-title-c">
+                    <p class="counter" id="d07-title-c">Vas 37 · máximo 90</p>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="d07-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                    <textarea class="control area" id="d07-desc" name="description" rows="6" aria-describedby="d07-desc-c">Apartamento de 3 habitaciones en un piso alto, con vista abierta al Ávila y mucha luz en la mañana. La cocina está equipada con horno, campana y gabinetes, y el edificio tiene vigilancia 24 h. Queda a cinco minutos a pie del metro de Altamira, cerca de panaderías y farmacias.</textarea>
+                    <p class="counter" id="d07-desc-c">Vas 276 · mínimo 120 · máximo 1200</p>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="d07-price">Precio al mes <span class="req">✱ obligatorio</span></label>
+                    <div class="price-row"><input class="control price" id="d07-price" name="priceUsd" type="text" inputmode="numeric" value="610" aria-describedby="d07-price-h"><span class="unit">USD al mes</span></div>
+                    <p class="help" id="d07-price-h">Sólo el número, sin puntos ni decimales.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="d07-s3">
+                  <h2 class="sec-title" id="d07-s3">La propiedad</h2>
+                  <dl class="readonly"><dt>Zona y ciudad</dt><dd class="value">Altamira · Caracas</dd><dd class="hint">Van con la dirección del aviso y no se cambian al editar.</dd></dl>
+                  <fieldset class="choices">
+                    <legend class="legend">Tipo de propiedad</legend>
+                    <label class="choice"><input type="radio" name="d07-type" value="apartamento" checked><span>Apartamento</span></label>
+                    <label class="choice"><input type="radio" name="d07-type" value="casa"><span>Casa</span></label>
+                    <label class="choice"><input type="radio" name="d07-type" value="anexo"><span>Anexo</span></label>
+                    <label class="choice"><input type="radio" name="d07-type" value="habitacion"><span>Habitación</span></label>
+                  </fieldset>
+                  <div class="numbers">
+                    <div class="numberRow"><label class="label" for="d07-rooms">Habitaciones</label><input class="control numberControl" id="d07-rooms" name="rooms" type="text" inputmode="numeric" value="3"></div>
+                    <div class="numberRow"><label class="label" for="d07-baths">Baños <span class="req">✱ obligatorio</span></label><input class="control numberControl" id="d07-baths" name="baths" type="text" inputmode="numeric" value="2"></div>
+                    <div class="numberRow"><label class="label" for="d07-park">Puestos de auto</label><input class="control numberControl" id="d07-park" name="parking" type="text" inputmode="numeric" value="1"></div>
+                    <div class="numberRow"><label class="label" for="d07-area">Metros cuadrados</label><input class="control numberControl" id="d07-area" name="area" type="text" inputmode="numeric" value="128"></div>
+                  </div>
+                  <fieldset class="choices">
+                    <legend class="legend">Lo que tiene la propiedad</legend>
+                    <label class="choice"><input type="checkbox" name="d07-feat" value="planta" checked><span>Planta eléctrica</span></label>
+                    <label class="choice"><input type="checkbox" name="d07-feat" value="agua"><span>Agua regular</span></label>
+                    <label class="choice"><input type="checkbox" name="d07-feat" value="amoblado" checked><span>Amoblado</span></label>
+                    <label class="choice"><input type="checkbox" name="d07-feat" value="vigilancia" checked><span>Vigilancia 24 h</span></label>
+                    <label class="choice"><input type="checkbox" name="d07-feat" value="linea-blanca"><span>Línea blanca</span></label>
+                  </fieldset>
+                  <div class="field">
+                    <label class="label" for="d07-ref">Referencia <span class="req">(opcional)</span></label>
+                    <input class="control" id="d07-ref" name="reference" type="text" value="Frente a la panadería La Castellana" aria-describedby="d07-ref-h">
+                    <p class="help" id="d07-ref-h">Ayuda a ubicar el inmueble sin dar la dirección exacta.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="d07-s4">
+                  <h2 class="sec-title" id="d07-s4">Contacto</h2>
+                  <fieldset class="choices">
+                    <legend class="legend">Cómo te contactan</legend>
+                    <label class="choice"><input type="radio" name="d07-contact" value="whatsapp" checked><span>WhatsApp</span></label>
+                    <label class="choice"><input type="radio" name="d07-contact" value="telefono"><span>Teléfono</span></label>
+                    <label class="choice"><input type="radio" name="d07-contact" value="correo"><span>Correo</span></label>
+                  </fieldset>
+                  <div class="field">
+                    <label class="label" for="d07-cval">Tu dato de contacto</label>
+                    <input class="control" id="d07-cval" name="contactValue" type="text" value="0412 123 4567" aria-describedby="d07-cval-h">
+                    <p class="help" id="d07-cval-h">Sólo lo ve quien se registra para escribirte.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="d07-s5">
+                  <h2 class="sec-title" id="d07-s5">Quién publica</h2>
+                  <fieldset class="choices" aria-describedby="d07-pub-h">
+                    <legend class="legend">Publicas como</legend>
+                    <label class="choice"><input type="radio" name="d07-pub" value="dueno" checked><span>Dueño</span></label>
+                    <label class="choice"><input type="radio" name="d07-pub" value="inmobiliaria"><span>Inmobiliaria</span></label>
+                  </fieldset>
+                  <p class="help" id="d07-pub-h">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</p>
+                </section>
+              </div>
+              <div class="bar"><div class="bar-in"><div class="bar-row">
+                <button class="btn btn-action btn-tall grow" type="button">Guardar cambios</button>
+                <a class="btn btn-neutral btn-tall" href="#d07-label">Cancelar</a>
+              </div></div></div>
+            </form>
+          </div>
+          <footer class="footer" aria-label="Pie del sitio · 768 predeterminado">
+            <div class="f-top">
+              <div class="f-brand"><a class="wordmark" href="#d07-label">Rentoru</a><p class="tagline">Alquiler residencial en Distrito Capital y Maracaibo. Gratis y sin comisión.</p></div>
+              <div class="f-cols">
+                <nav class="f-col" aria-label="Ayuda · 768 predeterminado"><p class="f-heading">Ayuda</p><ul class="f-list"><li><a class="f-link" href="#d07-label">Cómo publicar</a></li><li><a class="f-link" href="#d07-label">Preguntas frecuentes</a></li></ul></nav>
+                <nav class="f-col" aria-label="Legal · 768 predeterminado"><p class="f-heading">Legal</p><ul class="f-list"><li><a class="f-link" href="#d07-label">Términos</a></li><li><a class="f-link" href="#d07-label">Privacidad</a></li></ul></nav>
+              </div>
+            </div>
+            <div class="f-strip"><p class="legal">Rentoru no participa en la negociación.</p></div>
+          </footer>
+        </div>
+      </article>
+
+      <!-- ---------- 390 default ---------- -->
+      <article aria-labelledby="d39-label">
+        <p class="frame-label" id="d39-label"><b>390 px</b> · móvil · márgenes de 20 px · barra pegada abajo</p>
+        <div class="screen w390">
+          <header class="nav"><nav class="nav-in" aria-label="Principal · 390 predeterminado"><a class="brand" href="#d39-label">Rentoru</a><a class="nav-link" href="#d39-label">Mis avisos</a></nav></header>
+          <div class="page">
+            <form class="wrap" action="#" method="get" aria-labelledby="d39-h1">
+              <div class="col">
+                <div class="page-head">
+                  <a class="back" href="#d39-label">← Mis avisos</a>
+                  <h1 class="h1" id="d39-h1">Editar aviso</h1>
+                  <p class="sub">Apartamento amoblado en La Castellana · Activo</p>
+                  <p class="lede">Lo que cambies aquí se ve en tu aviso cuando guardas. Hasta entonces, nada cambia.</p>
+                </div>
+
+                <section class="sec" aria-labelledby="d39-s1">
+                  <div class="sec-head"><h2 class="sec-title" id="d39-s1">Fotos</h2><span class="sec-meta">3 de 6</span></div>
+                  <ol class="photos">
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-meta">Posición 2</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 2</span></button></div></li>
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3</p><p class="photo-meta">Posición 3</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                  </ol>
+                  <div class="add-row"><button class="btn btn-neutral" type="button">+ Agregar foto</button><span class="pending">Puedes subir 3 más</span></div>
+                </section>
+
+                <section class="sec" aria-labelledby="d39-s2">
+                  <h2 class="sec-title" id="d39-s2">Lo básico</h2>
+                  <div class="field">
+                    <label class="label" for="d39-title">Título <span class="req">✱ obligatorio</span></label>
+                    <input class="control" id="d39-title" name="title" type="text" maxlength="90" value="Apartamento amoblado en La Castellana" aria-describedby="d39-title-c">
+                    <p class="counter" id="d39-title-c">Vas 37 · máximo 90</p>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="d39-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                    <textarea class="control area" id="d39-desc" name="description" rows="8" aria-describedby="d39-desc-c">Apartamento de 3 habitaciones en un piso alto, con vista abierta al Ávila y mucha luz en la mañana. La cocina está equipada con horno, campana y gabinetes, y el edificio tiene vigilancia 24 h. Queda a cinco minutos a pie del metro de Altamira, cerca de panaderías y farmacias.</textarea>
+                    <p class="counter" id="d39-desc-c">Vas 276 · mínimo 120 · máximo 1200</p>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="d39-price">Precio al mes <span class="req">✱ obligatorio</span></label>
+                    <div class="price-row"><input class="control price" id="d39-price" name="priceUsd" type="text" inputmode="numeric" value="610" aria-describedby="d39-price-h"><span class="unit">USD al mes</span></div>
+                    <p class="help" id="d39-price-h">Sólo el número, sin puntos ni decimales.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="d39-s3">
+                  <h2 class="sec-title" id="d39-s3">La propiedad</h2>
+                  <dl class="readonly"><dt>Zona y ciudad</dt><dd class="value">Altamira · Caracas</dd><dd class="hint">Van con la dirección del aviso y no se cambian al editar.</dd></dl>
+                  <fieldset class="choices">
+                    <legend class="legend">Tipo de propiedad</legend>
+                    <label class="choice"><input type="radio" name="d39-type" value="apartamento" checked><span>Apartamento</span></label>
+                    <label class="choice"><input type="radio" name="d39-type" value="casa"><span>Casa</span></label>
+                    <label class="choice"><input type="radio" name="d39-type" value="anexo"><span>Anexo</span></label>
+                    <label class="choice"><input type="radio" name="d39-type" value="habitacion"><span>Habitación</span></label>
+                  </fieldset>
+                  <div class="numbers">
+                    <div class="numberRow"><label class="label" for="d39-rooms">Habitaciones</label><input class="control numberControl" id="d39-rooms" name="rooms" type="text" inputmode="numeric" value="3"></div>
+                    <div class="numberRow"><label class="label" for="d39-baths">Baños <span class="req">✱ obligatorio</span></label><input class="control numberControl" id="d39-baths" name="baths" type="text" inputmode="numeric" value="2"></div>
+                    <div class="numberRow"><label class="label" for="d39-park">Puestos de auto</label><input class="control numberControl" id="d39-park" name="parking" type="text" inputmode="numeric" value="1"></div>
+                    <div class="numberRow"><label class="label" for="d39-area">Metros cuadrados</label><input class="control numberControl" id="d39-area" name="area" type="text" inputmode="numeric" value="128"></div>
+                  </div>
+                  <fieldset class="choices">
+                    <legend class="legend">Lo que tiene la propiedad</legend>
+                    <label class="choice"><input type="checkbox" name="d39-feat" value="planta" checked><span>Planta eléctrica</span></label>
+                    <label class="choice"><input type="checkbox" name="d39-feat" value="agua"><span>Agua regular</span></label>
+                    <label class="choice"><input type="checkbox" name="d39-feat" value="amoblado" checked><span>Amoblado</span></label>
+                    <label class="choice"><input type="checkbox" name="d39-feat" value="vigilancia" checked><span>Vigilancia 24 h</span></label>
+                    <label class="choice"><input type="checkbox" name="d39-feat" value="linea-blanca"><span>Línea blanca</span></label>
+                  </fieldset>
+                  <div class="field">
+                    <label class="label" for="d39-ref">Referencia <span class="req">(opcional)</span></label>
+                    <input class="control" id="d39-ref" name="reference" type="text" value="Frente a la panadería La Castellana" aria-describedby="d39-ref-h">
+                    <p class="help" id="d39-ref-h">Ayuda a ubicar el inmueble sin dar la dirección exacta.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="d39-s4">
+                  <h2 class="sec-title" id="d39-s4">Contacto</h2>
+                  <fieldset class="choices">
+                    <legend class="legend">Cómo te contactan</legend>
+                    <label class="choice"><input type="radio" name="d39-contact" value="whatsapp" checked><span>WhatsApp</span></label>
+                    <label class="choice"><input type="radio" name="d39-contact" value="telefono"><span>Teléfono</span></label>
+                    <label class="choice"><input type="radio" name="d39-contact" value="correo"><span>Correo</span></label>
+                  </fieldset>
+                  <div class="field">
+                    <label class="label" for="d39-cval">Tu dato de contacto</label>
+                    <input class="control" id="d39-cval" name="contactValue" type="text" value="0412 123 4567" aria-describedby="d39-cval-h">
+                    <p class="help" id="d39-cval-h">Sólo lo ve quien se registra para escribirte.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="d39-s5">
+                  <h2 class="sec-title" id="d39-s5">Quién publica</h2>
+                  <fieldset class="choices" aria-describedby="d39-pub-h">
+                    <legend class="legend">Publicas como</legend>
+                    <label class="choice"><input type="radio" name="d39-pub" value="dueno" checked><span>Dueño</span></label>
+                    <label class="choice"><input type="radio" name="d39-pub" value="inmobiliaria"><span>Inmobiliaria</span></label>
+                  </fieldset>
+                  <p class="help" id="d39-pub-h">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</p>
+                </section>
+              </div>
+              <div class="bar"><div class="bar-in"><div class="bar-row">
+                <button class="btn btn-action btn-tall grow" type="button">Guardar cambios</button>
+                <a class="btn btn-neutral btn-tall" href="#d39-label">Cancelar</a>
+              </div></div></div>
+            </form>
+          </div>
+          <footer class="footer" aria-label="Pie del sitio · 390 predeterminado">
+            <div class="f-top">
+              <div class="f-brand"><a class="wordmark" href="#d39-label">Rentoru</a><p class="tagline">Alquiler residencial en Distrito Capital y Maracaibo. Gratis y sin comisión.</p></div>
+              <div class="f-cols">
+                <nav class="f-col" aria-label="Ayuda · 390 predeterminado"><p class="f-heading">Ayuda</p><ul class="f-list"><li><a class="f-link" href="#d39-label">Cómo publicar</a></li><li><a class="f-link" href="#d39-label">Preguntas frecuentes</a></li></ul></nav>
+                <nav class="f-col" aria-label="Legal · 390 predeterminado"><p class="f-heading">Legal</p><ul class="f-list"><li><a class="f-link" href="#d39-label">Términos</a></li><li><a class="f-link" href="#d39-label">Privacidad</a></li></ul></nav>
+              </div>
+            </div>
+            <div class="f-strip"><p class="legal">Rentoru no participa en la negociación.</p></div>
+          </footer>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- =============================== STATE 2 · REJECTED SAVE =============================== -->
+  <section class="stage" aria-labelledby="st2">
+    <div class="stage-head">
+      <div><p class="kicker">Estado 2 de 6 · S4, S5</p><h2 class="stage-title" id="st2">Guardado rechazado</h2></div>
+      <ul class="notes">
+        <li>Cada error va <b>debajo</b> de su control, antes de la ayuda: etiqueta, control, error, ayuda (fundador, 2026-11-02, para todo el sitio). El campo lleva borde de 2 px en <b>--err</b>, <code>aria-invalid</code> y <code>aria-describedby</code> hacia su mensaje.</li>
+        <li>Como la página es larga, el rechazo abre con un resumen que enlaza a cada campo. Es el bloque «No se pudo guardar» que ya existe, ahora con enlaces.</li>
+        <li>Lo demás vuelve tal como se escribió (S4): precio 610, habitaciones 3 y metros 128 no se reinician.</li>
+      </ul>
+    </div>
+
+    <!-- ---------- 1440 rejected ---------- -->
+    <article class="frame-full" aria-labelledby="r14-label">
+      <p class="frame-label" id="r14-label"><b>1440 px</b> · escritorio · guardado rechazado: descripción corta y baños vacío</p>
+      <div class="screen desk wide w1440">
+        <header class="nav"><nav class="nav-in" aria-label="Principal · 1440 rechazado"><a class="brand" href="#r14-label">Rentoru</a><a class="nav-link" href="#r14-label">Mis avisos</a></nav></header>
+        <div class="page">
+          <form class="wrap" action="#" method="get" aria-labelledby="r14-h1">
+            <div class="col">
+              <div class="page-head">
+                <a class="back" href="#r14-label">← Mis avisos</a>
+                <h1 class="h1" id="r14-h1">Editar aviso</h1>
+                <p class="sub">Apartamento amoblado en La Castellana · Activo</p>
+              </div>
+              <div class="summary" id="r14-sum" tabindex="-1">
+                <p class="summary-title">✱ No se guardó. Corrige 2 campos y vuelve a guardar:</p>
+                <ul><li><a href="#r14-desc">Descripción: te faltan 93 caracteres</a></li><li><a href="#r14-baths">Baños: es obligatorio</a></li></ul>
+                <p>Lo demás quedó como lo escribiste.</p>
+              </div>
+
+              <section class="sec" aria-labelledby="r14-s1">
+                <div class="sec-head"><h2 class="sec-title" id="r14-s1">Fotos</h2><span class="sec-meta">3 de 6</span></div>
+                <ol class="photos">
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero en los resultados</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-meta">Posición 2</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 2</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3</p><p class="photo-meta">Posición 3</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                </ol>
+                <div class="add-row"><button class="btn btn-neutral" type="button">+ Agregar foto</button><span class="pending">Puedes subir 3 más</span></div>
+              </section>
+
+              <section class="sec" aria-labelledby="r14-s2">
+                <h2 class="sec-title" id="r14-s2">Lo básico</h2>
+                <div class="field">
+                  <label class="label" for="r14-title">Título <span class="req">✱ obligatorio</span></label>
+                  <input class="control" id="r14-title" name="title" type="text" maxlength="90" value="Apartamento amoblado en La Castellana" aria-describedby="r14-title-c">
+                  <p class="counter" id="r14-title-c">Vas 37 · máximo 90</p>
+                </div>
+                <div class="field">
+                  <label class="label" for="r14-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                  <textarea class="control area controlInvalid" id="r14-desc" name="description" rows="6" aria-invalid="true" aria-describedby="r14-desc-e r14-desc-c">Apartamento amoblado y alto</textarea>
+                  <p class="error" id="r14-desc-e">✱ Mínimo 120 caracteres. Vas 27.</p>
+                  <p class="counter" id="r14-desc-c"><span class="short">Vas 27</span> · mínimo 120</p>
+                </div>
+                <div class="field">
+                  <label class="label" for="r14-price">Precio al mes <span class="req">✱ obligatorio</span></label>
+                  <div class="price-row"><input class="control price" id="r14-price" name="priceUsd" type="text" inputmode="numeric" value="610" aria-describedby="r14-price-h"><span class="unit">USD al mes</span></div>
+                  <p class="help" id="r14-price-h">Sólo el número, sin puntos ni decimales.</p>
+                </div>
+              </section>
+
+              <section class="sec" aria-labelledby="r14-s3">
+                <h2 class="sec-title" id="r14-s3">La propiedad</h2>
+                <dl class="readonly"><dt>Zona y ciudad</dt><dd class="value">Altamira · Caracas</dd><dd class="hint">Van con la dirección del aviso y no se cambian al editar.</dd></dl>
+                <fieldset class="choices">
+                  <legend class="legend">Tipo de propiedad</legend>
+                  <label class="choice"><input type="radio" name="r14-type" value="apartamento" checked><span>Apartamento</span></label>
+                  <label class="choice"><input type="radio" name="r14-type" value="casa"><span>Casa</span></label>
+                  <label class="choice"><input type="radio" name="r14-type" value="anexo"><span>Anexo</span></label>
+                  <label class="choice"><input type="radio" name="r14-type" value="habitacion"><span>Habitación</span></label>
+                </fieldset>
+                <div class="numbers">
+                  <div class="numberRow"><label class="label" for="r14-rooms">Habitaciones</label><input class="control numberControl" id="r14-rooms" name="rooms" type="text" inputmode="numeric" value="3"></div>
+                  <div class="numberField">
+                    <div class="numberRow"><label class="label" for="r14-baths">Baños</label><input class="control numberControl controlInvalid" id="r14-baths" name="baths" type="text" inputmode="numeric" value="" aria-invalid="true" aria-describedby="r14-baths-e"></div>
+                    <p class="error" id="r14-baths-e">✱ obligatorio. ¿Cuántos baños tiene?</p>
+                  </div>
+                  <div class="numberRow"><label class="label" for="r14-park">Puestos de auto</label><input class="control numberControl" id="r14-park" name="parking" type="text" inputmode="numeric" value="1"></div>
+                  <div class="numberRow"><label class="label" for="r14-area">Metros cuadrados</label><input class="control numberControl" id="r14-area" name="area" type="text" inputmode="numeric" value="128"></div>
+                </div>
+                <fieldset class="choices">
+                  <legend class="legend">Lo que tiene la propiedad</legend>
+                  <label class="choice"><input type="checkbox" name="r14-feat" value="planta" checked><span>Planta eléctrica</span></label>
+                  <label class="choice"><input type="checkbox" name="r14-feat" value="agua"><span>Agua regular</span></label>
+                  <label class="choice"><input type="checkbox" name="r14-feat" value="amoblado" checked><span>Amoblado</span></label>
+                  <label class="choice"><input type="checkbox" name="r14-feat" value="vigilancia" checked><span>Vigilancia 24 h</span></label>
+                  <label class="choice"><input type="checkbox" name="r14-feat" value="linea-blanca"><span>Línea blanca</span></label>
+                </fieldset>
+                <div class="field">
+                  <label class="label" for="r14-ref">Referencia <span class="req">(opcional)</span></label>
+                  <input class="control" id="r14-ref" name="reference" type="text" value="Frente a la panadería La Castellana" aria-describedby="r14-ref-h">
+                  <p class="help" id="r14-ref-h">Ayuda a ubicar el inmueble sin dar la dirección exacta.</p>
+                </div>
+              </section>
+
+              <section class="sec" aria-labelledby="r14-s4">
+                <h2 class="sec-title" id="r14-s4">Contacto</h2>
+                <fieldset class="choices">
+                  <legend class="legend">Cómo te contactan</legend>
+                  <label class="choice"><input type="radio" name="r14-contact" value="whatsapp" checked><span>WhatsApp</span></label>
+                  <label class="choice"><input type="radio" name="r14-contact" value="telefono"><span>Teléfono</span></label>
+                  <label class="choice"><input type="radio" name="r14-contact" value="correo"><span>Correo</span></label>
+                </fieldset>
+                <div class="field">
+                  <label class="label" for="r14-cval">Tu dato de contacto</label>
+                  <input class="control" id="r14-cval" name="contactValue" type="text" value="0412 123 4567" aria-describedby="r14-cval-h">
+                  <p class="help" id="r14-cval-h">Sólo lo ve quien se registra para escribirte.</p>
+                </div>
+              </section>
+
+              <section class="sec" aria-labelledby="r14-s5">
+                <h2 class="sec-title" id="r14-s5">Quién publica</h2>
+                <fieldset class="choices" aria-describedby="r14-pub-h">
+                  <legend class="legend">Publicas como</legend>
+                  <label class="choice"><input type="radio" name="r14-pub" value="dueno" checked><span>Dueño</span></label>
+                  <label class="choice"><input type="radio" name="r14-pub" value="inmobiliaria"><span>Inmobiliaria</span></label>
+                </fieldset>
+                <p class="help" id="r14-pub-h">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</p>
+              </section>
+            </div>
+
+            <aside class="aside" aria-labelledby="r14-prev">
+              <div class="card">
+                <h2 class="kicker" id="r14-prev">Así se ve tu aviso</h2>
+                <span class="cover" aria-hidden="true"></span>
+                <span class="badge-owner">Dueño</span>
+                <p class="card-price">$610 <span>/mes</span></p>
+                <p class="card-title">Apartamento amoblado en La Castellana</p>
+                <p class="card-meta">Altamira · 3 hab · 128 m²</p>
+              </div>
+              <p class="status-err">No se guardó: <a href="#r14-sum">2 campos por corregir</a>.</p>
+              <div class="actions">
+                <button class="btn btn-action btn-tall" type="button">Guardar cambios</button>
+                <a class="btn btn-neutral btn-tall" href="#r14-label">Cancelar</a>
+              </div>
+            </aside>
+          </form>
+        </div>
+        <footer class="footer" aria-label="Pie del sitio · 1440 rechazado">
+          <div class="f-top">
+            <div class="f-brand"><a class="wordmark" href="#r14-label">Rentoru</a><p class="tagline">Alquiler residencial en Distrito Capital y Maracaibo. Gratis y sin comisión.</p></div>
+            <div class="f-cols">
+              <nav class="f-col" aria-label="Ayuda · 1440 rechazado"><p class="f-heading">Ayuda</p><ul class="f-list"><li><a class="f-link" href="#r14-label">Cómo publicar</a></li><li><a class="f-link" href="#r14-label">Preguntas frecuentes</a></li></ul></nav>
+              <nav class="f-col" aria-label="Legal · 1440 rechazado"><p class="f-heading">Legal</p><ul class="f-list"><li><a class="f-link" href="#r14-label">Términos</a></li><li><a class="f-link" href="#r14-label">Privacidad</a></li></ul></nav>
+            </div>
+          </div>
+          <div class="f-strip"><p class="legal">Rentoru no participa en la negociación.</p></div>
+        </footer>
+      </div>
+    </article>
+
+    <div class="frames">
+      <!-- ---------- 390 rejected ---------- -->
+      <article aria-labelledby="r39-label">
+        <p class="frame-label" id="r39-label"><b>390 px</b> · móvil · guardado rechazado</p>
+        <div class="screen w390">
+          <header class="nav"><nav class="nav-in" aria-label="Principal · 390 rechazado"><a class="brand" href="#r39-label">Rentoru</a><a class="nav-link" href="#r39-label">Mis avisos</a></nav></header>
+          <div class="page">
+            <form class="wrap" action="#" method="get" aria-labelledby="r39-h1">
+              <div class="col">
+                <div class="page-head">
+                  <a class="back" href="#r39-label">← Mis avisos</a>
+                  <h1 class="h1" id="r39-h1">Editar aviso</h1>
+                  <p class="sub">Apartamento amoblado en La Castellana · Activo</p>
+                </div>
+                <div class="summary" id="r39-sum" tabindex="-1">
+                  <p class="summary-title">✱ No se guardó. Corrige 2 campos y vuelve a guardar:</p>
+                  <ul><li><a href="#r39-desc">Descripción: te faltan 93 caracteres</a></li><li><a href="#r39-baths">Baños: es obligatorio</a></li></ul>
+                  <p>Lo demás quedó como lo escribiste.</p>
+                </div>
+
+                <section class="sec" aria-labelledby="r39-s1">
+                  <div class="sec-head"><h2 class="sec-title" id="r39-s1">Fotos</h2><span class="sec-meta">3 de 6</span></div>
+                  <ol class="photos">
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-meta">Posición 2</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 2</span></button></div></li>
+                    <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3</p><p class="photo-meta">Posición 3</p></div>
+                      <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                  </ol>
+                  <div class="add-row"><button class="btn btn-neutral" type="button">+ Agregar foto</button><span class="pending">Puedes subir 3 más</span></div>
+                </section>
+
+                <section class="sec" aria-labelledby="r39-s2">
+                  <h2 class="sec-title" id="r39-s2">Lo básico</h2>
+                  <div class="field">
+                    <label class="label" for="r39-title">Título <span class="req">✱ obligatorio</span></label>
+                    <input class="control" id="r39-title" name="title" type="text" maxlength="90" value="Apartamento amoblado en La Castellana" aria-describedby="r39-title-c">
+                    <p class="counter" id="r39-title-c">Vas 37 · máximo 90</p>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="r39-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                    <textarea class="control area controlInvalid" id="r39-desc" name="description" rows="6" aria-invalid="true" aria-describedby="r39-desc-e r39-desc-c">Apartamento amoblado y alto</textarea>
+                    <p class="error" id="r39-desc-e">✱ Mínimo 120 caracteres. Vas 27.</p>
+                    <p class="counter" id="r39-desc-c"><span class="short">Vas 27</span> · mínimo 120</p>
+                  </div>
+                  <div class="field">
+                    <label class="label" for="r39-price">Precio al mes <span class="req">✱ obligatorio</span></label>
+                    <div class="price-row"><input class="control price" id="r39-price" name="priceUsd" type="text" inputmode="numeric" value="610" aria-describedby="r39-price-h"><span class="unit">USD al mes</span></div>
+                    <p class="help" id="r39-price-h">Sólo el número, sin puntos ni decimales.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="r39-s3">
+                  <h2 class="sec-title" id="r39-s3">La propiedad</h2>
+                  <dl class="readonly"><dt>Zona y ciudad</dt><dd class="value">Altamira · Caracas</dd><dd class="hint">Van con la dirección del aviso y no se cambian al editar.</dd></dl>
+                  <fieldset class="choices">
+                    <legend class="legend">Tipo de propiedad</legend>
+                    <label class="choice"><input type="radio" name="r39-type" value="apartamento" checked><span>Apartamento</span></label>
+                    <label class="choice"><input type="radio" name="r39-type" value="casa"><span>Casa</span></label>
+                    <label class="choice"><input type="radio" name="r39-type" value="anexo"><span>Anexo</span></label>
+                    <label class="choice"><input type="radio" name="r39-type" value="habitacion"><span>Habitación</span></label>
+                  </fieldset>
+                  <div class="numbers">
+                    <div class="numberRow"><label class="label" for="r39-rooms">Habitaciones</label><input class="control numberControl" id="r39-rooms" name="rooms" type="text" inputmode="numeric" value="3"></div>
+                    <div class="numberField">
+                      <div class="numberRow"><label class="label" for="r39-baths">Baños</label><input class="control numberControl controlInvalid" id="r39-baths" name="baths" type="text" inputmode="numeric" value="" aria-invalid="true" aria-describedby="r39-baths-e"></div>
+                      <p class="error" id="r39-baths-e">✱ obligatorio. ¿Cuántos baños tiene?</p>
+                    </div>
+                    <div class="numberRow"><label class="label" for="r39-park">Puestos de auto</label><input class="control numberControl" id="r39-park" name="parking" type="text" inputmode="numeric" value="1"></div>
+                    <div class="numberRow"><label class="label" for="r39-area">Metros cuadrados</label><input class="control numberControl" id="r39-area" name="area" type="text" inputmode="numeric" value="128"></div>
+                  </div>
+                  <fieldset class="choices">
+                    <legend class="legend">Lo que tiene la propiedad</legend>
+                    <label class="choice"><input type="checkbox" name="r39-feat" value="planta" checked><span>Planta eléctrica</span></label>
+                    <label class="choice"><input type="checkbox" name="r39-feat" value="agua"><span>Agua regular</span></label>
+                    <label class="choice"><input type="checkbox" name="r39-feat" value="amoblado" checked><span>Amoblado</span></label>
+                    <label class="choice"><input type="checkbox" name="r39-feat" value="vigilancia" checked><span>Vigilancia 24 h</span></label>
+                    <label class="choice"><input type="checkbox" name="r39-feat" value="linea-blanca"><span>Línea blanca</span></label>
+                  </fieldset>
+                  <div class="field">
+                    <label class="label" for="r39-ref">Referencia <span class="req">(opcional)</span></label>
+                    <input class="control" id="r39-ref" name="reference" type="text" value="Frente a la panadería La Castellana" aria-describedby="r39-ref-h">
+                    <p class="help" id="r39-ref-h">Ayuda a ubicar el inmueble sin dar la dirección exacta.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="r39-s4">
+                  <h2 class="sec-title" id="r39-s4">Contacto</h2>
+                  <fieldset class="choices">
+                    <legend class="legend">Cómo te contactan</legend>
+                    <label class="choice"><input type="radio" name="r39-contact" value="whatsapp" checked><span>WhatsApp</span></label>
+                    <label class="choice"><input type="radio" name="r39-contact" value="telefono"><span>Teléfono</span></label>
+                    <label class="choice"><input type="radio" name="r39-contact" value="correo"><span>Correo</span></label>
+                  </fieldset>
+                  <div class="field">
+                    <label class="label" for="r39-cval">Tu dato de contacto</label>
+                    <input class="control" id="r39-cval" name="contactValue" type="text" value="0412 123 4567" aria-describedby="r39-cval-h">
+                    <p class="help" id="r39-cval-h">Sólo lo ve quien se registra para escribirte.</p>
+                  </div>
+                </section>
+
+                <section class="sec" aria-labelledby="r39-s5">
+                  <h2 class="sec-title" id="r39-s5">Quién publica</h2>
+                  <fieldset class="choices" aria-describedby="r39-pub-h">
+                    <legend class="legend">Publicas como</legend>
+                    <label class="choice"><input type="radio" name="r39-pub" value="dueno" checked><span>Dueño</span></label>
+                    <label class="choice"><input type="radio" name="r39-pub" value="inmobiliaria"><span>Inmobiliaria</span></label>
+                  </fieldset>
+                  <p class="help" id="r39-pub-h">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</p>
+                </section>
+              </div>
+              <div class="bar"><div class="bar-in">
+                <p class="status-err">No se guardó: <a href="#r39-sum">2 campos por corregir</a>.</p>
+                <div class="bar-row">
+                  <button class="btn btn-action btn-tall grow" type="button">Guardar cambios</button>
+                  <a class="btn btn-neutral btn-tall" href="#r39-label">Cancelar</a>
+                </div>
+              </div></div>
+            </form>
+          </div>
+          <footer class="footer" aria-label="Pie del sitio · 390 rechazado">
+            <div class="f-top">
+              <div class="f-brand"><a class="wordmark" href="#r39-label">Rentoru</a><p class="tagline">Alquiler residencial en Distrito Capital y Maracaibo. Gratis y sin comisión.</p></div>
+              <div class="f-cols">
+                <nav class="f-col" aria-label="Ayuda · 390 rechazado"><p class="f-heading">Ayuda</p><ul class="f-list"><li><a class="f-link" href="#r39-label">Cómo publicar</a></li><li><a class="f-link" href="#r39-label">Preguntas frecuentes</a></li></ul></nav>
+                <nav class="f-col" aria-label="Legal · 390 rechazado"><p class="f-heading">Legal</p><ul class="f-list"><li><a class="f-link" href="#r39-label">Términos</a></li><li><a class="f-link" href="#r39-label">Privacidad</a></li></ul></nav>
+              </div>
+            </div>
+            <div class="f-strip"><p class="legal">Rentoru no participa en la negociación.</p></div>
+          </footer>
+        </div>
+      </article>
+
+      <div class="side-notes">
+        <h3>Fila numérica en error: la fila se queda, el mensaje va debajo</h3>
+        <ul class="notes">
+          <li>Baños, en error, sigue siendo fila: etiqueta a la izquierda y control de 120 px con borde <b>--err</b> a la derecha. El mensaje aparece justo debajo de la fila, a todo su ancho, antes de «Puestos de auto».</li>
+          <li>Por qué: con el error debajo, la etiqueta y el control no se mueven, así que la columna de números sigue alineada; es la respuesta a lo que se veía raro en la 44.3. El control se anuncia con <code>aria-invalid</code> y <code>aria-describedby</code>, así que el lector de pantalla lee el mensaje al llegar al campo.</li>
+        </ul>
+        <h3>Resumen arriba y aviso junto a Guardar</h3>
+        <ul class="notes">
+          <li>En móvil la barra repite «No se guardó: 2 campos por corregir» con un enlace al resumen, porque en una página larga Guardar queda lejos de los campos.</li>
+          <li>Al volver del rechazo, el foco va al resumen (<code>tabindex="-1"</code>). Sin JavaScript, el formulario nativo dibuja el mismo estado (44.2).</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============================== STATE 3 · PHOTO MARKED =============================== -->
+  <section class="stage" aria-labelledby="st3">
+    <div class="stage-head">
+      <div><p class="kicker">Estado 3 de 6 · S2, 44.4</p><h2 class="stage-title" id="st3">Foto marcada para quitar</h2></div>
+      <ul class="notes">
+        <li>Quitar ya no borra: marca. Foto 2 se ve atenuada pero sigue en su lugar, con borde punteado, fondo <b>--bg</b> y la miniatura en gris. El texto pasa a <b>--soft</b> y no se usa <code>opacity</code>, para que todo siga pasando AA.</li>
+        <li>«Deshacer» la devuelve. Nada se elimina hasta que se guarda; si el guardado falla, la foto sigue ahí.</li>
+        <li>El recordatorio va junto a Guardar, en el panel de escritorio y en la barra de móvil, porque ahí se toma la decisión.</li>
+      </ul>
+    </div>
+    <div class="frames">
+      <article aria-labelledby="m14-label">
+        <p class="frame-label" id="m14-label"><b>1440 px</b> · recorte a tamaño real: columna 520 + panel 260</p>
+        <div class="screen desk wide crop">
+          <form class="wrap" action="#" method="get" aria-label="Editar aviso · foto marcada · 1440">
+            <div class="col">
+              <section class="sec" aria-labelledby="m14-s1">
+                <div class="sec-head"><h2 class="sec-title" id="m14-s1">Fotos</h2><span class="sec-meta">3 de 6 · 1 por quitar</span></div>
+                <ol class="photos">
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero en los resultados</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                  <li class="photo is-marked"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-flag" id="m14-flag">Se quitará al guardar</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button" aria-describedby="m14-flag">Deshacer<span class="vh">: conservar la foto 2</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3</p><p class="photo-meta">Posición 3</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                </ol>
+                <div class="add-row"><button class="btn btn-neutral" type="button">+ Agregar foto</button><span class="pending">Puedes subir 3 más</span></div>
+              </section>
+            </div>
+            <aside class="aside" aria-labelledby="m14-prev">
+              <div class="card">
+                <h2 class="kicker" id="m14-prev">Así se ve tu aviso</h2>
+                <span class="cover" aria-hidden="true"></span>
+                <span class="badge-owner">Dueño</span>
+                <p class="card-price">$610 <span>/mes</span></p>
+                <p class="card-title">Apartamento amoblado en La Castellana</p>
+                <p class="card-meta">Altamira · 3 hab · 128 m²</p>
+              </div>
+              <p class="notice" id="m14-notice">Recuerda: la foto marcada se eliminará al guardar.</p>
+              <div class="actions">
+                <button class="btn btn-action btn-tall" type="button" aria-describedby="m14-notice">Guardar cambios</button>
+                <a class="btn btn-neutral btn-tall" href="#m14-label">Cancelar</a>
+              </div>
+            </aside>
+          </form>
+        </div>
+      </article>
+
+      <article aria-labelledby="m39-label">
+        <p class="frame-label" id="m39-label"><b>390 px</b> · recorte: sección Fotos + barra</p>
+        <div class="screen w390 crop">
+          <form class="wrap" action="#" method="get" aria-label="Editar aviso · foto marcada · 390">
+            <div class="col">
+              <section class="sec" aria-labelledby="m39-s1">
+                <div class="sec-head"><h2 class="sec-title" id="m39-s1">Fotos</h2><span class="sec-meta">3 de 6 · 1 por quitar</span></div>
+                <ol class="photos">
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                  <li class="photo is-marked"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-flag" id="m39-flag">Se quitará al guardar</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button" aria-describedby="m39-flag">Deshacer<span class="vh">: conservar la foto 2</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3</p><p class="photo-meta">Posición 3</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                </ol>
+              </section>
+            </div>
+            <div class="bar"><div class="bar-in">
+              <p class="notice" id="m39-notice">Recuerda: la foto marcada se eliminará al guardar.</p>
+              <div class="bar-row">
+                <button class="btn btn-action btn-tall grow" type="button" aria-describedby="m39-notice">Guardar cambios</button>
+                <a class="btn btn-neutral btn-tall" href="#m39-label">Cancelar</a>
+              </div>
+            </div></div>
+          </form>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- =============================== STATE 4 · SAVING =============================== -->
+  <section class="stage" aria-labelledby="st4">
+    <div class="stage-head">
+      <div><p class="kicker">Estado 4 de 6 · S2</p><h2 class="stage-title" id="st4">Guardando</h2></div>
+      <ul class="notes">
+        <li>Sin imagen de espera: Guardar pasa al estilo «Inactivo» de la especificación (fondo <b>--line</b>, texto <b>--soft</b>) y dice «Guardando…». El texto respira entre <b>--soft</b> y <b>--ink</b> con <code>--loading-duration</code> (1.2 s); con <code>prefers-reduced-motion</code> se queda quieto.</li>
+        <li>Cancelar también queda inactivo: mientras guarda, ninguna acción compite con Guardar. Una línea con <code>role="status"</code> lo anuncia.</li>
+        <li>Contraste medido del inactivo: menta 5,0:1, oscuro 4,6:1. Los dos pasan AA.</li>
+      </ul>
+    </div>
+    <div class="frames">
+      <article aria-labelledby="g14-label">
+        <p class="frame-label" id="g14-label"><b>1440 px</b> · recorte a tamaño real: final de la columna + panel</p>
+        <div class="screen desk wide crop">
+          <form class="wrap" action="#" method="get" aria-label="Editar aviso · guardando · 1440" aria-busy="true">
+            <div class="col">
+              <section class="sec" aria-labelledby="g14-s5">
+                <h2 class="sec-title" id="g14-s5">Quién publica</h2>
+                <fieldset class="choices" aria-describedby="g14-pub-h">
+                  <legend class="legend">Publicas como</legend>
+                  <label class="choice"><input type="radio" name="g14-pub" value="dueno" checked><span>Dueño</span></label>
+                  <label class="choice"><input type="radio" name="g14-pub" value="inmobiliaria"><span>Inmobiliaria</span></label>
+                </fieldset>
+                <p class="help" id="g14-pub-h">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</p>
+              </section>
+            </div>
+            <aside class="aside" aria-labelledby="g14-prev">
+              <div class="card">
+                <h2 class="kicker" id="g14-prev">Así se ve tu aviso</h2>
+                <span class="cover" aria-hidden="true"></span>
+                <span class="badge-owner">Dueño</span>
+                <p class="card-price">$610 <span>/mes</span></p>
+                <p class="card-title">Apartamento amoblado en La Castellana</p>
+                <p class="card-meta">Altamira · 3 hab · 128 m²</p>
+              </div>
+              <div class="actions">
+                <button class="btn btn-wait btn-tall" type="button" aria-disabled="true">Guardando…</button>
+                <span class="btn btn-off btn-tall" aria-disabled="true">Cancelar</span>
+              </div>
+              <p class="status" role="status">Guardando tus cambios. Esto toma unos segundos.</p>
+            </aside>
+          </form>
+        </div>
+      </article>
+
+      <article aria-labelledby="g39-label">
+        <p class="frame-label" id="g39-label"><b>390 px</b> · recorte: final del formulario + barra</p>
+        <div class="screen w390 crop">
+          <form class="wrap" action="#" method="get" aria-label="Editar aviso · guardando · 390" aria-busy="true">
+            <div class="col">
+              <section class="sec" aria-labelledby="g39-s5">
+                <h2 class="sec-title" id="g39-s5">Quién publica</h2>
+                <fieldset class="choices" aria-describedby="g39-pub-h">
+                  <legend class="legend">Publicas como</legend>
+                  <label class="choice"><input type="radio" name="g39-pub" value="dueno" checked><span>Dueño</span></label>
+                  <label class="choice"><input type="radio" name="g39-pub" value="inmobiliaria"><span>Inmobiliaria</span></label>
+                </fieldset>
+                <p class="help" id="g39-pub-h">Un dueño puede pasar a inmobiliaria; una inmobiliaria no vuelve a dueño.</p>
+              </section>
+            </div>
+            <div class="bar"><div class="bar-in">
+              <p class="status" role="status">Guardando tus cambios. Esto toma unos segundos.</p>
+              <div class="bar-row">
+                <button class="btn btn-wait btn-tall grow" type="button" aria-disabled="true">Guardando…</button>
+                <span class="btn btn-off btn-tall" aria-disabled="true">Cancelar</span>
+              </div>
+            </div></div>
+          </form>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- =============================== STATE 5 · COVER AND ORDER =============================== -->
+  <section class="stage" aria-labelledby="st5">
+    <div class="stage-head">
+      <div><p class="kicker">Estado 5 de 6 · S6, 44.5</p><h2 class="stage-title" id="st5">Portada y orden</h2></div>
+      <ul class="notes">
+        <li>Después de «Hacer portada» en la Foto 3: sube al primer lugar y lleva «Portada» con el estilo de nivel 2 (fondo <b>--tint</b>, borde y texto <b>--accent</b>). Ese estilo comunica un estado; no invita a enviar.</li>
+        <li>Cada foto muestra sólo las acciones posibles: la primera no tiene «Subir» ni «Hacer portada», y la última no tiene «Bajar». Las flechas son caracteres ↑ ↓, sin iconos.</li>
+        <li><b>Propuesta para confirmar:</b> el orden y la portada, como quitar, se aplican al guardar y no al tocar. Así toda la pantalla sigue una sola regla: nada cambia en el aviso hasta Guardar.</li>
+      </ul>
+    </div>
+    <div class="frames">
+      <article aria-labelledby="p14-label">
+        <p class="frame-label" id="p14-label"><b>1440 px</b> · recorte a tamaño real: columna 520 + panel 260</p>
+        <div class="screen desk wide crop">
+          <form class="wrap" action="#" method="get" aria-label="Editar aviso · portada y orden · 1440">
+            <div class="col">
+              <section class="sec" aria-labelledby="p14-s1">
+                <div class="sec-head"><h2 class="sec-title" id="p14-s1">Fotos</h2><span class="sec-meta">3 de 6</span></div>
+                <p class="pending" role="status">Foto 3 es la nueva portada. Se aplica al guardar.</p>
+                <ol class="photos">
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero en los resultados</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1</p><p class="photo-meta">Posición 2 · era la portada</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-meta">Posición 3</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 2</span></button></div></li>
+                </ol>
+              </section>
+            </div>
+            <aside class="aside" aria-labelledby="p14-prev">
+              <div class="card">
+                <h2 class="kicker" id="p14-prev">Así se ve tu aviso</h2>
+                <span class="cover" aria-hidden="true"></span>
+                <span class="badge-owner">Dueño</span>
+                <p class="card-price">$610 <span>/mes</span></p>
+                <p class="card-title">Apartamento amoblado en La Castellana</p>
+                <p class="card-meta">Altamira · 3 hab · 128 m²</p>
+              </div>
+              <div class="actions">
+                <button class="btn btn-action btn-tall" type="button">Guardar cambios</button>
+                <a class="btn btn-neutral btn-tall" href="#p14-label">Cancelar</a>
+              </div>
+            </aside>
+          </form>
+        </div>
+      </article>
+
+      <article aria-labelledby="p39-label">
+        <p class="frame-label" id="p39-label"><b>390 px</b> · recorte: sección Fotos</p>
+        <div class="screen w390 crop">
+          <form class="wrap" action="#" method="get" aria-label="Editar aviso · portada y orden · 390">
+            <div class="col">
+              <section class="sec" aria-labelledby="p39-s1">
+                <div class="sec-head"><h2 class="sec-title" id="p39-s1">Fotos</h2><span class="sec-meta">3 de 6</span></div>
+                <p class="pending" role="status">Foto 3 es la nueva portada. Se aplica al guardar.</p>
+                <ol class="photos">
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 3 <span class="chip-sel">Portada</span></p><p class="photo-meta">Se ve primero</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 3</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 3</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 1</p><p class="photo-meta">Posición 2</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↓</span> Bajar<span class="vh"> la foto 1</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 1</span></button></div></li>
+                  <li class="photo"><span class="thumb" aria-hidden="true"></span><div><p class="photo-name">Foto 2</p><p class="photo-meta">Posición 3</p></div>
+                    <div class="photo-actions"><button class="btn btn-neutral" type="button">Hacer portada<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button"><span aria-hidden="true">↑</span> Subir<span class="vh"> la foto 2</span></button><button class="btn btn-neutral" type="button">Quitar<span class="vh"> la foto 2</span></button></div></li>
+                </ol>
+              </section>
+            </div>
+          </form>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- =============================== STATE 6 · LIVE VALIDATION =============================== -->
+  <section class="stage" aria-labelledby="st6">
+    <div class="stage-head">
+      <div><p class="kicker">Estado 6 de 6 · S3, 44.6</p><h2 class="stage-title" id="st6">Validación viva</h2></div>
+      <ul class="notes">
+        <li>Mientras escribes, un contador en <b>--meta</b> (<code>.counterLine</code>) bajo el título y la descripción. Lo que falta va en <b>--warn</b> con peso 600: muestra progreso, no castigo (§9 regla 4).</li>
+        <li>Todavía no hay error ni borde rojo: eso llega sólo si se intenta guardar (estado 2).</li>
+        <li>Guardar sigue activo. Sin JavaScript no habría cómo explicar un botón apagado; el rechazo dice qué falta.</li>
+      </ul>
+    </div>
+    <div class="frames">
+      <article aria-labelledby="v14-label">
+        <p class="frame-label" id="v14-label"><b>1440 px</b> · recorte a tamaño real: columna 520 + panel 260</p>
+        <div class="screen desk wide crop">
+          <form class="wrap" action="#" method="get" aria-label="Editar aviso · validación viva · 1440">
+            <div class="col">
+              <section class="sec" aria-labelledby="v14-s2">
+                <h2 class="sec-title" id="v14-s2">Lo básico</h2>
+                <div class="field">
+                  <label class="label" for="v14-title">Título <span class="req">✱ obligatorio</span></label>
+                  <input class="control" id="v14-title" name="title" type="text" maxlength="90" value="Apartamento amoblado en La Castellana" aria-describedby="v14-title-c">
+                  <p class="counter" id="v14-title-c" aria-live="polite">Vas 37 · máximo 90</p>
+                </div>
+                <div class="field">
+                  <label class="label" for="v14-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                  <textarea class="control area" id="v14-desc" name="description" rows="6" aria-describedby="v14-desc-c">Apartamento amoblado y alto</textarea>
+                  <p class="counter" id="v14-desc-c" aria-live="polite"><span class="short">Vas 27</span> · mínimo 120</p>
+                </div>
+                <div class="field">
+                  <label class="label" for="v14-price">Precio al mes <span class="req">✱ obligatorio</span></label>
+                  <div class="price-row"><input class="control price" id="v14-price" name="priceUsd" type="text" inputmode="numeric" value="610" aria-describedby="v14-price-h"><span class="unit">USD al mes</span></div>
+                  <p class="help" id="v14-price-h">Sólo el número, sin puntos ni decimales.</p>
+                </div>
+              </section>
+            </div>
+            <aside class="aside" aria-labelledby="v14-prev">
+              <div class="card">
+                <h2 class="kicker" id="v14-prev">Así se ve tu aviso</h2>
+                <span class="cover" aria-hidden="true"></span>
+                <span class="badge-owner">Dueño</span>
+                <p class="card-price">$610 <span>/mes</span></p>
+                <p class="card-title">Apartamento amoblado en La Castellana</p>
+                <p class="card-meta">Altamira · 3 hab · 128 m²</p>
+              </div>
+              <div class="actions">
+                <button class="btn btn-action btn-tall" type="button">Guardar cambios</button>
+                <a class="btn btn-neutral btn-tall" href="#v14-label">Cancelar</a>
+              </div>
+            </aside>
+          </form>
+        </div>
+      </article>
+
+      <article aria-labelledby="v39-label">
+        <p class="frame-label" id="v39-label"><b>390 px</b> · recorte: sección Lo básico</p>
+        <div class="screen w390 crop">
+          <form class="wrap" action="#" method="get" aria-label="Editar aviso · validación viva · 390">
+            <div class="col">
+              <section class="sec" aria-labelledby="v39-s2">
+                <h2 class="sec-title" id="v39-s2">Lo básico</h2>
+                <div class="field">
+                  <label class="label" for="v39-title">Título <span class="req">✱ obligatorio</span></label>
+                  <input class="control" id="v39-title" name="title" type="text" maxlength="90" value="Apartamento amoblado en La Castellana" aria-describedby="v39-title-c">
+                  <p class="counter" id="v39-title-c" aria-live="polite">Vas 37 · máximo 90</p>
+                </div>
+                <div class="field">
+                  <label class="label" for="v39-desc">Descripción <span class="req">✱ obligatorio</span></label>
+                  <textarea class="control area" id="v39-desc" name="description" rows="6" aria-describedby="v39-desc-c">Apartamento amoblado y alto</textarea>
+                  <p class="counter" id="v39-desc-c" aria-live="polite"><span class="short">Vas 27</span> · mínimo 120</p>
+                </div>
+                <div class="field">
+                  <label class="label" for="v39-price">Precio al mes <span class="req">✱ obligatorio</span></label>
+                  <div class="price-row"><input class="control price" id="v39-price" name="priceUsd" type="text" inputmode="numeric" value="610" aria-describedby="v39-price-h"><span class="unit">USD al mes</span></div>
+                  <p class="help" id="v39-price-h">Sólo el número, sin puntos ni decimales.</p>
+                </div>
+              </section>
+            </div>
+          </form>
+        </div>
+      </article>
+    </div>
+  </section>
+
+</main>
+<script>
+  // Theme toggle for the artboard only: swaps the palette class on <body>.
+  document.querySelectorAll('[data-theme-set]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      document.body.className = 't-' + button.getAttribute('data-theme-set');
+      document.querySelectorAll('[data-theme-set]').forEach(function (other) {
+        other.setAttribute('aria-pressed', String(other === button));
+      });
+    });
+  });
+</script>
+</body>
+</html>
