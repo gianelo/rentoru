@@ -319,6 +319,25 @@ it("un contacto inválido se muestra en su campo y no como archivo rechazado", a
   expect(container.querySelector('[role="alert"]')).toBeNull();
 });
 
+// 44.8 (L8): el error va debajo del control. En un grupo de opciones, eso es
+// después de la última, dentro del mismo fieldset.
+it("un método de contacto inválido se lee después de la última opción", async () => {
+  responder({
+    estado: "rechazado",
+    motivo: "contacto-invalido",
+    campo: "contactMethod",
+    mensaje: "Elige cómo te contactan.",
+  });
+  await pulsar("Revisar el archivo");
+
+  const opciones = container.querySelectorAll('input[name="contactMethod"]');
+  const ultima = opciones[opciones.length - 1] as Element;
+  const error = container.querySelector("#import-contact-method-error") as Element;
+  expect(error.textContent).toBe("Elige cómo te contactan.");
+  expect(ultima.compareDocumentPosition(error) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(error.closest("fieldset")).toBe(ultima.closest("fieldset"));
+});
+
 // #290: el resultado sale debajo del formulario; sin mover el foco nadie lo ve.
 it.each([
   [

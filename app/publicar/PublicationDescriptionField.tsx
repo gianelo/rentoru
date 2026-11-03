@@ -16,7 +16,6 @@ export function PublicationDescriptionField({ listing, error }: PublicationDescr
   const guidance = descriptionGuidance(text);
   return (
     <div>
-      <FieldError id="description-error" message={error} />
       <label className={styles.srOnly} htmlFor="description">
         Descripción
       </label>
@@ -30,6 +29,7 @@ export function PublicationDescriptionField({ listing, error }: PublicationDescr
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? "description-error" : undefined}
       />
+      <FieldError id="description-error" message={error} />
       {/* Un minimo se muestra como progreso, no como castigo. */}
       <div className={styles.meter}>
         <div className={styles.meterFill} style={{ inlineSize: `${guidance.progress}%` }} />

@@ -112,9 +112,11 @@ describe("la descripción guardada servida por StepPage", () => {
       if (error) {
         expect(html).toContain("Máximo 1200 caracteres. Vas 1201.");
         expect(html.indexOf('id="description-error"')).toBeGreaterThan(-1);
-        expect(html.indexOf('id="description-error"')).toBeLessThan(
+        // Después del control y antes del medidor (L8, fase 44).
+        expect(html.indexOf('id="description-error"')).toBeGreaterThan(
           html.indexOf('id="description"'),
         );
+        expect(html.indexOf('id="description-error"')).toBeLessThan(html.indexOf("1201 / "));
         expect(control).toContain('aria-invalid="true"');
         expect(control).toContain('aria-describedby="description-error"');
       } else {

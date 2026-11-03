@@ -521,10 +521,11 @@
 
 /* ---------- avisos y errores ---------- */
 
+/* Debajo del control (L8): el mismo respiro que la etiqueta deja arriba. */
 .error {
   color: var(--err);
   font-size: var(--ficha-body-fs);
-  margin: 0;
+  margin: 6px 0 0;
 }
 
 .notice {

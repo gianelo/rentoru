@@ -265,9 +265,9 @@ Order inside a field: **label → control → error → help/counter**.
 
 Founder decision, 2026-11-02, superseding the 2026-11-01 «arriba»: «es
 mejor abajo… es abajo deberia de salir el error y unificar todo». Shipped
-code still mixes both orders until the unification task lands (publish steps
-and edit put the error first; `Field.tsx`, sign-in and the publish contact
-field already put it below).
+in task 44.8: publish steps, edit, import, `Field.tsx`, sign-in and the publish
+contact field all use this order. In a radio group (`<fieldset>`) the message
+goes after the last option, inside the fieldset.
 
 1. **Error**, when present, goes directly under the control:
    `<p class="error" id="…-error">`. El mensaje dice qué hacer, no qué pasó.
@@ -276,8 +276,7 @@ field already put it below).
    - The `✱` glyph belongs to the message copy, not to the component, for
      example "✱ Mínimo 120 caracteres. Vas 24." (spec §6).
    - Publish `.error`: `--err`, `--ficha-body-fs` (→ `-desktop` ≥768),
-     margin 0. Field `.error`: `--err`, `--meta-fs`, line height 1.5.
-   - `FieldError.tsx` notes one exception: "en contacto va debajo del input".
+     margin `6px 0 0`. Field `.error`: `--err`, `--meta-fs`, line height 1.5.
 2. **Label**. Publish `.label`: block, `--control-fs`, `--meta-fw`, margin
    below `6px`. Field `.label`: `--sans`, `--meta-fs`, weight 600, line height
    1.4, `--ink`.
@@ -303,9 +302,9 @@ the 2026-11-02 decision.
 
 Source: `app/publicar/publish-steps.module.css`, `app/publicar/PublishStep.tsx`.
 
-- `.numbers` is a column with gap `12px`. Shipped code puts one `FieldError`
-  for the whole group first; under the 2026-11-02 decision a row in error keeps
-  its layout and its message goes directly under that row.
+- `.numbers` is a column with gap `12px`. A row in error keeps its layout and
+  its own message (`<name>-error`) goes directly under that row, before the
+  next row (44.8); the input gets `aria-invalid` and `.controlInvalid`.
 - Each `.numberRow` is flex, `align-items: center`,
   `justify-content: space-between`, gap `12px`: the label on the left, the
   input on the right.

@@ -114,7 +114,6 @@ export function PublicationZoneReference({
 }) {
   return (
     <div>
-      <FieldError id="reference-error" message={error} />
       <label className={styles.label} htmlFor="reference">
         Referencia
       </label>
@@ -129,6 +128,7 @@ export function PublicationZoneReference({
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? "reference-error" : undefined}
       />
+      <FieldError id="reference-error" message={error} />
       <p className={styles.help}>Opcional. No se publica la dirección.</p>
     </div>
   );

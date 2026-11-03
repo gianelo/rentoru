@@ -102,7 +102,9 @@ describe("el título guardado servido por la ruta real", () => {
     if (error) {
       expect(html).toContain("Máximo 90 caracteres. Vas 91.");
       expect(html.indexOf('id="title-error"')).toBeGreaterThan(-1);
-      expect(html.indexOf('id="title-error"')).toBeLessThan(html.indexOf('id="title"'));
+      // Después del control y antes del contador (L8, fase 44).
+      expect(html.indexOf('id="title-error"')).toBeGreaterThan(html.indexOf('id="title"'));
+      expect(html.indexOf('id="title-error"')).toBeLessThan(html.indexOf("Sin mayúsculas"));
       expect(control).toContain('aria-invalid="true"');
       expect(control).toContain('aria-describedby="title-error"');
     } else {

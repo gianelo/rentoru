@@ -17,7 +17,7 @@ import type {
  * archivo de pruebas: lo único que se afirmaba era que la tabla NOMBRA un
  * campo, nunca que el mensaje aterrice bajo ese control. O sea que la razón que
  * la 18.22 cita —«el mensaje va ANTES del campo que lo produjo»— estaba escrita
- * en un comentario y en ninguna aserción.
+ * en un comentario y en ninguna aserción. Desde la fase 44 (L8) va DESPUÉS.
  *
  * Las negativas prueban el mecanismo compartido; la matriz de copia recorre
  * los nueve componentes en SSR, no nueve rutas HTTP autenticadas.
@@ -180,18 +180,20 @@ describe("el contador de un paso cuenta lo que el borrador acaba de guardar (18.
 
 describe("un paso de publicar sirve la negativa al lado de su campo (18.22)", () => {
   /**
-   * El mensaje ANTES del control, con su `id`, y el control anunciado. La razón
+   * El mensaje DESPUÉS del control (L8, fase 44), con su `id`, y el control anunciado. La razón
    * está escrita en `violation-copy.ts` y no es estética: «un borde rojo es
    * invisible para quien no distingue colores y para el modo de alto
    * contraste».
    */
-  it("pone el mensaje antes del control que lo produjo y lo anuncia", () => {
+  it("pone el mensaje después del control que lo produjo y lo anuncia", () => {
     const html = dibujar("precio", ["priceUsd.invalid"]);
 
     expect(html).toContain('id="priceUsd-error"');
     expect(html).toContain('aria-describedby="priceUsd-error"');
     expect(html).toContain('aria-invalid="true"');
-    expect(html.indexOf("Solo el número, en dólares")).toBeLessThan(html.indexOf('id="priceUsd"'));
+    expect(html.indexOf("Solo el número, en dólares")).toBeGreaterThan(
+      html.indexOf('id="priceUsd"'),
+    );
   });
 
   /**
@@ -220,14 +222,14 @@ describe("un paso de publicar sirve la negativa al lado de su campo (18.22)", ()
    * (`reference.tooLong`) pero ningún lugar donde leerse: sin esto, quien pega
    * un párrafo entero recibe un botón que no avanza y un campo sin marca.
    */
-  it("la negativa de la seña se lee antes del campo que la produjo", () => {
+  it("la negativa de la seña se lee después del campo y antes de su ayuda", () => {
     const html = dibujar("zona", ["reference.tooLong"]);
+    const mensaje = html.indexOf("Máximo 120 caracteres para la referencia");
 
     expect(html).toContain('id="reference-error"');
     expect(html).toContain('aria-describedby="reference-error"');
-    expect(html.indexOf("Máximo 120 caracteres para la referencia")).toBeLessThan(
-      html.indexOf('id="reference"'),
-    );
+    expect(mensaje).toBeGreaterThan(html.indexOf('id="reference"'));
+    expect(mensaje).toBeLessThan(html.indexOf("No se publica la dirección"));
   });
 
   /**
@@ -235,10 +237,12 @@ describe("un paso de publicar sirve la negativa al lado de su campo (18.22)", ()
    * seña son dos controles del mismo paso: un mensaje de zona colgado del campo
    * de la seña diría que la seña está mal.
    */
-  it("la negativa de la zona no marca el campo de la seña", () => {
-    const html = dibujar("zona", ["zoneId.required"]);
+  it("la negativa de la zona va después de sus opciones y no marca el campo de la seña", () => {
+    const conZona = { ...BORRADOR, listing: { ...BORRADOR.listing, zoneId: "z-1" } };
+    const html = dibujar("zona", ["zoneId.required"], conZona as PublicationDraft);
 
     expect(html).toContain('id="zoneId-error"');
+    expect(html.indexOf('id="zoneId-error"')).toBeGreaterThan(html.indexOf('name="zoneId"'));
     expect(html).not.toContain('id="reference-error"');
     expect(html).not.toContain('aria-describedby="reference-error"');
   });
