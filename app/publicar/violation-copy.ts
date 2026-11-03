@@ -1,5 +1,8 @@
 import type { ContactFeedback } from "../../src/modules/listing-publication/domain/contact-feedback";
-import type { ListingEditViolation } from "../../src/modules/listing-publication/domain/listing-edit";
+import type {
+  ListingEditViolation,
+  PhotosToRemoveViolation,
+} from "../../src/modules/listing-publication/domain/listing-edit";
 import {
   MAX_DESCRIPTION_CHARACTERS,
   MAX_PHOTOS_PER_LISTING,
@@ -260,6 +263,17 @@ export const PUBLISHER_TYPE_ONE_WAY_STRESS = "nunca al revés";
 export const PUBLISHER_TYPE_ONE_WAY_NOTICE = `${PUBLISHER_TYPE_ONE_WAY_LEAD}${PUBLISHER_TYPE_ONE_WAY_STRESS}.`;
 
 /**
+ * Fase 44 (44.4) — las fotos marcadas al guardar. **Un `Record` sobre la
+ * unión**, igual que la tabla de publicar: un código nuevo deja de compilar
+ * hasta tener frase. No reusa `PHOTO_REMOVAL_REFUSAL_COPY`: aquélla habla de
+ * una foto que se quita al tocarla; ésta, de un lote que espera a Guardar.
+ */
+const PHOTOS_TO_REMOVE_COPY: Record<PhotosToRemoveViolation, string> = {
+  "photosToRemove.notFound": "Esa foto ya no está. Revisa y vuelve a guardar.",
+  "photosToRemove.lastPhoto": "No puedes quitar todas las fotos: el aviso necesita al menos una.",
+};
+
+/**
  * El español de una edición: la MISMA tabla de arriba para los códigos
  * compartidos, más el único que es propio de este camino.
  *
@@ -277,6 +291,10 @@ export function listingEditViolationMessage(
   // sería mentir sobre la mitad de la regla que el fundador abrió.
   if (violation === "publisherType.immutable") {
     return `Una inmobiliaria no puede volver a declararse dueño. ${PUBLISHER_TYPE_ONE_WAY_NOTICE}`;
+  }
+
+  if (Object.hasOwn(PHOTOS_TO_REMOVE_COPY, violation)) {
+    return PHOTOS_TO_REMOVE_COPY[violation as PhotosToRemoveViolation];
   }
 
   // **`string` y no la unión, y el `??` no es un descuido.** Los códigos vuelven

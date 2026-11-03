@@ -36,6 +36,23 @@ describe("el campo que produjo cada negativa (18.22)", () => {
   });
 });
 
+/**
+ * Fase 44 (44.4) — las negativas de quitar fotos al guardar se leen debajo de
+ * la lista de fotos (L8), no en el bloque de arriba: las marcas sí viajan en
+ * el pedido de edición.
+ */
+describe("las fotos marcadas para quitar (44.4)", () => {
+  it("las dos negativas pertenecen a la lista de fotos marcadas, y se colocan ahí", () => {
+    const placed = placeListingEditViolations([
+      "photosToRemove.notFound",
+      "photosToRemove.lastPhoto",
+    ]);
+
+    expect(placed.byField.get("photosToRemove")).toBe("photosToRemove.notFound");
+    expect(placed.elsewhere).toEqual([]);
+  });
+});
+
 describe("dónde va cada negativa de una edición (18.22)", () => {
   /**
    * Los doce campos que un pedido de edición puede traer —los once que escribe

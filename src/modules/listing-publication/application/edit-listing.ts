@@ -1,11 +1,16 @@
 import type { SessionPort } from "../../identity/application/ports/session.port";
 import { requireAuthenticatedSession } from "../../identity/application/require-authenticated-session";
+import { planPhotosRemoval } from "../domain/draft-photo-actions";
 import {
   type ListingEdit,
   type ListingEditViolation,
   planListingEdit,
 } from "../domain/listing-edit";
+import type { CuratedZone } from "../domain/publishable-listing";
 import type { EditableListing, ListingEditPort } from "./ports/listing-edit.port";
+import type { ListingEditWithPhotosPort } from "./ports/listing-edit-with-photos.port";
+import type { ListingPhotoOrderPort } from "./ports/listing-photo-set.port";
+import type { PhotoStoragePort } from "./ports/photo-storage.port";
 import type { ZoneCataloguePort } from "./ports/zone-catalogue.port";
 
 /**
@@ -81,16 +86,33 @@ export async function loadListingForEdit(
 export interface EditListingRequest {
   readonly listingId: string;
   readonly edit: ListingEdit;
+  /**
+   * Fase 44 (44.4): las fotos marcadas «Quitar al guardar». Vacío o ausente
+   * es el camino de siempre: un solo `UPDATE`, sin leer fotos ni tocar R2.
+   */
+  readonly photoIdsToRemove?: readonly string[];
 }
 
 export interface EditListingDependencies {
   readonly sessionPort: SessionPort;
   readonly zones: ZoneCataloguePort;
   readonly listings: ListingEditPort;
+  /**
+   * Sólo hace falta cuando hay marcas. Opcional para que quien edita sin
+   * marcar no tenga que armar R2; un pedido con marcas y sin esto se niega.
+   */
+  readonly photoRemoval?: {
+    readonly order: ListingPhotoOrderPort;
+    readonly listings: ListingEditWithPhotosPort;
+    /** Sólo `remove`: guardar no firma subidas ni lee objetos. */
+    readonly storage: Pick<PhotoStoragePort, "remove">;
+  };
 }
 
 export interface EditListingResult {
   readonly listingId: string;
+  /** La foto que quedó de portada cuando se quitó la anterior; `null` si no cambió. */
+  readonly coverChangedTo: string | null;
 }
 
 export async function editListing(
@@ -119,6 +141,11 @@ export async function editListing(
 
   const curatedZones = await zones.listZonesForCity(current.cityId);
 
+  const marked = request.photoIdsToRemove ?? [];
+  if (marked.length > 0) {
+    return editRemovingPhotos(request, current, curatedZones, marked, dependencies);
+  }
+
   const plan = planListingEdit(current, curatedZones, request.edit);
   if (!plan.ok) {
     throw new EditListingRejectedError(plan.violations);
@@ -133,5 +160,68 @@ export async function editListing(
     throw new EditListingNotFoundError(request.listingId);
   }
 
-  return { listingId: current.id };
+  return { listingId: current.id, coverChangedTo: null };
+}
+
+/**
+ * Fase 44 (44.4, G3/D1) — **la edición y las fotos marcadas, planificadas
+ * juntas ANTES de escribir y escritas juntas.** Ninguna regla vive acá: el
+ * piso y la portada los contesta `planPhotosRemoval`, los campos
+ * `planListingEdit` —que ve las fotos que QUEDAN, así el conteo que valida es
+ * el que va a tener el aviso—.
+ */
+async function editRemovingPhotos(
+  request: EditListingRequest,
+  current: EditableListing,
+  curatedZones: readonly CuratedZone[],
+  marked: readonly string[],
+  { photoRemoval }: EditListingDependencies,
+): Promise<EditListingResult> {
+  if (!photoRemoval) {
+    // Falla cerrado (AGENTS.md §7): guardar los campos y callar las marcas
+    // sería decirle «guardado» a quien pidió quitar una foto que sigue ahí.
+    throw new Error("edit-listing: photoRemoval dependencies are required to remove photos.");
+  }
+
+  const ids = await photoRemoval.order.listPhotoIdsInOrder(current.id);
+  const removal = planPhotosRemoval(ids, marked);
+  const plan = planListingEdit(
+    { ...current, photoCount: removal.ok ? removal.ids.length : current.photoCount },
+    curatedZones,
+    request.edit,
+  );
+
+  const violations: ListingEditViolation[] = removal.ok
+    ? []
+    : [`photosToRemove.${removal.refusal}`];
+  if (!plan.ok) violations.push(...plan.violations);
+  if (!removal.ok || !plan.ok) {
+    throw new EditListingRejectedError(violations);
+  }
+
+  const outcome = await photoRemoval.listings.applyEditRemovingPhotos(
+    current.id,
+    current.publisherId,
+    plan.write,
+    removal.removed,
+  );
+  if (!outcome.applied) {
+    // Nada se escribió: la transacción se revirtió entera. Una marcada que
+    // otra pestaña ya quitó es lo que el fundador pidió rechazar (L11); un
+    // aviso que dejó de ser editable se contesta como el inexistente.
+    if (outcome.reason === "photos") {
+      throw new EditListingRejectedError(["photosToRemove.notFound"]);
+    }
+    throw new EditListingNotFoundError(current.id);
+  }
+
+  // **Después del commit, y gritando** — el mismo orden y el mismo porqué que
+  // `detachPhotoFromListing` (D12): con R2 primero, una escritura revertida
+  // dejaría un aviso vivo apuntando a fotos borradas; así, lo peor es un
+  // huérfano. Sin `try`: tragarse la falla es el silencio de la 18.23.
+  for (const key of outcome.derivativeKeys) {
+    await photoRemoval.storage.remove(key);
+  }
+
+  return { listingId: current.id, coverChangedTo: removal.coverChangedTo };
 }

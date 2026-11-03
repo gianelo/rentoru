@@ -4,6 +4,7 @@ import {
   offersDragReorder,
   photoActionsFor,
   planPhotoRemoval,
+  planPhotosRemoval,
   promoteToCover,
   reorderPhotoTo,
 } from "./draft-photo-actions";
@@ -66,6 +67,38 @@ describe("quitar una foto del aviso", () => {
 
   it("quitar una foto que no está en la lista se rechaza en vez de devolver la lista entera", () => {
     expect(planPhotoRemoval(CUATRO, "z")).toEqual({ ok: false, refusal: "notFound" });
+  });
+});
+
+/**
+ * Fase 44 (44.4) — **las marcadas al guardar, todas juntas.** Una sola
+ * respuesta para el lote: o se quitan todas o no se quita ninguna (G3).
+ */
+describe("quitar varias fotos al guardar", () => {
+  it("una marcada que no está en el aviso rechaza el lote entero, aunque las demás estén", () => {
+    expect(planPhotosRemoval(CUATRO, ["b", "z"])).toEqual({ ok: false, refusal: "notFound" });
+  });
+
+  it("marcar las dos de un aviso de dos se rechaza: el piso es para el lote, no para cada una", () => {
+    expect(planPhotosRemoval(["a", "b"], ["a", "b"])).toEqual({ ok: false, refusal: "lastPhoto" });
+  });
+
+  it("una marca repetida cuenta una vez, y no tumba el piso que la foto sola respeta", () => {
+    expect(planPhotosRemoval(["a", "b"], ["b", "b"])).toEqual({
+      ok: true,
+      ids: ["a"],
+      removed: ["b"],
+      coverChangedTo: null,
+    });
+  });
+
+  it("quitar la portada entre otras asciende a la primera que queda, en el orden del aviso", () => {
+    expect(planPhotosRemoval(CUATRO, ["b", "a"])).toEqual({
+      ok: true,
+      ids: ["c", "d"],
+      removed: ["a", "b"],
+      coverChangedTo: "c",
+    });
   });
 });
 
