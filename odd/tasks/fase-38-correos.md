@@ -56,5 +56,5 @@ Base `a5575a1`; una tarea por PR ≤400 líneas a `dev`, en orden, con TDD sobre
 - L11: «para hacer esa prueba no puedes enviar un email de prueba a gianbarboza11@gmail.com y listo?» Se enviaron los cinco correos de la 38.2 (asunto con «[Prueba 38.2]») con los adaptadores reales y las claves del `.env` local, sin exponerlas: Resend aceptó los cinco. Esto fija G3 para las pruebas reales: entorno local del fundador, bandeja `gianbarboza11@gmail.com`.
 - L12: aceptación del fundador tras ver los cinco correos en Gmail: «si todos llegaron sigamos». Publicada en #507 a `dev`; merge pendiente.
 - L13: #507 (38.2) fusionado, dev `a6990c8`. 38.3 en el worktree `rentoru-phase38-task-38-3`, rama `feat/correo-entrar-bloques`; correo real «[Prueba 38.3] Tu enlace para entrar a Rentoru» enviado a la bandeja del fundador, Resend lo aceptó. Pendiente su revisión.
-- L14: aceptación del fundador del correo real de la 38.3: «en gmail se ve bien.»
+- L14: aceptación del fundador del correo real de la 38.3: «en gmail se ve bien.» Publicada en #508 a `dev`; merge pendiente.
 - L10: excepción de tamaño para la 38.2 (≈722 líneas, ≈260 de pruebas): «Un solo PR con excepción». El envío compartido a Resend sale en un corte propio.
