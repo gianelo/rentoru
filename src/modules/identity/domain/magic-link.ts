@@ -8,26 +8,45 @@
  * idea que `LISTING_LIFETIME_DAYS` en `listing-lifecycle/domain/expiry.ts`.
  */
 
+import {
+  action,
+  fact,
+  fallback,
+  footer,
+  heading,
+  MAIL_BRAND_LINE,
+  type MailContent,
+  paragraph,
+} from "../../../shared/email/mail-content";
+
 /** F17: el enlace vale 15 minutos. El default de Auth.js es 24 horas. */
 export const MAGIC_LINK_MAX_AGE_SECONDS = 15 * 60;
 
-export interface MagicLinkEmail {
-  readonly subject: string;
-  readonly body: string;
-}
-
 /**
- * Lo que dice el correo. Nada de HTML acá — igual que `composeNotice` en
- * listing-lifecycle, la redacción es del dominio y la presentación es del
- * adaptador (`resend-mailer.ts`).
+ * Lo que dice el correo, en los bloques de la lámina v1 (38.3), con los
+ * textos cortos que pidió el fundador (L5). Nada de HTML acá: el HTML y el
+ * texto plano los dibuja `src/shared/email/render-mail.ts`.
+ *
+ * **La vigencia llega como argumento**: quien llama pasa la misma
+ * `MAGIC_LINK_MAX_AGE_SECONDS` que le da a Auth.js, así el correo no puede
+ * prometer otro plazo que el que de verdad se aplica.
  */
-export function composeMagicLinkEmail(url: string): MagicLinkEmail {
+export function composeMagicLinkEmail(url: string, maxAgeSeconds: number): MailContent {
   return {
     subject: "Tu enlace para entrar a Rentoru",
-    body:
-      `Entra con este enlace:\n${url}\n\n` +
-      "Vale por 15 minutos y se puede usar una sola vez. " +
-      "Si no lo pediste, ignora este correo.",
+    blocks: [
+      heading("Entra a Rentoru"),
+      paragraph("Toca el botón para entrar. No necesitas contraseña."),
+      action("Entrar a Rentoru", url),
+      fallback("O copia este enlace en tu navegador:", url),
+      fact({
+        label: "Vale por",
+        value: `${maxAgeSeconds / 60} minutos`,
+        note: "Se usa una sola vez.",
+      }),
+      paragraph("¿No pediste entrar? Ignora este correo."),
+      footer("Te escribimos porque pediste entrar a Rentoru con este correo.", MAIL_BRAND_LINE),
+    ],
   };
 }
 

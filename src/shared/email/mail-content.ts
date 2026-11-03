@@ -25,6 +25,9 @@ export interface MailContent {
   readonly blocks: readonly MailBlock[];
 }
 
+/** La línea de marca con que cierra el pie de cada correo (lámina v1). */
+export const MAIL_BRAND_LINE = "Rentoru · alquileres en Distrito Capital y Maracaibo";
+
 export const heading = (text: string): MailBlock => ({ kind: "heading", text });
 export const paragraph = (text: string): MailBlock => ({ kind: "paragraph", text });
 export const action = (label: string, href: string): MailBlock => ({ kind: "action", label, href });

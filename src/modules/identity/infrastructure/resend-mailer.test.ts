@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { expectedMailHtml, P } from "../../../shared/email/mail-html.fixture";
+import { action, paragraph } from "../../../shared/email/mail-content";
+import { expectedMailHtml, FIXTURE_FONTS, P } from "../../../shared/email/mail-html.fixture";
 import { buildEmailProvider } from "./email-provider";
 import {
   AuthMailerNotConfiguredError,
@@ -21,10 +22,10 @@ function fakeResend(result: { error: { message: string } | null }) {
   return { send, client: { emails: { send } } as never };
 }
 
+const LINK = "https://rentoru.com/api/auth/callback/email?token=x";
 const MESSAGE = {
   to: "tenant@ejemplo.com",
-  subject: "Tu enlace para entrar a Rentoru",
-  body: "Entra con este enlace:\nhttps://rentoru.com/api/auth/callback/email?token=x",
+  content: { subject: "Tu enlace para entrar a Rentoru", blocks: [action("Entrar", LINK)] },
 };
 
 describe("configuración", () => {
@@ -66,7 +67,7 @@ describe("readAuthMailerConfig", () => {
 });
 
 describe("el envío", () => {
-  it("manda el asunto y el cuerpo que compuso el dominio, sin reescribirlos", async () => {
+  it("manda el asunto y el texto plano de los bloques que compuso el dominio", async () => {
     const { send, client } = fakeResend({ error: null });
 
     await new ResendMailer("re_loquesea", "ingresa@rentoru.com", client).send(MESSAGE);
@@ -75,8 +76,8 @@ describe("el envío", () => {
       expect.objectContaining({
         from: "ingresa@rentoru.com",
         to: MESSAGE.to,
-        subject: MESSAGE.subject,
-        text: MESSAGE.body,
+        subject: MESSAGE.content.subject,
+        text: `Entrar:\n${LINK}`,
       }),
     );
   });
@@ -90,10 +91,10 @@ describe("el envío", () => {
   });
 });
 
-describe("el correo final que recibe Resend (35.10, diseño de la 38.2)", () => {
+describe("el correo final que recibe Resend (lámina v1, 38.3)", () => {
   // Proveedor → composeMagicLinkEmail → ResendMailer: las tres salidas
   // compuestas, con un enlace sintético que el HTML tiene que escapar.
-  it("sale en español neutro, con el enlace intacto en texto y escapado en HTML", async () => {
+  it("sale con botón, respaldo entero y vigencia; el texto lleva el enlace una vez", async () => {
     const { send, client } = fakeResend({ error: null });
     const url = 'https://rentoru.test/api/auth/callback/email?token=a"b&email=<c>';
     const provider = buildEmailProvider({
@@ -106,15 +107,42 @@ describe("el correo final que recibe Resend (35.10, diseño de la 38.2)", () => 
     const payload = send.mock.calls[0]?.[0];
     expect(payload.subject).toBe("Tu enlace para entrar a Rentoru");
     expect(payload.text).toBe(
-      `Entra con este enlace:\n${url}\n\n` +
-        "Vale por 15 minutos y se puede usar una sola vez. Si no lo pediste, ignora este correo.",
+      "Entra a Rentoru\n\n" +
+        "Toca el botón para entrar. No necesitas contraseña.\n\n" +
+        `Entrar a Rentoru:\n${url}\n\n` +
+        "Vale por: 15 minutos\nSe usa una sola vez.\n\n" +
+        "¿No pediste entrar? Ignora este correo.\n\n" +
+        "Te escribimos porque pediste entrar a Rentoru con este correo.\n" +
+        "Rentoru · alquileres en Distrito Capital y Maracaibo",
     );
+    const { SANS, MONO, TABLE } = FIXTURE_FONTS;
+    const u = "https://rentoru.test/api/auth/callback/email?token=a&quot;b&amp;email=&lt;c&gt;";
+    const box = `<table ${TABLE} width="100%" style="margin:0 0 16px"><tr>`;
+    const line = (text: string) => `<p style="margin:0 0 4px">${text}</p>`;
     expect(payload.html).toBe(
       expectedMailHtml(
         "Tu enlace para entrar a Rentoru",
-        `${P}Entra con este enlace:<br />` +
-          "https://rentoru.test/api/auth/callback/email?token=a&quot;b&amp;email=&lt;c&gt;</p>" +
-          `${P}Vale por 15 minutos y se puede usar una sola vez. Si no lo pediste, ignora este correo.</p>`,
+        '<h1 style="margin:0 0 16px;font-size:20px;font-weight:700;line-height:1.25;color:#1e2022">' +
+          "Entra a Rentoru</h1>" +
+          `${P}Toca el botón para entrar. No necesitas contraseña.</p>` +
+          `${box}<td align="center" bgcolor="#272343" style="border-radius:12px;background-color:#272343">` +
+          `<a href="${u}" style="display:block;padding:0 24px;line-height:46px;font-family:${SANS};` +
+          'font-size:15px;font-weight:600;color:#ffffff;text-decoration:none">Entrar a Rentoru</a>' +
+          "</td></tr></table>" +
+          '<p style="margin:0 0 16px;font-size:12px;line-height:1.6;color:#52616b">' +
+          `O copia este enlace en tu navegador:<br /><a href="${u}" ` +
+          `style="font-family:${MONO};color:#272343;word-break:break-all">${u}</a></p>` +
+          `${box}<td bgcolor="#f0f5f9" style="padding:16px;border-radius:12px;` +
+          `background-color:#f0f5f9;font-family:${SANS}">` +
+          `<p style="margin:0 0 4px;font-family:${MONO};font-size:12px;font-weight:600;color:#52616b">` +
+          'Vale por</p><p style="margin:0;font-size:17px;font-weight:600;color:#1e2022">15 minutos</p>' +
+          '<p style="margin:4px 0 0;color:#52616b">Se usa una sola vez.</p></td></tr></table>' +
+          `${P}¿No pediste entrar? Ignora este correo.</p>`,
+        '<tr><td style="padding:16px 16px 12px;border-top:1px solid #e1e4e6;' +
+          `font-family:${SANS};font-size:12px;line-height:1.6;color:#52616b">` +
+          line("Te escribimos porque pediste entrar a Rentoru con este correo.") +
+          line("Rentoru · alquileres en Distrito Capital y Maracaibo") +
+          "</td></tr>",
       ),
     );
   });
@@ -125,7 +153,7 @@ describe("el HTML, que es presentación y no redacción", () => {
     const { send, client } = fakeResend({ error: null });
     await new ResendMailer("re_loquesea", "ingresa@rentoru.com", client).send({
       ...MESSAGE,
-      body: '<script>alert("x")</script>',
+      content: { subject: "s", blocks: [paragraph('<script>alert("x")</script>')] },
     });
     const html: string = send.mock.calls[0]?.[0].html;
 

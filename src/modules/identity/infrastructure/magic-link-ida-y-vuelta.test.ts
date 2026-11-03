@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import NextAuth from "next-auth";
 import type { Adapter } from "next-auth/adapters";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { renderMailText } from "../../../shared/email/render-mail";
 import { buildEmailProvider } from "./email-provider";
 import { signInRedirect } from "./redirect-callback";
 
@@ -71,7 +72,7 @@ function puerta({ conLaRegla = true } = {}) {
           async send(message) {
             // Se lee del cuerpo redactado, no de un parámetro interceptado: si
             // el correo dejara de llevar el enlace, esto se queda sin nada.
-            enviado.url = /https?:\/\/\S+/.exec(message.body)?.[0];
+            enviado.url = /https?:\/\/\S+/.exec(renderMailText(message.content))?.[0];
           },
         }),
       }),
