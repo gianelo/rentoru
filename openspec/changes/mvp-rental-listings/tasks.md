@@ -3144,7 +3144,7 @@ Plan: `odd/tasks/fase-44-editar-aviso.md`. Sale de [#290](https://github.com/gia
 - [ ] 44.5 Portada y orden de fotos en editar.
 - [ ] 44.6 Validación viva de título y descripción.
 - [ ] 44.7 Aceptación integrada.
-- [x] 44.8 Errores debajo del campo en todo el sitio: publicar, editar e importar al orden etiqueta, control, error, ayuda; una negativa por fila numérica. Evidencia: 15 pruebas de orden servido en RED y luego GREEN, nueva prueba de fila numérica y de importar, 859/859, 2 mutaciones, typecheck, biome, `lint:tokens` y build. Aceptado por el fundador (2026-11-02). Verificado localmente; publicación según su PR.
+- [x] 44.8 Errores debajo del campo en todo el sitio: publicar, editar e importar al orden etiqueta, control, error, ayuda; una negativa por fila numérica. Evidencia: 15 pruebas de orden servido en RED y luego GREEN, nueva prueba de fila numérica y de importar, 859/859, 2 mutaciones, typecheck, biome, `lint:tokens` y build. Aceptado por el fundador (2026-11-02). Publicado en el PR #506 (pendiente de merge).
 
 ## Fase 45 — Importar cartera
 
