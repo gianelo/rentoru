@@ -92,10 +92,6 @@ export function EditarForm({
       )}
 
       <div>
-        {/* `FieldError` es el MISMO de los nueve pasos, movido a su
-            archivo en vez de copiado: dos maneras de anunciar un mismo
-            tipo de error es como un producto se contradice. */}
-        <FieldError id="title-error" message={mensaje("title")} />
         <label className={styles.label} htmlFor="title">
           {etiqueta("title")}
         </label>
@@ -108,10 +104,14 @@ export function EditarForm({
           maxLength={MAX_TITLE_CHARACTERS * 2}
           {...invalido("title")}
         />
+        {/* `FieldError` es el MISMO de los nueve pasos, movido a su
+            archivo en vez de copiado: dos maneras de anunciar un mismo
+            tipo de error es como un producto se contradice. Va debajo del
+            control y antes de la ayuda (L8). */}
+        <FieldError id="title-error" message={mensaje("title")} />
       </div>
 
       <div>
-        <FieldError id="description-error" message={mensaje("description")} />
         <label className={styles.label} htmlFor="description">
           {etiqueta("description")}
         </label>
@@ -123,11 +123,11 @@ export function EditarForm({
           defaultValue={valores?.description ?? aviso.description}
           {...invalido("description")}
         />
+        <FieldError id="description-error" message={mensaje("description")} />
         <p className={styles.help}>Mínimo {MIN_DESCRIPTION_CHARACTERS} caracteres.</p>
       </div>
 
       <div>
-        <FieldError id="priceUsd-error" message={mensaje("priceUsd")} />
         <label className={styles.label} htmlFor="priceUsd">
           {etiqueta("priceUsd")}
         </label>
@@ -142,6 +142,7 @@ export function EditarForm({
           defaultValue={valores?.priceUsd ?? aviso.priceUsd}
           {...invalido("priceUsd")}
         />
+        <FieldError id="priceUsd-error" message={mensaje("priceUsd")} />
       </div>
 
       <div className={styles.numbers}>
@@ -155,20 +156,23 @@ export function EditarForm({
             ["areaM2", aviso.areaM2],
           ] as const
         ).map(([name, value]) => (
-          <div key={name} className={styles.numberRow}>
+          // La fila no se rompe y su mensaje va debajo de ella (L8).
+          <div key={name}>
+            <div className={styles.numberRow}>
+              <label className={styles.label} htmlFor={name}>
+                {etiqueta(name)}
+              </label>
+              <input
+                id={name}
+                name={name}
+                type="text"
+                inputMode="numeric"
+                className={`${styles.control} ${styles.numberControl}${claseControl(name)}`}
+                defaultValue={valores?.[name] ?? value}
+                {...invalido(name)}
+              />
+            </div>
             <FieldError id={`${name}-error`} message={mensaje(name)} />
-            <label className={styles.label} htmlFor={name}>
-              {etiqueta(name)}
-            </label>
-            <input
-              id={name}
-              name={name}
-              type="text"
-              inputMode="numeric"
-              className={`${styles.control} ${styles.numberControl}${claseControl(name)}`}
-              defaultValue={valores?.[name] ?? value}
-              {...invalido(name)}
-            />
           </div>
         ))}
       </div>
@@ -184,7 +188,6 @@ export function EditarForm({
         className={styles.choices}
         aria-describedby={negativas.byField.has("propertyType") ? "propertyType-error" : undefined}
       >
-        <FieldError id="propertyType-error" message={mensaje("propertyType")} />
         <legend className={styles.legend}>{etiqueta("propertyType")}</legend>
         {Object.entries(PROPERTY_TYPE_LABEL).map(([value, label]) => (
           <label key={value} className={styles.choice}>
@@ -198,10 +201,10 @@ export function EditarForm({
             <span>{label}</span>
           </label>
         ))}
+        <FieldError id="propertyType-error" message={mensaje("propertyType")} />
       </fieldset>
 
       <div>
-        <FieldError id="reference-error" message={mensaje("reference")} />
         <label className={styles.label} htmlFor="reference">
           {etiqueta("reference")}
         </label>
@@ -213,6 +216,7 @@ export function EditarForm({
           defaultValue={valores?.reference ?? aviso.reference ?? ""}
           {...invalido("reference")}
         />
+        <FieldError id="reference-error" message={mensaje("reference")} />
         {/* Y se dice que se puede vaciar: es el único campo del aviso
             donde borrar el contenido es una corrección válida, y sin la
             frase nadie sabría que dejarlo en blanco la saca. */}
@@ -262,7 +266,6 @@ export function EditarForm({
           negativas.byField.has("contactMethod") ? "contactMethod-error" : undefined
         }
       >
-        <FieldError id="contactMethod-error" message={mensaje("contactMethod")} />
         <legend className={styles.legend}>{etiqueta("contactMethod")}</legend>
         {(["whatsapp", "telefono", "email"] as const).map((value) => (
           <label key={value} className={styles.choice}>
@@ -276,10 +279,10 @@ export function EditarForm({
             <span>{CONTACT_METHOD_LABEL[value]}</span>
           </label>
         ))}
+        <FieldError id="contactMethod-error" message={mensaje("contactMethod")} />
       </fieldset>
 
       <div>
-        <FieldError id="contactValue-error" message={mensaje("contactValue")} />
         <label className={styles.label} htmlFor="contactValue">
           {etiqueta("contactValue")}
         </label>
@@ -291,6 +294,7 @@ export function EditarForm({
           defaultValue={valores?.contactValue ?? aviso.contactValue}
           {...invalido("contactValue")}
         />
+        <FieldError id="contactValue-error" message={mensaje("contactValue")} />
         {/* «El que reveló, reveló. Si entra de nuevo que vea el
             contacto nuevo» (fundador, 2026-08-29). La evidencia del
             revelado no guarda el valor, así que cambiarlo no reescribe
@@ -317,7 +321,6 @@ export function EditarForm({
           negativas.byField.has("publisherType") ? "publisherType-error" : undefined
         }
       >
-        <FieldError id="publisherType-error" message={mensaje("publisherType")} />
         <legend className={styles.legend}>{etiqueta("publisherType")}</legend>
         {publisherTypes.length === 0 ? (
           <p className={styles.help}>{PUBLISHER_TYPE_LABEL[aviso.publisherType]}</p>
@@ -335,6 +338,7 @@ export function EditarForm({
             </label>
           ))
         )}
+        <FieldError id="publisherType-error" message={mensaje("publisherType")} />
         {/* **Antes de guardar, no después en una negativa.** Una vez
             guardado `broker` la guarda cierra la vuelta, así que decirlo
             recién en el rechazo llegaría cuando ya no evita nada. */}

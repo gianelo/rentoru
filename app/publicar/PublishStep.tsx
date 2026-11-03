@@ -412,7 +412,6 @@ function StepFields(props: FieldsProps) {
       return (
         <fieldset className={styles.choices}>
           <legend className={styles.srOnly}>Tipo de propiedad</legend>
-          <FieldError id="propertyType-error" message={errors.get("propertyType")} />
           {/* Sin `defaultChecked` en ninguna, y no puede agregarse: el dominio
               rechaza un tipo ausente y no aplica default, para que un anexo no
               se publique como apartamento por un olvido. */}
@@ -436,14 +435,14 @@ function StepFields(props: FieldsProps) {
               <span>{label}</span>
             </label>
           ))}
+          {/* Después de la última opción: etiqueta, control, error (L8). */}
+          <FieldError id="propertyType-error" message={errors.get("propertyType")} />
         </fieldset>
       );
 
     case "zona":
       return (
         <>
-          <FieldError id="zoneId-error" message={errors.get("zoneId") ?? errors.get("cityId")} />
-
           <PublicationZoneResults
             results={props.zoneResults ?? []}
             selected={
@@ -452,6 +451,7 @@ function StepFields(props: FieldsProps) {
                 : null
             }
           />
+          <FieldError id="zoneId-error" message={errors.get("zoneId") ?? errors.get("cityId")} />
 
           {/* No es decorativa. Con lista cerrada, una zona faltante deja al
               dueño trabado, y de paso indica dónde hay demanda. */}
@@ -472,7 +472,6 @@ function StepFields(props: FieldsProps) {
     case "precio":
       return (
         <div>
-          <FieldError id="priceUsd-error" message={errors.get("priceUsd")} />
           <div className={styles.price}>
             <span className={styles.priceSign} aria-hidden="true">
               $
@@ -494,6 +493,7 @@ function StepFields(props: FieldsProps) {
               aria-describedby={errors.get("priceUsd") ? "priceUsd-error" : undefined}
             />
           </div>
+          <FieldError id="priceUsd-error" message={errors.get("priceUsd")} />
           {props.priceHistogram ? <PriceStepMarket view={props.priceHistogram} /> : null}
         </div>
       );
@@ -501,15 +501,6 @@ function StepFields(props: FieldsProps) {
     case "tamano":
       return (
         <div className={styles.numbers}>
-          <FieldError
-            id="tamano-error"
-            message={
-              errors.get("rooms") ??
-              errors.get("bathrooms") ??
-              errors.get("areaM2") ??
-              errors.get("parkingSpots")
-            }
-          />
           {(
             [
               ["rooms", "Habitaciones", listing.rooms],
@@ -520,18 +511,25 @@ function StepFields(props: FieldsProps) {
               ["areaM2", "Metros cuadrados", listing.areaM2],
             ] as const
           ).map(([name, label, value]) => (
-            <div key={name} className={styles.numberRow}>
-              <label className={styles.label} htmlFor={name}>
-                {label}
-              </label>
-              <input
-                id={name}
-                name={name}
-                type="text"
-                inputMode="numeric"
-                className={`${styles.control} ${styles.numberControl}`}
-                defaultValue={raw?.[name] ?? value ?? ""}
-              />
+            // La fila no se rompe y su mensaje va debajo de ella, antes de la
+            // siguiente (L8): cada campo dice el suyo, no uno por los cuatro.
+            <div key={name}>
+              <div className={styles.numberRow}>
+                <label className={styles.label} htmlFor={name}>
+                  {label}
+                </label>
+                <input
+                  id={name}
+                  name={name}
+                  type="text"
+                  inputMode="numeric"
+                  className={`${styles.control} ${styles.numberControl} ${errors.get(name) ? styles.controlInvalid : ""}`}
+                  defaultValue={raw?.[name] ?? value ?? ""}
+                  aria-invalid={errors.get(name) ? "true" : undefined}
+                  aria-describedby={errors.get(name) ? `${name}-error` : undefined}
+                />
+              </div>
+              <FieldError id={`${name}-error`} message={errors.get(name)} />
             </div>
           ))}
         </div>
@@ -577,8 +575,8 @@ function StepFields(props: FieldsProps) {
     case "fotos":
       return (
         <>
-          <FieldError id="photos-error" message={errors.get("photos")} />
           <PhotoUploader initial={draft.photos} />
+          <FieldError id="photos-error" message={errors.get("photos")} />
         </>
       );
 
@@ -587,7 +585,6 @@ function StepFields(props: FieldsProps) {
         <>
           <fieldset className={styles.choices}>
             <legend className={styles.srOnly}>¿Quién publica?</legend>
-            <FieldError id="publisherType-error" message={errors.get("publisherType")} />
             {/* Sin default, y no puede agregarse: un default convertiria "al
                 que se le olvido" en "todos son duenos", y esa distincion es la
                 garantia de confianza central del producto. */}
@@ -608,6 +605,7 @@ function StepFields(props: FieldsProps) {
                 <span>{label}</span>
               </label>
             ))}
+            <FieldError id="publisherType-error" message={errors.get("publisherType")} />
           </fieldset>
 
           {/* La advertencia va ANTES, no despues de publicar: declararlo mal es
@@ -623,11 +621,6 @@ function StepFields(props: FieldsProps) {
             aria-describedby={errors.has("contactMethod") ? "contact-method-error" : undefined}
           >
             <legend className={styles.legend}>¿Cómo te contactan?</legend>
-            <PublicationContactEnhancement
-              field="method"
-              message={errors.get("contactMethod")}
-              initiallyTouched={errors.has("contactMethod") || errors.has("contactValue")}
-            />
             {(
               [
                 ["whatsapp", "WhatsApp"],
@@ -646,6 +639,11 @@ function StepFields(props: FieldsProps) {
                 <span>{label}</span>
               </label>
             ))}
+            <PublicationContactEnhancement
+              field="method"
+              message={errors.get("contactMethod")}
+              initiallyTouched={errors.has("contactMethod") || errors.has("contactValue")}
+            />
           </fieldset>
 
           <div>

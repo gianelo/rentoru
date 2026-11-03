@@ -19,7 +19,6 @@ export function PublicationTitleField({ listing, error, zoneName }: PublicationT
   const [title, setTitle] = useState(listing.title);
   return (
     <div>
-      <FieldError id="title-error" message={error} />
       <label className={styles.srOnly} htmlFor="title">
         Título
       </label>
@@ -34,6 +33,7 @@ export function PublicationTitleField({ listing, error, zoneName }: PublicationT
         aria-invalid={error ? "true" : undefined}
         aria-describedby={error ? "title-error" : undefined}
       />
+      <FieldError id="title-error" message={error} />
       <p className={styles.counterLine}>
         <span>Sin mayúsculas sostenidas.</span>
         <span>

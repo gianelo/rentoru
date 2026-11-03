@@ -243,7 +243,6 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
           aria-describedby={errorEn("contactMethod") ? "import-contact-method-error" : undefined}
         >
           <legend className={publicar.legend}>¿Cómo te contactan?</legend>
-          <FieldError id="import-contact-method-error" message={errorEn("contactMethod")} />
           {FORMAS_DE_CONTACTO.map(([value, label]) => (
             <label key={value} className={publicar.choice}>
               <input
@@ -257,6 +256,8 @@ export function ImportarCartera({ contact }: { contact: AccountDefaultContact | 
               <span>{label}</span>
             </label>
           ))}
+          {/* Después de la última opción, como en publicar (L8). */}
+          <FieldError id="import-contact-method-error" message={errorEn("contactMethod")} />
         </fieldset>
 
         <div>

@@ -19,7 +19,8 @@ import styles from "../../publish-steps.module.css";
  * La 18.22 dejó escrita la regla —*«el mensaje va ANTES del campo que lo
  * produjo»*, anunciado con `aria-invalid` y `aria-describedby`, porque *«un
  * borde rojo es invisible para quien no distingue colores y para el modo de
- * alto contraste»*— y la dejó viviendo en un comentario. La 18.25, la 18.17 y
+ * alto contraste»*— y la dejó viviendo en un comentario. Desde la fase 44 (L8)
+ * el mensaje va DESPUÉS del control: etiqueta, control, error, ayuda. La 18.25, la 18.17 y
  * la 18.7 la afirmaron sobre los pasos 3, 7 y 2. Los otros seis —1, 4, 5, 6, 8
  * y 9— no tenían una sola aserción, sobre un archivo de 723 líneas.
  *
@@ -64,7 +65,7 @@ vi.mock("../../actions", () => ({ submitStep: vi.fn() }));
 /**
  * El subidor es de cliente y no aporta marcado de servidor, así que los otros
  * archivos lo apagan. Acá se lo reemplaza por una MARCA: la mitad de la regla
- * de la 18.22 que el paso 8 tiene que cumplir es qué va antes que él, y con un
+ * del campo que el paso 8 tiene que cumplir es qué va después de él, y con un
  * `null` esa posición no existe.
  */
 vi.mock("../../fotos/PhotoUploader", async () => {
@@ -303,56 +304,53 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
   );
 
   /**
-   * Paso 1. El mensaje va DENTRO del `<fieldset>`, entre la leyenda y la
-   * primera opción, que es el orden en el que un lector de pantalla lo
-   * encuentra. Ninguna de las cinco lleva `aria-describedby`, así que la
-   * posición es todo lo que hay: se afirma la posición.
+   * Paso 1. El mensaje va DENTRO del `<fieldset>`, después de la última
+   * opción (L8, fase 44: etiqueta, control, error). Ninguna de las cinco lleva
+   * `aria-describedby`, así que la posición es todo lo que hay: se afirma la
+   * posición.
    */
-  it("el paso 1 dice la negativa del tipo dentro de su fieldset, antes de la primera opción", async () => {
+  it("el paso 1 dice la negativa del tipo dentro de su fieldset, después de la última opción", async () => {
     borrador = abre("tipo");
 
     const campo = conjunto(await servido("tipo"), "Tipo de propiedad");
 
     expect(campo).toContain('id="propertyType-error"');
-    antesDe(campo, "Dinos qué vas a alquilar.", 'name="propertyType"');
+    antesDe(campo, 'value="habitacion"', "Dinos qué vas a alquilar.");
     // El par: las cinco opciones se siguen dibujando. Un fieldset que sólo
     // dibujara el mensaje pasaría la aserción de orden.
     expect(campo.match(/type="radio"/g)).toHaveLength(5);
   });
 
   /**
-   * Paso 4. Sus cuatro controles comparten UN solo mensaje, y el orden del
-   * `??` decide cuál se dice. Con dos campos vacíos se dice el de
-   * habitaciones y el de los metros no se dice: no es un hueco, es que la
-   * pantalla no tiene dónde poner el segundo.
+   * Paso 4. Cada fila dice la suya, debajo de ella y antes de la siguiente
+   * (L8). Hasta la fase 44 las cuatro compartían un mensaje arriba de todo y
+   * con dos campos vacíos el segundo no se decía.
    */
-  it("el paso 4 dice una sola de sus cuatro negativas, la primera de su lista", async () => {
+  it("el paso 4 dice cada negativa debajo de su fila, antes de la siguiente", async () => {
     borrador = sin("rooms", "areaM2");
 
     const html = await servido("tamano");
 
     expect(html).toContain("¿Cuántas habitaciones tiene?");
-    expect(html).not.toContain("¿Cuántos metros cuadrados tiene?");
-    expect(html.match(/id="tamano-error"/g)).toHaveLength(1);
-    // El par: los cuatro controles están dibujados, así que lo que falta es el
-    // mensaje del segundo y no el campo.
-    for (const campo of ["rooms", "bathrooms", "parkingSpots", "areaM2"]) control(html, campo);
+    expect(html).toContain("¿Cuántos metros cuadrados tiene?");
+    antesDe(html, 'id="rooms"', 'id="rooms-error"');
+    antesDe(html, 'id="rooms-error"', 'id="bathrooms"');
+    antesDe(html, 'id="areaM2"', 'id="areaM2-error"');
+    // El par: una fila sin negativa no dibuja mensaje.
+    expect(html).not.toContain('id="bathrooms-error"');
   });
 
-  /**
-   * Paso 4, la otra mitad. **Es la desviación de la regla de la 18.22 y se
-   * afirma tal como se sirve**: el mensaje de los metros cuadrados se lee
-   * arriba de todo, antes del campo de habitaciones, y su propio campo no lo
-   * nombra. Anotada en el PR, no arreglada acá.
-   */
-  it("la negativa de los metros se lee antes del campo de habitaciones, y el suyo no la anuncia", async () => {
+  /** Paso 4, la otra mitad: el campo de los metros anuncia su propio mensaje. */
+  it("la negativa de los metros se lee debajo de su fila, y su campo la anuncia", async () => {
     borrador = sin("areaM2");
 
     const html = await servido("tamano");
 
     expect(html).toContain("¿Cuántos metros cuadrados tiene?");
-    antesDe(html, 'id="tamano-error"', 'id="rooms"');
-    expect(control(html, "areaM2")).not.toContain("aria-");
+    antesDe(html, 'id="areaM2"', 'id="areaM2-error"');
+    expect(control(html, "areaM2")).toContain('aria-invalid="true"');
+    expect(control(html, "areaM2")).toContain('aria-describedby="areaM2-error"');
+    expect(control(html, "rooms")).not.toContain("aria-");
   });
 
   /**
@@ -380,13 +378,13 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
     expect(stepViolations("atributos", todoMal)).toEqual([]);
   });
 
-  /** Paso 6, y es el que cumple la regla entera: antes, anunciado y marcado. */
-  it("el paso 6 dice la negativa antes del título y anuncia el control", async () => {
+  /** Paso 6, y es el que cumple la regla entera: después, anunciado y marcado. */
+  it("el paso 6 dice la negativa después del título y anuncia el control", async () => {
     borrador = abre("titulo");
 
     const html = await servido("titulo");
 
-    antesDe(html, 'id="title-error"', 'id="title"');
+    antesDe(html, 'id="title"', 'id="title-error"');
     expect(control(html, "title")).toContain('aria-invalid="true"');
     expect(control(html, "title")).toContain('aria-describedby="title-error"');
   });
@@ -410,18 +408,18 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
   });
 
   /**
-   * Paso 8. El mensaje antes del subidor.
+   * Paso 8. El mensaje después del subidor.
    *
    * **Contradicción anotada, no arreglada**: la frase manda al «paso 2» y las
    * fotos son el paso 8 (`STEP_COPY.fotos.number`). Se afirma lo que se sirve.
    */
-  it("el paso 8 dice la negativa antes del subidor de fotos", async () => {
+  it("el paso 8 dice la negativa después del subidor de fotos", async () => {
     borrador = abre("fotos");
 
     const html = await servido("fotos");
 
     expect(html).toContain("Sube al menos una foto en el paso 2.");
-    antesDe(html, 'id="photos-error"', 'id="subidor-de-fotos"');
+    antesDe(html, 'id="subidor-de-fotos"', 'id="photos-error"');
   });
 
   /**
@@ -483,6 +481,7 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
     const html = await servido("quien");
 
     expect(conjunto(html, "¿Quién publica?")).toContain('id="publisherType-error"');
+    antesDe(conjunto(html, "¿Quién publica?"), 'value="broker"', 'id="publisherType-error"');
     expect(conjunto(html, "¿Cómo te contactan?")).not.toContain("-error");
     expect(conjunto(html, "¿Cómo te contactan?").match(/type="radio"/g)).toHaveLength(3);
   });
@@ -494,6 +493,7 @@ describe("cada paso lee su negativa al lado del control que la produjo (18.24)",
     const html = await servido("quien");
 
     expect(conjunto(html, "¿Cómo te contactan?")).toContain('id="contact-method-error"');
+    antesDe(conjunto(html, "¿Cómo te contactan?"), 'value="email"', 'id="contact-method-error"');
     expect(conjunto(html, "¿Cómo te contactan?")).toContain(
       'aria-describedby="contact-method-error"',
     );

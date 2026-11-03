@@ -441,19 +441,34 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
 
   /**
    * tasks.md 18.22 — **la negativa al lado del campo que la produjo**, con la
-   * misma anatomía que publicar: el mensaje ANTES del control, con su `id`, y
+   * misma anatomía que publicar: el mensaje DESPUÉS del control (L8, fase 44), con su `id`, y
    * el control anunciado con `aria-invalid` y `aria-describedby`. La razón está
    * escrita en `violation-copy.ts`: «un borde rojo es invisible para quien no
    * distingue colores y para el modo de alto contraste».
    */
-  it("pone la negativa antes del campo que la produjo y anuncia el control", async () => {
+  it("pone la negativa después del campo que la produjo y anuncia el control", async () => {
     const html = await dibujar("priceUsd.invalid");
 
     expect(html).toContain('id="priceUsd-error"');
     expect(html).toContain('aria-invalid="true"');
     expect(html).toContain('aria-describedby="priceUsd-error"');
-    // ANTES, no debajo: el orden en los bytes es el orden en que se lee.
-    expect(html.indexOf("Solo el número, en dólares")).toBeLessThan(html.indexOf('id="priceUsd"'));
+    // Debajo, no antes: el orden en los bytes es el orden en que se lee.
+    expect(html.indexOf("Solo el número, en dólares")).toBeGreaterThan(
+      html.indexOf('id="priceUsd"'),
+    );
+  });
+
+  /**
+   * Las filas numéricas (L8): la fila conserva etiqueta y campo en línea, y su
+   * mensaje va debajo de ELLA, antes de la fila siguiente. Así el mensaje no
+   * empuja la etiqueta hacia el campo (L6).
+   */
+  it("la negativa de una fila numérica va debajo de su campo y antes de la fila siguiente", async () => {
+    const html = await dibujar("bathrooms.required");
+    const mensaje = html.indexOf('id="bathrooms-error"');
+
+    expect(mensaje).toBeGreaterThan(html.indexOf('id="bathrooms"'));
+    expect(mensaje).toBeLessThan(html.indexOf('id="parkingSpots"'));
   });
 
   /**
@@ -484,14 +499,14 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
   /**
    * **El hueco que la 18.22 nombraba.** `publisherType.immutable` no estaba en
    * el `Record` de publicar, así que era el único código sin campo. Desde la
-   * 18.38 hay control de verdad para un dueño, y el mensaje se lee antes de él.
+   * 18.38 hay control de verdad para un dueño, y el mensaje se lee después de él.
    */
-  it("la negativa de quién publica se lee antes del control", async () => {
+  it("la negativa de quién publica se lee después del control", async () => {
     const html = await dibujar("publisherType.immutable");
 
     expect(html).toContain('id="publisherType-error"');
-    expect(html.indexOf("Una inmobiliaria no puede volver a declararse dueño")).toBeLessThan(
-      html.indexOf('name="publisherType"'),
+    expect(html.indexOf("Una inmobiliaria no puede volver a declararse dueño")).toBeGreaterThan(
+      html.lastIndexOf('name="publisherType"'),
     );
   });
 
