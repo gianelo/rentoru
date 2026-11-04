@@ -218,8 +218,7 @@ async function editRemovingPhotos(
     throw new EditListingNotFoundError(current.id);
   }
 
-  // **Después del commit, y gritando** — el mismo orden y el mismo porqué que
-  // `detachPhotoFromListing` (D12): con R2 primero, una escritura revertida
+  // **Después del commit, y gritando** (D12): con R2 primero, una escritura revertida
   // dejaría un aviso vivo apuntando a fotos borradas; así, lo peor es un
   // huérfano. Sin `try`: tragarse la falla es el silencio de la 18.23.
   for (const key of outcome.derivativeKeys) {
