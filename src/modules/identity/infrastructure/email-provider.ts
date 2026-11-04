@@ -69,7 +69,10 @@ export function buildEmailProvider(deps: EmailProviderDependencies = {}): EmailP
         throw new AuthMailerNotConfiguredError("RESEND_API_KEY y/o AUTH_MAIL_FROM");
       }
 
-      await createMailer(config).send({ to: identifier, ...composeMagicLinkEmail(url) });
+      await createMailer(config).send({
+        to: identifier,
+        content: composeMagicLinkEmail(url, MAGIC_LINK_MAX_AGE_SECONDS),
+      });
     },
   };
 }

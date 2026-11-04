@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  action,
+  fact,
+  fallback,
+  footer,
+  heading,
+  paragraph,
+} from "../../../shared/email/mail-content";
+import {
   composeMagicLinkEmail,
   isVerificationLinkExpired,
   MAGIC_LINK_MAX_AGE_SECONDS,
@@ -15,19 +23,36 @@ describe("MAGIC_LINK_MAX_AGE_SECONDS", () => {
 });
 
 describe("composeMagicLinkEmail", () => {
-  it("incluye el enlace tal cual, sin envolverlo ni acortarlo", () => {
-    const url = "https://rentoru.com/api/auth/callback/email?token=abc&email=a%40b.com";
+  const URL = "https://rentoru.com/api/auth/callback/email?token=abc&email=a%40b.com";
 
-    const email = composeMagicLinkEmail(url);
-
-    expect(email.body).toContain(url);
+  // 38.3: los bloques de la lámina v1, con los textos cortos de L5 y el enlace
+  // tal cual en el botón y en el respaldo, sin envolverlo ni acortarlo (S2).
+  it("arma los bloques de la lámina v1 en su orden, con el enlace entero", () => {
+    expect(composeMagicLinkEmail(URL, MAGIC_LINK_MAX_AGE_SECONDS)).toEqual({
+      subject: "Tu enlace para entrar a Rentoru",
+      blocks: [
+        heading("Entra a Rentoru"),
+        paragraph("Toca el botón para entrar. No necesitas contraseña."),
+        action("Entrar a Rentoru", URL),
+        fallback("O copia este enlace en tu navegador:", URL),
+        fact({ label: "Vale por", value: "15 minutos", note: "Se usa una sola vez." }),
+        paragraph("¿No pediste entrar? Ignora este correo."),
+        footer(
+          "Te escribimos porque pediste entrar a Rentoru con este correo.",
+          "Rentoru · alquileres en Distrito Capital y Maracaibo",
+        ),
+      ],
+    });
   });
 
-  it("dice que vale 15 minutos y una sola vez, para que quien lo lee sepa la regla", () => {
-    const email = composeMagicLinkEmail("https://rentoru.com/x");
+  // La vigencia que lee la persona sale de la misma regla que aplica Auth.js:
+  // si la regla cambia, el correo no puede seguir diciendo «15».
+  it("dice la vigencia que recibe, no un número escrito aparte", () => {
+    const { blocks } = composeMagicLinkEmail(URL, 30 * 60);
 
-    expect(email.body).toContain("15 minutos");
-    expect(email.body).toContain("una sola vez");
+    expect(blocks).toContainEqual(
+      fact({ label: "Vale por", value: "30 minutos", note: "Se usa una sola vez." }),
+    );
   });
 
   /**
@@ -39,7 +64,7 @@ describe("composeMagicLinkEmail", () => {
    * viejo puesto.
    */
   it("el asunto nombra el producto, que es lo que vuelve legítimo al correo", () => {
-    const email = composeMagicLinkEmail("https://rentoru.com/x");
+    const email = composeMagicLinkEmail("https://rentoru.com/x", MAGIC_LINK_MAX_AGE_SECONDS);
 
     expect(email.subject).toBe("Tu enlace para entrar a Rentoru");
   });
