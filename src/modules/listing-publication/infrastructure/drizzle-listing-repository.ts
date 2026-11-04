@@ -75,8 +75,7 @@ export class DrizzleListingRepository implements ListingRepositoryPort {
     // the second statement leaves exactly that state in the catalogue, and
     // nothing would ever report it.
     //
-    // This is the call `neon-http` cannot serve, and the whole reason
-    // transactional-client.ts exists.
+    // This is why the handle comes from transactional-client.ts.
     await this.db.transaction(async (tx) => {
       await tx.insert(listings).values({
         id,

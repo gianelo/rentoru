@@ -10,7 +10,7 @@ Greenfield. This design carries the **blocking stack decision** for the whole pr
 | Framework | Next.js 15 App Router + React 19 | — |
 | Hosting | Vercel (Hobby) | Yes — see D8, tracked debt |
 | Database | Neon Postgres (pooled endpoint) | Yes |
-| Data access | Drizzle ORM + `@neondatabase/serverless` | — |
+| Data access | Drizzle ORM + `pg` (node-postgres) | — |
 | Object storage | Cloudflare R2 (S3 API, presigned PUT) | 10 GB, $0 egress |
 | Auth | Auth.js v5, Google provider, Drizzle adapter | Yes |
 | Email | Resend + React Email | 3k/mo, 100/day |
@@ -60,6 +60,8 @@ Supabase is the tempting "one service" answer and was seriously considered. It l
 R2 charges **zero egress** and gives 10 GB free, which is decisive for a photo-heavy marketplace. Once storage leaves Supabase, its remaining advantage is Auth, and Auth.js covers that inside the app with sessions in our own Postgres — which also keeps `user`, `listing`, `photo_hash`, and `reveal_event` joinable in one database with no cross-service reads.
 
 Rejected: Vercel Postgres/Blob (thinner free tier, deeper lock-in), Railway/Render/Fly (no meaningful free tier remains), SQLite/Turso (weaker for the ad-hoc metric queries the north star needs).
+
+**Driver: node-postgres for reads and writes (founder option A, 2026-11).** `src/shared/db/client.ts` runs one small `pg` pool per process, shared with `transactional-client.ts`, so the app runs on any Postgres (Neon, Supabase, RDS) by changing `DATABASE_URL`, and the local/CI harness connects straight to its test Postgres. The `-pooler.` requirement now applies only to `*.neon.tech` hosts. Trade-off: a cold serverless instance pays a TCP+TLS connection that Neon's HTTP driver did not. Gate: staging Lighthouse LCP ≤ 2500 ms. Fallback if it fails: select the driver by configuration rather than reverting portability.
 
 ### D3 — The scheduled job: dumb trigger, idempotent job
 

@@ -14,8 +14,8 @@ import { buildListingPath } from "../../src/modules/listing-discovery/domain/lis
  * **Hasta ahora no medía nada, y la causa era estructural.** `/alquiler/**`
  * consulta el catálogo antes de dibujar, y el respaldo local compilaba contra
  * una `DATABASE_URL` deliberadamente inalcanzable: sólo podía contestar 500. La
- * 11.22 es lo que faltaba — `scripts/neon-http-proxy.mjs` traduce el HTTP de
- * Neon a `pg` contra el Postgres de `docker-compose.yml`, y
+ * 11.22 es lo que faltaba — la aplicación habla node-postgres directo contra
+ * el Postgres de `docker-compose.yml`, y
  * `scripts/seed-e2e.ts` le pone dos ciudades con fotos.
  *
  * **Corre por PR y no por push, a propósito** (decisión del fundador,

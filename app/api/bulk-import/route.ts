@@ -107,7 +107,7 @@ function dependencies() {
     zones: new DrizzleZoneCatalogue(readHandle as never),
     catalogue: new DrizzleCatalogue(readHandle as never),
     // La escritura va por el cliente transaccional, igual que publicar: cada
-    // aviso es una fila más sus fotos, y `neon-http` no sabe hacer eso.
+    // aviso es una fila más sus fotos, en una sola transacción.
     listings: new DrizzleListingRepository(writeHandle),
   };
 }

@@ -31,9 +31,9 @@ import { emptyDraft, publicationDraftDependencies, type StoredDraft } from "./dr
  * firma es lo que hace imposible dibujar el flujo sin saber de quien es el
  * borrador — que es justo lo que la cookie permitia.
  *
- * Las lecturas van por `db` (`neon-http`), no por el cliente transaccional:
- * este es el camino de lectura del que habla el argumento de latencia de D2, y
- * no sostiene ninguna conexion.
+ * Las lecturas van por `db`, no por el cliente transaccional: este es el
+ * camino de lectura del que habla el argumento de latencia de D2, y no abre
+ * ninguna transaccion.
  */
 
 export interface PublicationContext {

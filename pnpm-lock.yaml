@@ -29,6 +29,9 @@ importers:
       next-auth:
         specifier: 5.0.0-beta.32
         version: 5.0.0-beta.32(next@15.5.23(@playwright/test@1.62.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
+      pg:
+        specifier: 8.23.0
+        version: 8.23.0
       react:
         specifier: 19.2.8
         version: 19.2.8
@@ -75,9 +78,6 @@ importers:
       happy-dom:
         specifier: ^20.14.5
         version: 20.14.5
-      pg:
-        specifier: 8.23.0
-        version: 8.23.0
       tsx:
         specifier: 4.23.12
         version: 4.23.12

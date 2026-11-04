@@ -23,35 +23,15 @@ if (bypassStatePath) process.env.PREVIEW_BYPASS_STATE_PATH = bypassStatePath;
 // solas: la suite con el script apagado no medía nada, que es justo lo que
 // `AGENTS.md` §2 dice que mide.
 //
-// Con `TEST_DATABASE_URL` puesta, `scripts/neon-http-proxy.mjs` traduce el HTTP
-// de Neon a `pg` contra ese Postgres y la aplicación corre entera contra datos
-// reales, sin una línea distinta. Sin la variable, todo se comporta como antes.
+// Con `TEST_DATABASE_URL` puesta, la aplicación recibe esa misma cadena como
+// `DATABASE_URL` y habla node-postgres directo contra ese Postgres: el mismo
+// driver que en producción, sin proxy ni host disfrazado. Sin la variable,
+// todo se comporta como antes.
 const testDatabaseUrl = process.env.TEST_DATABASE_URL || undefined;
-const proxyPort = Number(process.env.NEON_PROXY_PORT || 5544);
 const appPort = process.env.PLAYWRIGHT_PORT === "3001" ? 3001 : 3000;
 const reuseLocalServer = !process.env.CI && appPort === 3000;
 
-/**
- * La misma cadena de conexión con `-pooler.` metido en el nombre de host.
- *
- * **`assertPooledConnectionString` no se debilita**: la guarda de D2 sigue
- * exigiendo un endpoint agrupado y lo sigue encontrando. El ruteo real no viaja
- * por acá sino por `NEON_FETCH_ENDPOINT`, que sólo se acepta hacia el bucle
- * local. Y el nombre resultante no resuelve a ninguna parte, que es
- * exactamente lo que se quiere: nada puede conectarse ahí por accidente.
- */
-function pooledLookalike(url: string): string {
-  const parsed = new URL(url);
-  parsed.hostname = `${parsed.hostname}-pooler.rentas.invalid`;
-  return parsed.toString();
-}
-
-const harnessEnv: Record<string, string> = testDatabaseUrl
-  ? {
-      DATABASE_URL: pooledLookalike(testDatabaseUrl),
-      NEON_FETCH_ENDPOINT: `http://127.0.0.1:${proxyPort}/sql`,
-    }
-  : {};
+const harnessEnv: Record<string, string> = testDatabaseUrl ? { DATABASE_URL: testDatabaseUrl } : {};
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -77,20 +57,6 @@ export default defineConfig({
     ? {}
     : {
         webServer: [
-          // El traductor de Neon a Postgres, primero. Playwright espera a que
-          // TODOS los servidores estén listos antes de correr una prueba, así
-          // que el orden del arreglo no es una carrera.
-          ...(testDatabaseUrl
-            ? [
-                {
-                  command: "node scripts/neon-http-proxy.mjs",
-                  port: proxyPort,
-                  reuseExistingServer: reuseLocalServer,
-                  timeout: 30_000,
-                  env: { TEST_DATABASE_URL: testDatabaseUrl, NEON_PROXY_PORT: String(proxyPort) },
-                },
-              ]
-            : []),
           {
             // CI builds once before running both projects and sets this to
             // `pnpm start`; locally the default builds too, so a bare

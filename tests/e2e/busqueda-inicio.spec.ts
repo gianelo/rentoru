@@ -35,7 +35,7 @@ import { expect, test } from "@playwright/test";
  * Antes esto era `Boolean(PLAYWRIGHT_BASE_URL)` y el comentario de arriba
  * explicaba por qué: el respaldo local compilaba contra una `DATABASE_URL`
  * deliberadamente inalcanzable, así que todo lo que lee el catálogo sólo podía
- * contestar 500. Ya no — `scripts/neon-http-proxy.mjs` más `scripts/seed-e2e.ts`
+ * contestar 500. Ya no — `TEST_DATABASE_URL` directo más `scripts/seed-e2e.ts`
  * le dan a la compilación local un Postgres real con dos ciudades sembradas, y
  * esta prueba deja de saltarse en cada corrida.
  */

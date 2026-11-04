@@ -51,7 +51,6 @@ describe("publication entry CI isolation", () => {
       SITE_URL: "http://localhost:3001",
       R2_BUCKET_PUBLIC_URL: "http://localhost:3001",
       PLAYWRIGHT_PORT: "3001",
-      NEON_PROXY_PORT: "55436",
       PLAYWRIGHT_WEB_COMMAND: "pnpm start --port 3001",
     });
     expect(dedicated().env).not.toHaveProperty("DATABASE_URL");

@@ -10,8 +10,7 @@ export const preload = path.join(repoRoot, "tests/fixtures/owned-contact-isolati
 export const appEnv = Object.freeze({
   ...isolation.synthetic,
   OWNED_CONTACT_APP_MODE: "dev-webpack",
-  DATABASE_URL: "postgresql://owned:owned@127.0.0.1-pooler.rentas.invalid:55437/owned_contact",
-  NEON_FETCH_ENDPOINT: "http://127.0.0.1:55438/sql",
+  DATABASE_URL: "postgresql://owned:owned@127.0.0.1:55437/owned_contact",
   AUTH_URL: appOrigin,
   SITE_URL: appOrigin,
   NEXT_PUBLIC_SITE_URL: appOrigin,
