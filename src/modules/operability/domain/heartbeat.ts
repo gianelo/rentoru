@@ -1,3 +1,12 @@
+import {
+  fact,
+  footer,
+  heading,
+  MAIL_BRAND_LINE,
+  type MailContent,
+  paragraph,
+} from "../../../shared/email/mail-content";
+
 /**
  * **El latido** (tasks.md 27.5): «no se puede ver el consumo, así que se
  * vigila la consecuencia».
@@ -32,11 +41,6 @@ export interface HeartbeatFailure {
   readonly checkedAt: Date;
 }
 
-export interface HeartbeatNotice {
-  readonly subject: string;
-  readonly body: string;
-}
-
 function spellDateTime(date: Date): string {
   return new Intl.DateTimeFormat("es-VE", {
     dateStyle: "long",
@@ -53,17 +57,31 @@ function spellDateTime(date: Date): string {
  * la consecuencia observada: la URL, cuándo se comprobó y qué contestó (o que
  * no contestó nada), y remite al panel de Neon para lo que el latido no puede
  * ver por ningún medio automático.
+ *
+ * Sale en bloques (38.5, G2: el mismo diseño que los correos al usuario); la
+ * falla va en ámbar, como las fechas límite.
  */
-export function composeHeartbeatFailureNotice(failure: HeartbeatFailure): HeartbeatNotice {
+export function composeHeartbeatFailureNotice(failure: HeartbeatFailure): MailContent {
   const statusText =
     failure.status === "unreachable" ? "no respondió" : `respondió con ${failure.status}`;
+  const subject = "El latido no encontró la base viva";
 
   return {
-    subject: "El latido no encontró la base viva",
-    body:
-      `${failure.url} ${statusText} el ${spellDateTime(failure.checkedAt)} (UTC).\n\n` +
-      "Esto no mide cuánta cuota queda — el plan Free de Neon no lo permite por " +
-      "ningún medio automático (tasks.md 27.5) — sólo que la consecuencia ya se " +
-      "ve. Revisa el panel de Neon para confirmar la causa.",
+    subject,
+    blocks: [
+      heading(subject),
+      fact({
+        label: "Qué pasó",
+        value: `${failure.url} ${statusText}`,
+        note: `el ${spellDateTime(failure.checkedAt)} (UTC).`,
+        tone: "warn",
+      }),
+      paragraph(
+        "Esto no mide cuánta cuota queda — el plan Free de Neon no lo permite por " +
+          "ningún medio automático (tasks.md 27.5) — sólo que la consecuencia ya se " +
+          "ve. Revisa el panel de Neon para confirmar la causa.",
+      ),
+      footer("Te escribimos porque el latido de Rentoru falló.", MAIL_BRAND_LINE),
+    ],
   };
 }

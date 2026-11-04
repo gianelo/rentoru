@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { fact, footer, heading, paragraph } from "../../../shared/email/mail-content";
+import { renderMailText } from "../../../shared/email/render-mail";
 import { composeHeartbeatFailureNotice, heartbeatOutcome } from "./heartbeat";
 
 describe("heartbeatOutcome", () => {
@@ -17,6 +19,48 @@ describe("heartbeatOutcome", () => {
 
 describe("composeHeartbeatFailureNotice", () => {
   const CHECKED_AT = new Date("2026-09-08T12:34:00Z");
+  // El contrato de la fecha (es-VE, larga, hora corta, UTC), no los espacios
+  // de este ICU: algunas versiones escriben «p. m.» con espacios duros.
+  const WHEN = new Intl.DateTimeFormat("es-VE", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(CHECKED_AT);
+
+  // 38.5 (G2): los bloques de los correos al usuario; la falla va en ámbar
+  // y el segundo párrafo de antes queda igual.
+  it.each<[number | "unreachable", string]>([
+    [503, "respondió con 503"],
+    ["unreachable", "no respondió"],
+  ])("arma los bloques del aviso (%s)", (status, statusText) => {
+    expect(
+      composeHeartbeatFailureNotice({
+        url: "https://rentoru.com/api/health",
+        status,
+        checkedAt: CHECKED_AT,
+      }),
+    ).toEqual({
+      subject: "El latido no encontró la base viva",
+      blocks: [
+        heading("El latido no encontró la base viva"),
+        fact({
+          label: "Qué pasó",
+          value: `https://rentoru.com/api/health ${statusText}`,
+          note: `el ${WHEN} (UTC).`,
+          tone: "warn",
+        }),
+        paragraph(
+          "Esto no mide cuánta cuota queda — el plan Free de Neon no lo permite por " +
+            "ningún medio automático (tasks.md 27.5) — sólo que la consecuencia ya se " +
+            "ve. Revisa el panel de Neon para confirmar la causa.",
+        ),
+        footer(
+          "Te escribimos porque el latido de Rentoru falló.",
+          "Rentoru · alquileres en Distrito Capital y Maracaibo",
+        ),
+      ],
+    });
+  });
 
   it("names the url and the status that failed", () => {
     const notice = composeHeartbeatFailureNotice({
@@ -26,8 +70,8 @@ describe("composeHeartbeatFailureNotice", () => {
     });
 
     expect(notice.subject).not.toBe("");
-    expect(notice.body).toContain("https://rentoru.com/api/health");
-    expect(notice.body).toContain("503");
+    expect(renderMailText(notice)).toContain("https://rentoru.com/api/health");
+    expect(renderMailText(notice)).toContain("503");
   });
 
   it("says 'unreachable' rather than a status number when the request never got one", () => {
@@ -37,8 +81,8 @@ describe("composeHeartbeatFailureNotice", () => {
       checkedAt: CHECKED_AT,
     });
 
-    expect(notice.body).not.toMatch(/\bunreachable\b.*\d{3}/);
-    expect(notice.body.toLowerCase()).toContain("no respondió");
+    expect(renderMailText(notice)).not.toMatch(/\bunreachable\b.*\d{3}/);
+    expect(renderMailText(notice).toLowerCase()).toContain("no respondió");
   });
 
   // The failure this task exists to end never had a spending number to show
@@ -51,6 +95,6 @@ describe("composeHeartbeatFailureNotice", () => {
       checkedAt: CHECKED_AT,
     });
 
-    expect(notice.body).not.toMatch(/%/);
+    expect(renderMailText(notice)).not.toMatch(/%/);
   });
 });

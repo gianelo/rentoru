@@ -43,16 +43,3 @@ export const fact = (input: {
   tone?: "normal" | "warn";
 }): MailBlock => ({ kind: "fact", ...input, tone: input.tone ?? "normal" });
 export const footer = (...lines: string[]): MailBlock => ({ kind: "footer", lines });
-
-/**
- * El cuerpo de texto que hoy redactan los dominios, en párrafos: separados por
- * líneas en blanco; un salto simple queda dentro del párrafo. Es la forma que
- * tenían las cuatro copias que esto reemplaza.
- */
-export function paragraphsFromBody(body: string): MailBlock[] {
-  return body
-    .split(/\n{2,}/)
-    .map((text) => text.trim())
-    .filter((text) => text !== "")
-    .map(paragraph);
-}

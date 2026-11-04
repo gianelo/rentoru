@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { fact, footer, heading, paragraph } from "../../../shared/email/mail-content";
 import {
   CONTACT_MESSAGE_MAX_LENGTH,
   CONTACT_MESSAGE_MIN_LENGTH,
@@ -111,13 +112,30 @@ describe("composeContactNotice", () => {
   it("names the sender in the subject", () => {
     const notice = composeContactNotice(validInput({ name: "María Pérez" }));
 
-    expect(notice.subject).toContain("María Pérez");
+    expect(notice.content.subject).toContain("María Pérez");
   });
 
-  it("carries the trimmed message body through untouched", () => {
-    const notice = composeContactNotice(validInput({ message: "  Hola, una pregunta.  " }));
+  // 38.5 (G2): los bloques de los correos al usuario. El mensaje va recortado
+  // y nada más: sus líneas en blanco y sus saltos simples llegan tal cual.
+  it("arma los bloques del correo con el mensaje sin reescribir", () => {
+    const message = "Hola, una pregunta.\n\nOtra idea\nseguida.";
 
-    expect(notice.body).toContain("Hola, una pregunta.");
+    expect(composeContactNotice(validInput({ message: `  ${message}\n ` }))).toEqual({
+      content: {
+        subject: "Escríbenos: mensaje de María Pérez",
+        blocks: [
+          heading("Mensaje desde Escríbenos"),
+          fact({ label: "De", value: "María Pérez", note: "maria@example.com" }),
+          paragraph(message),
+          paragraph("Responde a este correo para escribirle."),
+          footer(
+            "Te escribimos porque alguien usó Escríbenos en Rentoru.",
+            "Rentoru · alquileres en Distrito Capital y Maracaibo",
+          ),
+        ],
+      },
+      replyTo: "maria@example.com",
+    });
   });
 
   it("sets replyTo to the visitor's own address, so a reply reaches them", () => {

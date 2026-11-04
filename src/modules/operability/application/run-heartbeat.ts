@@ -47,12 +47,12 @@ export async function runHeartbeat(deps: RunHeartbeatDependencies): Promise<Hear
     return { outcome, notified: false };
   }
 
-  const notice = composeHeartbeatFailureNotice({
+  const content = composeHeartbeatFailureNotice({
     url: deps.url,
     status: checked.status,
     checkedAt: now(),
   });
-  await deps.mailer.send({ to: deps.notifyTo, ...notice });
+  await deps.mailer.send({ to: deps.notifyTo, content });
 
   return { outcome, notified: true };
 }

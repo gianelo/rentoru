@@ -40,7 +40,10 @@ describe("runHeartbeat", () => {
     expect(result.notified).toBe(true);
     expect(mailer.send).toHaveBeenCalledTimes(1);
     expect(mailer.send).toHaveBeenCalledWith(
-      expect.objectContaining({ to: NOTIFY_TO, subject: expect.any(String) }),
+      expect.objectContaining({
+        to: NOTIFY_TO,
+        content: expect.objectContaining({ subject: "El latido no encontró la base viva" }),
+      }),
     );
   });
 

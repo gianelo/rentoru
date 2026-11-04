@@ -7,7 +7,6 @@ import {
   heading,
   type MailContent,
   paragraph,
-  paragraphsFromBody,
 } from "./mail-content";
 import { expectedMailHtml, FIXTURE_FONTS, P } from "./mail-html.fixture";
 import { renderMailHtml, renderMailText } from "./render-mail";
@@ -119,14 +118,5 @@ describe("renderMailText", () => {
         "Vence el: 22 de noviembre de 2026\n\n" +
         "Te escribimos porque pediste entrar.\nRentoru · alquileres",
     );
-  });
-});
-
-describe("paragraphsFromBody", () => {
-  it("parte por líneas en blanco y no deja párrafos vacíos", () => {
-    expect(paragraphsFromBody("  Uno.\nsigue\n\n\n\nDos.\n\n")).toEqual([
-      paragraph("Uno.\nsigue"),
-      paragraph("Dos."),
-    ]);
   });
 });

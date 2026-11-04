@@ -1,3 +1,5 @@
+import type { MailContent } from "../../../../shared/email/mail-content";
+
 /**
  * Por dónde sale el mensaje de "Escribinos" (tasks.md 23.7).
  *
@@ -14,10 +16,12 @@
  * tenga dónde poner un `to` es la garantía en el tipo: nada que implemente
  * esta interfaz puede reenviar el mensaje a otro lado que no sea el que la
  * infraestructura ya fijó al construirse.
+ *
+ * Recibe los bloques (asunto incluido) que `composeContactNotice` compuso en
+ * el dominio (38.5): el puerto no sabe de HTML ni de plantillas.
  */
 export interface ContactMessage {
-  readonly subject: string;
-  readonly body: string;
+  readonly content: MailContent;
   readonly replyTo: string;
 }
 
