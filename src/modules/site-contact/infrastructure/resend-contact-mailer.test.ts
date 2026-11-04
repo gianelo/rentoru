@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { expectedMailHtml, P } from "../../../shared/email/mail-html.fixture";
+import { paragraph } from "../../../shared/email/mail-content";
+import { expectedMailHtml, FIXTURE_FONTS, P } from "../../../shared/email/mail-html.fixture";
 import { composeContactNotice } from "../domain/contact-message";
 import {
   ContactMailerNotConfiguredError,
@@ -20,8 +21,10 @@ function fakeResend(result: { error: { message: string } | null }) {
 }
 
 const MESSAGE = {
-  subject: "Escríbenos: mensaje de María Pérez",
-  body: 'María Pérez <maria@example.com> escribió desde "Escríbenos":\n\nHola, una pregunta.',
+  content: {
+    subject: "Escríbenos: mensaje de María Pérez",
+    blocks: [paragraph("Hola."), paragraph("Chau.")],
+  },
   replyTo: "maria@example.com",
 };
 
@@ -69,19 +72,24 @@ describe("el envío", () => {
         // puerto (`ContactMailerPort`) ni siquiera tiene un campo `to`.
         to: "hola@rentoru.com",
         replyTo: MESSAGE.replyTo,
-        subject: MESSAGE.subject,
-        text: MESSAGE.body,
+        subject: MESSAGE.content.subject,
+        // El texto plano sale de los mismos bloques que el HTML (38.5).
+        text: "Hola.\n\nChau.",
       }),
     );
   });
 
-  it("F35.10: nombra la pantalla «Escríbenos» y deja intacto lo que escribió el visitante", async () => {
+  // composeContactNotice → ResendContactMailer (38.5, G2): texto y HTML
+  // exactos. El mensaje llega byte a byte al texto y escapado al HTML, con
+  // sus líneas en blanco y sus saltos simples.
+  it("el correo final que recibe Resend: bloques de la lámina, mensaje sin reescribir", async () => {
     const { send, client } = fakeResend({ error: null });
+    const { SANS, MONO, TABLE } = FIXTURE_FONTS;
     const notice = composeContactNotice({
       name: 'Ana & "Bea"',
       email: "ana@example.com",
       honeypot: "",
-      message: "Hola <b>¿hay cupo?</b>",
+      message: "Hola <b>¿hay cupo?</b>\n\nSegunda línea\nseguida.",
     });
 
     await new ResendContactMailer(
@@ -91,20 +99,34 @@ describe("el envío", () => {
       client,
     ).send(notice);
 
+    const WHY = "Te escribimos porque alguien usó Escríbenos en Rentoru.";
+    const BRAND = "Rentoru · alquileres en Distrito Capital y Maracaibo";
+    const line = (text: string) => `<p style="margin:0 0 4px">${text}</p>`;
     const payload = send.mock.calls[0]?.[0];
     expect(payload.subject).toBe('Escríbenos: mensaje de Ana & "Bea"');
+    expect(payload.replyTo).toBe("ana@example.com");
     expect(payload.text).toBe(
-      'Ana & "Bea" <ana@example.com> escribió desde "Escríbenos":\n\nHola <b>¿hay cupo?</b>',
+      'Mensaje desde Escríbenos\n\nDe: Ana & "Bea"\nana@example.com\n\n' +
+        "Hola <b>¿hay cupo?</b>\n\nSegunda línea\nseguida.\n\n" +
+        `Responde a este correo para escribirle.\n\n${WHY}\n${BRAND}`,
     );
-    // Diseño de la 38.2 (G2: el mismo que los correos al usuario).
     expect(payload.html).toBe(
       expectedMailHtml(
         "Escríbenos: mensaje de Ana &amp; &quot;Bea&quot;",
-        `${P}Ana &amp; &quot;Bea&quot; &lt;ana@example.com&gt; escribió desde &quot;Escríbenos&quot;:</p>` +
-          `${P}Hola &lt;b&gt;¿hay cupo?&lt;/b&gt;</p>`,
+        '<h1 style="margin:0 0 16px;font-size:20px;font-weight:700;line-height:1.25;color:#1e2022">' +
+          "Mensaje desde Escríbenos</h1>" +
+          `<table ${TABLE} width="100%" style="margin:0 0 16px"><tr><td bgcolor="#f0f5f9" ` +
+          `style="padding:16px;border-radius:12px;background-color:#f0f5f9;font-family:${SANS}">` +
+          `<p style="margin:0 0 4px;font-family:${MONO};font-size:12px;font-weight:600;color:#52616b">De</p>` +
+          '<p style="margin:0;font-size:17px;font-weight:600;color:#1e2022">Ana &amp; &quot;Bea&quot;</p>' +
+          '<p style="margin:4px 0 0;color:#52616b">ana@example.com</p></td></tr></table>' +
+          `${P}Hola &lt;b&gt;¿hay cupo?&lt;/b&gt;<br /><br />Segunda línea<br />seguida.</p>` +
+          `${P}Responde a este correo para escribirle.</p>`,
+        '<tr><td style="padding:16px 16px 12px;border-top:1px solid #e1e4e6;' +
+          `font-family:${SANS};font-size:12px;line-height:1.6;color:#52616b">` +
+          `${line(WHY)}${line(BRAND)}</td></tr>`,
       ),
     );
-    expect(payload.replyTo).toBe("ana@example.com");
   });
 
   it("convierte en excepción el error que Resend devuelve, sin fingir que se mandó", async () => {
@@ -130,7 +152,10 @@ describe("el HTML, que es presentación y no redacción", () => {
       "ingresa@rentoru.com",
       "hola@rentoru.com",
       client,
-    ).send({ ...MESSAGE, body: 'Mensaje: <script>alert("x")</script>' });
+    ).send({
+      ...MESSAGE,
+      content: { subject: "s", blocks: [paragraph('Mensaje: <script>alert("x")</script>')] },
+    });
     const html: string = send.mock.calls[0]?.[0].html;
 
     expect(html).not.toContain("<script>");

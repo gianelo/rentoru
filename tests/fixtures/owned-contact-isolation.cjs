@@ -276,10 +276,14 @@ function install(p, env) {
         typeof body.subject !== "string"
       )
         denied();
-      // Exactly two LF or CRLF lines and a terminal test marker; no payload normalization.
+      // The marker is its own paragraph: two LF or CRLF lines before it, and the end
+      // or another blank line after it. Since 38.5 the visitor message sits between
+      // blocks, not at the end of the text. No payload normalization.
       const failed =
         typeof body.text === "string" &&
-        /(?:^|[^\r\n])(?:\n\n|\r\n\r\n)\[owned-provider-error\](?![\s\S])/.test(body.text);
+        /(?:^|[^\r\n])(?:\n\n|\r\n\r\n)\[owned-provider-error\](?:\r?\n\r?\n|(?![\s\S]))/.test(
+          body.text,
+        );
       return new Response(
         JSON.stringify(
           failed

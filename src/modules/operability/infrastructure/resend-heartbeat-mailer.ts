@@ -1,6 +1,5 @@
 import { Resend } from "resend";
-import { paragraphsFromBody } from "../../../shared/email/mail-content";
-import { renderMailHtml } from "../../../shared/email/render-mail";
+import { renderMailHtml, renderMailText } from "../../../shared/email/render-mail";
 import type {
   HeartbeatMailerPort,
   HeartbeatMessage,
@@ -66,12 +65,10 @@ export class ResendHeartbeatMailer implements HeartbeatMailerPort {
     const { error } = await this.client.emails.send({
       from: this.from,
       to: message.to,
-      subject: message.subject,
-      text: message.body,
-      html: renderMailHtml({
-        subject: message.subject,
-        blocks: paragraphsFromBody(message.body),
-      }),
+      subject: message.content.subject,
+      // Los dos desde los mismos bloques (38.5).
+      text: renderMailText(message.content),
+      html: renderMailHtml(message.content),
     });
 
     if (error) {

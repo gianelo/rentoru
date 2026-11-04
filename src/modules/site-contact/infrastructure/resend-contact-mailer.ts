@@ -1,6 +1,5 @@
 import { Resend } from "resend";
-import { paragraphsFromBody } from "../../../shared/email/mail-content";
-import { renderMailHtml } from "../../../shared/email/render-mail";
+import { renderMailHtml, renderMailText } from "../../../shared/email/render-mail";
 import type { ContactMailerPort, ContactMessage } from "../application/ports/contact-mailer.port";
 
 /**
@@ -72,13 +71,12 @@ export class ResendContactMailer implements ContactMailerPort {
       from: this.from,
       to: this.to,
       replyTo: message.replyTo,
-      subject: message.subject,
-      text: message.body,
+      subject: message.content.subject,
+      // Los dos desde los mismos bloques (38.5): el texto plano lleva el
+      // mensaje del visitante tal cual lo escribió.
+      text: renderMailText(message.content),
       // Nombre y mensaje los escribió el visitante: el renderizador los escapa.
-      html: renderMailHtml({
-        subject: message.subject,
-        blocks: paragraphsFromBody(message.body),
-      }),
+      html: renderMailHtml(message.content),
     });
 
     if (error) {

@@ -1,3 +1,12 @@
+import {
+  fact,
+  footer,
+  heading,
+  MAIL_BRAND_LINE,
+  type MailContent,
+  paragraph,
+} from "../../../shared/email/mail-content";
+
 /**
  * "Escribinos" — the visitor-facing contact form (tasks.md 23.7, DECIDIDA
  * 2026-09-04).
@@ -89,8 +98,8 @@ export function evaluateContactMessage(input: ContactMessageInput): ContactMessa
 }
 
 export interface ContactNotice {
-  readonly subject: string;
-  readonly body: string;
+  /** Asunto y bloques (38.5, G2): el mismo diseño que los correos al usuario. */
+  readonly content: MailContent;
   /** The visitor's own address, so hitting "reply" in a mail client reaches them
    *  and not the sender identity the port sends `from`. */
   readonly replyTo: string;
@@ -108,8 +117,18 @@ export function composeContactNotice(input: ContactMessageInput): ContactNotice 
   const message = input.message.trim();
 
   return {
-    subject: `Escríbenos: mensaje de ${name}`,
-    body: `${name} <${email}> escribió desde "Escríbenos":\n\n${message}`,
+    content: {
+      subject: `Escríbenos: mensaje de ${name}`,
+      blocks: [
+        heading("Mensaje desde Escríbenos"),
+        fact({ label: "De", value: name, note: email }),
+        // Recortado y nada más: el párrafo conserva sus líneas en blanco y sus
+        // saltos en el texto plano, y el renderizador lo escapa en el HTML.
+        paragraph(message),
+        paragraph("Responde a este correo para escribirle."),
+        footer("Te escribimos porque alguien usó Escríbenos en Rentoru.", MAIL_BRAND_LINE),
+      ],
+    },
     replyTo: email,
   };
 }

@@ -548,7 +548,7 @@ describe("owned contact isolation", () => {
           { mailer },
         ).catch((error: unknown) => error);
         expect(texts).toEqual([
-          `Owned Test <visitor@owned.invalid> escribió desde "Escríbenos":\n\nFalta una zona en la ciudad.${separator}[owned-provider-error]`,
+          `Mensaje desde Escríbenos\n\nDe: Owned Test\nvisitor@owned.invalid\n\nFalta una zona en la ciudad.${separator}[owned-provider-error]\n\nResponde a este correo para escribirle.\n\nTe escribimos porque alguien usó Escríbenos en Rentoru.\nRentoru · alquileres en Distrito Capital y Maracaibo`,
         ]);
         expect(responses).toEqual([{ name: "validation_error", message: "owned provider error" }]);
         expect(result).toBeInstanceOf(ContactMailerSendError);
