@@ -5,7 +5,7 @@ import type { MailContent } from "../../../../shared/email/mail-content";
  *
  * **Decisión: `identity` tiene su propio puerto, no el de
  * `listing-lifecycle`.** `LifecycleMailerPort` existe y es estructuralmente
- * casi idéntico — `send({to, subject, body})` — pero importarlo desde acá
+ * casi idéntico — `send({to, content})` — pero importarlo desde acá
  * acoplaría dos capacidades por un accidente de forma: `identity` pasaría a
  * depender de un módulo que no le pertenece y cuyo puerto está pensado para
  * los avisos del ciclo de vida, no para un enlace de acceso.

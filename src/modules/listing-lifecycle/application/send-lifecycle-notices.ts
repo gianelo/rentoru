@@ -131,7 +131,7 @@ async function deliver(
     { listingId: candidate.id, expiresAt: candidate.expiresAt },
     secret,
   );
-  const notice = composeNotice(kind, candidate, now, `${baseUrl}/renovar/${token}`);
+  const content = composeNotice(kind, candidate, now, `${baseUrl}/renovar/${token}`);
 
-  await mailer.send({ to: candidate.publisherEmail, ...notice });
+  await mailer.send({ to: candidate.publisherEmail, content });
 }
