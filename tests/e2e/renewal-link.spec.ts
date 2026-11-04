@@ -113,7 +113,7 @@ test("un GET no renueva ni quema el token", async ({ request }) => {
  * exista en una base alcanzable, el `expires_at` exacto que ese aviso lleva
  * hoy —porque es la cerradura del compare-and-swap— y el mismo
  * `RENEWAL_TOKEN_SECRET` con el que firma el servidor. La 11.22 puso las dos
- * primeras (`neonConfig.fetchEndpoint` contra `scripts/neon-http-proxy.mjs` y
+ * primeras (`DATABASE_URL` directo a `TEST_DATABASE_URL` y
  * un Postgres sembrado) y el trabajo de CI ya define la tercera desde la 7.11.
  *
  * **La fila la siembra y la borra esta prueba, no `seed-e2e.ts`.** Renovar

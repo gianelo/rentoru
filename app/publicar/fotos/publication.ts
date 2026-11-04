@@ -24,21 +24,20 @@ import { getTransactionalDatabase } from "@/shared/db/transactional-client";
  * paid for in one function, and it is worth reading as a list because each
  * line is a decision made earlier:
  *
- * - **Reads use `db` (`neon-http`), writes use the transactional client.**
- *   `neon-http` cannot do transactions at all, and a listing plus its photo
- *   rows must succeed or fail together. Reads stay on HTTP because D2's
- *   latency argument is about the read path.
+ * - **Reads use `db`, writes use the transactional client.** Both are the
+ *   same node-postgres pool; the split names the intent, because a listing
+ *   plus its photo rows must succeed or fail together in one transaction.
  * - **Derivation and hash computation are both adapted, not injected raw.**
  *   Both ports take `Uint8Array` so the application layer never mentions
  *   `Buffer`, which is Node's and not the domain's.
  * - **La verificación del contacto lee por `db` y escribe por el cliente
  *   transaccional** (tasks.md 19.9/19.10), por la misma razón de la primera
  *   línea de esta lista y no por una nueva: la lectura es del camino de
- *   lectura, y `neon-http` no sirve para la mitad que escribe.
+ *   lectura, y la escritura se nombra como tal.
  * - **`photoHashes` uses the transactional client, not `db`.** It both reads
  *   (`findMatchesFromOtherPublishers`, inside the upload guard) and writes
- *   (`record`, task 4.7) — `neon-http` cannot do the write half at all, the
- *   same reason `listings` below is not built on `db` either.
+ *   (`record`, task 4.7) — it is a write port, the same reason `listings`
+ *   below is not built on `db` either.
  *
  * Built per request rather than at module load. `createR2PhotoStorage` reads
  * six environment variables and throws on any that is missing — at module

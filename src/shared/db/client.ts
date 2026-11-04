@@ -1,6 +1,5 @@
-import { neon, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import { resolveLocalFetchEndpoint } from "./local-fetch-endpoint";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
 import { assertPooledConnectionString } from "./pooled-connection";
 import * as schema from "./schema";
 
@@ -14,27 +13,28 @@ function getPooledDatabaseUrl(): string {
   return assertPooledConnectionString(url);
 }
 
-// `neon-http` issues one HTTP request per query with no held connection —
-// the right shape for a serverless function against Neon's pooled endpoint
-// (design.md D2). Interactive multi-statement transactions are not needed by
-// anything this app does today (Auth.js adapter calls, single-row use case
-// writes); if that changes, `drizzle-orm/neon-serverless` is the documented
-// escalation path, not a rewrite.
-
-// **La costura del arnés de e2e (tasks.md 11.22), y sólo hacia el bucle local.**
-// `neon()` habla HTTP, y a qué dirección lo habla lo decide esto: con el proxy
-// de `scripts/neon-http-proxy.mjs` levantado, ESTA aplicación —sin una línea
-// distinta— corre contra el Postgres de `docker-compose.yml`, que es lo que le
-// devuelve los dientes al proyecto `crawlability`.
+// Standard node-postgres, so the same build runs against any Postgres —
+// Neon, another provider, the local container, CI's service — by changing
+// DATABASE_URL alone (design.md D2). No HTTP translation and no proxy: the
+// e2e harness and the deployment speak the same wire protocol to the same
+// driver, and `transaction()` works everywhere.
 //
-// Fuera de esa costura la variable no existe y nada cambia. Y no puede
-// convertirse en otra cosa: `resolveLocalFetchEndpoint` rechaza cualquier host
-// que no sea el bucle local, así que una variable filtrada en un despliegue
-// deja la aplicación sin arrancar en vez de mandar cada consulta a otra parte.
-// `assertPooledConnectionString` sigue corriendo, y sin aflojarse.
-const localFetchEndpoint = resolveLocalFetchEndpoint(process.env.NEON_FETCH_ENDPOINT);
-if (localFetchEndpoint) neonConfig.fetchEndpoint = localFetchEndpoint;
+// ONE pool per process, built at module load, shared by reads and by
+// `transactional-client.ts`. Small on purpose: every warm serverless instance
+// holds its own, and the provider's pooler (Neon's `-pooler.` endpoint) is
+// what absorbs the concurrency, not this number. Idle sockets close quickly
+// so a frozen instance does not sit on connections it is not using.
+const pool = new pg.Pool({
+  connectionString: getPooledDatabaseUrl(),
+  max: 5,
+  idleTimeoutMillis: 10_000,
+});
 
-const sql = neon(getPooledDatabaseUrl());
+// An idle client the server drops emits `error` on the pool. Unhandled, Node
+// kills the process — the deploy smoke scripts would die mid-build. The pool
+// already discards that client; logging is all that is left to do.
+pool.on("error", (error) => {
+  console.error("db pool: idle client error", error.message);
+});
 
-export const db = drizzle(sql, { schema });
+export const db = drizzle(pool, { schema });

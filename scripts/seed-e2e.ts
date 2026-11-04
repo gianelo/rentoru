@@ -17,8 +17,8 @@
  * por no tener nada que traerse de más.
  *
  * Habla `pg` directo contra `TEST_DATABASE_URL`, como el resto de la capa de
- * integración: es una fixture, no la aplicación. Quien corre la aplicación
- * contra este mismo Postgres es `scripts/neon-http-proxy.mjs`.
+ * integración: es una fixture, no la aplicación. La aplicación corre contra
+ * este mismo Postgres con `DATABASE_URL` apuntando directo a él.
  */
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";

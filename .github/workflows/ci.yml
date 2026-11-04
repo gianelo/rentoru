@@ -219,11 +219,9 @@ jobs:
           --health-cmd pg_isready --health-interval 10s --health-timeout 5s
           --health-retries 5
     env:
-      # Deliberately not DATABASE_URL: src/shared/db/client.ts only accepts
-      # Neon's pooled HTTP endpoint (assertPooledConnectionString requires
-      # a "-pooler." hostname), which this bare container can never satisfy.
-      # Future integration specs connect with a direct Postgres driver
-      # against TEST_DATABASE_URL instead of the app's Neon-only client.
+      # Deliberately not DATABASE_URL: integration specs build their own
+      # node-postgres handle from TEST_DATABASE_URL, the same driver the app
+      # runs, so nothing here depends on ambient app configuration.
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentas_test
     steps:
       - uses: actions/checkout@v4
@@ -311,11 +309,9 @@ jobs:
     # especificaciones se saltaban solas. El job instalaba un navegador, corria
     # varios minutos y no podia fallar.
     #
-    # La causa era estructural: la aplicacion habla el HTTP de Neon, no el
-    # protocolo de cable de Postgres. `scripts/neon-http-proxy.mjs` traduce uno
-    # al otro contra este contenedor, y `scripts/seed-e2e.ts` le pone dos
-    # ciudades con fotos. La aplicacion no cambia una linea, y
-    # `assertPooledConnectionString` no se debilita.
+    # Ahora la aplicacion habla node-postgres: `playwright.config.ts` le da
+    # TEST_DATABASE_URL como DATABASE_URL, directo a este contenedor, sin
+    # proxy, y `scripts/seed-e2e.ts` le pone dos ciudades con fotos.
     #
     # Ahora corre tras actualizar dev/staging, siempre contra este contenedor.
     #
@@ -391,7 +387,7 @@ jobs:
       # This preservation fixture needs the seed publisher still draft-free, so
       # it runs alone in its own leg on a freshly seeded container, local only,
       # with no ambient worker DB.
-      # Only the build gets a fake pooled URL; webServer supplies its own DB/proxy.
+      # Only the build gets a fake pooled URL; webServer gets the job's own DB.
       - name: Publication entry (local production build)
         if: matrix.leg == 'publication'
         env:
@@ -403,7 +399,6 @@ jobs:
           SITE_URL: http://localhost:3001
           R2_BUCKET_PUBLIC_URL: http://localhost:3001
           PLAYWRIGHT_PORT: '3001'
-          NEON_PROXY_PORT: '55436'
           PLAYWRIGHT_WEB_COMMAND: pnpm start --port 3001
         run: |
           DATABASE_URL=postgresql://ci:ci@ep-ci-build-0000-pooler.invalid.neon.tech/ci?sslmode=require pnpm build
@@ -506,7 +501,7 @@ jobs:
           pnpm exec playwright test tests/e2e/ficha-diagnostico.spec.ts tests/e2e/ficha-rutas.spec.ts --project=chromium --project=crawlability
 
       # Authenticated logout needs the owned local session table, not the preview.
-      # Build with a fake pooled URL, then start with Playwright's local DB proxy.
+      # Build with a fake pooled URL, then start against the job's own Postgres.
       - name: 30.4b2–30.7 authenticated contact and door (local production build)
         if: matrix.leg == 'auth'
         env:
@@ -585,8 +580,7 @@ jobs:
       # reason as the two above — a build must not depend on the live domain.
       SITE_URL: https://ci-build-no-es-el-dominio-real.invalid
       # Deliberately not DATABASE_URL, same reasoning as the `integration`
-      # job: this bare container is never a Neon pooled endpoint.
-      # scripts/budget-rows.ts speaks node-postgres against this directly.
+      # job: scripts/budget-rows.ts speaks node-postgres against this directly.
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/rentas_test
     steps:
       - uses: actions/checkout@v4
