@@ -136,7 +136,7 @@ export function planPhotosRemoval(
     if (!ids.includes(id)) return { ok: false, refusal: "notFound" };
   }
 
-  const shown = [...requested, ...ids.filter((id) => !requested.has(id))];
+  const shown = photosInShownOrder(ids, order);
   const remaining = shown.filter((id) => !marked.has(id));
   if (remaining.length < MIN_PHOTOS_FOR_ACTIVATION) return { ok: false, refusal: "lastPhoto" };
 
@@ -192,6 +192,66 @@ export function reorderPhotoTo(
   next.splice(from, 1);
   next.splice(toIndex, 0, id);
   return next;
+}
+
+/** Las acciones que cambian el orden. Quitar no: en editar espera a Guardar. */
+export type PhotoReorderAction = Exclude<DraftPhotoAction, "remove">;
+
+const REORDER_ACTIONS: readonly string[] = ["moveUp", "moveDown", "makeCover"];
+
+/** Si lo que llegó de afuera (un botón enviado) es una acción de orden. */
+export function isPhotoReorderAction(value: string): value is PhotoReorderAction {
+  return REORDER_ACTIONS.includes(value);
+}
+
+/**
+ * Fase 44 (44.5b, L17) — **un botón con nombre, una mecánica.** La misma
+ * función la llama la acción de servidor sin JavaScript y el navegador con
+ * él, así que las dos pantallas no pueden reordenar distinto.
+ */
+export function applyPhotoAction(
+  ids: readonly string[],
+  id: string,
+  action: PhotoReorderAction,
+): readonly string[] {
+  if (action === "makeCover") return promoteToCover(ids, id);
+  return movePhotoBy(ids, id, action === "moveUp" ? -1 : 1);
+}
+
+/**
+ * El orden que editar dibuja: el enviado, contra las fotos que el aviso tiene
+ * HOY. Una repetida cuenta una vez, una que ya no está no se dibuja, y las que
+ * no venían —subidas mientras tanto— van al final en su orden, que es donde
+ * guardar las pondría (`planPhotosRemoval`).
+ */
+export function photosInShownOrder(
+  ids: readonly string[],
+  order: readonly string[],
+): readonly string[] {
+  const requested = new Set(order.filter((id) => ids.includes(id)));
+  return [...requested, ...ids.filter((id) => !requested.has(id))];
+}
+
+export type PendingPhotoChange =
+  | { readonly kind: "cover"; readonly photoId: string }
+  | { readonly kind: "order" }
+  | null;
+
+/**
+ * Qué se aplicará al guardar, para que la pantalla lo diga antes: otra
+ * portada (y cuál), sólo otro orden, o nada.
+ */
+export function pendingPhotoChange(
+  ids: readonly string[],
+  order: readonly string[],
+): PendingPhotoChange {
+  const shown = photosInShownOrder(ids, order);
+  const cover = shown[COVER_PHOTO_INDEX];
+  if (cover !== undefined && cover !== ids[COVER_PHOTO_INDEX]) {
+    return { kind: "cover", photoId: cover };
+  }
+  if (shown.some((id, index) => id !== ids[index])) return { kind: "order" };
+  return null;
 }
 
 /**

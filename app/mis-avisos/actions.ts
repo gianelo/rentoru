@@ -22,6 +22,10 @@ import {
 } from "@/modules/listing-publication/application/edit-listing-photos";
 import { requestDraftPhotoUpload } from "@/modules/listing-publication/application/request-draft-photo-upload";
 import { measureOf } from "@/modules/listing-publication/domain/carried-value";
+import {
+  applyPhotoAction,
+  isPhotoReorderAction,
+} from "@/modules/listing-publication/domain/draft-photo-actions";
 import type { ListingEdit } from "@/modules/listing-publication/domain/listing-edit";
 import {
   DrizzleListingActivation,
@@ -346,9 +350,27 @@ export async function guardarEdicion(
   _estadoAnterior: EstadoDeEdicion,
   formData: FormData,
 ): Promise<EstadoDeEdicion> {
+  const fotosAQuitar = leerFotosAQuitar(formData);
+  const ordenFotos = leerOrdenFotos(formData);
+  const mover = formData.get("moverFoto");
+  // Fase 44 (44.5b, L17): sin JavaScript, «Hacer portada», «Subir» y
+  // «Bajar» son botones de envío. Vuelven a la pantalla reordenada SIN
+  // guardar, con lo escrito y las marcas; el orden nuevo lo da el dominio, y
+  // uno inventado deja el orden como estaba.
+  if (typeof mover === "string") {
+    const [accion = "", photoId = ""] = mover.split(":");
+    const orden = ordenFotos ?? [];
+    return {
+      motivos: [],
+      medidas: {},
+      valores: valoresEnviados(formData),
+      fotosAQuitar,
+      ordenFotos: isPhotoReorderAction(accion) ? applyPhotoAction(orden, photoId, accion) : orden,
+    };
+  }
+
   const listingId = String(formData.get("listingId") ?? "");
   const edicion = leerEdicion(formData);
-  const fotosAQuitar = leerFotosAQuitar(formData);
   const transactional = getTransactionalDatabase();
   const listings = new DrizzleListingEdit(transactional);
 
@@ -356,16 +378,19 @@ export async function guardarEdicion(
   let portadaCambio = false;
   try {
     const result = await editListing(
-      { listingId, edit: edicion, photoIdsToRemove: fotosAQuitar },
+      { listingId, edit: edicion, photoIdsToRemove: fotosAQuitar, photoOrder: ordenFotos },
       {
         sessionPort: nextAuthSessionPort,
         zones: new DrizzleZoneCatalogue(db),
         listings,
-        // Fase 44 (44.4b): sólo con marcas. Sin ellas el guardado es el de
-        // siempre y no arma R2, que lee seis variables y tira si falta una.
-        // Transaccional y no HTTP: quitar y guardar van en UNA transacción.
+        // Fase 44 (44.4b, 44.5b): sólo con marcas o con un orden. Desde la
+        // 44.5b la pantalla siempre manda el orden, así que en la práctica
+        // todo guardado arma R2 —como ya lo hacía subir— y una variable que
+        // falte se niega ANTES de escribir, no después del commit. Un POST sin
+        // fotos sigue siendo el de siempre. Transaccional y no HTTP: fotos y
+        // campos van en UNA transacción.
         photoRemoval:
-          fotosAQuitar.length === 0
+          fotosAQuitar.length === 0 && ordenFotos === undefined
             ? undefined
             : {
                 order: new DrizzleListingPhotoSet(transactional),
@@ -400,8 +425,9 @@ export async function guardarEdicion(
       },
       valores: valoresEnviados(formData),
       // Las marcas sobreviven a la negativa (G3): `valores` guarda una por
-      // nombre y aquí hay varias con el mismo.
+      // nombre y aquí hay varias con el mismo. El orden, igual (44.5b).
       fotosAQuitar,
+      ordenFotos,
     };
   }
 
@@ -424,14 +450,28 @@ function leerFotosAQuitar(formData: FormData): string[] {
 }
 
 /**
+ * Fase 44 (44.5b) — el orden en que se veían las fotos, uno por campo
+ * `ordenFoto`. `undefined` si no viajó ninguno: un POST sin orden guarda como
+ * antes. Si cada id es del aviso lo contesta `editListing`.
+ */
+function leerOrdenFotos(formData: FormData): string[] | undefined {
+  const ids = formData
+    .getAll("ordenFoto")
+    .filter((value): value is string => typeof value === "string" && value.trim() !== "");
+  return ids.length === 0 ? undefined : ids;
+}
+
+/**
  * Lo escrito, de vuelta tal cual: cadenas crudas, nunca leídas — el «abc» del
  * precio vuelve «abc». El `listingId` no vuelve porque el formulario ya lo
  * dibuja desde el aviso.
  */
+const NO_SON_VALORES = new Set(["listingId", "quitarFoto", "ordenFoto", "moverFoto"]);
+
 function valoresEnviados(formData: FormData): Record<string, string> {
   const valores: Record<string, string> = {};
   for (const [name, value] of formData) {
-    if (name !== "listingId" && name !== "quitarFoto" && typeof value === "string") {
+    if (!NO_SON_VALORES.has(name) && typeof value === "string") {
       valores[name] = value;
     }
   }

@@ -48,3 +48,46 @@
 .conFotos:has(.quitar:checked) .recuerda {
   display: block;
 }
+
+/* Fase 44 (44.5b, S6) — portada y orden, de la lámina (estado 5). Los
+   botones de orden van en su propia línea, debajo de la foto. */
+.foto {
+  flex-wrap: wrap;
+}
+
+.acciones {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-block-end: 12px;
+}
+
+.mover {
+  padding: 8px 16px;
+}
+
+/* «Se ve primero en los resultados», «Posición 2» y el aviso de lo pendiente. */
+.meta,
+.pendiente {
+  display: block;
+  margin: 0;
+  font-family: var(--meta);
+  font-size: var(--meta-fs);
+  color: var(--soft);
+}
+
+/* Nivel 2: comunica un estado, no invita a enviar. */
+.portada {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border-radius: var(--rs);
+  background: var(--tint);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: var(--badge-fs);
+  font-weight: var(--badge-fw);
+  letter-spacing: var(--badge-ls);
+  text-transform: uppercase;
+}
