@@ -1,3 +1,4 @@
+import type { PhotoRemovalRefusal } from "./draft-photo-actions";
 import {
   type ContactMethod,
   type CuratedZone,
@@ -97,7 +98,17 @@ export function editablePublisherTypes(current: PublisherType): readonly Publish
  * inventarle un paso, y un paso inventado es una violación que el publicador
  * recibe en ninguna parte.
  */
-export type ListingEditViolation = PublishViolation | "publisherType.immutable";
+export type ListingEditViolation =
+  | PublishViolation
+  | "publisherType.immutable"
+  | PhotosToRemoveViolation;
+
+/**
+ * Fase 44 (44.4) — por qué no se pudieron quitar las fotos marcadas al
+ * guardar. La negativa de `planPhotosRemoval`, con el prefijo del campo que la
+ * pantalla dibuja: un código por pregunta, no dos tablas para la misma.
+ */
+export type PhotosToRemoveViolation = `photosToRemove.${PhotoRemovalRefusal}`;
 
 /**
  * Los cinco atributos de la F6 (18.37), escritos UNA vez: el aviso, el pedido y

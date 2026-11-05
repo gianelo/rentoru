@@ -93,6 +93,47 @@ export function planPhotoRemoval(ids: readonly string[], id: string): PhotoRemov
   };
 }
 
+export type PhotosRemovalPlan =
+  | { readonly ok: false; readonly refusal: PhotoRemovalRefusal }
+  | {
+      readonly ok: true;
+      readonly ids: readonly string[];
+      /** Las que se quitan, sin repetir y en el orden del aviso. */
+      readonly removed: readonly string[];
+      readonly coverChangedTo: string | null;
+    };
+
+/**
+ * Fase 44 (44.4) — **las marcadas al guardar, como un lote.** Mismo piso y
+ * misma portada que `planPhotoRemoval`, pero dichos sobre el conjunto: dos
+ * marcas sobre dos fotos son «quitar todas», aunque cada una por separado
+ * pasaría.
+ *
+ * **Una sola marca que no está rechaza el lote entero** (G3, fundador:
+ * «Rechazar el guardado»). Quitar las demás y callar la que faltó sería
+ * guardar algo distinto de lo que se pidió (AGENTS.md §7).
+ */
+export function planPhotosRemoval(
+  ids: readonly string[],
+  idsToRemove: readonly string[],
+): PhotosRemovalPlan {
+  const marked = new Set(idsToRemove);
+  for (const id of marked) {
+    if (!ids.includes(id)) return { ok: false, refusal: "notFound" };
+  }
+
+  const remaining = ids.filter((id) => !marked.has(id));
+  if (remaining.length < MIN_PHOTOS_FOR_ACTIVATION) return { ok: false, refusal: "lastPhoto" };
+
+  const coverRemoved = marked.has(ids[COVER_PHOTO_INDEX] as string);
+  return {
+    ok: true,
+    ids: remaining,
+    removed: ids.filter((id) => marked.has(id)),
+    coverChangedTo: coverRemoved ? (remaining[COVER_PHOTO_INDEX] ?? null) : null,
+  };
+}
+
 /**
  * Un lugar arriba o abajo. La primera es la portada, así que «mover arriba»
  * desde la segunda posición ES «hacer portada» — una sola mecánica en vez de

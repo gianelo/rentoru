@@ -38,6 +38,8 @@ export type ListingField =
   | "bathrooms"
   | "parkingSpots"
   | "photos"
+  /** Las fotos marcadas para quitar al guardar (44.4): la lista de fotos de editar. */
+  | "photosToRemove"
   | "contactMethod"
   | "contactValue";
 
@@ -75,6 +77,8 @@ export const LISTING_VIOLATION_FIELD: Record<ListingEditViolation, ListingField>
   "contactValue.invalid": "contactValue",
   "photos.required": "photos",
   "photos.tooMany": "photos",
+  "photosToRemove.notFound": "photosToRemove",
+  "photosToRemove.lastPhoto": "photosToRemove",
 };
 
 /**
@@ -93,7 +97,7 @@ export const LISTING_VIOLATION_FIELD: Record<ListingEditViolation, ListingField>
  * también va en esa URL, no tienen el id que `listingIdFromSlug` usa para
  * rescatar una dirección vieja.
  */
-const EDIT_REQUEST_FIELD: Record<keyof ListingEdit, true> = {
+const EDIT_REQUEST_FIELD: Record<keyof ListingEdit | "photosToRemove", true> = {
   title: true,
   description: true,
   priceUsd: true,
@@ -117,6 +121,13 @@ const EDIT_REQUEST_FIELD: Record<keyof ListingEdit, true> = {
   isFurnished: true,
   hasSecurity: true,
   hasAppliances: true,
+  /**
+   * Fase 44 (44.4): no es un campo de `ListingEdit` sino los ids que viajan al
+   * lado, en el mismo envío. Se coloca porque la pantalla tiene dónde: debajo
+   * de la lista de fotos (L8). `photos` sigue sin lugar, porque el conteo no
+   * lo manda nadie.
+   */
+  photosToRemove: true,
 };
 
 export interface PlacedEditViolations {

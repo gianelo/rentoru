@@ -1,15 +1,11 @@
 import type { SessionPort } from "../../identity/application/ports/session.port";
 import type { PhotoHashPort } from "../../listing-trust/application/ports/photo-hash.port";
-import { type PhotoRemovalRefusal, planPhotoRemoval } from "../domain/draft-photo-actions";
 import { MAX_PHOTOS_PER_LISTING } from "../domain/publishable-listing";
 import { MAX_PHOTO_BYTES } from "../domain/uploaded-photo";
-import { EditListingNotFoundError, loadListingForEdit } from "./edit-listing";
+import { loadListingForEdit } from "./edit-listing";
 import type { ListingEditPort } from "./ports/listing-edit.port";
 import type { ListingPhotoAttachmentPort } from "./ports/listing-photo-attachment.port";
 import type {
-  ListingPhotoDerivativeKeysPort,
-  ListingPhotoDetachmentPort,
-  ListingPhotoOrderPort,
   ListingPhotoThumbnail,
   ListingPhotoThumbnailPort,
 } from "./ports/listing-photo-set.port";
@@ -19,7 +15,9 @@ import type { PhotoStoragePort, UploadTarget } from "./ports/photo-storage.port"
 import { processUploadedPhoto } from "./process-uploaded-photo";
 
 /**
- * tasks.md 18.21 — **agregar y quitar fotos de un aviso YA publicado.**
+ * tasks.md 18.21 — **agregar fotos a un aviso YA publicado y listar las que
+ * tiene.** Quitarlas ya no vive acá: desde la 44.4 se marcan y se quitan al
+ * guardar, dentro de `editListing`.
  *
  * **Por qué no es `attachPhotoToDraft`.** Su propio docstring ya lo dejó
  * escrito: «an `active` listing cannot reach this function at all», porque su
@@ -33,8 +31,8 @@ import { processUploadedPhoto } from "./process-uploaded-photo";
  * ajeno, un borrador, un vencido y uno oculto con el MISMO
  * `EditListingNotFoundError` que ya refusa un id inexistente, y vuelve a
  * comparar `publisherId` contra la sesión por si un adaptador futuro se
- * olvida del segundo parámetro. Reusarla es lo que garantiza que quitar una
- * foto no se convierta en el camino por el que un desconocido averigua que un
+ * olvida del segundo parámetro. Reusarla es lo que garantiza que tocar las
+ * fotos no se convierta en el camino por el que un desconocido averigua que un
  * aviso existe (AGENTS.md §7).
  *
  * **`processUploadedPhoto` sigue siendo el único punto de paso**, llamado acá
@@ -43,17 +41,8 @@ import { processUploadedPhoto } from "./process-uploaded-photo";
  * de adjuntar que no pase por ahí reabre el agujero que esa tarea cerró.
  *
  * **Ninguna regla nueva.** El tope es `MAX_PHOTOS_PER_LISTING`, la misma
- * constante que `planListingEdit` aplica en etapa `"activation"`; el piso y
- * el ascenso de la portada los decide `planPhotoRemoval`, que ya existe desde
- * la 18.15 y ya está probado. Acá sólo se ordenan las puertas.
- *
- * **Al desprender, las derivadas de R2 se borran acá mismo (18.32).** Viven
- * bajo el prefijo PROMOVIDO, junto a las fotos de todos los avisos activos, así
- * que ninguna regla de ciclo de vida del bucket las distingue: lo único que las
- * separa es la ausencia de su fila en `listing_photo`, o sea exactamente este
- * instante. **Y el permiso ya estaba**: `PhotoStoragePort.remove` existe desde
- * D12 y `purgeExpiredPhotos` ya lo usa contra el mismo bucket, así que la razón
- * que la 18.21 anotó —«pediría ensanchar un puerto angosto»— era falsa.
+ * constante que `planListingEdit` aplica en etapa `"activation"`. Acá sólo se
+ * ordenan las puertas.
  */
 
 export class ListingPhotoLimitReachedError extends Error {
@@ -63,20 +52,6 @@ export class ListingPhotoLimitReachedError extends Error {
         "the maximum a listing may carry.",
     );
     this.name = "ListingPhotoLimitReachedError";
-  }
-}
-
-/**
- * Lleva la negativa del dominio, **nunca una frase**: la copia sale de
- * `PHOTO_REMOVAL_REFUSAL_COPY`, que ya la escribió una vez para el paso 8.
- */
-export class ListingPhotoRemovalRefusedError extends Error {
-  readonly refusal: PhotoRemovalRefusal;
-
-  constructor(listingId: string, refusal: PhotoRemovalRefusal) {
-    super(`edit-listing-photos: cannot detach from ${listingId} (${refusal}).`);
-    this.name = "ListingPhotoRemovalRefusedError";
-    this.refusal = refusal;
   }
 }
 
@@ -193,73 +168,6 @@ export async function loadListingPhotosForEdit(
 ): Promise<readonly ListingPhotoThumbnail[]> {
   const listing = await openForPhotos(request.listingId, dependencies, { checkCeiling: false });
   return dependencies.thumbnails.listPhotoThumbnailsInOrder(listing.id);
-}
-
-export interface DetachPhotoFromListingDependencies extends EditableListingGate {
-  readonly order: ListingPhotoOrderPort;
-  readonly derivatives: ListingPhotoDerivativeKeysPort;
-  readonly photos: ListingPhotoDetachmentPort;
-  /** Sólo `remove`: desprender no firma subidas ni lee objetos. */
-  readonly storage: Pick<PhotoStoragePort, "remove">;
-}
-
-/**
- * Quitar una foto de un aviso publicado.
- *
- * **La decisión es del dominio.** `planPhotoRemoval` contesta si se puede
- * —el piso es `MIN_PHOTOS_FOR_ACTIVATION`, la misma constante que
- * `activateListing` revalida— y cuál queda de portada cuando la quitada era
- * la portada. Acá no se compara ningún número.
- */
-export async function detachPhotoFromListing(
-  request: { readonly listingId: string; readonly photoId: string },
-  dependencies: DetachPhotoFromListingDependencies,
-): Promise<{ readonly listingId: string; readonly coverChangedTo: string | null }> {
-  const listing = await openForPhotos(request.listingId, dependencies, { checkCeiling: false });
-
-  const ids = await dependencies.order.listPhotoIdsInOrder(listing.id);
-  const plan = planPhotoRemoval(ids, request.photoId);
-  if (!plan.ok) {
-    throw new ListingPhotoRemovalRefusedError(listing.id, plan.refusal);
-  }
-
-  // ANTES del borrado, y no por prolijidad: `listing_photo_derivative` cuelga de
-  // `listing_photo` con `ON DELETE cascade`, así que leído después esto devuelve
-  // cero claves y los cinco objetos quedan pagados sin que nada los nombre.
-  const derivativeKeys = await dependencies.derivatives.listDerivativeKeys(
-    listing.id,
-    request.photoId,
-  );
-
-  const detached = await dependencies.photos.detachPhoto(listing.id, request.photoId);
-  if (!detached) {
-    // La fila estaba cuando la lectura de arriba la vio y dejó de estar antes
-    // del `DELETE`. No hay nada que ESTA llamada pueda haber hecho, y el
-    // aviso se contesta como el inexistente que ahora es. **Sin tocar R2**: el
-    // borrado fue de otra transacción y sus objetos son decisión de aquélla.
-    throw new EditListingNotFoundError(listing.id);
-  }
-
-  /**
-   * **La fila primero y R2 después, al revés que `purgeExpiredPhotos`.** Ahí
-   * nada vivo muestra esas fotos y el trabajo vuelve a correr mañana; acá la
-   * fila es de un aviso PUBLICADO y no hay segunda corrida. Con R2 primero, un
-   * borrado de fila que falle deja un aviso vivo apuntando a cinco 404 que no se
-   * pueden rehacer —D12 descartó el original—, y un objeto que ya no está en R2
-   * hace `remove` gritar para siempre: la foto queda imposible de quitar, el
-   * fallo abierto que `listPhotoThumbnailsInOrder` se escribió para evitar. Con
-   * la fila primero, lo peor que queda es el huérfano: una cuenta, no una
-   * pantalla rota.
-   *
-   * **Y grita.** `remove` está fuera de todo `try` a propósito (D12): tragarse
-   * la falla es el silencio que fabricó la 18.23. La fila ya se fue, así que
-   * recargar muestra la foto quitada.
-   */
-  for (const key of derivativeKeys) {
-    await dependencies.storage.remove(key);
-  }
-
-  return { listingId: listing.id, coverChangedTo: plan.coverChangedTo };
 }
 
 /**

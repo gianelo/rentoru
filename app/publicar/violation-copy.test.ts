@@ -282,6 +282,15 @@ describe("listingEditViolationMessage — un solo español para publicar y edita
     expect(listingEditViolationMessage("precio.regalado", {})).toBe("precio.regalado");
   });
 
+  it("las negativas de quitar fotos al guardar dicen qué pasó y qué hacer (44.4)", () => {
+    expect(listingEditViolationMessage("photosToRemove.notFound", {})).toBe(
+      "Esa foto ya no está. Revisa y vuelve a guardar.",
+    );
+    expect(listingEditViolationMessage("photosToRemove.lastPhoto", {})).toBe(
+      "No puedes quitar todas las fotos: el aviso necesita al menos una.",
+    );
+  });
+
   it("no hay entrada de `publisherType.immutable` en la tabla de publicar", () => {
     // Los nueve pasos no pueden mostrarlo: `STEP_FOR_VIOLATION` es un `Record`
     // sobre la unión de publicar, y meterlo ahí obligaría a inventarle un paso.

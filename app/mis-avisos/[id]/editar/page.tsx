@@ -12,8 +12,6 @@ import {
 } from "@/modules/listing-publication/application/edit-listing";
 import { loadListingPhotosForEdit } from "@/modules/listing-publication/application/edit-listing-photos";
 import { readCarriedMeasure } from "@/modules/listing-publication/domain/carried-value";
-import { COVER_PHOTO_INDEX } from "@/modules/listing-publication/domain/draft-photo-actions";
-import { MAX_PHOTOS_PER_LISTING } from "@/modules/listing-publication/domain/publishable-listing";
 import {
   DrizzleListingEdit,
   DrizzleListingPhotoSet,
@@ -24,15 +22,8 @@ import { Container } from "../../../../components/layout/Container";
 import type { SearchPillProps } from "../../../../components/molecules/SearchPill";
 import { Nav } from "../../../../components/organisms/Nav";
 import { requireSession } from "../../../_lib/require-session";
-import {
-  coverChangedNotice,
-  PHOTO_ACTION_COPY,
-  PHOTO_COVER_EXPLANATION,
-  photoActionLabel,
-  photoRemovalRefusalMessage,
-} from "../../../publicar/photo-action-copy";
 import styles from "../../../publicar/publish-steps.module.css";
-import { adjuntarFotoAlAviso, pedirDestinoDeFotoDelAviso, quitarFotoDelAviso } from "../../actions";
+import { adjuntarFotoAlAviso, pedirDestinoDeFotoDelAviso } from "../../actions";
 import type { EstadoDeEdicion } from "../../editar-estado";
 import { SubirFoto } from "../../SubirFoto";
 import { EditarForm } from "./EditarForm";
@@ -75,15 +66,13 @@ export const dynamic = "force-dynamic";
  * **El formulario de guardar vive en `EditarForm.tsx`**, un componente de
  * cliente para que la fase 44 pueda devolver los valores rechazados (G2). Sigue
  * siendo un `<form method="post">` nativo hacia una Server Action, igual que
- * los nueve pasos de publicar, y funciona con el script apagado. Los
- * formularios de cada foto siguen nativos en este archivo.
+ * los nueve pasos de publicar, y funciona con el script apagado.
  *
- * **Las fotos se agregan y se quitan acá desde la 18.21**, y con su propio
- * `<form>` cada una: no viajan con «Guardar cambios» porque no son un campo
- * del pedido — `photoCount` sale de contar filas y nunca de la edición. Quién
- * puede agregar y quitar lo contesta `edit-listing-photos.ts` con la MISMA
- * puerta que esta pantalla ya usó para leer el aviso; el piso, el tope y el
- * ascenso de la portada los contesta el dominio.
+ * **Las fotos se agregan acá desde la 18.21, y se quitan al guardar desde la
+ * 44.4b** (S2): cada una lleva una casilla dentro del formulario de guardar, y
+ * `editListing` las quita en la misma transacción que los campos. Agregar
+ * sigue siendo inmediato. El piso, el tope y el ascenso de la portada los
+ * contesta el dominio.
  *
  * **Dónde se lee cada negativa lo decide el dominio** (tasks.md 18.22): antes
  * del campo que la produjo y anunciada, como hacen los nueve pasos, con el
@@ -144,6 +133,18 @@ export default async function EditarAvisoPage({
    */
   const fotosBaseUrl = readPhotoPublicBaseUrl();
 
+  /**
+   * Datos planos para el formulario de cliente (44.4b): la dirección se
+   * compone acá porque la base del bucket es del servidor, y el texto
+   * alternativo lo compone el dominio. **Una foto sin derivada conserva su
+   * renglón**, con `thumbUrl` en `null`: es el único camino para quitarla.
+   */
+  const fotosDelAviso = fotos.map((foto, index) => ({
+    photoId: foto.photoId,
+    thumbUrl: foto.thumbKey === null ? null : photoUrl(fotosBaseUrl, foto.thumbKey),
+    alt: photoAltText({ position: index, total: fotos.length, title: aviso.title, zone: "" }),
+  }));
+
   // **Y acá tampoco se paga** (14.56): esta pantalla edita un aviso PROPIO y
   // `loadListingForEdit` ya contestó `notFound()` para un id ajeno o
   // inexistente, así que haber llegado hasta esta línea es la respuesta del
@@ -203,142 +204,29 @@ export default async function EditarAvisoPage({
               Los cambios se ven enseguida en tu aviso. Quien ya vio tu contacto no lo pierde.
             </p>
 
-            {/*
-              **Las fotos, antes del formulario y fuera de él.** Cada una lleva
-              su propio `<form method="post">`, así que anidarlas adentro del de
-              guardar sería marcado inválido y haría que quitar una enviara la
-              edición entera. Y se guardan al tocarlas: `photoCount` sale de
-              contar filas, nunca de un campo del pedido.
-            */}
-            <section className={styles.choices} aria-labelledby="fotos-titulo">
-              <h2 className={styles.legend} id="fotos-titulo">
-                Fotos
-              </h2>
-              <p className={styles.help}>
-                {fotos.length} de {MAX_PHOTOS_PER_LISTING}. {PHOTO_COVER_EXPLANATION}. Se guardan al
-                tocarlas, sin esperar a «Guardar cambios».
-              </p>
-
-              {/* La negativa vuelve como código, y la copia la decide la tabla
-                  del paso 8 — no una segunda lista de castellano. */}
-              {query.foto === undefined ? null : (
-                <p className={styles.error} role="alert">
-                  {photoRemovalRefusalMessage(query.foto)}
-                </p>
-              )}
-
-              {/* Quien quita la portada cambió la cara del aviso sin pedirlo,
-                  así que se anuncia con nombre en vez de callarse. */}
-              {query.portada === "1" && fotos.length > 0 ? (
-                <p className={styles.help} role="status">
-                  {coverChangedNotice(nombreDeFoto(COVER_PHOTO_INDEX))}
-                </p>
-              ) : null}
-
-              <ul className={styles.results}>
-                {fotos.map((foto, index) => (
-                  <li key={foto.photoId} className={styles.photoRow}>
-                    {/*
-                      **La foto, no su ordinal** (tasks.md 18.26). Antes de
-                      esto el renglón decía «Foto 4» y nada más, así que quien
-                      tiene seis parecidas elegía a ciegas y podía quitar la
-                      que no era, sobre su propio aviso y sin vuelta atrás.
-
-                      `<img>` y no `next/image` por la misma razón que la
-                      cuadrícula y el visor: el optimizador de la plataforma es
-                      un recurso medido del plan gratuito, y estas derivadas ya
-                      salen de R2 con egreso cero.
-
-                      **La miniatura, nunca la foto entera**: los cuatro
-                      tamaños existen para que un teléfono con datos caros no
-                      descargue seis imágenes de pantalla completa para elegir
-                      una.
-
-                      **Una foto sin derivada conserva su renglón**, sin
-                      `<img>`: filtrarla dejaría una fila que el aviso muestra
-                      y su dueño no puede sacar, porque este renglón es el
-                      único camino para quitarla (AGENTS.md §7).
-                    */}
-                    {foto.thumbKey === null ? null : (
-                      /* `next/image` optimiza contra un servicio medido del
-                         plan gratuito; estas derivadas YA se generaron una vez
-                         al subir, en cuatro tamaños, justamente para salir de
-                         R2 con egreso cero. Pasarlas por el optimizador
-                         gastaría una transformación paga por una imagen que ya
-                         está en el tamaño que se dibuja. */
-                      // biome-ignore lint/performance/noImgElement: derivada ya generada, egreso cero desde R2
-                      <img
-                        className={styles.photoThumb}
-                        src={photoUrl(fotosBaseUrl, foto.thumbKey)}
-                        /* **El texto alternativo es producto, no decoración**,
-                           y lo compone el dominio: la posición va primero
-                           porque quien usa lector de pantalla necesita saber
-                           dónde está antes que qué mira. Un `alt="foto"`
-                           escrito acá sería peor que ninguno. Sin zona: el
-                           dueño ya sabe dónde está su aviso, y traerla pediría
-                           una segunda lectura para una coma. */
-                        alt={photoAltText({
-                          position: index,
-                          total: fotos.length,
-                          title: aviso.title,
-                          zone: "",
-                        })}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    )}
-                    <span className={styles.photoName}>
-                      {nombreDeFoto(index)}
-                      {index === COVER_PHOTO_INDEX ? " (portada)" : ""}
-                    </span>
-                    {/* Un `<form>` de verdad: quitar funciona con el script
-                        apagado, a diferencia de agregar, que comprime en el
-                        teléfono antes de que los bytes salgan. */}
-                    <form action={quitarFotoDelAviso} method="post">
-                      <input type="hidden" name="listingId" value={aviso.id} />
-                      <input type="hidden" name="photoId" value={foto.photoId} />
-                      <button
-                        type="submit"
-                        className={styles.secondary}
-                        aria-label={photoActionLabel("remove", nombreDeFoto(index))}
-                      >
-                        {PHOTO_ACTION_COPY.remove.label}
-                      </button>
-                    </form>
-                  </li>
-                ))}
-              </ul>
-
-              {/* El MISMO componente que sube una foto a un borrador importado:
-                  cambia la puerta del servidor, no la secuencia. */}
-              <SubirFoto
-                listingId={aviso.id}
-                photoCount={fotos.length}
-                firmar={pedirDestinoDeFotoDelAviso}
-                adjuntar={adjuntarFotoAlAviso}
-                exito="Foto agregada a tu aviso."
-                chooserLabel="Elegir fotos"
-              />
-            </section>
-
-            <EditarForm aviso={aviso} estadoInicial={estadoInicial} />
+            <EditarForm
+              aviso={aviso}
+              estadoInicial={estadoInicial}
+              fotos={fotosDelAviso}
+              subirFoto={
+                /* El MISMO componente que sube una foto a un borrador
+                   importado. Va como ranura dentro del formulario de guardar:
+                   no dibuja ningún `<form>` ni `<button>`, y su archivo no
+                   tiene `name`, así que no viaja con Guardar. Subir sigue
+                   siendo inmediato; quitar espera a Guardar (44.4b). */
+                <SubirFoto
+                  listingId={aviso.id}
+                  photoCount={fotos.length}
+                  firmar={pedirDestinoDeFotoDelAviso}
+                  adjuntar={adjuntarFotoAlAviso}
+                  exito="Foto agregada a tu aviso."
+                  chooserLabel="Elegir fotos"
+                />
+              }
+            />
           </div>
         </Container>
       </main>
     </>
   );
-}
-
-/**
- * Cómo se llama una foto de un aviso publicado.
- *
- * **Su posición es el único nombre que tiene**, y no es una carencia de esta
- * pantalla: `listing_photo` no guarda ni nombre de archivo ni `alt_text`, a
- * propósito —«pedirle a quien llena el formulario de pie y con una mano que
- * describa seis fotografías produce campos vacíos, no accesibilidad»—. Base
- * uno para quien lee, igual que `photoAltText`: «Foto 0» no es algo que nadie
- * diga en voz alta.
- */
-function nombreDeFoto(index: number): string {
-  return `Foto ${index + 1}`;
 }

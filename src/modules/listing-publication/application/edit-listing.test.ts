@@ -8,6 +8,7 @@ import {
   loadListingForEdit,
 } from "./edit-listing";
 import type { EditableListing, ListingEditPort } from "./ports/listing-edit.port";
+import type { EditRemovingPhotosOutcome } from "./ports/listing-edit-with-photos.port";
 import type { ZoneCataloguePort } from "./ports/zone-catalogue.port";
 
 /**
@@ -156,7 +157,7 @@ describe("editListing — lo que escribe y lo que refusa (18.14)", () => {
       { sessionPort: sessionPortReturning(OWNER), zones, listings },
     );
 
-    expect(result).toEqual({ listingId: LISTING });
+    expect(result).toEqual({ listingId: LISTING, coverChangedTo: null });
     expect(listings.applyEdit).toHaveBeenCalledWith(LISTING, OWNER, {
       title: "Apartamento amoblado en La Castellana",
       description: VALID_DESCRIPTION,
@@ -205,6 +206,209 @@ describe("editListing — lo que escribe y lo que refusa (18.14)", () => {
     ).catch((thrown: unknown) => thrown);
 
     expect((error as EditListingRejectedError).violations).toContain("priceUsd.invalid");
+    expect(listings.applyEdit).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Fase 44 (44.4, G3/D1) — **las fotos marcadas se quitan al guardar, o no se
+ * quitan.** `calls` es un registro compartido y no un espía por puerto: lo que
+ * se afirma es el ORDEN —la escritura antes que R2—, que dos espías sueltos no
+ * pueden decir.
+ */
+describe("editListing — quitar fotos al guardar (44.4)", () => {
+  function photoRemoval(
+    photoIds: readonly string[],
+    outcome: EditRemovingPhotosOutcome = { applied: true, derivativeKeys: ["k1", "k2"] },
+  ) {
+    const calls: string[] = [];
+    const ports = {
+      order: { listPhotoIdsInOrder: vi.fn(async () => photoIds) },
+      listings: {
+        applyEditRemovingPhotos: vi.fn(async () => {
+          calls.push("write");
+          return outcome;
+        }),
+      },
+      storage: {
+        remove: vi.fn(async (key: string) => {
+          calls.push(`remove:${key}`);
+        }),
+      },
+    };
+    return { calls, ports };
+  }
+
+  async function run(
+    request: { edit?: object; photoIdsToRemove?: readonly string[] },
+    removal: ReturnType<typeof photoRemoval>,
+    listings = portReturning(listing()),
+  ) {
+    return editListing(
+      { listingId: LISTING, edit: request.edit ?? {}, photoIdsToRemove: request.photoIdsToRemove },
+      { sessionPort: sessionPortReturning(OWNER), zones, listings, photoRemoval: removal.ports },
+    );
+  }
+
+  it("una edición rechazada con fotos marcadas no escribe ni toca R2", async () => {
+    const removal = photoRemoval(["a", "b"]);
+
+    const error = await run({ edit: { priceUsd: 0 }, photoIdsToRemove: ["a"] }, removal).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect((error as EditListingRejectedError).violations).toEqual(["priceUsd.invalid"]);
+    expect(removal.calls).toEqual([]);
+  });
+
+  it("guarda con las marcadas en una sola escritura, y R2 sólo después, clave por clave", async () => {
+    const removal = photoRemoval(["a", "b", "c"]);
+    const listings = portReturning(listing());
+
+    const result = await run(
+      { edit: { priceUsd: 700 }, photoIdsToRemove: ["b", "a", "b"] },
+      removal,
+      listings,
+    );
+
+    expect(removal.ports.listings.applyEditRemovingPhotos).toHaveBeenCalledTimes(1);
+    expect(removal.ports.listings.applyEditRemovingPhotos).toHaveBeenCalledWith(
+      LISTING,
+      OWNER,
+      expect.objectContaining({ priceUsd: 700 }),
+      ["a", "b"],
+      ["a", "b", "c"],
+    );
+    expect(removal.calls).toEqual(["write", "remove:k1", "remove:k2"]);
+    expect(listings.applyEdit).not.toHaveBeenCalled();
+    expect(result).toEqual({ listingId: LISTING, coverChangedTo: "c" });
+  });
+
+  it("una marcada que no es de este aviso rechaza el guardado entero, sin escribir", async () => {
+    const removal = photoRemoval(["a", "b"]);
+    const listings = portReturning(listing());
+
+    const error = await run(
+      { edit: { priceUsd: 700 }, photoIdsToRemove: ["a", "ajena"] },
+      removal,
+      listings,
+    ).catch((thrown: unknown) => thrown);
+
+    expect((error as EditListingRejectedError).violations).toEqual(["photosToRemove.notFound"]);
+    expect(removal.calls).toEqual([]);
+    expect(listings.applyEdit).not.toHaveBeenCalled();
+  });
+
+  it("marcarlas todas se rechaza con su código propio, sin repetirlo como «faltan fotos»", async () => {
+    const removal = photoRemoval(["a", "b"]);
+
+    const error = await run({ photoIdsToRemove: ["a", "b"] }, removal).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect((error as EditListingRejectedError).violations).toEqual(["photosToRemove.lastPhoto"]);
+    expect(removal.calls).toEqual([]);
+  });
+
+  it("el plan de la edición cuenta las fotos que quedan, no las de antes de quitar", async () => {
+    const seven = ["a", "b", "c", "d", "e", "f", "g"];
+    const removal = photoRemoval(seven);
+    const listings = portReturning(listing({ photoCount: seven.length }));
+
+    await run({ photoIdsToRemove: ["g"] }, removal, listings);
+
+    expect(removal.calls[0]).toBe("write");
+  });
+
+  it("sin marcas el camino es el de siempre: un solo UPDATE, sin leer fotos ni tocar R2", async () => {
+    const removal = photoRemoval(["a"]);
+    const listings = portReturning(listing());
+
+    const result = await run({ edit: { priceUsd: 700 }, photoIdsToRemove: [] }, removal, listings);
+
+    expect(listings.applyEdit).toHaveBeenCalledTimes(1);
+    expect(removal.ports.order.listPhotoIdsInOrder).not.toHaveBeenCalled();
+    expect(removal.calls).toEqual([]);
+    expect(result).toEqual({ listingId: LISTING, coverChangedTo: null });
+  });
+
+  it("si una marcada desapareció dentro de la transacción, se rechaza como «ya no está» y R2 no se toca", async () => {
+    const removal = photoRemoval(["a", "b"], { applied: false, reason: "photos" });
+
+    const error = await run({ photoIdsToRemove: ["b"] }, removal).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect((error as EditListingRejectedError).violations).toEqual(["photosToRemove.notFound"]);
+    expect(removal.calls).toEqual(["write"]);
+  });
+
+  it("si el aviso dejó de ser editable antes de escribir, contesta «no existe» y R2 no se toca", async () => {
+    const removal = photoRemoval(["a", "b"], { applied: false, reason: "listing" });
+
+    await expect(run({ photoIdsToRemove: ["b"] }, removal)).rejects.toBeInstanceOf(
+      EditListingNotFoundError,
+    );
+    expect(removal.calls).toEqual(["write"]);
+  });
+
+  it("una falla de R2 sube en vez de tragarse (D12)", async () => {
+    const removal = photoRemoval(["a", "b"]);
+    removal.ports.storage.remove.mockRejectedValueOnce(new Error("r2 caído"));
+
+    await expect(run({ photoIdsToRemove: ["b"] }, removal)).rejects.toThrow("r2 caído");
+  });
+
+  it("con marcas, un aviso que no es editable por esta cuenta es «no existe» sin leer fotos ni escribir", async () => {
+    const removal = photoRemoval(["a", "b"]);
+    const listings = portReturning(null);
+
+    await expect(run({ photoIdsToRemove: ["a"] }, removal, listings)).rejects.toBeInstanceOf(
+      EditListingNotFoundError,
+    );
+    expect(removal.ports.order.listPhotoIdsInOrder).not.toHaveBeenCalled();
+    expect(removal.calls).toEqual([]);
+    expect(listings.applyEdit).not.toHaveBeenCalled();
+  });
+
+  /**
+   * El conjunto sobre el que se planeó viaja a la escritura (punto 8): la
+   * transacción lo compara con el que encuentra, en orden, para que dos
+   * guardados simultáneos no dejen el aviso sin fotos.
+   */
+  it("pasa a la escritura las fotos que leyó, en el orden en que las leyó", async () => {
+    const removal = photoRemoval(["c", "a", "b"]);
+
+    await run({ photoIdsToRemove: ["b"] }, removal);
+
+    expect(removal.ports.listings.applyEditRemovingPhotos).toHaveBeenCalledWith(
+      LISTING,
+      OWNER,
+      expect.anything(),
+      ["b"],
+      ["c", "a", "b"],
+    );
+  });
+
+  it("un error de la escritura que no es una reversión sube tal cual, y R2 no se toca", async () => {
+    const removal = photoRemoval(["a", "b"]);
+    removal.ports.listings.applyEditRemovingPhotos.mockRejectedValueOnce(
+      new Error("unique violation"),
+    );
+
+    await expect(run({ photoIdsToRemove: ["b"] }, removal)).rejects.toThrow("unique violation");
+    expect(removal.ports.storage.remove).not.toHaveBeenCalled();
+  });
+
+  it("con marcas y sin puertos de fotos se niega antes de escribir (falla cerrado)", async () => {
+    const listings = portReturning(listing());
+
+    await expect(
+      editListing(
+        { listingId: LISTING, edit: {}, photoIdsToRemove: ["a"] },
+        { sessionPort: sessionPortReturning(OWNER), zones, listings },
+      ),
+    ).rejects.toThrow(/photoRemoval/);
     expect(listings.applyEdit).not.toHaveBeenCalled();
   });
 });

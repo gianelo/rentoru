@@ -18,8 +18,6 @@ import {
 } from "@/modules/listing-publication/application/edit-listing";
 import {
   attachPhotoToListing,
-  detachPhotoFromListing,
-  ListingPhotoRemovalRefusedError,
   requestListingPhotoUpload,
 } from "@/modules/listing-publication/application/edit-listing-photos";
 import { requestDraftPhotoUpload } from "@/modules/listing-publication/application/request-draft-photo-upload";
@@ -196,52 +194,6 @@ export async function adjuntarFotoAlAviso(input: {
 }
 
 /**
- * Quitar una foto. **Un `<form method="post">` de verdad**, así que llega como
- * `FormData` y funciona con el script apagado — a diferencia de agregar, que
- * necesita comprimir en el teléfono.
- *
- * **La negativa viaja como código, jamás como frase**, igual que las de activar
- * y guardar: la copia la decide `PHOTO_REMOVAL_REFUSAL_COPY`, y una URL con
- * castellano adentro sería una segunda tabla que nadie mantiene. Un aviso
- * ajeno o inexistente no produce ninguna dirección: sube, porque decirle a un
- * desconocido «ese aviso no es tuyo» ya sería contarle que existe.
- */
-export async function quitarFotoDelAviso(formData: FormData): Promise<void> {
-  const listingId = String(formData.get("listingId") ?? "");
-  const photoId = String(formData.get("photoId") ?? "");
-  const transactional = getTransactionalDatabase();
-  const photoSet = new DrizzleListingPhotoSet(transactional);
-
-  let respuesta: string;
-  try {
-    const result = await detachPhotoFromListing(
-      { listingId, photoId },
-      {
-        sessionPort: nextAuthSessionPort,
-        listings: new DrizzleListingEdit(transactional),
-        order: photoSet,
-        // 18.32 — las derivadas se leen antes del borrado y se quitan de R2
-        // después; el orden y el porqué viven en `detachPhotoFromListing`.
-        derivatives: photoSet,
-        photos: photoSet,
-        storage: createR2PhotoStorage(),
-      },
-    );
-    // Quien quita la portada cambió la cara del aviso sin pedirlo, así que la
-    // pantalla tiene algo que anunciar; el `null` del dominio no manda nada.
-    respuesta = result.coverChangedTo === null ? "" : "portada=1";
-  } catch (error) {
-    if (!(error instanceof ListingPhotoRemovalRefusedError)) throw error;
-    respuesta = `foto=${encodeURIComponent(error.refusal)}`;
-  }
-
-  revalidatePath("/mis-avisos");
-
-  const destino = `/mis-avisos/${encodeURIComponent(listingId)}/editar`;
-  redirect(respuesta === "" ? destino : `${destino}?${respuesta}`);
-}
-
-/**
  * El disparador de activación. **Un `<form>` de verdad**, así que llega como
  * `FormData` y funciona con el script apagado: `/mis-avisos` está exento del
  * piso de la ruta de lectura por la compresión de fotos (AGENTS.md §2), no
@@ -396,17 +348,34 @@ export async function guardarEdicion(
 ): Promise<EstadoDeEdicion> {
   const listingId = String(formData.get("listingId") ?? "");
   const edicion = leerEdicion(formData);
+  const fotosAQuitar = leerFotosAQuitar(formData);
+  const transactional = getTransactionalDatabase();
+  const listings = new DrizzleListingEdit(transactional);
 
   let violations: readonly string[] | null = null;
+  let portadaCambio = false;
   try {
-    await editListing(
-      { listingId, edit: edicion },
+    const result = await editListing(
+      { listingId, edit: edicion, photoIdsToRemove: fotosAQuitar },
       {
         sessionPort: nextAuthSessionPort,
         zones: new DrizzleZoneCatalogue(db),
-        listings: new DrizzleListingEdit(getTransactionalDatabase()),
+        listings,
+        // Fase 44 (44.4b): sólo con marcas. Sin ellas el guardado es el de
+        // siempre y no arma R2, que lee seis variables y tira si falta una.
+        // Transaccional y no HTTP: quitar y guardar van en UNA transacción.
+        photoRemoval:
+          fotosAQuitar.length === 0
+            ? undefined
+            : {
+                order: new DrizzleListingPhotoSet(transactional),
+                listings,
+                storage: createR2PhotoStorage(),
+              },
       },
     );
+    // Quien quitó la portada cambió la cara del aviso: Mis avisos lo dice.
+    portadaCambio = Boolean(result.coverChangedTo);
   } catch (error) {
     if (!(error instanceof EditListingRejectedError)) throw error;
     violations = error.violations;
@@ -430,12 +399,28 @@ export async function guardarEdicion(
         descriptionLength: measureOf(edicion.description),
       },
       valores: valoresEnviados(formData),
+      // Las marcas sobreviven a la negativa (G3): `valores` guarda una por
+      // nombre y aquí hay varias con el mismo.
+      fotosAQuitar,
     };
   }
 
   // Fuera del `try`: `redirect` funciona tirando, y atraparlo adentro lo
   // convertiria en «un error inesperado» silenciosamente.
-  redirect("/mis-avisos");
+  redirect(portadaCambio ? "/mis-avisos?portada=1" : "/mis-avisos");
+}
+
+/**
+ * Fase 44 (44.4b) — las casillas «Quitar al guardar». Forma y nada más: una
+ * casilla vacía o repetida no es una marca. Si se puede quitar lo contesta
+ * `editListing`.
+ */
+function leerFotosAQuitar(formData: FormData): string[] {
+  const ids = new Set<string>();
+  for (const value of formData.getAll("quitarFoto")) {
+    if (typeof value === "string" && value.trim() !== "") ids.add(value);
+  }
+  return [...ids];
 }
 
 /**
@@ -446,7 +431,9 @@ export async function guardarEdicion(
 function valoresEnviados(formData: FormData): Record<string, string> {
   const valores: Record<string, string> = {};
   for (const [name, value] of formData) {
-    if (name !== "listingId" && typeof value === "string") valores[name] = value;
+    if (name !== "listingId" && name !== "quitarFoto" && typeof value === "string") {
+      valores[name] = value;
+    }
   }
   return valores;
 }
