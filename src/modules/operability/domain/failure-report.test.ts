@@ -44,6 +44,22 @@ describe("failureLogLine", () => {
   const base = { boundary: "render", route: "/alquiler/[ciudad]/[zona]" } as const;
 
   /**
+   * **Los valores de una consulta no salen** (13.1). Drizzle escribe
+   * `Failed query: …` y, en la línea siguiente, `params: …` con lo que la
+   * consulta llevaba: un nombre, un título, el texto de un mensaje. Desde que
+   * el reporte también viaja a Sentry, eso saldría a un tercero.
+   */
+  it("corta la causa en su primera línea, y los parámetros de una consulta no viajan", () => {
+    const cause = new Error(
+      'Failed query: select * from "listing" where "title" = $1\nparams: Casa de Ana',
+    );
+
+    expect(failureReport({ ...base, cause }).cause).toBe(
+      'Error: Failed query: select * from "listing" where "title" = $1',
+    );
+  });
+
+  /**
    * **Un solo reporte, dos destinos** (13.1). La línea de Vercel y el evento
    * de Sentry salen del MISMO objeto cerrado, así que lo que una puede decir
    * la otra también — y lo que una calla, la otra calla.

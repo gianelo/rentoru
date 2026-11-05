@@ -75,7 +75,10 @@ function describeCause(cause: unknown): string {
   // La pila no se escribe, y no es por tamaño: lleva rutas de archivo,
   // argumentos y —en este producto— el valor de contacto que el caso de uso
   // acababa de leer. El mensaje alcanza para buscar y alertar.
-  let described = `${cause.name}: ${cause.message}`;
+  //
+  // Y sólo su primera línea (13.1): Drizzle pone en la segunda `params: …`,
+  // los valores de la consulta, y el reporte también sale a Sentry.
+  let described = `${cause.name}: ${cause.message.replace(/\r?\n[\s\S]*$/, "")}`;
   for (const leak of LEAKS) described = described.replace(leak, "[oculto]");
 
   return described.length > MAX_CAUSE ? `${described.slice(0, MAX_CAUSE - 1)}…` : described;
