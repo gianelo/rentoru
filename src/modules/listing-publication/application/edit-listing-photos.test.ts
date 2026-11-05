@@ -9,16 +9,13 @@ import { MAX_PHOTOS_PER_LISTING } from "../domain/publishable-listing";
 import { EditListingNotFoundError } from "./edit-listing";
 import {
   attachPhotoToListing,
-  detachPhotoFromListing,
   ListingPhotoLimitReachedError,
-  ListingPhotoRemovalRefusedError,
   loadListingPhotosForEdit,
   requestListingPhotoUpload,
 } from "./edit-listing-photos";
 import type { EditableListing, ListingEditPort } from "./ports/listing-edit.port";
 import type { ListingPhotoAttachmentPort } from "./ports/listing-photo-attachment.port";
 import type {
-  ListingPhotoOrderPort,
   ListingPhotoThumbnail,
   ListingPhotoThumbnailPort,
 } from "./ports/listing-photo-set.port";
@@ -27,7 +24,7 @@ import type { PhotoHashComputationPort } from "./ports/photo-hash-computation.po
 import type { PhotoStoragePort, StoredObject } from "./ports/photo-storage.port";
 
 /**
- * tasks.md 18.21 — agregar y quitar fotos de un aviso YA publicado.
+ * tasks.md 18.21 — agregar fotos a un aviso YA publicado y listar las que tiene.
  *
  * **Los dobles prueban el orden de las puertas, nunca el `WHERE`.** Que un
  * aviso ajeno vuelva `null`, que el índice único refuse dos fotos en la misma
@@ -121,60 +118,8 @@ function attachmentPort(photoId = "photo-new"): ListingPhotoAttachmentPort {
   return { attachPhoto: vi.fn(async () => ({ photoId })) };
 }
 
-function orderPort(ids: readonly string[]): ListingPhotoOrderPort {
-  return { listPhotoIdsInOrder: vi.fn(async () => ids) };
-}
-
 function thumbnailPort(photos: readonly ListingPhotoThumbnail[]): ListingPhotoThumbnailPort {
   return { listPhotoThumbnailsInOrder: vi.fn(async () => photos) };
-}
-
-/**
- * Las cinco dependencias de desprender en un solo armado, **con un registro de
- * llamadas**: lo que la 18.32 agrega no es un borrado más sino un ORDEN, y una
- * prueba que sólo mire «se llamó a `remove`» no distingue leer las claves antes
- * de borrar la fila de leerlas después, que es cuando ya no existen.
- */
-function detachDeps(
-  options: {
-    readonly listing?: EditableListing | null;
-    readonly ids?: readonly string[];
-    readonly detached?: boolean;
-    readonly keys?: readonly string[];
-    readonly rejectRemove?: boolean;
-    readonly user?: string;
-  } = {},
-) {
-  const calls: string[] = [];
-  const listing =
-    options.listing === undefined ? editableListing({ photoCount: 3 }) : options.listing;
-
-  return {
-    calls,
-    dependencies: {
-      sessionPort: sessionFor(options.user ?? OWNER),
-      listings: listingsThatFind(listing),
-      order: orderPort(options.ids ?? ["a", "b", "c"]),
-      derivatives: {
-        listDerivativeKeys: vi.fn(async () => {
-          calls.push("listDerivativeKeys");
-          return options.keys ?? [];
-        }),
-      },
-      photos: {
-        detachPhoto: vi.fn(async () => {
-          calls.push("detachPhoto");
-          return options.detached ?? true;
-        }),
-      },
-      storage: {
-        remove: vi.fn(async (key: string) => {
-          calls.push(`remove:${key}`);
-          if (options.rejectRemove) throw new Error("R2 cortó la conexión");
-        }),
-      },
-    },
-  };
 }
 
 describe("requestListingPhotoUpload", () => {
@@ -459,112 +404,5 @@ describe("loadListingPhotosForEdit", () => {
       { photoId: "a", thumbKey: null },
       { photoId: "b", thumbKey: "promoted/b/thumb.webp" },
     ]);
-  });
-});
-
-describe("detachPhotoFromListing", () => {
-  it("un aviso ajeno o inexistente no desprende nada, ni lee sus fotos, ni toca R2", async () => {
-    const { dependencies } = detachDeps({ listing: null, user: "stranger" });
-
-    await expect(
-      detachPhotoFromListing({ listingId: "listing-1", photoId: "a" }, dependencies),
-    ).rejects.toBeInstanceOf(EditListingNotFoundError);
-
-    expect(dependencies.order.listPhotoIdsInOrder).not.toHaveBeenCalled();
-    expect(dependencies.derivatives.listDerivativeKeys).not.toHaveBeenCalled();
-    expect(dependencies.photos.detachPhoto).not.toHaveBeenCalled();
-    expect(dependencies.storage.remove).not.toHaveBeenCalled();
-  });
-
-  it("quitar la única foto se rechaza, y no borra la fila ni sus derivadas", async () => {
-    const { dependencies } = detachDeps({
-      listing: editableListing({ photoCount: 1 }),
-      ids: ["a"],
-      keys: ["promoted/a/thumb"],
-    });
-
-    await expect(
-      detachPhotoFromListing({ listingId: "listing-1", photoId: "a" }, dependencies),
-    ).rejects.toMatchObject({ name: "ListingPhotoRemovalRefusedError", refusal: "lastPhoto" });
-
-    expect(dependencies.photos.detachPhoto).not.toHaveBeenCalled();
-    expect(dependencies.storage.remove).not.toHaveBeenCalled();
-  });
-
-  it("una foto que no está en este aviso se rechaza como notFound, no como la última", async () => {
-    const { dependencies } = detachDeps();
-
-    await expect(
-      detachPhotoFromListing({ listingId: "listing-1", photoId: "de-otro-aviso" }, dependencies),
-    ).rejects.toMatchObject({ name: "ListingPhotoRemovalRefusedError", refusal: "notFound" });
-
-    expect(dependencies.photos.detachPhoto).not.toHaveBeenCalled();
-  });
-
-  it("quitar la portada dice con nombre cuál quedó de portada", async () => {
-    const { dependencies } = detachDeps();
-
-    expect(await detachPhotoFromListing({ listingId: "listing-1", photoId: "a" }, dependencies)) //
-      .toEqual({ listingId: "listing-1", coverChangedTo: "b" });
-  });
-
-  it("quitar una que no es la portada no anuncia ningún cambio de portada", async () => {
-    const { dependencies } = detachDeps();
-
-    expect(await detachPhotoFromListing({ listingId: "listing-1", photoId: "c" }, dependencies)) //
-      .toEqual({ listingId: "listing-1", coverChangedTo: null });
-  });
-
-  it("si la fila dejó de estar entre la lectura y el borrado, se contesta como inexistente", async () => {
-    const { dependencies } = detachDeps({ detached: false, keys: ["promoted/c/thumb"] });
-
-    await expect(
-      detachPhotoFromListing({ listingId: "listing-1", photoId: "c" }, dependencies),
-    ).rejects.toBeInstanceOf(EditListingNotFoundError);
-
-    // Ya la borró otra transacción, así que sus derivadas son de aquélla: quitarlas
-    // acá borraría objetos que la otra podría estar decidiendo conservar.
-    expect(dependencies.storage.remove).not.toHaveBeenCalled();
-  });
-
-  it("lee las claves de las derivadas ANTES de borrar la fila, y las quita de R2 DESPUÉS", async () => {
-    const claves = ["promoted/c/thumb", "promoted/c/card", "promoted/c/full"];
-    const { calls, dependencies } = detachDeps({ keys: claves });
-
-    await detachPhotoFromListing({ listingId: "listing-1", photoId: "c" }, dependencies);
-
-    // El orden literal. `listing_photo_derivative` cuelga de `listing_photo` con
-    // `ON DELETE cascade`: leído después del borrado, esto devuelve cero claves y
-    // los cinco objetos quedan pagados para siempre.
-    expect(calls).toEqual([
-      "listDerivativeKeys",
-      "detachPhoto",
-      ...claves.map((k) => `remove:${k}`),
-    ]);
-    expect(dependencies.derivatives.listDerivativeKeys).toHaveBeenCalledWith("listing-1", "c");
-  });
-
-  it("si R2 rechaza, la llamada grita — y la fila ya se fue, que es el orden elegido", async () => {
-    const { calls, dependencies } = detachDeps({ keys: ["promoted/c/thumb"], rejectRemove: true });
-
-    await expect(
-      detachPhotoFromListing({ listingId: "listing-1", photoId: "c" }, dependencies),
-    ).rejects.toThrow("R2 cortó la conexión");
-
-    // La fila YA no está cuando R2 falla: se eligió el huérfano —una cuenta que
-    // nadie ve— antes que un aviso vivo apuntando a cinco 404 irrecuperables.
-    expect(calls).toEqual(["listDerivativeKeys", "detachPhoto", "remove:promoted/c/thumb"]);
-  });
-
-  it("una foto sin derivadas pierde la fila igual y no le pide nada a R2", async () => {
-    const { calls, dependencies } = detachDeps({ keys: [] });
-
-    await detachPhotoFromListing({ listingId: "listing-1", photoId: "c" }, dependencies);
-
-    expect(calls).toEqual(["listDerivativeKeys", "detachPhoto"]);
-  });
-
-  it("ListingPhotoRemovalRefusedError lleva la negativa del dominio, no una frase", () => {
-    expect(new ListingPhotoRemovalRefusedError("listing-1", "lastPhoto").refusal).toBe("lastPhoto");
   });
 });

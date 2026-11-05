@@ -17,6 +17,8 @@ export interface EstadoDeEdicion {
   readonly motivos: readonly string[];
   readonly medidas: PublishCopyContext;
   readonly valores?: Readonly<Record<string, string>>;
+  /** Las fotos marcadas «Quitar al guardar» que se enviaron (44.4b). */
+  readonly fotosAQuitar?: readonly string[];
 }
 
 export const SIN_NEGATIVAS: EstadoDeEdicion = { motivos: [], medidas: {} };

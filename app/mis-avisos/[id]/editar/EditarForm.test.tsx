@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EstadoDeEdicion } from "../../editar-estado";
@@ -12,11 +13,14 @@ import type { EstadoDeEdicion } from "../../editar-estado";
  */
 
 const { useActionState, estado } = vi.hoisted(() => {
-  const estado: { actual: EstadoDeEdicion } = { actual: { motivos: [], medidas: {} } };
+  const estado: { actual: EstadoDeEdicion; pendiente: boolean } = {
+    actual: { motivos: [], medidas: {} },
+    pendiente: false,
+  };
   const accionFalsa = vi.fn();
   return {
     estado,
-    useActionState: vi.fn(() => [estado.actual, accionFalsa, false]),
+    useActionState: vi.fn(() => [estado.actual, accionFalsa, estado.pendiente]),
   };
 });
 
@@ -57,9 +61,23 @@ const AVISO = {
 
 const INICIAL: EstadoDeEdicion = { motivos: [], medidas: {} };
 
-function dibujar(actual: EstadoDeEdicion): string {
+const FOTOS = [
+  { photoId: "foto-a", thumbUrl: "https://fotos.example/a.webp", alt: "Foto 1 de 3" },
+  { photoId: "foto-b", thumbUrl: null, alt: "Foto 2 de 3" },
+  { photoId: "foto-c", thumbUrl: "https://fotos.example/c.webp", alt: "Foto 3 de 3" },
+];
+
+function dibujar(actual: EstadoDeEdicion, pendiente = false): string {
   estado.actual = actual;
-  return renderToStaticMarkup(<EditarForm aviso={AVISO} estadoInicial={INICIAL} />);
+  estado.pendiente = pendiente;
+  return renderToStaticMarkup(
+    <EditarForm
+      aviso={AVISO}
+      estadoInicial={INICIAL}
+      fotos={FOTOS}
+      subirFoto={<p>RANURA DE SUBIR</p>}
+    />,
+  );
 }
 
 /** La etiqueta del control, y falla si no está dibujado. */
@@ -162,9 +180,81 @@ describe("EditarForm — lo escrito vuelve después de una negativa (44.2)", () 
   });
 
   it("una negativa sin campo se dice en el bloque de arriba, anunciada", () => {
+    estado.pendiente = false;
     const html = dibujar({ motivos: ["photos.required"], medidas: {} });
 
     expect(html).toMatch(/<p[^>]*role="alert"[^>]*>No se pudo guardar:[^<]*Sube al menos una foto/);
     expect(html).not.toContain('id="photos-error"');
+  });
+});
+
+/**
+ * Fase 44 (44.4b, S2) — «si yo no he guardado los cambios todavía las fotos
+ * se eliminan». Quitar ya no borra: marca, y la marca viaja con Guardar.
+ */
+describe("EditarForm — quitar fotos al guardar (44.4b)", () => {
+  it("cada foto trae su casilla «Quitar al guardar» dentro del formulario que guarda", () => {
+    const html = dibujar(INICIAL);
+    const abre = html.indexOf("<form");
+    const cierra = html.indexOf("</form>");
+
+    for (const { photoId } of FOTOS) {
+      const casilla = control(html, "quitarFoto", photoId);
+      expect(casilla).toContain('type="checkbox"');
+      expect(casilla).not.toContain("checked");
+      expect(html.indexOf(casilla)).toBeGreaterThan(abre);
+      expect(html.indexOf(casilla)).toBeLessThan(cierra);
+    }
+    expect(html).toContain('aria-label="Quitar al guardar: Foto 2"');
+    expect(html).toContain("Foto 1 (portada)");
+    // Subir sigue siendo inmediato y vive en la sección, antes de los campos.
+    expect(html.indexOf("RANURA DE SUBIR")).toBeLessThan(html.indexOf('name="title"'));
+  });
+
+  it("después de una negativa, las marcadas vuelven marcadas y las demás no", () => {
+    const html = dibujar({ motivos: ["title.required"], medidas: {}, fotosAQuitar: ["foto-b"] });
+
+    expect(control(html, "quitarFoto", "foto-b")).toContain('checked=""');
+    expect(control(html, "quitarFoto", "foto-a")).not.toContain("checked");
+  });
+
+  it("cada renglon dice que se quitará, y el aviso de Guardar recuerda que se elimina", () => {
+    const html = dibujar(INICIAL);
+    const aviso = html.indexOf("Recuerda: la foto marcada se eliminará al guardar.");
+
+    expect(html.split("Se quitará al guardar").length - 1).toBe(FOTOS.length);
+    expect(aviso).toBeGreaterThan(html.indexOf('name="contactValue"'));
+    expect(aviso).toBeLessThan(html.indexOf("Guardar cambios"));
+  });
+
+  it("la negativa de quitar fotos se lee debajo de la lista y cada casilla la anuncia", () => {
+    const html = dibujar({ motivos: ["photosToRemove.notFound"], medidas: {} });
+    const error = html.indexOf('id="photosToRemove-error"');
+
+    expect(error).toBeGreaterThan(html.indexOf(control(html, "quitarFoto", "foto-c")));
+    expect(error).toBeLessThan(html.indexOf('name="title"'));
+    expect(control(html, "quitarFoto", "foto-a")).toContain(
+      'aria-describedby="photosToRemove-error"',
+    );
+    expect(html).toContain("Esa foto ya no está. Revisa y vuelve a guardar.");
+    expect(html).not.toContain('role="alert"');
+  });
+
+  it("mientras guarda dibuja el indicador global, con su salida a esta misma pantalla", () => {
+    const html = dibujar(INICIAL, true);
+
+    expect(html).toContain("Guardando los cambios…");
+    expect(html).toContain('href="/mis-avisos/aviso-1/editar"');
+    expect(html).toContain("Dejar de esperar");
+    expect(dibujar(INICIAL, false)).not.toContain("Guardando los cambios…");
+  });
+
+  /** Sin JavaScript: la marca se ve por CSS, y sin `opacity` (AA, lámina). */
+  it("la foto marcada y el aviso se muestran con :has(:checked), sin opacidad", () => {
+    const css = readFileSync(new URL("./editar.module.css", import.meta.url), "utf8");
+
+    expect(css).toMatch(/\.foto:has\(\.quitar:checked\)/);
+    expect(css).toMatch(/:has\(\.quitar:checked\) \.recuerda/);
+    expect(css).not.toContain("opacity");
   });
 });
