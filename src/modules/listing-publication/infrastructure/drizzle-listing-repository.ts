@@ -20,8 +20,6 @@ import type {
 } from "../application/ports/listing-edit-with-photos.port";
 import type { ListingPhotoAttachmentPort } from "../application/ports/listing-photo-attachment.port";
 import type {
-  ListingPhotoDerivativeKeysPort,
-  ListingPhotoDetachmentPort,
   ListingPhotoOrderPort,
   ListingPhotoThumbnail,
   ListingPhotoThumbnailPort,
@@ -361,9 +359,9 @@ export class DrizzleListingEdit implements ListingEditPort, ListingEditWithPhoto
   }
 
   /**
-   * Fase 44 (44.4, G3/D1) — **las marcadas y la edición, o nada.** Las mismas
-   * tres piezas que `listDerivativeKeys`, `detachPhoto` y `applyEdit`, ahora
-   * sobre un solo `tx`. **El `UPDATE` va al final a propósito**: si su
+   * Fase 44 (44.4, G3/D1) — **las marcadas y la edición, o nada.** Leer las
+   * claves, borrar y renumerar, y el `UPDATE` de `applyEdit`, sobre un solo
+   * `tx`. **El `UPDATE` va al final a propósito**: si su
    * compare-and-swap refusa, los borrados ya hechos se revierten con él, y es
    * esa reversión la que la integración prueba. Un faltante tira adentro para
    * que Postgres revierta; afuera se traduce a un resultado, nunca a un éxito.
@@ -488,21 +486,13 @@ async function updateEditable(
 const THUMBNAIL_DERIVATIVE: DerivativeName = "thumb";
 
 /**
- * tasks.md 18.21 — el orden de las fotos de un aviso, y quitar una.
+ * tasks.md 18.21 — leer las fotos de un aviso: su orden y sus miniaturas.
  *
- * **Una clase al lado de `DrizzleListingActivation`, que es la que adjunta.**
- * Adjuntar escribe una fila sobre un aviso que ya existe y no necesita saber
- * nada del resto; quitar tiene que tocar TODAS las que quedan. Plegar las dos
- * en una sola le pondría al adjuntar una capacidad de borrado que nunca pidió
- * (AGENTS.md §3).
+ * **Una clase al lado de `DrizzleListingActivation`, que es la que adjunta**,
+ * y sólo de lectura: quitar fotos vive desde la 44.4 en la transacción de
+ * `DrizzleListingEdit.applyEditRemovingPhotos` (AGENTS.md §3).
  */
-export class DrizzleListingPhotoSet
-  implements
-    ListingPhotoOrderPort,
-    ListingPhotoThumbnailPort,
-    ListingPhotoDerivativeKeysPort,
-    ListingPhotoDetachmentPort
-{
+export class DrizzleListingPhotoSet implements ListingPhotoOrderPort, ListingPhotoThumbnailPort {
   constructor(private readonly db: PublicationDatabase) {}
 
   /**
@@ -551,53 +541,6 @@ export class DrizzleListingPhotoSet
 
     return rows.map((row) => ({ photoId: row.photoId, thumbKey: row.thumbKey }));
   }
-
-  /**
-   * tasks.md 18.32 — las claves de R2 de UNA foto, para poder quitarlas al
-   * desprenderla.
-   *
-   * **`innerJoin` acá y `leftJoin` en la de arriba, y la asimetría es la
-   * decisión.** Aquélla dibuja un renglón y una foto sin derivadas tiene que
-   * seguir apareciendo para poder quitarse; ésta produce la lista de lo que se
-   * va a BORRAR, y una fila con la clave en `null` sería un `DELETE` contra un
-   * objeto que no existe.
-   *
-   * **`listing_id` en el `WHERE` aunque `photo_id` sea único**, el idioma de
-   * `detachPhoto`: la clave de la foto de un aviso ajeno no se lee ni por error.
-   */
-  async listDerivativeKeys(listingId: string, photoId: string): Promise<readonly string[]> {
-    return derivativeKeysOf(this.db, listingId, photoId);
-  }
-
-  /**
-   * Borrar y renumerar, **en una transacción y en tres sentencias de
-   * conjunto** — nunca leyendo las filas para reescribirlas una por una, que
-   * es la forma con ventana que este repositorio ya evita en el uso único del
-   * token de renovación.
-   *
-   * **Por qué el rodeo por los negativos en vez de un simple
-   * `position = position - 1`.** `listing_photo_position_unique` no es
-   * `DEFERRABLE`, así que Postgres lo comprueba fila por fila DENTRO de la
-   * sentencia: `UPDATE ... SET position = position + 1` sobre `{0,1,2}` falla
-   * con `duplicate key`, medido contra este mismo contenedor. Restar uno
-   * sobrevive sólo si el plan visita las filas de menor a mayor, y ningún
-   * `UPDATE` promete un orden de visita. El rodeo no depende de ninguno:
-   * `k → -k-1` manda cada fila a un rango que ninguna otra ocupa, y
-   * `-k-1 → k-1` la trae de vuelta a un rango que ya quedó vacío. Ninguno de
-   * los dos pasos puede chocar consigo mismo bajo ningún orden.
-   *
-   * Renumerar es también lo que hace verdadero en la base el «quitar la
-   * portada asciende a la siguiente» que `planPhotoRemoval` decide en memoria:
-   * la portada es la de `position` más baja.
-   *
-   * **El objeto de R2 no se toca ACÁ, y desde la 18.32 sí lo toca el caso de
-   * uso**: `detachPhotoFromListing` lee las claves con `listDerivativeKeys`
-   * antes de llamar a este método y las borra después. Este adaptador sigue sin
-   * conocer R2, que es lo que lo deja probable contra Postgres solo.
-   */
-  async detachPhoto(listingId: string, photoId: string): Promise<boolean> {
-    return this.db.transaction((tx) => detachAndRenumber(tx, listingId, photoId));
-  }
 }
 
 /** El cuerpo de `listPhotoIdsInOrder`, sobre la base o sobre un `tx`. */
@@ -611,7 +554,18 @@ async function photoIdsInOrderOf(db: PublicationDatabase, listingId: string): Pr
   return rows.map((row) => row.id);
 }
 
-/** El cuerpo de `listDerivativeKeys`, sobre la base o sobre un `tx`. */
+/**
+ * tasks.md 18.32 — las claves de R2 de UNA foto, para poder borrarlas. Se lee
+ * ANTES de borrar la fila: `listing_photo_derivative` cuelga de `listing_photo`
+ * con `ON DELETE cascade`, así que después devolvería cero claves.
+ *
+ * **`innerJoin` acá y `leftJoin` en `listPhotoThumbnailsInOrder`, y la
+ * asimetría es la decisión.** Aquélla dibuja un renglón y una foto sin
+ * derivadas tiene que seguir apareciendo; ésta produce la lista de lo que se
+ * va a BORRAR, y una fila con la clave en `null` sería un `DELETE` contra un
+ * objeto que no existe. **`listing_id` en el `WHERE` aunque `photo_id` sea
+ * único**: la clave de la foto de un aviso ajeno no se lee ni por error.
+ */
 async function derivativeKeysOf(
   db: PublicationDatabase,
   listingId: string,
@@ -627,9 +581,20 @@ async function derivativeKeysOf(
 }
 
 /**
- * El cuerpo de `detachPhoto`, **siempre dentro de un `tx` que pone quien
- * llama**: borrar y renumerar sueltos dejarían un hueco visible. El porqué del
- * rodeo por los negativos vive en `detachPhoto`.
+ * Borrar y renumerar, **siempre dentro de un `tx` que pone quien llama**:
+ * sueltos dejarían un hueco visible, y el siguiente adjuntar —que pide
+ * `position =` cuántas fotos hay— chocaría contra el índice único. Renumerar
+ * es también lo que hace verdadero en la base el «quitar la portada asciende a
+ * la siguiente» que `planPhotoRemoval` decide en memoria. `false` cuando la
+ * fila ya no estaba.
+ *
+ * **Por qué el rodeo por los negativos y no `position = position - 1`.**
+ * `listing_photo_position_unique` no es `DEFERRABLE`, así que Postgres lo
+ * comprueba fila por fila DENTRO de la sentencia, y restar uno sobrevive sólo
+ * si el plan visita las filas de menor a mayor, cosa que ningún `UPDATE`
+ * promete. `k → -k-1` manda cada fila a un rango que ninguna otra ocupa, y
+ * `-k-1 → k-1` la trae de vuelta a uno que ya quedó vacío: ningún paso puede
+ * chocar consigo mismo bajo ningún orden.
  */
 async function detachAndRenumber(
   tx: PublicationDatabase,

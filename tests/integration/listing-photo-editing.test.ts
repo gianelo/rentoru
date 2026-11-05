@@ -6,12 +6,11 @@ import type {
   AuthenticatedSession,
   SessionPort,
 } from "../../src/modules/identity/application/ports/session.port";
-import { EditListingNotFoundError } from "../../src/modules/listing-publication/application/edit-listing";
 import {
-  attachPhotoToListing,
-  detachPhotoFromListing,
-  ListingPhotoRemovalRefusedError,
-} from "../../src/modules/listing-publication/application/edit-listing-photos";
+  EditListingNotFoundError,
+  editListing,
+} from "../../src/modules/listing-publication/application/edit-listing";
+import { attachPhotoToListing } from "../../src/modules/listing-publication/application/edit-listing-photos";
 import type { PhotoDerivationPort } from "../../src/modules/listing-publication/application/ports/photo-derivation.port";
 import type { PhotoHashComputationPort } from "../../src/modules/listing-publication/application/ports/photo-hash-computation.port";
 import type {
@@ -23,6 +22,7 @@ import {
   DrizzleListingActivation,
   DrizzleListingEdit,
   DrizzleListingPhotoSet,
+  DrizzleZoneCatalogue,
   type PublicationDatabase,
 } from "../../src/modules/listing-publication/infrastructure/drizzle-listing-repository";
 import type { PhotoHashPort } from "../../src/modules/listing-trust/application/ports/photo-hash.port";
@@ -30,19 +30,18 @@ import { toPerceptualHash } from "../../src/modules/listing-trust/domain/percept
 import * as schema from "../../src/shared/db/schema";
 
 /**
- * tasks.md 18.21 — agregar y quitar fotos de un aviso publicado, contra
- * Postgres de verdad.
+ * tasks.md 18.21 — agregar fotos a un aviso publicado y leerlas, contra
+ * Postgres de verdad. Quitar al guardar (44.4) tiene su propio archivo,
+ * `listing-edit-remove-photos.test.ts`; acá queda lo que cruza los dos.
  *
- * **Tres garantías que ningún doble puede dar:**
+ * **Lo que ningún doble puede dar:**
  *
- * 1. **que un desprender seguido de un adjuntar no choca.**
+ * 1. **que quitar seguido de adjuntar no choca.**
  *    `listing_photo_position_unique` es sobre `(listing_id, position)` y el
  *    adjuntar escribe `position = cuántas fotos hay`. Quitar la del medio de
  *    tres dejaría `{0, 2}` con dos filas y el siguiente adjuntar pediría la 2.
  *    Un doble no tiene índice único, así que no puede ver el choque;
- *    2. **que «quitar la portada asciende a la siguiente» es verdad EN LA
- *    BASE** y no sólo en el arreglo que `planPhotoRemoval` devolvió;
- *    3. **que el aviso de otra cuenta no se toca**, con la fila de esa otra
+ * 2. **que el aviso de otra cuenta no se toca**, con la fila de esa otra
  *    cuenta presente en la misma tabla y leída después.
  *
  * El renumerado se prueba sobre el `position` real, nunca sobre el orden en
@@ -66,6 +65,7 @@ const db = drizzle(pool, { schema });
 const listings = new DrizzleListingEdit(db as unknown as PublicationDatabase);
 const attachment = new DrizzleListingActivation(db as unknown as PublicationDatabase);
 const photoSet = new DrizzleListingPhotoSet(db as unknown as PublicationDatabase);
+const zones = new DrizzleZoneCatalogue(db as unknown as PublicationDatabase);
 
 const CITY = randomUUID();
 const ZONE = randomUUID();
@@ -214,23 +214,24 @@ async function insertDerivatives(photoId: string): Promise<void> {
 }
 
 /**
- * `removed` junta lo que el caso de uso le manda a R2 (18.32). Es un arreglo y no
- * un espía porque lo que se afirma es CUÁLES claves —las cinco reales que la fila
- * nombraba— y no cuántas veces se llamó.
+ * Fase 44 (44.4) — quitar fotos de un aviso publicado es guardar con marcas:
+ * es el único camino que queda. El precio viaja igual al que el aviso ya tiene,
+ * porque lo que se prueba acá son las filas de las fotos y no la edición.
  */
-function detachDependencies(userId: string, removed: string[] = []) {
-  return {
-    sessionPort: sessionFor(userId),
-    listings,
-    order: photoSet,
-    derivatives: photoSet,
-    photos: photoSet,
-    storage: {
-      async remove(key: string): Promise<void> {
-        removed.push(key);
-      },
+async function removeOnSave(
+  owner: string,
+  listingId: string,
+  photoIdsToRemove: readonly string[],
+): Promise<void> {
+  await editListing(
+    { listingId, edit: { priceUsd: 610 }, photoIdsToRemove },
+    {
+      sessionPort: sessionFor(owner),
+      zones,
+      listings,
+      photoRemoval: { order: photoSet, listings, storage: { async remove() {} } },
     },
-  };
+  );
 }
 
 beforeAll(async () => {
@@ -296,36 +297,12 @@ describe("attachPhotoToListing — contra Postgres de verdad", () => {
   });
 });
 
-describe("detachPhotoFromListing — contra Postgres de verdad", () => {
-  it("las cinco claves llegan a R2, leídas ANTES de que el cascade se las lleve", async () => {
-    const owner = await insertUser();
-    const { listingId, photoIds } = await insertActiveListing(owner, 3);
-    const quitada = photoIds[1] as string;
-    for (const photoId of photoIds) await insertDerivatives(photoId);
-    const removed: string[] = [];
-
-    await detachPhotoFromListing(
-      { listingId, photoId: quitada },
-      detachDependencies(owner, removed),
-    );
-
-    // Las cinco de ESA foto y ninguna de las otras dos, que el aviso sigue mostrando.
-    expect([...removed].sort()).toEqual(
-      ["card", "detail", "full", "strip", "thumb"].map((n) => `promoted/${quitada}/${n}.webp`),
-    );
-    // Y por qué había que leerlas antes: `ON DELETE cascade` ya se las llevó, así
-    // que la misma consulta hecha ahora no nombra ni una.
-    expect(await photoSet.listDerivativeKeys(listingId, quitada)).toEqual([]);
-  });
-
+describe("quitar al guardar y después adjuntar — contra Postgres de verdad", () => {
   it("quitar la del medio renumera, así que el siguiente adjuntar NO choca contra listing_photo_position_unique", async () => {
     const owner = await insertUser();
     const { listingId, photoIds } = await insertActiveListing(owner, 3);
 
-    await detachPhotoFromListing(
-      { listingId, photoId: photoIds[1] as string },
-      detachDependencies(owner),
-    );
+    await removeOnSave(owner, listingId, [photoIds[1] as string]);
 
     // El hueco se cerró: {0, 2} habría hecho que el próximo adjuntar pidiera
     // la 2 y chocara contra el índice único.
@@ -341,98 +318,6 @@ describe("detachPhotoFromListing — contra Postgres de verdad", () => {
 
     expect(result.position).toBe(2);
     expect((await positionsOf(listingId)).map((row) => row.position)).toEqual([0, 1, 2]);
-  });
-
-  it("quitar la portada asciende a la siguiente EN LA BASE, y es la que el plan nombró", async () => {
-    const owner = await insertUser();
-    const { listingId, photoIds } = await insertActiveListing(owner, 3);
-
-    const result = await detachPhotoFromListing(
-      { listingId, photoId: photoIds[0] as string },
-      detachDependencies(owner),
-    );
-
-    expect(result.coverChangedTo).toBe(photoIds[1]);
-    expect(await positionsOf(listingId)).toEqual([
-      { id: photoIds[1], position: 0 },
-      { id: photoIds[2], position: 1 },
-    ]);
-  });
-
-  it("quitar la que no es portada no mueve la portada, y las de más abajo suben una", async () => {
-    const owner = await insertUser();
-    const { listingId, photoIds } = await insertActiveListing(owner, 3);
-
-    const result = await detachPhotoFromListing(
-      { listingId, photoId: photoIds[2] as string },
-      detachDependencies(owner),
-    );
-
-    expect(result.coverChangedTo).toBeNull();
-    expect(await positionsOf(listingId)).toEqual([
-      { id: photoIds[0], position: 0 },
-      { id: photoIds[1], position: 1 },
-    ]);
-  });
-
-  it("quitar la única foto se rechaza, y la fila sigue ahí", async () => {
-    const owner = await insertUser();
-    const { listingId, photoIds } = await insertActiveListing(owner, 1);
-
-    await expect(
-      detachPhotoFromListing(
-        { listingId, photoId: photoIds[0] as string },
-        detachDependencies(owner),
-      ),
-    ).rejects.toBeInstanceOf(ListingPhotoRemovalRefusedError);
-
-    expect(await positionsOf(listingId)).toHaveLength(1);
-  });
-
-  it("una foto de OTRO aviso del mismo dueño no se puede quitar por este aviso, y sigue en el suyo", async () => {
-    const owner = await insertUser();
-    const propio = await insertActiveListing(owner, 2);
-    const otro = await insertActiveListing(owner, 2);
-
-    await expect(
-      detachPhotoFromListing(
-        { listingId: propio.listingId, photoId: otro.photoIds[0] as string },
-        detachDependencies(owner),
-      ),
-    ).rejects.toMatchObject({ refusal: "notFound" });
-
-    expect(await positionsOf(propio.listingId)).toHaveLength(2);
-    expect(await positionsOf(otro.listingId)).toHaveLength(2);
-  });
-
-  it("el aviso de otra cuenta no desprende nada, y se contesta como uno que no existe", async () => {
-    const owner = await insertUser();
-    const stranger = await insertUser();
-    const { listingId, photoIds } = await insertActiveListing(owner, 2);
-
-    await expect(
-      detachPhotoFromListing(
-        { listingId, photoId: photoIds[0] as string },
-        detachDependencies(stranger),
-      ),
-    ).rejects.toBeInstanceOf(EditListingNotFoundError);
-
-    expect(await positionsOf(listingId)).toHaveLength(2);
-  });
-
-  it("un aviso vencido no desprende fotos: editar no puede ser el camino por el que algo apagado se toca", async () => {
-    const owner = await insertUser();
-    const { listingId, photoIds } = await insertActiveListing(owner, 2);
-    await pool.query(`UPDATE "listing" SET status = 'expired' WHERE id = $1`, [listingId]);
-
-    await expect(
-      detachPhotoFromListing(
-        { listingId, photoId: photoIds[0] as string },
-        detachDependencies(owner),
-      ),
-    ).rejects.toBeInstanceOf(EditListingNotFoundError);
-
-    expect(await positionsOf(listingId)).toHaveLength(2);
   });
 });
 
@@ -473,10 +358,7 @@ describe("listPhotoThumbnailsInOrder — contra Postgres de verdad", () => {
     const { listingId, photoIds } = await insertActiveListing(owner, 3);
     for (const photoId of photoIds) await insertDerivatives(photoId);
 
-    await detachPhotoFromListing(
-      { listingId, photoId: photoIds[0] as string },
-      detachDependencies(owner),
-    );
+    await removeOnSave(owner, listingId, [photoIds[0] as string]);
 
     const fotos = await photoSet.listPhotoThumbnailsInOrder(listingId);
 
