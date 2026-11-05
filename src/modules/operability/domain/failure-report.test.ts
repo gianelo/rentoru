@@ -3,6 +3,7 @@ import {
   ERROR_SCREEN_EXIT,
   failureLogLine,
   failureReference,
+  failureReport,
   NOT_FOUND_SCREEN,
   resolveErrorScreen,
 } from "./failure-report";
@@ -41,6 +42,25 @@ describe("failureReference", () => {
 
 describe("failureLogLine", () => {
   const base = { boundary: "render", route: "/alquiler/[ciudad]/[zona]" } as const;
+
+  /**
+   * **Un solo reporte, dos destinos** (13.1). La línea de Vercel y el evento
+   * de Sentry salen del MISMO objeto cerrado, así que lo que una puede decir
+   * la otra también — y lo que una calla, la otra calla.
+   */
+  it("la línea es el reporte serializado, sin una clave de más", () => {
+    const input = { ...base, digest: "3f5d1a9c", cause: new Error("boom") };
+
+    expect(JSON.parse(failureLogLine(input))).toStrictEqual(failureReport(input));
+    expect(Object.keys(failureReport(input))).toStrictEqual([
+      "level",
+      "event",
+      "boundary",
+      "route",
+      "digest",
+      "cause",
+    ]);
+  });
 
   it("escribe UNA sola línea de JSON, sin saltos", () => {
     const line = failureLogLine({ ...base, digest: "3f5d1a9c", cause: new Error("boom") });
