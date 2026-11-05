@@ -365,6 +365,9 @@ export class DrizzleListingEdit implements ListingEditPort, ListingEditWithPhoto
    * compare-and-swap refusa, los borrados ya hechos se revierten con él, y es
    * esa reversión la que la integración prueba. Un faltante tira adentro para
    * que Postgres revierta; afuera se traduce a un resultado, nunca a un éxito.
+   *
+   * Desde la 44.5, `order` es el orden final de las que quedan (portada
+   * primero) y se escribe en el mismo `tx`, entre los borrados y el `UPDATE`.
    */
   async applyEditRemovingPhotos(
     listingId: string,
@@ -372,6 +375,7 @@ export class DrizzleListingEdit implements ListingEditPort, ListingEditWithPhoto
     write: ListingEditWrite,
     photoIds: readonly string[],
     expectedPhotoIds: readonly string[],
+    order: readonly string[],
   ): Promise<EditRemovingPhotosOutcome> {
     try {
       const derivativeKeys = await this.db.transaction(async (tx) => {
@@ -408,6 +412,13 @@ export class DrizzleListingEdit implements ListingEditPort, ListingEditWithPhoto
           if (!(await detachAndRenumber(tx, listingId, photoId))) {
             throw new EditRolledBack("photos");
           }
+        }
+        if (
+          new Set(order).size !== order.length ||
+          order.length !== current.length - photoIds.length ||
+          !(await rewritePositions(tx, listingId, order))
+        ) {
+          throw new EditRolledBack("photos");
         }
         if (!(await updateEditable(tx, listingId, publisherId, write))) {
           throw new EditRolledBack("listing");
@@ -617,6 +628,36 @@ async function detachAndRenumber(
   await tx
     .update(listingPhotos)
     .set({ position: sql`-${listingPhotos.position} - 2` })
+    .where(and(eq(listingPhotos.listingId, listingId), lt(listingPhotos.position, 0)));
+
+  return true;
+}
+
+/**
+ * Fase 44 (44.5) — dejar las fotos que quedan en el orden `order`, **siempre
+ * dentro del `tx` de quien llama**. El rodeo por los negativos es el de
+ * `detachAndRenumber` y por la misma razón: el índice único no es
+ * `DEFERRABLE`. Cada foto pasa a `-i-1`, que nadie ocupa, y una sola sentencia
+ * las devuelve a `i`. `false` cuando un id no es de este aviso: el `WHERE`
+ * lleva `listing_id`, así que la foto ajena no se mueve ni por error.
+ */
+async function rewritePositions(
+  tx: PublicationDatabase,
+  listingId: string,
+  order: readonly string[],
+): Promise<boolean> {
+  for (const [index, photoId] of order.entries()) {
+    const moved = await tx
+      .update(listingPhotos)
+      .set({ position: -index - 1 })
+      .where(and(eq(listingPhotos.listingId, listingId), eq(listingPhotos.id, photoId)))
+      .returning({ id: listingPhotos.id });
+    if (moved.length === 0) return false;
+  }
+
+  await tx
+    .update(listingPhotos)
+    .set({ position: sql`-${listingPhotos.position} - 1` })
     .where(and(eq(listingPhotos.listingId, listingId), lt(listingPhotos.position, 0)));
 
   return true;

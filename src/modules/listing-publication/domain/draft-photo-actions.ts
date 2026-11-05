@@ -101,6 +101,8 @@ export type PhotosRemovalPlan =
       /** Las que se quitan, sin repetir y en el orden del aviso. */
       readonly removed: readonly string[];
       readonly coverChangedTo: string | null;
+      /** Si las que quedan cambian de lugar: quitar sola no reordena nada. */
+      readonly reordered: boolean;
     };
 
 /**
@@ -112,25 +114,41 @@ export type PhotosRemovalPlan =
  * **Una sola marca que no está rechaza el lote entero** (G3, fundador:
  * «Rechazar el guardado»). Quitar las demás y callar la que faltó sería
  * guardar algo distinto de lo que se pidió (AGENTS.md §7).
+ *
+ * **Y el orden, que es el de la pantalla** (44.5, L17): `order` es como se
+ * veían las fotos al tocar Guardar, con la portada primero. Un id que el aviso
+ * no tiene rechaza igual que una marca perdida; uno repetido cuenta una vez;
+ * las que no vinieron —subidas después de dibujar la pantalla— van al final
+ * en su orden, que es donde subir las pone. Sin `order`, el del aviso.
+ *
+ * La portada nueva se anuncia sólo cuando se quita la que se VEÍA primera:
+ * elegir otra con «Hacer portada» y después quitar la vieja no cambió nada
+ * que no se haya elegido.
  */
 export function planPhotosRemoval(
   ids: readonly string[],
   idsToRemove: readonly string[],
+  order: readonly string[] = ids,
 ): PhotosRemovalPlan {
   const marked = new Set(idsToRemove);
-  for (const id of marked) {
+  const requested = new Set(order);
+  for (const id of [...marked, ...requested]) {
     if (!ids.includes(id)) return { ok: false, refusal: "notFound" };
   }
 
-  const remaining = ids.filter((id) => !marked.has(id));
+  const shown = [...requested, ...ids.filter((id) => !requested.has(id))];
+  const remaining = shown.filter((id) => !marked.has(id));
   if (remaining.length < MIN_PHOTOS_FOR_ACTIVATION) return { ok: false, refusal: "lastPhoto" };
 
-  const coverRemoved = marked.has(ids[COVER_PHOTO_INDEX] as string);
+  const kept = ids.filter((id) => !marked.has(id));
   return {
     ok: true,
     ids: remaining,
     removed: ids.filter((id) => marked.has(id)),
-    coverChangedTo: coverRemoved ? (remaining[COVER_PHOTO_INDEX] ?? null) : null,
+    coverChangedTo: marked.has(shown[COVER_PHOTO_INDEX] as string)
+      ? (remaining[COVER_PHOTO_INDEX] ?? null)
+      : null,
+    reordered: remaining.some((id, index) => id !== kept[index]),
   };
 }
 
