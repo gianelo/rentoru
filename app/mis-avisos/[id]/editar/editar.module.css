@@ -50,9 +50,13 @@
 }
 
 /* Fase 44 (44.5b, S6) — portada y orden, de la lámina (estado 5). Los
-   botones de orden van en su propia línea, debajo de la foto. */
+   botones de orden van en su propia línea, debajo de la foto. `.photoRow`
+   centra UNA línea en 56px sin relleno vertical; con dos, la de arriba
+   quedaría pegada al borde, así que lleva el mismo 12px que `.acciones`
+   abajo. */
 .foto {
   flex-wrap: wrap;
+  padding-block-start: 12px;
 }
 
 .acciones {
