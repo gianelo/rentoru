@@ -231,6 +231,18 @@ describe("/mis-avisos — la lista de avisos (14d)", () => {
     expect(html).toContain("Falta al menos una foto");
   });
 
+  /** Fase 44 (44.4b): guardar quitando la portada vuelve acá con `?portada=1`. */
+  it("anuncia que cambió la portada sólo cuando guardar la cambió", async () => {
+    const html = renderToStaticMarkup(
+      await MisAvisosPage({ searchParams: Promise.resolve({ portada: "1" }) }),
+    );
+
+    expect(html).toMatch(
+      /<p[^>]*role="status"[^>]*>Guardado\. La portada ahora es la siguiente foto\.<\/p>/,
+    );
+    expect(await draw()).not.toContain("La portada ahora es la siguiente foto");
+  });
+
   it("no dibuja la negativa de un aviso que no la pidió", async () => {
     const html = renderToStaticMarkup(
       await MisAvisosPage({

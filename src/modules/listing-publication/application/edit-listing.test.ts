@@ -277,6 +277,7 @@ describe("editListing — quitar fotos al guardar (44.4)", () => {
       OWNER,
       expect.objectContaining({ priceUsd: 700 }),
       ["a", "b"],
+      ["a", "b", "c"],
     );
     expect(removal.calls).toEqual(["write", "remove:k1", "remove:k2"]);
     expect(listings.applyEdit).not.toHaveBeenCalled();
@@ -356,6 +357,47 @@ describe("editListing — quitar fotos al guardar (44.4)", () => {
     removal.ports.storage.remove.mockRejectedValueOnce(new Error("r2 caído"));
 
     await expect(run({ photoIdsToRemove: ["b"] }, removal)).rejects.toThrow("r2 caído");
+  });
+
+  it("con marcas, un aviso que no es editable por esta cuenta es «no existe» sin leer fotos ni escribir", async () => {
+    const removal = photoRemoval(["a", "b"]);
+    const listings = portReturning(null);
+
+    await expect(run({ photoIdsToRemove: ["a"] }, removal, listings)).rejects.toBeInstanceOf(
+      EditListingNotFoundError,
+    );
+    expect(removal.ports.order.listPhotoIdsInOrder).not.toHaveBeenCalled();
+    expect(removal.calls).toEqual([]);
+    expect(listings.applyEdit).not.toHaveBeenCalled();
+  });
+
+  /**
+   * El conjunto sobre el que se planeó viaja a la escritura (punto 8): la
+   * transacción lo compara con el que encuentra, en orden, para que dos
+   * guardados simultáneos no dejen el aviso sin fotos.
+   */
+  it("pasa a la escritura las fotos que leyó, en el orden en que las leyó", async () => {
+    const removal = photoRemoval(["c", "a", "b"]);
+
+    await run({ photoIdsToRemove: ["b"] }, removal);
+
+    expect(removal.ports.listings.applyEditRemovingPhotos).toHaveBeenCalledWith(
+      LISTING,
+      OWNER,
+      expect.anything(),
+      ["b"],
+      ["c", "a", "b"],
+    );
+  });
+
+  it("un error de la escritura que no es una reversión sube tal cual, y R2 no se toca", async () => {
+    const removal = photoRemoval(["a", "b"]);
+    removal.ports.listings.applyEditRemovingPhotos.mockRejectedValueOnce(
+      new Error("unique violation"),
+    );
+
+    await expect(run({ photoIdsToRemove: ["b"] }, removal)).rejects.toThrow("unique violation");
+    expect(removal.ports.storage.remove).not.toHaveBeenCalled();
   });
 
   it("con marcas y sin puertos de fotos se niega antes de escribir (falla cerrado)", async () => {

@@ -1,17 +1,11 @@
 /**
- * tasks.md 18.21 — leer el orden de las fotos de un aviso y desprender una.
+ * tasks.md 18.21 — leer las fotos de un aviso: su orden y sus miniaturas.
  *
- * **Dos interfaces AL LADO de `ListingPhotoAttachmentPort`, ninguna adentro
- * de él** (AGENTS.md §3). Aquel puerto tiene un solo método —`attachPhoto`—
- * porque escribe una foto sobre una fila que ya existe, y ésa es toda su
- * responsabilidad; agregarle `detachPhoto` lo convertiría en «el puerto de
- * las fotos» y le pondría a `attachPhotoToDraft`, que sólo adjunta, una
- * capacidad de borrado que nunca pidió. Es la misma razón por la que
- * `ContactRevealEventPort` sigue teniendo sólo `record()`.
- *
- * La lectura va aparte de la escritura por la misma regla: cuando hace falta
- * leer de una tabla cuyo puerto de escritura es angosto a propósito, se
- * agrega un puerto de lectura al lado.
+ * **Puertos de lectura AL LADO de `ListingPhotoAttachmentPort`, ninguno
+ * adentro de él** (AGENTS.md §3): cuando hace falta leer de una tabla cuyo
+ * puerto de escritura es angosto a propósito, se agrega un puerto de lectura
+ * al lado. Quitar fotos ya no tiene puerto propio: desde la 44.4 vive en la
+ * transacción de `ListingEditWithPhotosPort`.
  */
 
 /**
@@ -52,10 +46,8 @@ export interface ListingPhotoThumbnail {
 /**
  * **Un puerto de lectura al lado, no un método más en `ListingPhotoOrderPort`.**
  * Aquél contesta una sola pregunta —en qué orden van— y `planPhotoRemoval`
- * recibe su arreglo tal cual; agregarle las claves de R2 le pondría a
- * `detachPhotoFromListing`, que sólo necesita el orden, un join contra
- * `listing_photo_derivative` que nunca pidió. Es la misma razón por la que la
- * escritura de las fotos se quedó partida en dos puertos y no en uno.
+ * recibe su arreglo tal cual; agregarle las miniaturas le pondría a quien sólo
+ * necesita el orden un join contra `listing_photo_derivative` que nunca pidió.
  */
 export interface ListingPhotoThumbnailPort {
   /**
@@ -66,49 +58,4 @@ export interface ListingPhotoThumbnailPort {
    * segunda.
    */
   listPhotoThumbnailsInOrder(listingId: string): Promise<readonly ListingPhotoThumbnail[]>;
-}
-
-export interface ListingPhotoDetachmentPort {
-  /**
-   * Borra la fila y **renumera las que quedan dentro de la MISMA
-   * transacción**, así que el aviso nunca queda con un hueco en `position`.
-   *
-   * La renumeración no es cosmética: `listing_photo_position_unique` es sobre
-   * `(listing_id, position)` y el siguiente adjuntar reclama `position =`
-   * cuántas fotos hay. Quitar la del medio de tres dejaría `{0, 2}` con dos
-   * filas, y el próximo adjuntar pediría la 2 y chocaría contra el índice.
-   *
-   * Es también lo que hace verdadero en la base el «quitar la portada
-   * asciende a la siguiente» que `planPhotoRemoval` ya decide en memoria: la
-   * portada es la de `position` más baja, y renumerar es lo que la mueve.
-   *
-   * `false` cuando la fila ya no estaba —el mismo compare-and-swap que
-   * `applyEdit` y `activate`—, para que el caso de uso conteste como ante un
-   * aviso inexistente en vez de afirmar que borró algo.
-   */
-  detachPhoto(listingId: string, photoId: string): Promise<boolean>;
-}
-
-/**
- * tasks.md 18.32 — **las claves de R2 de UNA foto, para poder quitarlas cuando
- * se la desprende.** Un puerto de lectura al lado, por la misma razón que
- * `ListingPhotoThumbnailPort`: `ListingPhotoDetachmentPort` escribe y nada más,
- * y `ListingPhotoOrderPort` contesta el orden que `planPhotoRemoval` recibe tal
- * cual (AGENTS.md §3).
- *
- * **Las cinco y no la miniatura**: `listPhotoThumbnailsInOrder` devuelve `thumb`
- * porque dibuja un renglón; acá se borra, y borrar cuatro de cinco deja el
- * mismo huérfano que no borrar ninguna.
- *
- * **`listingId` va en el `WHERE` aunque `photoId` sea único**, el idioma de
- * `detachPhoto`: la clave de la foto de un aviso ajeno no se lee ni por error.
- */
-export interface ListingPhotoDerivativeKeysPort {
-  /**
-   * Vacío cuando la foto no tiene derivadas o no es de ese aviso. **Se llama
-   * ANTES de `detachPhoto`**: `listing_photo_derivative` cuelga de
-   * `listing_photo` con `ON DELETE cascade`, así que después del borrado esta
-   * consulta devuelve cero claves y los objetos quedan pagados para siempre.
-   */
-  listDerivativeKeys(listingId: string, photoId: string): Promise<readonly string[]>;
 }

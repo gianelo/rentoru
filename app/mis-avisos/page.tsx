@@ -123,6 +123,15 @@ export default async function MisAvisosPage({
             {board.total} en total · {board.draftsAwaitingPhotos} no se ven todavía
           </p>
 
+          {/* Fase 44 (44.4b): guardar quitó la portada, y eso cambió la cara
+              del aviso sin que nadie la eligiera. Lo decide `editListing`;
+              acá sólo se dice. */}
+          {query.portada === "1" ? (
+            <p className={styles.resumen} role="status">
+              Guardado. La portada ahora es la siguiente foto.
+            </p>
+          ) : null}
+
           {/*
             **«Importar vive acá, no en la navegación global»** — la anotación
             al pie de la lámina 14d. El menú de cuenta (14b) también la
