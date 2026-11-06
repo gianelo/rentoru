@@ -208,6 +208,7 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
       WRITE,
       [photoIds[0] as string],
       photoIds,
+      photoIds.slice(1),
     );
 
     expect(outcome).toEqual({ applied: false, reason: "listing" });
@@ -229,6 +230,7 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
       WRITE,
       [photoIds[1] as string],
       photoIds,
+      photoIds.slice(0, 1),
     );
 
     expect(outcome).toEqual({ applied: false, reason: "listing" });
@@ -248,6 +250,7 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
       WRITE,
       [propio.photoIds[0] as string, otro.photoIds[0] as string],
       propio.photoIds,
+      propio.photoIds.slice(1),
     );
 
     expect(outcome).toEqual({ applied: false, reason: "photos" });
@@ -271,6 +274,7 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
       WRITE,
       [a, c],
       photoIds,
+      [b],
     );
 
     expect(outcome).toEqual({ applied: false, reason: "photos" });
@@ -294,8 +298,8 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
     const [a, b] = photoIds as [string, string];
 
     const outcomes = await Promise.all([
-      listings.applyEditRemovingPhotos(listingId, owner, WRITE, [a], photoIds),
-      listings.applyEditRemovingPhotos(listingId, owner, WRITE, [b], photoIds),
+      listings.applyEditRemovingPhotos(listingId, owner, WRITE, [a], photoIds, [b]),
+      listings.applyEditRemovingPhotos(listingId, owner, WRITE, [b], photoIds, [a]),
     ]);
 
     expect(outcomes.filter((outcome) => outcome.applied)).toHaveLength(1);
@@ -303,5 +307,94 @@ describe("guardar quitando fotos marcadas — contra Postgres de verdad (44.4)",
       { applied: false, reason: "photos" },
     ]);
     expect(await positionsOf(listingId)).toHaveLength(1);
+  });
+});
+
+describe("guardar con otra portada y otro orden — contra Postgres de verdad (44.5)", () => {
+  const sinR2 = { remove: async () => undefined };
+
+  async function save(owner: string, listingId: string, remove: string[], order: string[]) {
+    return editListing(
+      { listingId, edit: { priceUsd: 700 }, photoIdsToRemove: remove, photoOrder: order },
+      {
+        sessionPort: sessionFor(owner),
+        zones,
+        listings,
+        photoRemoval: { order: photoSet, listings, storage: sinR2 },
+      },
+    );
+  }
+
+  it("deja cada foto en su lugar nuevo y guarda los campos en la misma escritura", async () => {
+    const owner = await insertUser();
+    const { listingId, photoIds } = await insertListing(owner, 4);
+    const [a, b, c, d] = photoIds as [string, string, string, string];
+
+    const result = await save(owner, listingId, [], [c, a, b, d]);
+
+    expect(result).toEqual({ listingId, coverChangedTo: null });
+    expect(await positionsOf(listingId)).toEqual([
+      { id: c, position: 0 },
+      { id: a, position: 1 },
+      { id: b, position: 2 },
+      { id: d, position: 3 },
+    ]);
+    expect(await derivativeCountOf(photoIds)).toBe(20);
+    expect(await priceOf(listingId)).toBe(700);
+  });
+
+  it("quitar y reordenar en el mismo guardado deja el orden pedido sin huecos", async () => {
+    const owner = await insertUser();
+    const { listingId, photoIds } = await insertListing(owner, 4);
+    const [a, b, c, d] = photoIds as [string, string, string, string];
+
+    await save(owner, listingId, [a], [d, c, b, a]);
+
+    expect(await positionsOf(listingId)).toEqual([
+      { id: d, position: 0 },
+      { id: c, position: 1 },
+      { id: b, position: 2 },
+    ]);
+    expect(await derivativeCountOf([a])).toBe(0);
+  });
+
+  it("un orden con una foto de otro aviso revierte también el borrado y los campos", async () => {
+    const owner = await insertUser();
+    const propio = await insertListing(owner, 3);
+    const otro = await insertListing(owner, 1);
+    const [a, b] = propio.photoIds as [string, string, string];
+
+    const outcome = await listings.applyEditRemovingPhotos(
+      propio.listingId,
+      owner,
+      WRITE,
+      [a],
+      propio.photoIds,
+      [b, otro.photoIds[0] as string],
+    );
+
+    expect(outcome).toEqual({ applied: false, reason: "photos" });
+    expect(await positionsOf(propio.listingId)).toEqual(
+      propio.photoIds.map((id, position) => ({ id, position })),
+    );
+    expect(await positionsOf(otro.listingId)).toEqual([{ id: otro.photoIds[0], position: 0 }]);
+    expect(await priceOf(propio.listingId)).toBe(610);
+  });
+
+  it("un orden con una foto repetida se niega sin escribir, en vez de chocar contra el índice", async () => {
+    const owner = await insertUser();
+    const { listingId, photoIds } = await insertListing(owner, 3);
+    const [a, b] = photoIds as [string, string, string];
+
+    const outcome = await listings.applyEditRemovingPhotos(listingId, owner, WRITE, [a], photoIds, [
+      b,
+      b,
+    ]);
+
+    expect(outcome).toEqual({ applied: false, reason: "photos" });
+    expect(await positionsOf(listingId)).toEqual(
+      photoIds.map((id, position) => ({ id, position })),
+    );
+    expect(await priceOf(listingId)).toBe(610);
   });
 });
