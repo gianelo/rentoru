@@ -31,7 +31,7 @@ Sin SDK: un adaptador propio envía el evento por la API pública de *envelopes*
 - [x] T2 (S1, S3, S7) dominio: evento de Sentry desde el reporte (digest/ruta/frontera como tags, entorno, release) — A, commit: 05491b5
 - [x] T3 (S2, S7) infraestructura: envío por envelope con DSN, tiempo límite y sin romper la petición — A, commit: 05491b5
 - [x] T4 (S1–S3) `instrumentation.ts` conectado y probado: con DSN envía saneado; sin DSN no envía; línea de Vercel intacta — A, commit: 05491b5
-- T5 (S3) documentación: variable `SENTRY_DSN`, guía «un cliente se queja: cómo buscar», cierre en tasks.md 13.1 — A, commit: —
+- [x] T5 (S3) documentación: variable `SENTRY_DSN`, guía «un cliente se queja: cómo buscar», cierre en tasks.md 13.1 — A, commits: 05491b5, 22c5a11
 - T6 (S1) humano: crear cuenta/proyecto Sentry, `SENTRY_DSN` en Vercel, alerta por correo, ver un evento de prueba — A, —
 - T7 (S5) corte B: fallos manejados con id de cuenta / huella del correo — B, commit: —
 
@@ -41,3 +41,4 @@ Sin SDK: un adaptador propio envía el evento por la API pública de *envelopes*
 - L2: «vamos con la fase 13 primero el logger es lo que mas me importa poder ver si algo falla verlo nunca he usado sentry pero es algo que esta fure de vcercel yo pago vercel asi que alli tambien podemos registra loggs por si acaso. la idea es saber si un cliente o algo se queja poder encontrar el problema rapido.»
 - L3 (2026-11-05): navegador «No, sólo servidor (Recomendado)»; buscar cliente «ID de cuenta + huella del correo (Recomendado)»; alcance «A y después B (Recomendado)».
 - L4 (2026-11-05): corte A en `05491b5` más la guarda de la primera línea de la causa (aviso del verificador: `params:` de Drizzle). `gentle-ai-verify` dio PASS en S1–S4, S6 y S7; S5 es del corte B. El corte suma unas 600 líneas contra el tope de 400: hace falta una decisión del fundador.
+- L5 (2026-11-05): «hacemos la excepcion y authorizo» — excepción de presupuesto (~605 líneas) y push/PR a `dev` autorizados.
