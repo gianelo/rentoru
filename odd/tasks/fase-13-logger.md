@@ -42,3 +42,4 @@ Sin SDK: un adaptador propio envía el evento por la API pública de *envelopes*
 - L3 (2026-11-05): navegador «No, sólo servidor (Recomendado)»; buscar cliente «ID de cuenta + huella del correo (Recomendado)»; alcance «A y después B (Recomendado)».
 - L4 (2026-11-05): corte A en `05491b5` más la guarda de la primera línea de la causa (aviso del verificador: `params:` de Drizzle). `gentle-ai-verify` dio PASS en S1–S4, S6 y S7; S5 es del corte B. El corte suma unas 600 líneas contra el tope de 400: hace falta una decisión del fundador.
 - L5 (2026-11-05): «hacemos la excepcion y authorizo» — excepción de presupuesto (~605 líneas) y push/PR a `dev` autorizados.
+- L6 (2026-11-05): publicado en #517 hacia `dev`, sin fusionar.
