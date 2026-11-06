@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyPhotoAction,
+  isPhotoReorderAction,
   movePhotoBy,
   offersDragReorder,
+  pendingPhotoChange,
   photoActionsFor,
+  photosInShownOrder,
   planPhotoRemoval,
   planPhotosRemoval,
   promoteToCover,
@@ -158,6 +162,47 @@ describe("ordenar y elegir portada al guardar (44.5)", () => {
       ok: false,
       refusal: "lastPhoto",
     });
+  });
+});
+
+/**
+ * Fase 44 (44.5b) — lo que la pantalla de editar dibuja ANTES de guardar: el
+ * orden que se ve y qué cambió respecto del aviso.
+ */
+describe("el orden que se ve en editar (44.5b)", () => {
+  it("cada botón con nombre es su mecánica: subir, bajar y hacer portada", () => {
+    expect(applyPhotoAction(CUATRO, "c", "moveUp")).toEqual(["a", "c", "b", "d"]);
+    expect(applyPhotoAction(CUATRO, "b", "moveDown")).toEqual(["a", "c", "b", "d"]);
+    expect(applyPhotoAction(CUATRO, "d", "makeCover")).toEqual(["d", "a", "b", "c"]);
+    expect(applyPhotoAction(CUATRO, "z", "makeCover")).toEqual(CUATRO);
+  });
+
+  it("sólo subir, bajar y hacer portada son acciones de orden; quitar y lo inventado no", () => {
+    for (const accion of ["moveUp", "moveDown", "makeCover"]) {
+      expect(isPhotoReorderAction(accion), accion).toBe(true);
+    }
+    for (const accion of ["remove", "borrar", ""]) {
+      expect(isPhotoReorderAction(accion), accion).toBe(false);
+    }
+  });
+
+  it("el orden enviado sin repetidas ni ajenas, y las que faltan al final en su orden", () => {
+    // `d` se subió después de ordenar; `z` ya no está en el aviso.
+    expect(photosInShownOrder(CUATRO, ["c", "z", "c", "a"])).toEqual(["c", "a", "b", "d"]);
+    expect(photosInShownOrder(CUATRO, [])).toEqual(CUATRO);
+  });
+
+  it("otra foto primero es una portada nueva, con su id", () => {
+    expect(pendingPhotoChange(CUATRO, ["c", "a", "b", "d"])).toEqual({
+      kind: "cover",
+      photoId: "c",
+    });
+  });
+
+  it("la misma portada con otro orden es sólo orden, y el mismo orden no es nada", () => {
+    expect(pendingPhotoChange(CUATRO, ["a", "c", "b", "d"])).toEqual({ kind: "order" });
+    expect(pendingPhotoChange(CUATRO, ["a", "b"])).toBeNull();
+    expect(pendingPhotoChange([], [])).toBeNull();
   });
 });
 
