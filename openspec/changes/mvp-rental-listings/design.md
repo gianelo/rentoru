@@ -797,6 +797,14 @@ labels, teclado/foco, ausencia de default y aceptación visual humana; 36.12 sig
 
 El fundador aprobó la lámina `design/pantallas/Rentoru - Revisar - Responsive-v1.html` y su CSS v1: «si me gusta alli vi las 3 medidas con el inspecionadro». Derivada del sistema, móvil sitúa Cambiar junto al título; tablet apila valores a ancho completo y escritorio distribuye etiqueta, valor y Cambiar en el contenedor centrado1100px. Evidencia y versión aceptada: `odd/tasks/fase-36-revisar-lamina.md` L15–L20; cuatro medidas del agente PASS y aceptación humana separadas. Aprobación local, sin implementación36.17 ni integración acreditada; warning sin cambio, reservado a36.18. No amplía tokens ni auditoría F34.
 
+## Fase 13.1 — Los fallos le llegan a una persona (2026-11-05)
+
+- **Dos destinos, un reporte.** Cada fallo del servidor va a `stdout`, que Vercel Pro retiene un día, y a Sentry, que en el plan Developer lo retiene treinta y avisa por correo. Los dos salen del mismo `failureReport` cerrado, así que lo que uno calla lo calla el otro.
+- **Sin SDK de Sentry.** Por defecto, el SDK captura la URL de la petición, los encabezados, las URLs salientes y la pila, y `/renovar/<token>` lleva una llave en el camino. Un adaptador propio (`sentry-envelope.ts`) manda sólo el evento que arma el dominio: cero dependencias y cero bytes en el bundle.
+- **Sólo servidor** (fundador). Los errores del navegador quedan fuera por el presupuesto de JS de la D13.
+- **Falla cerrado.** Sin `SENTRY_DSN` no se manda nada. Si Sentry falla, la petición sigue y queda la línea `sentry-unreachable`, que no lleva la llave.
+- **Pendiente (corte B).** Los fallos manejados llevarán el id de la cuenta y una huella con llave del correo, nunca el correo.
+
 ## Open Questions
 
 - [ ] Hamming threshold: `<= 8` is the proposed hard-block distance. Needs calibration against real Venezuelan listing photos before launch — too loose blocks honest publishers, too tight lets re-encoded scams through.

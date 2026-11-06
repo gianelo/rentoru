@@ -75,19 +75,32 @@ function describeCause(cause: unknown): string {
   // La pila no se escribe, y no es por tamaño: lleva rutas de archivo,
   // argumentos y —en este producto— el valor de contacto que el caso de uso
   // acababa de leer. El mensaje alcanza para buscar y alertar.
-  let described = `${cause.name}: ${cause.message}`;
+  //
+  // Y sólo su primera línea (13.1): Drizzle pone en la segunda `params: …`,
+  // los valores de la consulta, y el reporte también sale a Sentry.
+  let described = `${cause.name}: ${cause.message.replace(/\r?\n[\s\S]*$/, "")}`;
   for (const leak of LEAKS) described = described.replace(leak, "[oculto]");
 
   return described.length > MAX_CAUSE ? `${described.slice(0, MAX_CAUSE - 1)}…` : described;
 }
 
+/** Las seis claves que pueden salir de un fallo, a Vercel o a Sentry. */
+export interface FailureReport {
+  readonly level: "error";
+  readonly event: "failure";
+  readonly boundary: string;
+  readonly route: string;
+  readonly digest: string | null;
+  readonly cause: string;
+}
+
 /**
- * Una línea de JSON por fallo, con la ruta, el digest que se le mostró al
- * visitante y la causa. Sin marca de tiempo: Vercel le pone la suya a cada
- * línea, y un segundo reloj es un segundo reloj que reconciliar.
+ * **El reporte cerrado, y es uno solo para los dos destinos** (13.1): la línea
+ * de Vercel lo serializa y el evento de Sentry se arma desde él, así que lo
+ * que se calla en uno se calla en el otro.
  */
-export function failureLogLine(input: FailureInput): string {
-  return JSON.stringify({
+export function failureReport(input: FailureInput): FailureReport {
+  return {
     level: "error",
     event: "failure",
     boundary: BOUNDARIES.includes(input.boundary as (typeof BOUNDARIES)[number])
@@ -100,7 +113,16 @@ export function failureLogLine(input: FailureInput): string {
     route: input.route.replace(/[?#].*$/, ""),
     digest: failureReference(input.digest),
     cause: describeCause(input.cause),
-  });
+  };
+}
+
+/**
+ * Una línea de JSON por fallo, con la ruta, el digest que se le mostró al
+ * visitante y la causa. Sin marca de tiempo: Vercel le pone la suya a cada
+ * línea, y un segundo reloj es un segundo reloj que reconciliar.
+ */
+export function failureLogLine(input: FailureInput): string {
+  return JSON.stringify(failureReport(input));
 }
 
 /** Lo que se dibuja cuando algo falla. Sin una sola decisión en la pantalla. */
