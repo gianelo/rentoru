@@ -240,12 +240,21 @@ describe("editListing — quitar fotos al guardar (44.4)", () => {
   }
 
   async function run(
-    request: { edit?: object; photoIdsToRemove?: readonly string[] },
+    request: {
+      edit?: object;
+      photoIdsToRemove?: readonly string[];
+      photoOrder?: readonly string[];
+    },
     removal: ReturnType<typeof photoRemoval>,
     listings = portReturning(listing()),
   ) {
     return editListing(
-      { listingId: LISTING, edit: request.edit ?? {}, photoIdsToRemove: request.photoIdsToRemove },
+      {
+        listingId: LISTING,
+        edit: request.edit ?? {},
+        photoIdsToRemove: request.photoIdsToRemove,
+        photoOrder: request.photoOrder,
+      },
       { sessionPort: sessionPortReturning(OWNER), zones, listings, photoRemoval: removal.ports },
     );
   }
@@ -278,6 +287,7 @@ describe("editListing — quitar fotos al guardar (44.4)", () => {
       expect.objectContaining({ priceUsd: 700 }),
       ["a", "b"],
       ["a", "b", "c"],
+      ["c"],
     );
     expect(removal.calls).toEqual(["write", "remove:k1", "remove:k2"]);
     expect(listings.applyEdit).not.toHaveBeenCalled();
@@ -387,6 +397,7 @@ describe("editListing — quitar fotos al guardar (44.4)", () => {
       expect.anything(),
       ["b"],
       ["c", "a", "b"],
+      ["c", "a"],
     );
   });
 
@@ -398,6 +409,52 @@ describe("editListing — quitar fotos al guardar (44.4)", () => {
 
     await expect(run({ photoIdsToRemove: ["b"] }, removal)).rejects.toThrow("unique violation");
     expect(removal.ports.storage.remove).not.toHaveBeenCalled();
+  });
+
+  it("un orden nuevo sin marcas se escribe en la misma transacción, sin tocar R2 (44.5)", async () => {
+    const removal = photoRemoval(["a", "b", "c"], { applied: true, derivativeKeys: [] });
+    const listings = portReturning(listing());
+
+    const result = await run(
+      { edit: { priceUsd: 700 }, photoIdsToRemove: [], photoOrder: ["c", "a", "b"] },
+      removal,
+      listings,
+    );
+
+    expect(removal.ports.listings.applyEditRemovingPhotos).toHaveBeenCalledWith(
+      LISTING,
+      OWNER,
+      expect.objectContaining({ priceUsd: 700 }),
+      [],
+      ["a", "b", "c"],
+      ["c", "a", "b"],
+    );
+    expect(removal.ports.storage.remove).not.toHaveBeenCalled();
+    expect(listings.applyEdit).not.toHaveBeenCalled();
+    expect(result).toEqual({ listingId: LISTING, coverChangedTo: null });
+  });
+
+  it("el mismo orden que ya tenía, sin marcas, es el UPDATE de siempre", async () => {
+    const removal = photoRemoval(["a", "b"]);
+    const listings = portReturning(listing());
+
+    await run({ edit: { priceUsd: 700 }, photoOrder: ["a", "b"] }, removal, listings);
+
+    expect(listings.applyEdit).toHaveBeenCalledTimes(1);
+    expect(removal.calls).toEqual([]);
+  });
+
+  it("un orden con una foto que no es del aviso rechaza el guardado entero, sin escribir", async () => {
+    const removal = photoRemoval(["a", "b"]);
+    const listings = portReturning(listing());
+
+    const error = await run({ photoOrder: ["b", "ajena", "a"] }, removal, listings).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect((error as EditListingRejectedError).violations).toEqual(["photosToRemove.notFound"]);
+    expect(removal.calls).toEqual([]);
+    expect(listings.applyEdit).not.toHaveBeenCalled();
   });
 
   it("con marcas y sin puertos de fotos se niega antes de escribir (falla cerrado)", async () => {

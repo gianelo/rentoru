@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyPhotoAction,
+  isPhotoReorderAction,
   movePhotoBy,
   offersDragReorder,
+  pendingPhotoChange,
   photoActionsFor,
+  photosInShownOrder,
   planPhotoRemoval,
   planPhotosRemoval,
   promoteToCover,
@@ -89,6 +93,7 @@ describe("quitar varias fotos al guardar", () => {
       ids: ["a"],
       removed: ["b"],
       coverChangedTo: null,
+      reordered: false,
     });
   });
 
@@ -98,7 +103,106 @@ describe("quitar varias fotos al guardar", () => {
       ids: ["c", "d"],
       removed: ["a", "b"],
       coverChangedTo: "c",
+      reordered: false,
     });
+  });
+});
+
+describe("ordenar y elegir portada al guardar (44.5)", () => {
+  it("el orden enviado es el orden que queda, y elegir portada no es quitarla", () => {
+    expect(planPhotosRemoval(CUATRO, [], ["c", "a", "b", "d"])).toEqual({
+      ok: true,
+      ids: ["c", "a", "b", "d"],
+      removed: [],
+      coverChangedTo: null,
+      reordered: true,
+    });
+  });
+
+  it("el mismo orden que ya tenía el aviso no es un cambio", () => {
+    const plan = planPhotosRemoval(CUATRO, [], [...CUATRO]);
+    expect(plan).toMatchObject({ ok: true, ids: CUATRO, reordered: false });
+  });
+
+  it("un id del orden que el aviso no tiene rechaza el guardado entero", () => {
+    expect(planPhotosRemoval(CUATRO, [], ["b", "z", "a", "c", "d"])).toEqual({
+      ok: false,
+      refusal: "notFound",
+    });
+  });
+
+  it("uno repetido cuenta una vez, y las que no vinieron van al final en su orden", () => {
+    // `d` se subió después de dibujar la pantalla: nadie la ordenó.
+    expect(planPhotosRemoval(CUATRO, [], ["c", "c", "a"])).toMatchObject({
+      ok: true,
+      ids: ["c", "a", "b", "d"],
+    });
+  });
+
+  it("quitar la que se veía primera anuncia la nueva portada, en el orden enviado", () => {
+    expect(planPhotosRemoval(CUATRO, ["c"], ["c", "d", "a", "b"])).toEqual({
+      ok: true,
+      ids: ["d", "a", "b"],
+      removed: ["c"],
+      coverChangedTo: "d",
+      reordered: true,
+    });
+  });
+
+  it("quitar la vieja portada después de elegir otra no anuncia nada: la portada se eligió", () => {
+    expect(planPhotosRemoval(CUATRO, ["a"], ["c", "a", "b", "d"])).toMatchObject({
+      ok: true,
+      ids: ["c", "b", "d"],
+      coverChangedTo: null,
+    });
+  });
+
+  it("el piso se cuenta igual con orden enviado", () => {
+    expect(planPhotosRemoval(["a", "b"], ["a", "b"], ["b", "a"])).toEqual({
+      ok: false,
+      refusal: "lastPhoto",
+    });
+  });
+});
+
+/**
+ * Fase 44 (44.5b) — lo que la pantalla de editar dibuja ANTES de guardar: el
+ * orden que se ve y qué cambió respecto del aviso.
+ */
+describe("el orden que se ve en editar (44.5b)", () => {
+  it("cada botón con nombre es su mecánica: subir, bajar y hacer portada", () => {
+    expect(applyPhotoAction(CUATRO, "c", "moveUp")).toEqual(["a", "c", "b", "d"]);
+    expect(applyPhotoAction(CUATRO, "b", "moveDown")).toEqual(["a", "c", "b", "d"]);
+    expect(applyPhotoAction(CUATRO, "d", "makeCover")).toEqual(["d", "a", "b", "c"]);
+    expect(applyPhotoAction(CUATRO, "z", "makeCover")).toEqual(CUATRO);
+  });
+
+  it("sólo subir, bajar y hacer portada son acciones de orden; quitar y lo inventado no", () => {
+    for (const accion of ["moveUp", "moveDown", "makeCover"]) {
+      expect(isPhotoReorderAction(accion), accion).toBe(true);
+    }
+    for (const accion of ["remove", "borrar", ""]) {
+      expect(isPhotoReorderAction(accion), accion).toBe(false);
+    }
+  });
+
+  it("el orden enviado sin repetidas ni ajenas, y las que faltan al final en su orden", () => {
+    // `d` se subió después de ordenar; `z` ya no está en el aviso.
+    expect(photosInShownOrder(CUATRO, ["c", "z", "c", "a"])).toEqual(["c", "a", "b", "d"]);
+    expect(photosInShownOrder(CUATRO, [])).toEqual(CUATRO);
+  });
+
+  it("otra foto primero es una portada nueva, con su id", () => {
+    expect(pendingPhotoChange(CUATRO, ["c", "a", "b", "d"])).toEqual({
+      kind: "cover",
+      photoId: "c",
+    });
+  });
+
+  it("la misma portada con otro orden es sólo orden, y el mismo orden no es nada", () => {
+    expect(pendingPhotoChange(CUATRO, ["a", "c", "b", "d"])).toEqual({ kind: "order" });
+    expect(pendingPhotoChange(CUATRO, ["a", "b"])).toBeNull();
+    expect(pendingPhotoChange([], [])).toBeNull();
   });
 });
 

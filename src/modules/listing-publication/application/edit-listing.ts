@@ -4,6 +4,7 @@ import { planPhotosRemoval } from "../domain/draft-photo-actions";
 import {
   type ListingEdit,
   type ListingEditViolation,
+  type ListingEditWrite,
   planListingEdit,
 } from "../domain/listing-edit";
 import type { CuratedZone } from "../domain/publishable-listing";
@@ -91,6 +92,12 @@ export interface EditListingRequest {
    * es el camino de siempre: un solo `UPDATE`, sin leer fotos ni tocar R2.
    */
   readonly photoIdsToRemove?: readonly string[];
+  /**
+   * 44.5 (L17): las fotos como se veían al guardar, portada primero. Ausente
+   * es el orden del aviso; el mismo orden sin marcas sigue siendo el `UPDATE`
+   * de siempre.
+   */
+  readonly photoOrder?: readonly string[];
 }
 
 export interface EditListingDependencies {
@@ -98,8 +105,9 @@ export interface EditListingDependencies {
   readonly zones: ZoneCataloguePort;
   readonly listings: ListingEditPort;
   /**
-   * Sólo hace falta cuando hay marcas. Opcional para que quien edita sin
-   * marcar no tenga que armar R2; un pedido con marcas y sin esto se niega.
+   * Sólo hace falta cuando hay marcas u orden. Opcional para que quien edita
+   * sin tocar fotos no tenga que armar R2; un pedido con fotos y sin esto se
+   * niega.
    */
   readonly photoRemoval?: {
     readonly order: ListingPhotoOrderPort;
@@ -142,7 +150,7 @@ export async function editListing(
   const curatedZones = await zones.listZonesForCity(current.cityId);
 
   const marked = request.photoIdsToRemove ?? [];
-  if (marked.length > 0) {
+  if (marked.length > 0 || request.photoOrder !== undefined) {
     return editRemovingPhotos(request, current, curatedZones, marked, dependencies);
   }
 
@@ -151,13 +159,22 @@ export async function editListing(
     throw new EditListingRejectedError(plan.violations);
   }
 
-  const applied = await listings.applyEdit(request.listingId, session.userId, plan.write);
+  return applyFieldsOnly(current, plan.write, listings);
+}
+
+/** El camino de siempre: un solo `UPDATE` con su compare-and-swap. */
+async function applyFieldsOnly(
+  current: EditableListing,
+  write: ListingEditWrite,
+  listings: ListingEditPort,
+): Promise<EditListingResult> {
+  const applied = await listings.applyEdit(current.id, current.publisherId, write);
   if (!applied) {
     // La fila era editable cuando la lectura de arriba la vio, y dejó de
     // serlo antes del `UPDATE`: venció, la ocultaron por reportes, o alguien
     // la borró. No hay nada que ESTA llamada pueda haber hecho, y reintentar
     // no es un estado al que volver.
-    throw new EditListingNotFoundError(request.listingId);
+    throw new EditListingNotFoundError(current.id);
   }
 
   return { listingId: current.id, coverChangedTo: null };
@@ -175,7 +192,7 @@ async function editRemovingPhotos(
   current: EditableListing,
   curatedZones: readonly CuratedZone[],
   marked: readonly string[],
-  { photoRemoval }: EditListingDependencies,
+  { photoRemoval, listings }: EditListingDependencies,
 ): Promise<EditListingResult> {
   if (!photoRemoval) {
     // Falla cerrado (AGENTS.md §7): guardar los campos y callar las marcas
@@ -184,7 +201,7 @@ async function editRemovingPhotos(
   }
 
   const ids = await photoRemoval.order.listPhotoIdsInOrder(current.id);
-  const removal = planPhotosRemoval(ids, marked);
+  const removal = planPhotosRemoval(ids, marked, request.photoOrder);
   const plan = planListingEdit(
     { ...current, photoCount: removal.ok ? removal.ids.length : current.photoCount },
     curatedZones,
@@ -199,6 +216,11 @@ async function editRemovingPhotos(
     throw new EditListingRejectedError(violations);
   }
 
+  // Nada que mover ni quitar: no hace falta la transacción de las fotos.
+  if (removal.removed.length === 0 && !removal.reordered) {
+    return applyFieldsOnly(current, plan.write, listings);
+  }
+
   const outcome = await photoRemoval.listings.applyEditRemovingPhotos(
     current.id,
     current.publisherId,
@@ -206,6 +228,7 @@ async function editRemovingPhotos(
     removal.removed,
     // Lo que el plan vio: si la transacción encuentra otra cosa, se niega.
     ids,
+    removal.ids,
   );
   if (!outcome.applied) {
     // Nada se escribió: la transacción se revirtió entera. Una marcada que

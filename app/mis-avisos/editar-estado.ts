@@ -19,6 +19,8 @@ export interface EstadoDeEdicion {
   readonly valores?: Readonly<Record<string, string>>;
   /** Las fotos marcadas «Quitar al guardar» que se enviaron (44.4b). */
   readonly fotosAQuitar?: readonly string[];
+  /** Las fotos en el orden que se veían, con la portada primero (44.5b). */
+  readonly ordenFotos?: readonly string[];
 }
 
 export const SIN_NEGATIVAS: EstadoDeEdicion = { motivos: [], medidas: {} };

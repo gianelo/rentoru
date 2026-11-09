@@ -37,6 +37,10 @@ export interface ListingEditWithPhotosPort {
    * `photos` sin escribir: el piso se decidió sobre otro aviso, y dos guardados
    * a la vez no pueden dejarlo sin fotos. Comparar no es decidir; el piso lo
    * sigue contestando `planPhotosRemoval`.
+   *
+   * **`order` es el orden final de las que quedan** (44.5), portada primero:
+   * la transacción deja cada una en su índice. Quitar sin reordenar manda el
+   * mismo orden de antes sin las quitadas.
    */
   applyEditRemovingPhotos(
     listingId: string,
@@ -44,5 +48,6 @@ export interface ListingEditWithPhotosPort {
     write: ListingEditWrite,
     photoIds: readonly string[],
     expectedPhotoIds: readonly string[],
+    order: readonly string[],
   ): Promise<EditRemovingPhotosOutcome>;
 }
