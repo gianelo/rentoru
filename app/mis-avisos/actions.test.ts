@@ -520,6 +520,7 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
 
     const [pedido, deps] = editListing.mock.calls[0] ?? [];
     expect(pedido.photoIdsToRemove).toEqual([]);
+    expect(pedido.photoOrder).toBeUndefined();
     expect(deps.photoRemoval).toBeUndefined();
   });
 
@@ -544,6 +545,70 @@ describe("guardarEdicion — la ruta que le faltaba a editListing (18.20)", () =
     await expect(guardarEdicion(SIN_NEGATIVAS, form)).rejects.toThrow(
       "NEXT_REDIRECT:/mis-avisos?portada=1",
     );
+  });
+
+  /**
+   * Fase 44 (44.5b, L17) — **el orden que se ve viaja con Guardar.** La acción
+   * no lo juzga: un id ajeno o repetido lo contesta `planPhotosRemoval`.
+   */
+  it("el orden que se ve viaja como photoOrder, y basta para armar los puertos de fotos", async () => {
+    editListing.mockResolvedValueOnce({ listingId: "aviso-1", coverChangedTo: null });
+    const form = edicionDe(CAMPOS);
+    for (const id of ["foto-c", "foto-a", "foto-b"]) form.append("ordenFoto", id);
+
+    await expect(guardarEdicion(SIN_NEGATIVAS, form)).rejects.toThrow("NEXT_REDIRECT:/mis-avisos");
+
+    const [pedido, deps] = editListing.mock.calls[0] ?? [];
+    expect(pedido.photoOrder).toEqual(["foto-c", "foto-a", "foto-b"]);
+    expect(pedido.photoIdsToRemove).toEqual([]);
+    expect(deps.photoRemoval.order).toBeInstanceOf(DrizzleListingPhotoSet);
+    expect(deps.photoRemoval.listings).toMatchObject({ db: TX });
+  });
+
+  it("una negativa devuelve también el orden, que no vuelve como un valor más", async () => {
+    editListing.mockRejectedValueOnce(new EditListingRejectedError(["title.required"]));
+    const form = edicionDe(CAMPOS);
+    for (const id of ["foto-c", "foto-a"]) form.append("ordenFoto", id);
+
+    const estado = await guardarEdicion(SIN_NEGATIVAS, form);
+
+    expect(estado.ordenFotos).toEqual(["foto-c", "foto-a"]);
+    expect(estado.valores).not.toHaveProperty("ordenFoto");
+  });
+
+  /**
+   * Sin JavaScript, «Hacer portada», «↑ Subir» y «↓ Bajar» son botones de
+   * envío (L17): vuelven a la pantalla reordenada **sin guardar nada**, con lo
+   * escrito y las marcas intactos. El orden nuevo lo calcula el dominio.
+   */
+  it("un botón de orden devuelve la pantalla reordenada sin guardar, con lo escrito y las marcas", async () => {
+    const form = edicionDe(CAMPOS);
+    for (const id of ["foto-a", "foto-b", "foto-c"]) form.append("ordenFoto", id);
+    form.append("quitarFoto", "foto-b");
+    form.set("moverFoto", "makeCover:foto-c");
+
+    await expect(guardarEdicion(SIN_NEGATIVAS, form)).resolves.toEqual({
+      motivos: [],
+      medidas: {},
+      valores: CAMPOS,
+      fotosAQuitar: ["foto-b"],
+      ordenFotos: ["foto-c", "foto-a", "foto-b"],
+    });
+    expect(editListing).not.toHaveBeenCalled();
+    expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it("un botón de orden inventado deja el orden como estaba y tampoco guarda", async () => {
+    for (const moverFoto of ["remove:foto-a", "borrar:foto-a", "moveDown", ""]) {
+      const form = edicionDe(CAMPOS);
+      for (const id of ["foto-a", "foto-b"]) form.append("ordenFoto", id);
+      form.set("moverFoto", moverFoto);
+
+      const estado = await guardarEdicion(SIN_NEGATIVAS, form);
+
+      expect(estado.ordenFotos, moverFoto).toEqual(["foto-a", "foto-b"]);
+    }
+    expect(editListing).not.toHaveBeenCalled();
   });
 
   /**

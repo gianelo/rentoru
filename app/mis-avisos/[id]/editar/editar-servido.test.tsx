@@ -553,8 +553,11 @@ describe("/mis-avisos/[id]/editar — la pantalla de corregir un aviso (18.20)",
 
     expect(fuente).toContain("useActionState(guardarEdicion, estadoInicial)");
     expect(fuente).toContain("<form action={accion}");
-    expect(fuente).not.toContain("onClick");
     expect(fuente).not.toContain("onSubmit");
+    // 44.5b: el único `onClick` es el de los botones de orden, que con
+    // JavaScript reordenan sin enviar (L17). Guardar sigue siendo nativo.
+    expect(fuente.match(/onClick/g)).toHaveLength(1);
+    expect(fuente).toMatch(/name="moverFoto"[^>]*onClick=/s);
   });
 
   it("la salida vuelve a la lista, con un enlace de verdad", async () => {
@@ -613,12 +616,63 @@ describe("/mis-avisos/[id]/editar — las fotos (18.21, 44.4b)", () => {
     expect(html).not.toContain("Quitar del aviso");
   });
 
-  it("nombra la portada, y sólo a la portada", async () => {
+  /** 44.5b: la portada lleva el chip de la lámina (estado 5) en vez del paréntesis. */
+  it("nombra la portada con su chip, y a las demás por su posición", async () => {
     const html = await dibujar();
 
-    expect(html).toContain("Foto 1 (portada)");
-    expect(html).not.toContain("Foto 2 (portada)");
-    expect(html).toContain("Foto 3");
+    expect(html).toMatch(/Foto 1 <span[^>]*>Portada<\/span>/);
+    expect(html.split(">Portada</span>")).toHaveLength(2);
+    expect(html).toContain("Se ve primero en los resultados");
+    expect(html).toContain("Posición 2");
+    expect(html).toContain("Posición 3");
+    expect(html).not.toContain("era la portada");
+  });
+
+  /**
+   * Fase 44 (44.5b, S6, L17) — el orden que se ve viaja con Guardar, uno por
+   * foto y dentro del formulario que guarda.
+   */
+  it("cada foto manda su lugar como ordenFoto, en el orden que se ve, dentro del formulario", async () => {
+    const html = guardado(await dibujar());
+    const orden = [...html.matchAll(/<input type="hidden" name="ordenFoto" value="([^"]+)"\/>/g)];
+
+    expect(orden.map((match) => match[1])).toEqual(["foto-a", "foto-b", "foto-c"]);
+  });
+
+  /**
+   * Sin JavaScript los botones de orden son envíos con nombre (L17). Cada
+   * foto ofrece sólo los posibles: la primera no sube ni se hace portada, y
+   * la última no baja.
+   */
+  it("cada foto ofrece sólo los botones de orden posibles, como envíos con nombre", async () => {
+    const html = guardado(await dibujar());
+    for (const valor of ["moveDown:foto-a", "makeCover:foto-b", "moveUp:foto-b"]) {
+      const boton = new RegExp(`<button[^>]*value="${valor}"[^>]*>`).exec(html)?.[0];
+      expect(boton, valor).toContain('type="submit"');
+      expect(boton, valor).toContain('name="moverFoto"');
+      expect(boton, valor).toContain('formNoValidate=""');
+    }
+    for (const valor of ["moveDown:foto-b", "makeCover:foto-c", "moveUp:foto-c"]) {
+      expect(html).toContain(`value="${valor}"`);
+    }
+    for (const valor of ["makeCover:foto-a", "moveUp:foto-a", "moveDown:foto-c"]) {
+      expect(html).not.toContain(`value="${valor}"`);
+    }
+    expect(html).toMatch(/>Hacer portada<span[^>]*> la foto 2<\/span><\/button>/);
+    expect(html).toMatch(/<span aria-hidden="true">↑<\/span> Subir<span[^>]*> la foto 3<\/span>/);
+    expect(html).toMatch(/<span aria-hidden="true">↓<\/span> Bajar<span[^>]*> la foto 1<\/span>/);
+  });
+
+  /**
+   * Enter en un campo envía con el PRIMER botón de envío del formulario, y
+   * los de orden van antes que los campos: sin un Guardar primero, Enter en
+   * el precio bajaría la portada en vez de guardar.
+   */
+  it("el primer botón de envío del formulario guarda, para que Enter no reordene", async () => {
+    const primero = /<button[^>]*>/.exec(guardado(await dibujar()))?.[0];
+
+    expect(primero).toContain('type="submit"');
+    expect(primero).not.toContain("name=");
   });
 
   it("sirve la copia aprobada de fotos y la de subir", async () => {
@@ -735,7 +789,7 @@ describe("/mis-avisos/[id]/editar — la foto dibujada (18.26)", () => {
     const html = await dibujar();
 
     expect(html).toMatch(/name="quitarFoto"[^>]*value="foto-a"/);
-    expect(html).toContain("Foto 1 (portada)");
+    expect(html).toMatch(/Foto 1 <span[^>]*>Portada<\/span>/);
     expect(html).toContain(`src="${photoUrl(BASE, "promoted/foto-b/thumb.webp")}"`);
     // Ni una `<img>` sin fuente, ni un `src` vacío, ni la palabra que delata
     // un valor que nadie escribió.

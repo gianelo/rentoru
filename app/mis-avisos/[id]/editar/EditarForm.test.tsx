@@ -1,4 +1,7 @@
+// @vitest-environment happy-dom
 import { readFileSync } from "node:fs";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { EstadoDeEdicion } from "../../editar-estado";
@@ -12,7 +15,7 @@ import type { EstadoDeEdicion } from "../../editar-estado";
  * se prueba que cada control pinta lo enviado antes que lo guardado.
  */
 
-const { useActionState, estado } = vi.hoisted(() => {
+const { useActionState, estado, accionFalsa } = vi.hoisted(() => {
   const estado: { actual: EstadoDeEdicion; pendiente: boolean } = {
     actual: { motivos: [], medidas: {} },
     pendiente: false,
@@ -20,6 +23,7 @@ const { useActionState, estado } = vi.hoisted(() => {
   const accionFalsa = vi.fn();
   return {
     estado,
+    accionFalsa,
     useActionState: vi.fn(() => [estado.actual, accionFalsa, estado.pendiente]),
   };
 });
@@ -60,6 +64,8 @@ const AVISO = {
 };
 
 const INICIAL: EstadoDeEdicion = { motivos: [], medidas: {} };
+// Por ruta y no por `import.meta.url`, que en happy-dom no es un `file:`.
+const CSS = "app/mis-avisos/[id]/editar/editar.module.css";
 
 const FOTOS = [
   { photoId: "foto-a", thumbUrl: "https://fotos.example/a.webp", alt: "Foto 1 de 3" },
@@ -90,7 +96,20 @@ function control(html: string, name: string, value?: string): string {
 
 beforeEach(() => {
   useActionState.mockClear();
+  accionFalsa.mockClear();
 });
+
+/** Los ids que viajan como `ordenFoto`, en el orden de los bytes. */
+function ordenServido(html: string): string[] {
+  return [...html.matchAll(/name="ordenFoto" value="([^"]+)"/g)].map((match) => match[1] ?? "");
+}
+
+/** El renglón de una foto, desde su `<li>` hasta el cierre. */
+function renglon(html: string, photoId: string): string {
+  const orden = html.indexOf(`name="ordenFoto" value="${photoId}"`);
+  expect(orden, photoId).toBeGreaterThan(-1);
+  return html.slice(html.lastIndexOf("<li", orden), html.indexOf("</li>", orden));
+}
 
 describe("EditarForm — lo escrito vuelve después de una negativa (44.2)", () => {
   it("siembra useActionState con la acción de guardar y el estado de la página", () => {
@@ -206,7 +225,8 @@ describe("EditarForm — quitar fotos al guardar (44.4b)", () => {
       expect(html.indexOf(casilla)).toBeLessThan(cierra);
     }
     expect(html).toContain('aria-label="Quitar al guardar: Foto 2"');
-    expect(html).toContain("Foto 1 (portada)");
+    // 44.5b: «Portada» pasó de un paréntesis a su chip (lámina, estado 5).
+    expect(renglon(html, "foto-a")).toMatch(/Foto 1 <span[^>]*>Portada<\/span>/);
     // Subir sigue siendo inmediato y vive en la sección, antes de los campos.
     expect(html.indexOf("RANURA DE SUBIR")).toBeLessThan(html.indexOf('name="title"'));
   });
@@ -251,10 +271,104 @@ describe("EditarForm — quitar fotos al guardar (44.4b)", () => {
 
   /** Sin JavaScript: la marca se ve por CSS, y sin `opacity` (AA, lámina). */
   it("la foto marcada y el aviso se muestran con :has(:checked), sin opacidad", () => {
-    const css = readFileSync(new URL("./editar.module.css", import.meta.url), "utf8");
+    const css = readFileSync(CSS, "utf8");
 
     expect(css).toMatch(/\.foto:has\(\.quitar:checked\)/);
     expect(css).toMatch(/:has\(\.quitar:checked\) \.recuerda/);
     expect(css).not.toContain("opacity");
+  });
+});
+
+/**
+ * Fase 44 (44.5b, S6) — «no me deja cambiar cuál es la portada». El orden
+ * vuelve en el estado (sin JavaScript, después de un botón o de una
+ * negativa); la página no puede sembrarlo, así que se fija acá.
+ */
+describe("EditarForm — portada y orden al guardar (44.5b)", () => {
+  it("con un orden de vuelta, dibuja las fotos en ese orden y anuncia la portada nueva", () => {
+    const html = dibujar({ ...INICIAL, ordenFotos: ["foto-c", "foto-a", "foto-b"] });
+
+    expect(ordenServido(html)).toEqual(["foto-c", "foto-a", "foto-b"]);
+    expect(html).toMatch(
+      /<p[^>]*role="status"[^>]*>Foto 3 es la nueva portada\. Se aplica al guardar\.<\/p>/,
+    );
+    // Cada foto conserva su nombre: es su identidad, no su lugar.
+    const portada = renglon(html, "foto-c");
+    expect(portada).toMatch(/Foto 3 <span[^>]*>Portada<\/span>/);
+    expect(portada).toContain("Se ve primero en los resultados");
+    expect(portada).toContain('aria-label="Quitar al guardar: Foto 3"');
+    expect(portada).not.toContain('value="makeCover:foto-c"');
+    expect(portada).not.toContain('value="moveUp:foto-c"');
+    expect(portada).toContain('value="moveDown:foto-c"');
+    expect(renglon(html, "foto-a")).toContain("Posición 2 · era la portada");
+    expect(renglon(html, "foto-a")).toContain('value="makeCover:foto-a"');
+    expect(renglon(html, "foto-b")).toContain("Posición 3");
+    expect(renglon(html, "foto-b")).not.toContain("era la portada");
+    expect(renglon(html, "foto-b")).not.toContain('value="moveDown:foto-b"');
+  });
+
+  it("el chip de la portada usa el nivel 2 de la lámina, sólo con tokens", () => {
+    const chip = /\.portada \{[^}]*\}/.exec(readFileSync(CSS, "utf8"))?.[0] ?? "";
+
+    expect(chip).toContain("background: var(--tint)");
+    expect(chip).toContain("border: 1px solid var(--accent)");
+    expect(chip).toContain("color: var(--accent)");
+  });
+
+  it("la misma portada con otro orden dice sólo que el orden se aplica al guardar", () => {
+    const html = dibujar({ ...INICIAL, ordenFotos: ["foto-a", "foto-c", "foto-b"] });
+
+    expect(html).toMatch(/role="status"[^>]*>El nuevo orden se aplica al guardar\.<\/p>/);
+    expect(html).not.toContain("nueva portada");
+  });
+
+  it("sin cambios no anuncia nada, y el orden es el del aviso", () => {
+    const html = dibujar(INICIAL);
+
+    expect(ordenServido(html)).toEqual(["foto-a", "foto-b", "foto-c"]);
+    expect(html).toMatch(/role="status"[^>]*><\/p>/);
+  });
+
+  it("un orden con una foto que ya no está y sin una nueva dibuja las del aviso", () => {
+    const html = dibujar({ ...INICIAL, ordenFotos: ["foto-z", "foto-c"] });
+
+    expect(ordenServido(html)).toEqual(["foto-c", "foto-a", "foto-b"]);
+    expect(html).not.toContain("foto-z");
+  });
+
+  /**
+   * Con JavaScript el botón no viaja (L17): reordena en el navegador con la
+   * MISMA función del dominio, sin envío y sin el indicador de espera.
+   */
+  it("con JavaScript, «Hacer portada» reordena en el navegador sin enviar el formulario", () => {
+    vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
+    estado.actual = INICIAL;
+    const container = document.createElement("div");
+    document.body.append(container);
+    const root = createRoot(container);
+    act(() => root.render(<EditarForm aviso={AVISO} estadoInicial={INICIAL} fotos={FOTOS} />));
+
+    act(() => {
+      container.querySelector<HTMLButtonElement>('button[value="makeCover:foto-c"]')?.click();
+    });
+
+    const orden = () =>
+      [...container.querySelectorAll<HTMLInputElement>('input[name="ordenFoto"]')].map(
+        (input) => input.value,
+      );
+    expect(orden()).toEqual(["foto-c", "foto-a", "foto-b"]);
+    expect(container.querySelector('[role="status"]')?.textContent).toBe(
+      "Foto 3 es la nueva portada. Se aplica al guardar.",
+    );
+    expect(accionFalsa).not.toHaveBeenCalled();
+
+    // Un estado nuevo de la acción (una negativa) manda sobre el local.
+    estado.actual = { ...INICIAL, ordenFotos: ["foto-b", "foto-a", "foto-c"] };
+    act(() => root.render(<EditarForm aviso={AVISO} estadoInicial={INICIAL} fotos={FOTOS} />));
+    expect(orden()).toEqual(["foto-b", "foto-a", "foto-c"]);
+
+    act(() => root.unmount());
+    container.remove();
+    vi.unstubAllGlobals();
   });
 });

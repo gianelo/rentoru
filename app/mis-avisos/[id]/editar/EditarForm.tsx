@@ -1,8 +1,15 @@
 "use client";
 
-import { type ReactNode, useActionState } from "react";
+import { type ReactNode, useActionState, useState } from "react";
 import type { EditableListing } from "@/modules/listing-publication/application/ports/listing-edit.port";
-import { COVER_PHOTO_INDEX } from "@/modules/listing-publication/domain/draft-photo-actions";
+import {
+  applyPhotoAction,
+  COVER_PHOTO_INDEX,
+  type PhotoReorderAction,
+  pendingPhotoChange,
+  photoActionsFor,
+  photosInShownOrder,
+} from "@/modules/listing-publication/domain/draft-photo-actions";
 import { editablePublisherTypes } from "@/modules/listing-publication/domain/listing-edit";
 import type { ChangedField } from "@/modules/listing-publication/domain/publication-steps";
 import {
@@ -44,6 +51,16 @@ export interface FotoDelAviso {
 }
 
 /**
+ * Los botones de orden, en el orden y con la copia de la lámina (estado 5).
+ * Cuáles se ofrecen lo contesta `photoActionsFor`; quitar es la casilla.
+ */
+const BOTONES_DE_ORDEN: readonly (readonly [PhotoReorderAction, string | null, string])[] = [
+  ["makeCover", null, "Hacer portada"],
+  ["moveUp", "↑", "Subir"],
+  ["moveDown", "↓", "Bajar"],
+];
+
+/**
  * El formulario de «Guardar cambios», sacado de `page.tsx` en la fase 44 (G2)
  * para que `useActionState` devuelva lo escrito (44.2, S4).
  *
@@ -71,6 +88,23 @@ export function EditarForm({
   const { medidas, valores } = estado;
   // Las marcas sobreviven a una negativa (44.4b, G3).
   const marcadas = new Set(estado.fotosAQuitar ?? []);
+  /*
+   * Portada y orden (44.5b, L17): se aplican al guardar. Sin JavaScript el
+   * orden vuelve en el estado; con él se cambia acá, con las mismas funciones
+   * del dominio, hasta que llegue un estado nuevo de la acción.
+   */
+  const fotoIds = fotos.map((foto) => foto.photoId);
+  const [ordenLocal, setOrdenLocal] = useState({ de: estado, ids: estado.ordenFotos });
+  const orden = photosInShownOrder(
+    fotoIds,
+    (ordenLocal.de === estado ? ordenLocal.ids : estado.ordenFotos) ?? fotoIds,
+  );
+  const cambio = pendingPhotoChange(fotoIds, orden);
+  const fotosEnOrden = orden.flatMap((photoId) => {
+    const original = fotoIds.indexOf(photoId);
+    const foto = fotos[original];
+    return foto ? [{ foto, original }] : [];
+  });
   // **Dónde va cada negativa lo decide el dominio** (tasks.md 18.22): acá sólo
   // se dibuja lo que ya viene repartido.
   const negativas = placeListingEditViolations(estado.motivos);
@@ -104,6 +138,11 @@ export function EditarForm({
       {/* La acción vuelve a acotarlo a la sesión: que este campo diga
           un id no es una afirmación sobre de quién es. */}
       <input type="hidden" name="listingId" value={aviso.id} />
+      {/* Enter en un campo envía con el PRIMER botón de envío, y los de orden
+          van antes que los campos: éste, sin nombre, hace que Enter guarde. */}
+      <button type="submit" hidden>
+        Guardar
+      </button>
 
       {/*
         **Sólo las que no tienen campo en esta pantalla.** Las demás se leen
@@ -136,9 +175,18 @@ export function EditarForm({
           {fotos.length} de {MAX_PHOTOS_PER_LISTING}. {PHOTO_COVER_EXPLANATION}. Las fotos nuevas se
           agregan al subirlas; las que marques se quitan al guardar.
         </p>
+        <p className={fotoStyles.pendiente} role="status">
+          {cambio === null
+            ? null
+            : cambio.kind === "cover"
+              ? `${nombreDeFoto(fotoIds.indexOf(cambio.photoId))} es la nueva portada. Se aplica al guardar.`
+              : "El nuevo orden se aplica al guardar."}
+        </p>
         <ul className={styles.results}>
-          {fotos.map((foto, index) => (
+          {fotosEnOrden.map(({ foto, original }, posicion) => (
             <li key={foto.photoId} className={`${styles.photoRow} ${fotoStyles.foto}`}>
+              {/* El lugar que se ve, que es el que guarda (44.5b). */}
+              <input type="hidden" name="ordenFoto" value={foto.photoId} />
               {foto.thumbUrl === null ? null : (
                 /* Derivada ya generada al subir, con egreso cero desde R2:
                    el optimizador de la plataforma es un recurso medido. */
@@ -152,9 +200,21 @@ export function EditarForm({
                 />
               )}
               <span className={styles.photoName}>
+                {/* El nombre sale de su lugar en el aviso, no del que se ve:
+                    es la identidad de la foto mientras se reordena. */}
                 <span className={fotoStyles.nombre}>
-                  {nombreDeFoto(index)}
-                  {index === COVER_PHOTO_INDEX ? " (portada)" : ""}
+                  {nombreDeFoto(original)}
+                  {posicion === COVER_PHOTO_INDEX ? (
+                    <>
+                      {" "}
+                      <span className={fotoStyles.portada}>Portada</span>
+                    </>
+                  ) : null}
+                </span>
+                <span className={fotoStyles.meta}>
+                  {posicion === COVER_PHOTO_INDEX
+                    ? "Se ve primero en los resultados"
+                    : `Posición ${posicion + 1}${original === COVER_PHOTO_INDEX ? " · era la portada" : ""}`}
                 </span>
                 <span className={fotoStyles.marcada}>Se quitará al guardar</span>
               </span>
@@ -165,13 +225,44 @@ export function EditarForm({
                   name="quitarFoto"
                   value={foto.photoId}
                   defaultChecked={marcadas.has(foto.photoId)}
-                  aria-label={`Quitar al guardar: ${nombreDeFoto(index)}`}
+                  aria-label={`Quitar al guardar: ${nombreDeFoto(original)}`}
                   aria-describedby={
                     negativas.byField.has("photosToRemove") ? "photosToRemove-error" : undefined
                   }
                 />
                 <span>Quitar al guardar</span>
               </label>
+              {/* Envíos con nombre: sin JavaScript vuelven reordenados sin
+                  guardar; con él reordenan acá y no viajan (L17). */}
+              <span className={fotoStyles.acciones}>
+                {BOTONES_DE_ORDEN.filter(([accion]) =>
+                  photoActionsFor(orden, foto.photoId).includes(accion),
+                ).map(([accion, flecha, texto]) => (
+                  <button
+                    key={accion}
+                    type="submit"
+                    name="moverFoto"
+                    value={`${accion}:${foto.photoId}`}
+                    formNoValidate
+                    className={`${styles.secondary} ${fotoStyles.mover}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setOrdenLocal({
+                        de: estado,
+                        ids: applyPhotoAction(orden, foto.photoId, accion),
+                      });
+                    }}
+                  >
+                    {flecha === null ? null : (
+                      <>
+                        <span aria-hidden="true">{flecha}</span>{" "}
+                      </>
+                    )}
+                    {texto}
+                    <span className={styles.srOnly}>{` la foto ${original + 1}`}</span>
+                  </button>
+                ))}
+              </span>
             </li>
           ))}
         </ul>
